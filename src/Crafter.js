@@ -5,7 +5,7 @@
  */
 "use strict";
 
-var ua = navigator.userAgent,
+let ua = navigator.userAgent,
   tem, M = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
 if (M && (tem = ua.match(/version\/([\.\d]+)/i)) != null) M[2] = tem[1];
 M ? [M[1], M[2]] : [navigator.appName, navigator.appVersion, '-?'];
@@ -20,7 +20,7 @@ window.CurrentBrowser = {
 
 (() => {
 
-  var isStr = (obj, str) => toString.call(obj) === str,
+  let isStr = (obj, str) => toString.call(obj) === str,
     isT = (val, str) => typeof val === str,
     nT = (val, str) => typeof val !== str;
 
@@ -29,7 +29,7 @@ window.CurrentBrowser = {
     Bool: val => typeof val === 'boolean',
     Undef: function () {
       if (arguments.length > 1) {
-        for (var i = 0; i < arguments.length; i++)
+        for (let i = 0; i < arguments.length; i++)
           if (typeof arguments[i] === 'undefined') return false;
         return true;
       }
@@ -37,7 +37,7 @@ window.CurrentBrowser = {
     },
     Def: function () {
       if (arguments.length > 1) {
-        for (var i = 0; i < arguments.length; i++)
+        for (let i = 0; i < arguments.length; i++)
           if (nT(arguments[i], 'undefined')) return false;
         return true;
       }
@@ -48,7 +48,7 @@ window.CurrentBrowser = {
     Num: val => isT(val, 'number'),
     Null: function (val) {
       if (arguments.length > 1) {
-        for (var i = 0; i < arguments.length; i++)
+        for (let i = 0; i < arguments.length; i++)
           if (arguments[i] === null) return true;
         return false;
       }
@@ -56,7 +56,7 @@ window.CurrentBrowser = {
     },
     Node: function (val) {
       if (arguments.length > 1) {
-        for (var i = 0; i < arguments.length; i++)
+        for (let i = 0; i < arguments.length; i++)
           if (is.Null(arguments[i]) || !(arguments[i] instanceof Node)) return false;
         return true;
       }
@@ -64,7 +64,7 @@ window.CurrentBrowser = {
     },
     NodeList: function (val) {
       if (arguments.length > 1) {
-        for (var i = 0; i < arguments.length; i++)
+        for (let i = 0; i < arguments.length; i++)
           if (arguments[i] === null || !(arguments[i] instanceof NodeList)) return false;
         return true;
       }
@@ -85,7 +85,7 @@ window.CurrentBrowser = {
       return /(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))/.test(email);
     },
     Native: val => {
-      var type = typeof val;
+      let type = typeof val;
       return type === 'function' ? RegExp('^' + String(Object.prototype.toString).replace(/[.*+?^${}()|[\]\/\\]/g, '\\$&').replace(/toString|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$').test(Function.prototype.toString.call(val)) : (val && type == 'object' && /^\[object .+?Constructor\]$/.test(val.toString)) || false;
     },
     Between: (val, max, min) => (val <= max && val >= min),
@@ -96,7 +96,7 @@ window.CurrentBrowser = {
 
   window.forEach = (iterable, func) => {
     if (is.Func(func)) {
-      var index = 0;
+      let index = 0;
       if (is.Arr(iterable) || is.NodeList(iterable) || is.String(iterable)) {
         for (; index < iterable.length; index++) func(iterable[index], index);
       } else if (is.Object(iterable)) {
@@ -117,7 +117,7 @@ window.CurrentBrowser = {
   }
 
   window.$ = (selector, forceSelectAll, noCraft) => {
-    var element = queryAll(selector);
+    let element = queryAll(selector);
     if (!is.Null(element)) {
       if (element.length > 1 || forceSelectAll === true && is.NodeList(element)) {
         return noCraft ? element : craft(element);
@@ -148,11 +148,11 @@ window.CurrentBrowser = {
   window.On = (eventType, SelectorNode, func) => {
     if (is.Def(SelectorNode)) {
       if (is.String(SelectorNode)) {
-        forEach(queryAll(SelectorNode), el => el.addEventListener(eventType, e => func(e, e.target)));
+        forEach(queryAll(SelectorNode), el => el.addEventListener(eventType, e => func(e, el)));
       } else if (is.Node(SelectorNode) || SelectorNode === window || SelectorNode === document) {
-        SelectorNode.addEventListener(eventType, e => func(e, e.target));
+        SelectorNode.addEventListener(eventType, e => func(e, SelectorNode));
       } else if (is.NodeList(SelectorNode)) {
-        forEach(SelectorNode, el => el.addEventListener(eventType, e => func(e, e.target)));
+        forEach(SelectorNode, el => el.addEventListener(eventType, e => func(e, el)));
       } else if (is.Func(SelectorNode)) window.addEventListener(eventType, e => SelectorNode(e, e.target));
     }
   }
@@ -173,7 +173,7 @@ window.CurrentBrowser = {
     if (is.NodeList(element)) {
       element.forEach = func => {
         if (is.Func(func)) {
-          for (var index = 0; index < element.length; index++) func(craft(element[index]), index);
+          for (let index = 0; index < element.length; index++) func(craft(element[index]), index);
         } else log("err", "No function Provided for NodeList.forEach");
       }
       element.On = (eventType, func) => {
@@ -187,16 +187,16 @@ window.CurrentBrowser = {
       element.includes = SelectorNode => {
         if (is.String(SelectorNode)) SelectorNode = query(SelectorNode);
         if (is.Node(SelectorNode))
-          for (var index = 0; index < element.length; index++)
+          for (let index = 0; index < element.length; index++)
             if (element[index] === SelectorNode) return true;
         return false;
       }
       element.css = styles => (is.Def(styles)) ? forEach(element, el => forEach(styles, (prop, key) => el.style[key] = prop)) : log("err", 'invalid styles');
     } else if (is.Node(element)) {
       element.getSiblings = () => {
-        var siblings = [];
-        var AllChildren = element.parentNode.childNodes;
-        for (var i = 0; i < AllChildren.length; i++) {
+        let siblings = [];
+        let AllChildren = element.parentNode.childNodes;
+        for (let i = 0; i < AllChildren.length; i++) {
           if (AllChildren[i] !== element) siblings.push(AllChildren[i]);
         }
         return siblings;
@@ -204,12 +204,14 @@ window.CurrentBrowser = {
       element.getWidth = () => element.getBoundingClientRect().width;
       element.getHeight = () => element.getBoundingClientRect().height;
       element.getRect = () => element.getBoundingClientRect();
+      element.setWidth = Width => element.style.width = Height;
+      element.setHeight = Height => element.style.height = Height;
       element.On = (eventType, func) => {
         On(eventType, element, func);
         return element;
       }
       element.find = (selector, forceSelectAll, returncraft) => {
-        var Localelement = queryAll(selector, element);
+        let Localelement = queryAll(selector, element);
         if (Localelement.length > 1 || forceSelectAll === true && !is.Null(Localelement) && is.NodeList(Localelement)) {
           return craft(Localelement);
         } else if (!is.Null(Localelement) && is.Node(Localelement[0])) {
@@ -234,7 +236,7 @@ window.CurrentBrowser = {
         return false;
       }
       element.hasClass = (className, func) => {
-        var has = false;
+        let has = false;
         element.classList.contains(className) ? has = true : has = false;
         if (is.Def(func) && is.Func(func)) func(has);
         return has;
@@ -269,7 +271,7 @@ window.CurrentBrowser = {
         }
 
         if (is.Def(element.effectInProgress) && element.effectInProgress.status === true) {
-          var CheckDone = setInterval(() => {
+          let CheckDone = setInterval(() => {
             if (element.effectInProgress.status === false) {
               HideElement();
               clearInterval(CheckDone);
@@ -301,7 +303,7 @@ window.CurrentBrowser = {
 
         }
         if (is.Def(element.effectInProgress) && element.effectInProgress.status === true) {
-          var CheckDone = setInterval(() => {
+          let CheckDone = setInterval(() => {
             if (element.effectInProgress.status === false) {
               ShowElement();
               clearInterval(CheckDone);
@@ -318,15 +320,15 @@ window.CurrentBrowser = {
 
   window.Craft = {
     ArraytoObject: arr => {
-      var NewObject = {};
-      for (var i in arr)
+      let NewObject = {};
+      for (let i in arr)
         if (is.Def(arr[i])) NewObject[i] = arr[i];
       return NewObject;
     },
     IndexOfArrInArr: (Arr, searchArr) => {
-      for (var i = 0; i < searchArr.length; i++) {
+      for (let i = 0; i < searchArr.length; i++) {
         if (Arr[0] === searchArr[i]) {
-          for (var c = 0; c < Arr.length; c++) {
+          for (let c = 0; c < Arr.length; c++) {
             if (Arr[c] === searchArr[i + c]) {
               if (c == (Arr.length - 1)) {
                 return i
@@ -338,7 +340,7 @@ window.CurrentBrowser = {
       return -1
     },
     bindNode: (SelectorNode, ContextObject, func) => {
-      var element = is.Node(SelectorNode) ? SelectorNode : query(SelectorNode),
+      let element = is.Node(SelectorNode) ? SelectorNode : query(SelectorNode),
         Changes;
       if (is.Func(ContextObject)) {
         func = ContextObject;
@@ -358,7 +360,7 @@ window.CurrentBrowser = {
       } else log("err", "No matching element");
     },
     unbindNode: (SelectorNode, func) => {
-      var element = is.Node(SelectorNode) ? SelectorNode : query(SelectorNode);
+      let element = is.Node(SelectorNode) ? SelectorNode : query(SelectorNode);
       if (!is.Null(element)) {
         element.isbound = false;
         func(element);
@@ -367,7 +369,7 @@ window.CurrentBrowser = {
     after: function (n, func) {
       if (!is.Func(func)) {
         if (is.Func(n)) {
-          var temp = n;
+          let temp = n;
           n = func;
           func = temp;
         } else log("err", "after : func is not a function");
@@ -378,35 +380,35 @@ window.CurrentBrowser = {
       }
     },
     debounce: function (wait, func, immediate) {
-      var timeout;
+      let timeout;
       return function () {
-        var context = this,
+        let context = this,
           args = arguments;
-        var later = () => {
+        let later = () => {
           timeout = null;
           if (!immediate) func.apply(context, args);
         };
-        var callNow = immediate && !timeout;
+        let callNow = immediate && !timeout;
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);
         if (callNow) func.apply(context, args);
       };
     },
     throttle: function (wait, func, options) {
-      var context, args, result,
+      let context, args, result,
         timeout = null,
         previous = 0;
       if (!options) options = {};
-      var later = function () {
+      let later = function () {
         previous = options.leading === false ? 0 : Date.now();
         timeout = null;
         result = func.apply(context, args);
         if (!timeout) context = args = null;
       };
       return function () {
-        var now = Date.now();
+        let now = Date.now();
         if (!previous && options.leading === false) previous = now;
-        var remaining = wait - (now - previous);
+        let remaining = wait - (now - previous);
         context = this;
         args = arguments;
         if (remaining <= 0 || remaining > wait) {
@@ -422,7 +424,7 @@ window.CurrentBrowser = {
       };
     },
     once: function (func, context) {
-      var res;
+      let res;
       return function () {
         if (is.Func(func)) {
           res = func.apply(context || this, arguments);
@@ -433,7 +435,7 @@ window.CurrentBrowser = {
     },
     css: (el, styles) => (is.Def(styles, el) && is.Node(el)) ? forEach(styles, (prop, key) => el.style[key] = prop) : log('err', 'invalid args'),
     hasCapitals: string => {
-      for (var i = 0; i < string.length; i++)
+      for (let i = 0; i < string.length; i++)
         if (is.UpperCase(string[i])) return true;
       return false;
     },
@@ -450,12 +452,8 @@ window.CurrentBrowser = {
             if (key in hostobj) {
               if (is.Arr(hostobj[key])) {
                 if (!hostobj[key].includes(prop)) hostobj[key].push(prop);
-              } else if (prop !== hostobj[key]) {
-                hostobj[key] = [prop, hostobj[key]];
-              }
-            } else {
-              hostobj[key] = prop;
-            }
+              } else if (prop !== hostobj[key]) hostobj[key] = [prop, hostobj[key]];
+            } else hostobj[key] = prop;
           });
         });
       });
@@ -516,7 +514,7 @@ window.CurrentBrowser = {
       return queryAll(selector) !== null;
     },
     ObjToFormData: obj => {
-      var formData = new FormData(),
+      let formData = new FormData(),
         key;
       for (key in obj) formData.append(key, obj[key]);
       return formData;
@@ -529,7 +527,7 @@ window.CurrentBrowser = {
       },
       setItem: (item, itemValue, EndOfLife, Path, Domain, isSecure) => {
         if (!item || /^(?:expires|max\-age|path|domain|secure)$/i.test(item)) return false;
-        var EOLdate = "";
+        let EOLdate = "";
         if (EndOfLife) {
           if (is.Num(EndOfLife)) {
             EOLdate = EndOfLife === Infinity ? "; expires=Fri, 11 April 9997 23:59:59 GMT" : "; max-age=" + EndOfLife;
@@ -552,8 +550,8 @@ window.CurrentBrowser = {
         return (new RegExp("(?:^|;\\s*)" + encodeURIComponent(item).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=")).test(document.cookie);
       },
       CookieKeys: () => {
-        var Keys = document.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/);
-        for (var KeysLength = Keys.length, IDx = 0; IDx < KeysLength; IDx = IDx + 1) Keys[IDx] = decodeURIComponent(Keys[IDx]);
+        let Keys = document.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/);
+        for (let KeysLength = Keys.length, IDx = 0; IDx < KeysLength; IDx = IDx + 1) Keys[IDx] = decodeURIComponent(Keys[IDx]);
         return Keys;
       }
     },
@@ -583,7 +581,7 @@ window.CurrentBrowser = {
         } else if (cache) query(viewHostSelector).innerHTML = localStorage.getItem("RT_" + id);
       },
       clearCache: () => {
-        for (var i in localStorage)
+        for (let i in localStorage)
           if (localStorage.key(i).includes("RT_")) localStorage.removeItem(localStorage.key(i));
       },
     },
@@ -593,7 +591,7 @@ window.CurrentBrowser = {
       if (is.Undef(config)) {
         log("err", "Invalid Component Configuration");
       } else {
-        var element = Object.create(HTMLElement.prototype);
+        let element = Object.create(HTMLElement.prototype);
         forEach(config, (prop, key) => {
           if (key === 'created') {
             element.createdCallback = prop;
@@ -652,7 +650,7 @@ window.CurrentBrowser = {
       this.length = Object.keys(this.functions).length;
     }
     runEach() {
-      for (var i in this.functions) this.functions[i].apply(this, arguments);
+      for (let i in this.functions) this.functions[i].apply(this, arguments);
     }
     runOne(funcName, arg) {
       this.functions.hasOwnProperty(funcName) ? this.functions[funcName].apply(this, arg, arguments) : log("warn", "No Such Function Entry in FunctionIterator");
@@ -666,7 +664,7 @@ window.CurrentBrowser = {
     Craft.mouse.x = ev.clientX;
     Craft.mouse.y = ev.clientY;
   }
-  var DomReady = false,
+  let DomReady = false,
     Ready = (false && DomReady);
 
   On('DOMContentLoaded', () => {
@@ -688,7 +686,7 @@ window.CurrentBrowser = {
           setTimeout(() => resolve(Craft.Scope), 600);
         } else resolve(Craft.Scope);
       } else {
-        var ReadyYet = setInterval(() => {
+        let ReadyYet = setInterval(() => {
           if (Ready) {
             if (CurrentBrowser.browser.includes("Firefox") || CurrentBrowser.browser.includes("msie")) {
               setTimeout(() => resolve(Craft.Scope), 650);
