@@ -1,0 +1,7 @@
+#Folders
+bower_components
+node_modules
+
+#FileTypes
+*.log
+*.exe
