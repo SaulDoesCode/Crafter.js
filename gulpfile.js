@@ -80,6 +80,9 @@ gulp.task('watchWebComponents', function () {
   gulp.watch(['./src/pre-webcomponents/*.js', './src/pre-webcomponents/*.css'], ['build_webcomponents']);
 });
 
+gulp.task('watchSource', function () {
+  gulp.watch('./src/*.js', ['babel']);
+});
 
 gulp.task('polyfills', function () {
   gulp.src('./polyfills/*.js')

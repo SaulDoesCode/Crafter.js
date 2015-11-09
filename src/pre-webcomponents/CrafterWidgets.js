@@ -77,21 +77,28 @@
     if (e.animationName === 'nodeInserted' && is.Node(e.target)) {
       var element = e.target;
       if (e.target.hasAttribute('tooltip')) {
-        forEach(queryAll(`[owner="${e.target.tagName} ${e.target.className}"]`), el => {
-          el.remove()
-        });
+        forEach(queryAll(`[owner="${e.target.parentNode.tagName.toLowerCase()} ${e.target.tagName.toLowerCase()} ${e.target.className}"]`), el => el.remove());
         var show = false,
           tooltip = document.createElement('span');
         tooltip.appendChild(document.createElement('label'));
         tooltip.innerHTML += element.getAttribute('tooltip');
-        tooltip.setAttribute('owner', element.tagName + " " + element.className);
+        tooltip.setAttribute('owner', `owner="${e.target.parentNode.tagName} ${e.target.tagName} ${e.target.className}"`);
         if (element.hasAttribute('ripple')) tooltip.style.borderColor = element.getAttribute('ripple');
+        if (element.hasAttribute('color-accent')) tooltip.style.borderColor = element.getAttribute('color-accent');
 
-        if (element.getAttribute('tooltip-direction') === 'left') {
-          tooltip.classList.add('craft-tooltip-left');
+        if(element.hasAttribute('tooltip-direction')) {
+          let direction = element.getAttribute('tooltip-direction');
+          if (direction === 'left') {
+            tooltip.classList.add('craft-tooltip-left');
+          } else if (direction === 'down') {
+            tooltip.classList.add('craft-tooltip-down');
+          } else if (direction === 'up') {
+            tooltip.classList.add('craft-tooltip-up');
+          }
         } else {
           tooltip.classList.add('craft-tooltip');
         }
+
         var MoveElement = () => {
           var movecheck = setInterval(() => {
             if (show) {
