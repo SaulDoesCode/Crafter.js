@@ -12,7 +12,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
 
 var ua = navigator.userAgent,
-    tem,
+    tem = undefined,
     M = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
 if (M && (tem = ua.match(/version\/([\.\d]+)/i)) != null) M[2] = tem[1];
 M ? [M[1], M[2]] : [navigator.appName, navigator.appVersion, '-?'];
@@ -46,15 +46,17 @@ window.CurrentBrowser = {
     },
     Undef: function Undef() {
       if (arguments.length > 1) {
-        for (var i = 0; i < arguments.length; i++) if (typeof arguments[i] === 'undefined') return false;
-        return true;
+        for (var _i = 0; _i < arguments.length; _i++) {
+          if (typeof arguments[_i] === 'undefined') return false;
+        }return true;
       }
       return isT(arguments[0], 'undefined');
     },
     Def: function Def() {
       if (arguments.length > 1) {
-        for (var i = 0; i < arguments.length; i++) if (nT(arguments[i], 'undefined')) return false;
-        return true;
+        for (var _i2 = 0; _i2 < arguments.length; _i2++) {
+          if (nT(arguments[_i2], 'undefined')) return false;
+        }return true;
       }
       return nT(arguments[0], 'undefined');
     },
@@ -69,8 +71,9 @@ window.CurrentBrowser = {
     },
     Null: function Null(val) {
       if (arguments.length > 1) {
-        for (var i = 0; i < arguments.length; i++) if (arguments[i] === null) return true;
-        return false;
+        for (var _i3 = 0; _i3 < arguments.length; _i3++) {
+          if (arguments[_i3] === null) return true;
+        }return false;
       }
       return val === null;
     },
@@ -86,8 +89,9 @@ window.CurrentBrowser = {
       return Node;
     })(function (val) {
       if (arguments.length > 1) {
-        for (var i = 0; i < arguments.length; i++) if (is.Null(arguments[i]) || !(arguments[i] instanceof Node)) return false;
-        return true;
+        for (var _i4 = 0; _i4 < arguments.length; _i4++) {
+          if (is.Null(arguments[_i4]) || !(arguments[_i4] instanceof Node)) return false;
+        }return true;
       }
       return !is.Null(val) && val instanceof Node;
     }),
@@ -103,8 +107,9 @@ window.CurrentBrowser = {
       return NodeList;
     })(function (val) {
       if (arguments.length > 1) {
-        for (var i = 0; i < arguments.length; i++) if (arguments[i] === null || !(arguments[i] instanceof NodeList)) return false;
-        return true;
+        for (var _i5 = 0; _i5 < arguments.length; _i5++) {
+          if (arguments[_i5] === null || !(arguments[_i5] instanceof NodeList)) return false;
+        }return true;
       }
       return !is.Null(val) && val instanceof NodeList;
     }),
@@ -215,17 +220,17 @@ window.CurrentBrowser = {
       if (is.String(SelectorNode)) {
         forEach(queryAll(SelectorNode), function (el) {
           return el.addEventListener(eventType, function (e) {
-            return func(e, e.target);
+            return func(e, el);
           });
         });
       } else if (is.Node(SelectorNode) || SelectorNode === window || SelectorNode === document) {
         SelectorNode.addEventListener(eventType, function (e) {
-          return func(e, e.target);
+          return func(e, SelectorNode);
         });
       } else if (is.NodeList(SelectorNode)) {
         forEach(SelectorNode, function (el) {
           return el.addEventListener(eventType, function (e) {
-            return func(e, e.target);
+            return func(e, el);
           });
         });
       } else if (is.Func(SelectorNode)) window.addEventListener(eventType, function (e) {
@@ -262,7 +267,9 @@ window.CurrentBrowser = {
     if (is.NodeList(element)) {
       element.forEach = function (func) {
         if (is.Func(func)) {
-          for (var index = 0; index < element.length; index++) func(craft(element[index]), index);
+          for (var index = 0; index < element.length; index++) {
+            func(craft(element[index]), index);
+          }
         } else log("err", "No function Provided for NodeList.forEach");
       };
       element.On = function (eventType, func) {
@@ -279,8 +286,9 @@ window.CurrentBrowser = {
       };
       element.includes = function (SelectorNode) {
         if (is.String(SelectorNode)) SelectorNode = query(SelectorNode);
-        if (is.Node(SelectorNode)) for (var index = 0; index < element.length; index++) if (element[index] === SelectorNode) return true;
-        return false;
+        if (is.Node(SelectorNode)) for (var index = 0; index < element.length; index++) {
+          if (element[index] === SelectorNode) return true;
+        }return false;
       };
       element.css = function (styles) {
         return is.Def(styles) ? forEach(element, function (el) {
@@ -293,8 +301,8 @@ window.CurrentBrowser = {
       element.getSiblings = function () {
         var siblings = [];
         var AllChildren = element.parentNode.childNodes;
-        for (var i = 0; i < AllChildren.length; i++) {
-          if (AllChildren[i] !== element) siblings.push(AllChildren[i]);
+        for (var _i6 = 0; _i6 < AllChildren.length; _i6++) {
+          if (AllChildren[_i6] !== element) siblings.push(AllChildren[_i6]);
         }
         return siblings;
       };
@@ -306,6 +314,12 @@ window.CurrentBrowser = {
       };
       element.getRect = function () {
         return element.getBoundingClientRect();
+      };
+      element.setWidth = function (Width) {
+        return element.style.width = Height;
+      };
+      element.setHeight = function (Height) {
+        return element.style.height = Height;
       };
       element.On = function (eventType, func) {
         On(eventType, element, func);
@@ -346,9 +360,9 @@ window.CurrentBrowser = {
         if (is.Def(func) && is.Func(func)) func(has);
         return has;
       };
-      element.isTag = function (Tagname, func) {
-        if (element.tagName === Tagname.toUpperCase()) {
-          if (is.Def(func) && is.Func(func)) func(craft(element));
+      element.isTag = function (tagName, func) {
+        if (element.tagName === tagName.toUpperCase()) {
+          if (is.Func(func)) func(craft(element));
           return true;
         }
         return false;
@@ -380,12 +394,14 @@ window.CurrentBrowser = {
         }
 
         if (is.Def(element.effectInProgress) && element.effectInProgress.status === true) {
-          var CheckDone = setInterval(function () {
-            if (element.effectInProgress.status === false) {
-              HideElement();
-              clearInterval(CheckDone);
-            }
-          }, 10);
+          (function () {
+            var CheckDone = setInterval(function () {
+              if (element.effectInProgress.status === false) {
+                HideElement();
+                clearInterval(CheckDone);
+              }
+            }, 10);
+          })();
         } else HideElement();
         return element;
       };
@@ -411,12 +427,14 @@ window.CurrentBrowser = {
           }, speed);
         }
         if (is.Def(element.effectInProgress) && element.effectInProgress.status === true) {
-          var CheckDone = setInterval(function () {
-            if (element.effectInProgress.status === false) {
-              ShowElement();
-              clearInterval(CheckDone);
-            }
-          }, 10);
+          (function () {
+            var CheckDone = setInterval(function () {
+              if (element.effectInProgress.status === false) {
+                ShowElement();
+                clearInterval(CheckDone);
+              }
+            }, 10);
+          })();
         } else ShowElement();
         return element;
       };
@@ -428,16 +446,17 @@ window.CurrentBrowser = {
   window.Craft = {
     ArraytoObject: function ArraytoObject(arr) {
       var NewObject = {};
-      for (var i in arr) if (is.Def(arr[i])) NewObject[i] = arr[i];
-      return NewObject;
+      for (var _i7 in arr) {
+        if (is.Def(arr[_i7])) NewObject[_i7] = arr[_i7];
+      }return NewObject;
     },
     IndexOfArrInArr: function IndexOfArrInArr(Arr, searchArr) {
-      for (var i = 0; i < searchArr.length; i++) {
-        if (Arr[0] === searchArr[i]) {
+      for (var _i8 = 0; _i8 < searchArr.length; _i8++) {
+        if (Arr[0] === searchArr[_i8]) {
           for (var c = 0; c < Arr.length; c++) {
-            if (Arr[c] === searchArr[i + c]) {
+            if (Arr[c] === searchArr[_i8 + c]) {
               if (c == Arr.length - 1) {
-                return i;
+                return _i8;
               } else continue;
             } else break;
           }
@@ -447,7 +466,7 @@ window.CurrentBrowser = {
     },
     bindNode: function bindNode(SelectorNode, ContextObject, func) {
       var element = is.Node(SelectorNode) ? SelectorNode : query(SelectorNode),
-          Changes;
+          Changes = undefined;
       if (is.Func(ContextObject)) {
         func = ContextObject;
         ContextObject = Craft.Scope;
@@ -486,7 +505,7 @@ window.CurrentBrowser = {
       };
     },
     debounce: function debounce(wait, func, immediate) {
-      var timeout;
+      var timeout = undefined;
       return function () {
         var context = this,
             args = arguments;
@@ -501,9 +520,9 @@ window.CurrentBrowser = {
       };
     },
     throttle: function throttle(wait, func, options) {
-      var context,
-          args,
-          result,
+      var context = undefined,
+          args = undefined,
+          result = undefined,
           timeout = null,
           previous = 0;
       if (!options) options = {};
@@ -532,7 +551,7 @@ window.CurrentBrowser = {
       };
     },
     once: function once(func, context) {
-      var res;
+      var res = undefined;
       return function () {
         if (is.Func(func)) {
           res = func.apply(context || this, arguments);
@@ -547,14 +566,15 @@ window.CurrentBrowser = {
       }) : log('err', 'invalid args');
     },
     hasCapitals: function hasCapitals(string) {
-      for (var i = 0; i < string.length; i++) if (is.UpperCase(string[i])) return true;
-      return false;
+      for (var _i9 = 0; _i9 < string.length; _i9++) {
+        if (is.UpperCase(string[_i9])) return true;
+      }return false;
     },
     OverrideFunction: function OverrideFunction(funcName, Func, ContextObject) {
       var namespaces = funcName.split("."),
           func = namespaces.pop();
-      for (var _i = 0; _i < namespaces.length; _i++) {
-        ContextObject = ContextObject[namespaces[_i]];
+      for (var _i10 = 0; _i10 < namespaces.length; _i10++) {
+        ContextObject = ContextObject[namespaces[_i10]];
       }ContextObject[func] = Func;
     },
     concatObjects: function concatObjects(hostobj) {
@@ -568,12 +588,8 @@ window.CurrentBrowser = {
             if (key in hostobj) {
               if (is.Arr(hostobj[key])) {
                 if (!hostobj[key].includes(prop)) hostobj[key].push(prop);
-              } else if (prop !== hostobj[key]) {
-                hostobj[key] = [prop, hostobj[key]];
-              }
-            } else {
-              hostobj[key] = prop;
-            }
+              } else if (prop !== hostobj[key]) hostobj[key] = [prop, hostobj[key]];
+            } else hostobj[key] = prop;
           });
         });
       });
@@ -589,21 +605,15 @@ window.CurrentBrowser = {
     len: function len(val) {
       if (is.Object(val)) return Object.keys(val).length;
       if (is.Map(val) || is.Set(val)) return val.size;
-      var val_length = undefined;
       try {
-        val_length = val.length;
+        return val.length;
       } catch (e) {
-        try {
-          val_length = val.size;
-        } catch (err) {
-          log('err', 'could not find length of value');
-        }
+        log('err', 'could not find length of value');
       }
-      return val_length;
     },
     indexOfDate: function indexOfDate(Collection, date) {
-      for (var _i2 = 0; _i2 < undefined.length; _i2++) {
-        if (+undefined[_i2] === +date) return _i2;
+      for (var _i11 = 0; _i11 < undefined.length; _i11++) {
+        if (+undefined[_i11] === +date) return _i11;
       }return -1;
     },
     removeArrItem: function removeArrItem(Arr, val) {
@@ -640,47 +650,12 @@ window.CurrentBrowser = {
     },
     ObjToFormData: function ObjToFormData(obj) {
       var formData = new FormData(),
-          key;
+          key = undefined;
       for (key in obj) formData.append(key, obj[key]);
       return formData;
     },
     URLfrom: function URLfrom(text) {
       return URL.createObjectURL(new Blob([text]));
-    },
-    cookie: {
-      getItem: function getItem(item) {
-        if (!item) return null;
-        return decodeURIComponent(document.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" + encodeURIComponent(item).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1")) || null;
-      },
-      setItem: function setItem(item, itemValue, EndOfLife, Path, Domain, isSecure) {
-        if (!item || /^(?:expires|max\-age|path|domain|secure)$/i.test(item)) return false;
-        var EOLdate = "";
-        if (EndOfLife) {
-          if (is.Num(EndOfLife)) {
-            EOLdate = EndOfLife === Infinity ? "; expires=Fri, 11 April 9997 23:59:59 GMT" : "; max-age=" + EndOfLife;
-          } else if (is.String(EndOfLife)) {
-            EOLdate = "; expires=" + EndOfLife;
-          } else if (is.Date(EndOfLife)) {
-            EOLdate = "; expires=" + EndOfLife.toUTCString();
-          } else log("err", "Expiry date is not a Number/String/Date");
-        }
-        document.cookie = encodeURIComponent(item) + "=" + encodeURIComponent(itemValue) + EOLdate + (Domain ? "; domain=" + Domain : "") + (Path ? "; path=" + Path : "") + (isSecure ? "; secure" : "");
-        return true;
-      },
-      removeItem: function removeItem(item, Path, Domain) {
-        if (!Craft.cookie.itemExists(item)) return false;
-        document.cookie = encodeURIComponent(item) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT" + (Domain ? "; domain=" + Domain : "") + (Path ? "; path=" + Path : "");
-        return true;
-      },
-      itemExists: function itemExists(item) {
-        if (!item) return false;
-        return new RegExp("(?:^|;\\s*)" + encodeURIComponent(item).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=").test(document.cookie);
-      },
-      CookieKeys: function CookieKeys() {
-        var Keys = document.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/);
-        for (var KeysLength = Keys.length, IDx = 0; IDx < KeysLength; IDx = IDx + 1) Keys[IDx] = decodeURIComponent(Keys[IDx]);
-        return Keys;
-      }
     },
     OnResize: function OnResize(func) {
       return is.Func(func) ? Craft.ResizeHandlers.add(func) : log("err", "TypeError : Craft.OnResize -> func is not a function");
@@ -734,7 +709,9 @@ window.CurrentBrowser = {
         } else if (cache) query(viewHostSelector).innerHTML = localStorage.getItem("RT_" + id);
       },
       clearCache: function clearCache() {
-        for (var i in localStorage) if (localStorage.key(i).includes("RT_")) localStorage.removeItem(localStorage.key(i));
+        for (var _i12 in localStorage) {
+          if (localStorage.key(_i12).includes("RT_")) localStorage.removeItem(localStorage.key(_i12));
+        }
       }
     },
     randomString: function randomString() {
@@ -747,30 +724,32 @@ window.CurrentBrowser = {
       if (is.Undef(config)) {
         log("err", "Invalid Component Configuration");
       } else {
-        var element = Object.create(HTMLElement.prototype);
-        forEach(config, function (prop, key) {
-          if (key === 'created') {
-            element.createdCallback = prop;
-          } else if (key === 'inserted') {
-            element.attachedCallback = prop;
-          } else if (key === 'destroyed') {
-            element.detachedCallback = prop;
-          } else if (key === 'attr') {
-            element.attributeChangedCallback = prop;
-          } else if (is.Func(prop)) {
-            element[key] = prop;
-          } else if (key !== 'extends' && !is.Func(prop)) element[key] = prop;
-        });
-        if ('extends' in config) {
-          document.registerElement(Name, {
-            prototype: element,
-            extends: config.extends
+        (function () {
+          var element = Object.create(HTMLElement.prototype);
+          forEach(config, function (prop, key) {
+            if (key === 'created') {
+              element.createdCallback = prop;
+            } else if (key === 'inserted') {
+              element.attachedCallback = prop;
+            } else if (key === 'destroyed') {
+              element.detachedCallback = prop;
+            } else if (key === 'attr') {
+              element.attributeChangedCallback = prop;
+            } else if (is.Func(prop)) {
+              element[key] = prop;
+            } else if (key !== 'extends' && !is.Func(prop)) element[key] = prop;
           });
-        } else {
-          document.registerElement(Name, {
-            prototype: element
-          });
-        }
+          if ('extends' in config) {
+            document.registerElement(Name, {
+              prototype: element,
+              extends: config.extends
+            });
+          } else {
+            document.registerElement(Name, {
+              prototype: element
+            });
+          }
+        })();
       }
     }
   };
@@ -819,7 +798,9 @@ window.CurrentBrowser = {
     }, {
       key: 'runEach',
       value: function runEach() {
-        for (var i in this.functions) this.functions[i].apply(this, arguments);
+        for (var _i13 in this.functions) {
+          this.functions[_i13].apply(this, arguments);
+        }
       }
     }, {
       key: 'runOne',
@@ -870,20 +851,22 @@ window.CurrentBrowser = {
           }, 600);
         } else resolve(Craft.Scope);
       } else {
-        var ReadyYet = setInterval(function () {
-          if (Ready) {
-            if (CurrentBrowser.browser.includes("Firefox") || CurrentBrowser.browser.includes("msie")) {
-              setTimeout(function () {
-                return resolve(Craft.Scope);
-              }, 650);
-              resolve(Craft.Scope);
-            } else resolve(Craft.Scope);
-            clearInterval(ReadyYet);
-          }
-        }, 50);
-        setTimeout(function () {
-          if (!Ready) reject("WebComponents didn't load correctly/intime -> load failed");
-        }, 4500);
+        (function () {
+          var ReadyYet = setInterval(function () {
+            if (Ready) {
+              if (CurrentBrowser.browser.includes("Firefox") || CurrentBrowser.browser.includes("msie")) {
+                setTimeout(function () {
+                  return resolve(Craft.Scope);
+                }, 650);
+                resolve(Craft.Scope);
+              } else resolve(Craft.Scope);
+              clearInterval(ReadyYet);
+            }
+          }, 50);
+          setTimeout(function () {
+            if (!Ready) reject("WebComponents didn't load correctly/intime -> load failed");
+          }, 4500);
+        })();
       }
     });
   };

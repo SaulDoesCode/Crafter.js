@@ -4,7 +4,9 @@
 (function (document) {
   Craft.WigetsDefined = true;
 
-  window.Ripple = function (SelectorOrNode, options) {
+  self.Ripple = function (SelectorOrNode) {
+    var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
     var color = options.color || undefined,
         timing = options.timing || 1000;
     SelectorOrNode = Array.from(is.String(SelectorOrNode) ? queryAll(SelectorOrNode) : is.NodeList(SelectorOrNode) ? SelectorOrNode : [SelectorOrNode]);
@@ -32,7 +34,7 @@
       };
       element.onmouseup = function (e) {
         return forEach(queryAll('.circle', element), function (Childcircle) {
-          if (Childcircle !== null) setTimeout(function () {
+          if (!is.Null(Childcircle)) setTimeout(function () {
             return Childcircle.remove();
           }, timing);
         });
@@ -73,131 +75,138 @@
     }
   });
 
-  On('hashchange', function (e) {
-    forEach(queryAll('context-menu'), function (el) {
-      return el.Show();
-    });
-    forEach(queryAll('[ripple]'), function (el) {
-      return Ripple(el, {});
-    });
-  });
   On('blur', function (e) {
     return forEach(queryAll('context-menu'), function (el) {
       return el.Show();
     });
   });
   On('click', document, function (e) {
-    if (is.Node(e.target) && !is.Null(e.target, e.target.parentNode) && e.target.tagName !== 'SECTION' && e.target.parentNode.tagName !== 'CONTEXT-MENU') forEach(queryAll('context-menu'), function (el) {
+    if (is.Node(e.target, e.target.parentNode) && e.target.tagName !== 'SECTION' && e.target.parentNode.tagName !== 'CONTEXT-MENU') forEach(queryAll('context-menu'), function (el) {
       return el.Show();
     });
   });
-
-  On('DOMContentLoaded', function (e) {
-    return forEach(queryAll('[ripple]'), function (el) {
-      return Ripple(el, {});
-    });
-  });
-
+  var element = undefined;
   On('animationstart', document, function (e) {
     if (e.animationName === 'nodeInserted' && is.Node(e.target)) {
-      var element = e.target;
-      if (e.target.hasAttribute('tooltip')) {
-        forEach(queryAll("[owner=\"" + e.target.parentNode.tagName.toLowerCase() + " " + e.target.tagName.toLowerCase() + " " + e.target.className + "\"]"), function (el) {
-          return el.remove();
-        });
-        var show = false,
-            tooltip = document.createElement('span');
-        tooltip.appendChild(document.createElement('label'));
-        tooltip.innerHTML += element.getAttribute('tooltip');
-        tooltip.setAttribute('owner', "owner=\"" + e.target.parentNode.tagName + " " + e.target.tagName + " " + e.target.className + "\"");
-        if (element.hasAttribute('ripple')) tooltip.style.borderColor = element.getAttribute('ripple');
-        if (element.hasAttribute('color-accent')) tooltip.style.borderColor = element.getAttribute('color-accent');
+      element = e.target;
+      if (element.hasAttribute('ripple')) Ripple(element);
+      if (element.hasAttribute('tooltip')) {
+        (function () {
+          forEach(queryAll("[owner=\"" + e.target.parentNode.tagName.toLowerCase() + " " + e.target.tagName.toLowerCase() + " " + e.target.className + "\"]"), function (el) {
+            return el.remove();
+          });
+          var show = false,
+              tooltip = document.createElement('span');
+          tooltip.appendChild(document.createElement('label'));
+          tooltip.innerHTML += element.getAttribute('tooltip');
+          tooltip.setAttribute('owner', "owner=\"" + e.target.parentNode.tagName + " " + e.target.tagName + " " + e.target.className + "\"");
+          if (element.hasAttribute('ripple')) tooltip.style.borderColor = element.getAttribute('ripple');
+          if (element.hasAttribute('color-accent')) tooltip.style.borderColor = element.getAttribute('color-accent');
 
-        if (element.hasAttribute('tooltip-direction')) {
-          var direction = element.getAttribute('tooltip-direction');
-          if (direction === 'left') {
-            tooltip.classList.add('craft-tooltip-left');
-          } else if (direction === 'down') {
-            tooltip.classList.add('craft-tooltip-down');
-          } else if (direction === 'up') {
-            tooltip.classList.add('craft-tooltip-up');
-          }
-        } else {
-          tooltip.classList.add('craft-tooltip');
-        }
+          if (element.hasAttribute('tooltip-direction')) {
+            var direction = element.getAttribute('tooltip-direction');
+            if (direction === 'left') {
+              tooltip.classList.add('craft-tooltip-left');
+            } else if (direction === 'down') {
+              tooltip.classList.add('craft-tooltip-down');
+            } else if (direction === 'up') tooltip.classList.add('craft-tooltip-up');
+          } else tooltip.classList.add('craft-tooltip');
 
-        var MoveElement = function MoveElement() {
-          var movecheck = setInterval(function () {
-            if (show) {
-              tooltip.style.left = Craft.mouse.x + 'px';
-              tooltip.style.top = Craft.mouse.y + 'px';
-            } else clearInterval(movecheck);
-          }, 5);
-        };
+          var moveTooltip = function moveTooltip() {
+            var movecheck = setInterval(function () {
+              if (show) {
+                tooltip.style.left = Craft.mouse.x + 'px';
+                tooltip.style.top = Craft.mouse.y + 'px';
+              } else clearInterval(movecheck);
+            }, 5);
+          };
 
-        element.onmouseenter = function (ev) {
-          show = true;
-          MoveElement();
-          if (ev.target !== element || ev.target.parentNode !== element) {
-            tooltip.style.display = show ? 'block' : 'none';
-            setTimeout(function () {
-              return tooltip.style.opacity = show ? '1' : '0';
-            }, 10);
-          } else {
-            if (element.hasAttribute('tooltip-delay')) {
-              setTimeout(function () {
-                tooltip.style.display = show ? 'block' : 'none';
-                setTimeout(function () {
-                  return tooltip.style.opacity = show ? '1' : '0';
-                }, 10);
-              }, parseInt(element.getAttribute('tooltip-delay')));
-            } else {
+          element.onmouseenter = function (ev) {
+            show = true;
+            moveTooltip();
+            if (ev.target !== element || ev.target.parentNode !== element) {
               tooltip.style.display = show ? 'block' : 'none';
               setTimeout(function () {
                 return tooltip.style.opacity = show ? '1' : '0';
               }, 10);
+            } else {
+              if (element.hasAttribute('tooltip-delay')) {
+                setTimeout(function () {
+                  tooltip.style.display = show ? 'block' : 'none';
+                  setTimeout(function () {
+                    return tooltip.style.opacity = show ? '1' : '0';
+                  }, 10);
+                }, parseInt(element.getAttribute('tooltip-delay')));
+              } else {
+                tooltip.style.display = show ? 'block' : 'none';
+                setTimeout(function () {
+                  return tooltip.style.opacity = show ? '1' : '0';
+                }, 10);
+              }
             }
-          }
-        };
-        element.onmouseleave = function (e) {
-          show = false;
-          tooltip.style.display = show ? 'block' : 'none';
-          setTimeout(function () {
-            return tooltip.style.opacity = show ? '1' : '0';
-          }, 10);
-        };
-        document.body.appendChild(tooltip);
+          };
+          element.onmouseleave = function (e) {
+            show = false;
+            tooltip.style.display = show ? 'block' : 'none';
+            setTimeout(function () {
+              return tooltip.style.opacity = show ? '1' : '0';
+            }, 10);
+          };
+          document.body.appendChild(tooltip);
+        })();
       }
-      if (e.target.hasAttribute('movable')) {
+      if (element.hasAttribute('movable')) {
+        (function () {
+          var MoveElement = undefined;
+          if (element.hasAttribute('movable-scope')) {
+            (function () {
+              var moveScope = query(element.getAttribute('movable-scope')).getBoundingClientRect();
+              var elementDimentions = element.getBoundingClientRect();
+              console.log(moveScope);
+              console.log(elementDimentions);
+              MoveElement = function () {
+                var movecheck = setInterval(function () {
+                  //log(is.lt(elementDimentions.left,moveScope.right) && is.lt(elementDimentions.bottom,moveScope.bottom))
+                  if (elementinfo.movable) {
+                    if (is.bt(elementDimentions.left, moveScope.right) && is.bt(elementDimentions.bottom, moveScope.bottom)) {
+                      element.style.left = Craft.mouse.x - (elementinfo.mouseX - elementinfo.rect.left) + 'px';
+                      element.style.top = Craft.mouse.y - (elementinfo.mouseY - elementinfo.rect.top) + 'px';
+                    }
+                  } else clearInterval(movecheck);
+                }, 2);
+              };
+            })();
+          } else {
+            MoveElement = function () {
+              var movecheck = setInterval(function () {
+                if (elementinfo.movable) {
+                  element.style.left = Craft.mouse.x - (elementinfo.mouseX - elementinfo.rect.left) + 'px';
+                  element.style.top = Craft.mouse.y - (elementinfo.mouseY - elementinfo.rect.top) + 'px';
+                } else clearInterval(movecheck);
+              }, 2);
+            };
+          }
 
-        var MoveElement = function MoveElement() {
-          var movecheck = setInterval(function () {
-            if (elementinfo.movable) {
-              element.style.left = Craft.mouse.x - (elementinfo.mouseX - elementinfo.rect.left) + 'px';
-              element.style.top = Craft.mouse.y - (elementinfo.mouseY - elementinfo.rect.top) + 'px';
-            } else clearInterval(movecheck);
-          }, 5);
-        };
+          element.style.position = 'absolute';
+          var elementinfo = {
+            movable: false,
+            rect: element.getBoundingClientRect(),
+            mouseX: Craft.mouse.x,
+            mouseY: Craft.mouse.y
+          },
+              movehandle = query('[movehandle]', element);
+          On('mousedown', !is.Null(movehandle) ? movehandle : element, function (e) {
+            elementinfo.movable = true;
+            elementinfo.rect = element.getBoundingClientRect();
+            elementinfo.mouseX = e.clientX;
+            elementinfo.mouseY = e.clientY;
+            MoveElement();
+          });
 
-        element.style.position = 'absolute';
-        var elementinfo = {
-          movable: false,
-          rect: element.getBoundingClientRect(),
-          mouseX: Craft.mouse.x,
-          mouseY: Craft.mouse.y
-        };
-        var movehandle = query('[movehandle]', element);
-        On('mousedown', movehandle !== null ? movehandle : element, function (e) {
-          elementinfo.movable = true;
-          elementinfo.rect = element.getBoundingClientRect();
-          elementinfo.mouseX = e.clientX;
-          elementinfo.mouseY = e.clientY;
-          MoveElement();
-        });
-
-        On('mouseup', document, function (e) {
-          return elementinfo.movable = false;
-        });
+          On('mouseup', document, function (e) {
+            return elementinfo.movable = false;
+          });
+        })();
       }
     }
   });
@@ -211,7 +220,7 @@
     opacity: 1;
   }
 }
-[tooltip], [movable] {
+[tooltip], [movable] , [ripple] {
   animation-duration: 0.001s;
   animation-name: nodeInserted;
 }

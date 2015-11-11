@@ -1,97 +1,77 @@
 'use strict';
 
-(function (document) {
-  var PreKey = 'craft:';
-
-  function CraftImport(obj) {
-    var src, promise;
-    src = Craftloader.get(obj.key || obj.url);
-    obj.execute = obj.execute !== false;
-    if (!src || src.expire - +new Date() < 0 || obj.unique !== src.unique) {
-      if (obj.unique) obj.url += (obj.url.indexOf('?') > 0 ? '&' : '?') + 'unique=' + obj.unique;
-      promise = new Promise(function (success, failure) {
-        fetch(obj.url).then(function (res) {
-          res.text().then(function (content) {
-            var now = +new Date();
-            obj.data = content;
-            obj.stamp = now;
-            obj.expire = now + (obj.expire || 4000) * 60 * 60 * 1000;
-            if (!obj.noCache) {
-              try {
-                localStorage.setItem(PreKey + (obj.key || obj.url), JSON.stringify(obj));
-              } catch (e) {
-                e.name.toUpperCase().includes('QUOTA') ? console.warn('localStorage is over QUOTA :' + e) : console.warn("couldn't cache Module executing locally: " + e);
-              }
-            }
-            success(obj);
-          });
-        }).catch(function (res) {
-          return failure('Could not fetch Craftloader import -> ' + res);
-        });
-      });
-    } else {
-      src.execute = obj.execute;
-      promise = new Promise(function (resolve) {
-        return resolve(src);
-      });
+(function () {
+  var pre = 'craft:',
+      doc = document,
+      def = function def() {
+    for (var _len = arguments.length, obj = Array(_len), _key = 0; _key < _len; _key++) {
+      obj[_key] = arguments[_key];
     }
-    return promise;
-  }
 
-  function execute(sources) {
-    return sources.map(function (obj) {
-      if (obj.execute) {
-        var execEl;
-        obj.type === 'css' ? execEl = document.createElement('style') : execEl = document.createElement('script');
-        if (obj.type !== 'css') execEl.defer = obj.defer || false;
-        execEl.innerHTML = obj.data;
-        document.head.appendChild(execEl);
-      }
-      return obj;
+    return obj.every(function (o) {
+      return o !== undefined;
     });
-  }
-
-  window.Craftloader = {
+  },
+      CraftImport = function CraftImport(obj) {
+    var now = +new Date(),
+        key = obj.key || obj.url,
+        src = Craftloader.get(key);
+    if (src || src.expire - now > 0) return new Promise(function (resolve) {
+      return resolve(src);
+    });
+    return new Promise(function (success, failed) {
+      return fetch(obj.url).then(function (res) {
+        return res.text().then(function (data) {
+          obj.data = data;
+          obj.stamp = now;
+          obj.expire = now + (obj.expire || 4000) * 60 * 60 * 1000;
+          if (obj.cache) localStorage.setItem(pre + key, JSON.stringify(obj));
+          success(obj);
+        });
+      }).catch(function (err) {
+        return failed('Craftloader: problem fetching import -> ' + err);
+      });
+    });
+  },
+      execute = function execute(src) {
+    return src.map(function (obj) {
+      var el = obj.type === 'css' ? doc.createElement('style') : doc.createElement('script');
+      el.defer = obj.defer || undefined;
+      el.innerHTML = obj.data;
+      if (obj.exec) doc.head.appendChild(el);
+    });
+  };
+  self.Craftloader = {
     Import: function Import() {
-      var obj,
-          promises = [];
-      for (var i = 0; i < arguments.length; i++) {
-        if (arguments[i].test !== undefined && arguments[i].test === false || arguments[i].execute !== undefined && arguments[i].execute === false) {
-          if (arguments[i].test === false) Craftloader.remove(arguments[i].css || arguments[i].script || arguments[i].url);
-        } else {
-          obj = {
-            url: arguments[i].script || arguments[i].css || arguments[i].url,
-            type: arguments[i].css ? 'css' : 'script'
-          };
-          if (obj.url === undefined || obj.url === '' || obj.url === null) return console.error('no script/css/url found');
-          if (arguments[i].noCache === true) obj.noCache = true;
-          if (arguments[i].key !== undefined) obj.key = arguments[i].key;
-          if (arguments[i].defer !== undefined) obj.defer = obj.key;
-          if (arguments[i].expire !== undefined) obj.expire = arguments[i].expire;
-          promises.push(CraftImport(obj));
-        }
+      for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+        args[_key2] = arguments[_key2];
       }
+
+      var obj = undefined,
+          promises = [];
+      args.forEach(function (arg) {
+        obj = { url: arg.css || arg.script, type: arg.css ? 'css' : 'script', exec: arg.execute !== false, cache: arg.noCache !== false };
+        if (def(arg.key)) obj.key = arg.key;
+        if (def(arg.defer)) obj.defer = arg.defer;
+        if (def(arg.expire)) obj.expire = arg.expire;
+        arg.test === false ? Craftloader.remove(obj.url) : promises.push(CraftImport(obj));
+      });
       return Promise.all(promises).then(execute);
     },
-    remove: function remove(key) {
-      return localStorage.removeItem(PreKey + key);
+    setPrekey: function setPrekey(str) {
+      return pre = str + ':';
     },
     get: function get(key) {
-      try {
-        return JSON.parse(localStorage.getItem(PreKey + key) || false);
-      } catch (e) {
-        return undefined;
-      }
+      return JSON.parse(localStorage.getItem(key.includes(pre) ? key : pre + key) || false);
+    },
+    remove: function remove(key) {
+      return localStorage.removeItem(key.includes(pre) ? key : pre + key);
     },
     removeAll: function removeAll(expired) {
-      var mod,
-          key,
-          now = +new Date();
-      for (mod in localStorage) {
-        key = mod.split(PreKey)[1];
-        if (key && (!expired || Craftloader.get(key).expire <= now)) Craftloader.remove(key);
+      for (var i in localStorage) {
+        if (!expired || Craftloader.get(i).expire <= +new Date()) Craftloader.remove(i);
       }
     }
   };
   Craftloader.removeAll(true);
-})(document);
+})();

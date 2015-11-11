@@ -3,14 +3,14 @@
 (document => {
   Craft.WigetsDefined = true;
 
-  window.Ripple = function (SelectorOrNode, options) {
-    var color = options.color || undefined,
+  self.Ripple = function (SelectorOrNode, options = {}) {
+    let color = options.color || undefined,
       timing = options.timing || 1000;
     SelectorOrNode = Array.from((is.String(SelectorOrNode) ? queryAll(SelectorOrNode) : is.NodeList(SelectorOrNode) ? SelectorOrNode : [SelectorOrNode]));
     SelectorOrNode.forEach(element => {
       if (element.hasAttribute("ripple")) color = element.getAttribute("ripple");
       element.onmousedown = e => {
-        var circle = document.createElement('div'),
+        let circle = document.createElement('div'),
           Dimentions = element.getBoundingClientRect(),
           diameter = Math.max(Dimentions.width, Dimentions.height),
           x = e.clientX - Dimentions.left - (diameter / 2),
@@ -28,7 +28,7 @@
         if (is.Def(circle)) setTimeout(() => circle.remove(), timing);
       }
       element.onmouseup = e => forEach(queryAll('.circle', element), Childcircle => {
-        if (Childcircle !== null) setTimeout(() => Childcircle.remove(), timing);
+        if (!is.Null(Childcircle)) setTimeout(() => Childcircle.remove(), timing);
       });
     });
   }
@@ -36,7 +36,7 @@
   Craft.newComponent('context-menu', {
     created: function () {
       this.show = false;
-      var scope = Array.from(queryAll(this.getAttribute('scope')));
+      let scope = Array.from(queryAll(this.getAttribute('scope')));
       if (this.hasAttribute('scope') && queryAll(this.getAttribute('scope')) !== null) {
         forEach(queryAll(this.getAttribute('scope')), el => {
           el.oncontextmenu = ev => {
@@ -62,23 +62,18 @@
     }
   });
 
-  On('hashchange', e => {
-    forEach(queryAll('context-menu'), el => el.Show());
-    forEach(queryAll('[ripple]'), el => Ripple(el, {}))
-  });
   On('blur', e => forEach(queryAll('context-menu'), el => el.Show()));
   On('click', document, e => {
-    if (is.Node(e.target) && !is.Null(e.target, e.target.parentNode) && e.target.tagName !== 'SECTION' && e.target.parentNode.tagName !== 'CONTEXT-MENU') forEach(queryAll('context-menu'), el => el.Show());
+    if (is.Node(e.target, e.target.parentNode) && e.target.tagName !== 'SECTION' && e.target.parentNode.tagName !== 'CONTEXT-MENU') forEach(queryAll('context-menu'), el => el.Show());
   });
-
-  On('DOMContentLoaded', e => forEach(queryAll('[ripple]'), el => Ripple(el, {})));
-
+  let element;
   On('animationstart', document, e => {
     if (e.animationName === 'nodeInserted' && is.Node(e.target)) {
-      var element = e.target;
-      if (e.target.hasAttribute('tooltip')) {
+      element = e.target;
+      if (element.hasAttribute('ripple')) Ripple(element);
+      if (element.hasAttribute('tooltip')) {
         forEach(queryAll(`[owner="${e.target.parentNode.tagName.toLowerCase()} ${e.target.tagName.toLowerCase()} ${e.target.className}"]`), el => el.remove());
-        var show = false,
+        let show = false,
           tooltip = document.createElement('span');
         tooltip.appendChild(document.createElement('label'));
         tooltip.innerHTML += element.getAttribute('tooltip');
@@ -86,21 +81,17 @@
         if (element.hasAttribute('ripple')) tooltip.style.borderColor = element.getAttribute('ripple');
         if (element.hasAttribute('color-accent')) tooltip.style.borderColor = element.getAttribute('color-accent');
 
-        if(element.hasAttribute('tooltip-direction')) {
+        if (element.hasAttribute('tooltip-direction')) {
           let direction = element.getAttribute('tooltip-direction');
           if (direction === 'left') {
             tooltip.classList.add('craft-tooltip-left');
           } else if (direction === 'down') {
             tooltip.classList.add('craft-tooltip-down');
-          } else if (direction === 'up') {
-            tooltip.classList.add('craft-tooltip-up');
-          }
-        } else {
-          tooltip.classList.add('craft-tooltip');
-        }
+          } else if (direction === 'up') tooltip.classList.add('craft-tooltip-up');
+        } else tooltip.classList.add('craft-tooltip');
 
-        var MoveElement = () => {
-          var movecheck = setInterval(() => {
+        let moveTooltip = () => {
+          let movecheck = setInterval(() => {
             if (show) {
               tooltip.style.left = Craft.mouse.x + 'px';
               tooltip.style.top = Craft.mouse.y + 'px';
@@ -110,7 +101,7 @@
 
         element.onmouseenter = ev => {
           show = true;
-          MoveElement();
+          moveTooltip();
           if (ev.target !== element || ev.target.parentNode !== element) {
             tooltip.style.display = show ? 'block' : 'none';
             setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
@@ -133,26 +124,44 @@
         }
         document.body.appendChild(tooltip);
       }
-      if (e.target.hasAttribute('movable')) {
-
-        var MoveElement = () => {
-          var movecheck = setInterval(() => {
-            if (elementinfo.movable) {
-              element.style.left = (Craft.mouse.x - (elementinfo.mouseX - elementinfo.rect.left)) + 'px';
-              element.style.top = (Craft.mouse.y - (elementinfo.mouseY - elementinfo.rect.top)) + 'px';
-            } else clearInterval(movecheck);
-          }, 5);
+      if (element.hasAttribute('movable')) {
+        let MoveElement;
+        if (element.hasAttribute('movable-scope')) {
+          let moveScope = query(element.getAttribute('movable-scope')).getBoundingClientRect();
+          let elementDimentions = element.getBoundingClientRect();
+          console.log(moveScope);
+          console.log(elementDimentions);
+          MoveElement = () => {
+            let movecheck = setInterval(() => {
+              //log(is.lt(elementDimentions.left,moveScope.right) && is.lt(elementDimentions.bottom,moveScope.bottom))
+              if (elementinfo.movable) {
+                if(is.bt(elementDimentions.left,moveScope.right) && is.bt(elementDimentions.bottom,moveScope.bottom)) {
+                  element.style.left = (Craft.mouse.x - (elementinfo.mouseX - elementinfo.rect.left)) + 'px';
+                  element.style.top = (Craft.mouse.y - (elementinfo.mouseY - elementinfo.rect.top)) + 'px';
+                }
+              } else clearInterval(movecheck);
+            }, 2);
+          }
+        } else {
+          MoveElement = () => {
+            let movecheck = setInterval(() => {
+              if (elementinfo.movable) {
+                element.style.left = (Craft.mouse.x - (elementinfo.mouseX - elementinfo.rect.left)) + 'px';
+                element.style.top = (Craft.mouse.y - (elementinfo.mouseY - elementinfo.rect.top)) + 'px';
+              } else clearInterval(movecheck);
+            }, 2);
+          }
         }
 
         element.style.position = 'absolute';
-        var elementinfo = {
-          movable: false,
-          rect: element.getBoundingClientRect(),
-          mouseX: Craft.mouse.x,
-          mouseY: Craft.mouse.y
-        }
-        var movehandle = query('[movehandle]', element);
-        On('mousedown', ((movehandle !== null) ? movehandle : element), e => {
+        let elementinfo = {
+            movable: false,
+            rect: element.getBoundingClientRect(),
+            mouseX: Craft.mouse.x,
+            mouseY: Craft.mouse.y
+          },
+          movehandle = query('[movehandle]', element);
+        On('mousedown', (!is.Null(movehandle) ? movehandle : element), e => {
           elementinfo.movable = true;
           elementinfo.rect = element.getBoundingClientRect()
           elementinfo.mouseX = e.clientX;

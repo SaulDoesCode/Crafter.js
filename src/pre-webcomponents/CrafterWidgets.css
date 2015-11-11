@@ -6,7 +6,7 @@
     opacity: 1;
   }
 }
-[tooltip], [movable] {
+[tooltip], [movable] , [ripple] {
   animation-duration: 0.001s;
   animation-name: nodeInserted;
 }
