@@ -11,23 +11,22 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
 
-var ua = navigator.userAgent,
-    tem = undefined,
-    M = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
-if (M && (tem = ua.match(/version\/([\.\d]+)/i)) != null) M[2] = tem[1];
-M ? [M[1], M[2]] : [navigator.appName, navigator.appVersion, '-?'];
-
-window.CurrentBrowser = {
-  is: function is(browser) {
-    if (CurrentBrowser.browser.toLowerCase().includes(browser.toLowerCase())) return true;
-    return false;
-  },
-  browser: M.join(' ')
-};
-
 (function () {
+  var ua = navigator.userAgent,
+      tem = undefined,
+      Br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
+  if (Br && (tem = ua.match(/version\/([\.\d]+)/i)) !== null) Br[2] = tem[1];
+  Br ? [Br[1], Br[2]] : [navigator.appName, navigator.appVersion, '-?'];
 
-  var isStr = function isStr(obj, str) {
+  self.CurrentBrowser = {
+    is: function is(browser) {
+      if (CurrentBrowser.browser.toLowerCase().includes(browser.toLowerCase())) return true;
+      return false;
+    },
+    browser: Br.join(' ')
+  };
+
+  var type = function type(obj, str) {
     return toString.call(obj) === str;
   },
       isT = function isT(val, str) {
@@ -35,33 +34,22 @@ window.CurrentBrowser = {
   },
       nT = function nT(val, str) {
     return (typeof val === 'undefined' ? 'undefined' : _typeof(val)) !== str;
-  };
+  },
+      root = document.defaultView,
+      doc = document;
 
-  window.is = {
-    Func: function Func(func) {
-      return typeof func === 'function';
-    },
+  root.is = {
     Bool: function Bool(val) {
       return typeof val === 'boolean';
     },
-    Undef: function Undef() {
-      if (arguments.length > 1) {
-        for (var _i = 0; _i < arguments.length; _i++) {
-          if (typeof arguments[_i] === 'undefined') return false;
-        }return true;
-      }
-      return isT(arguments[0], 'undefined');
-    },
-    Def: function Def() {
-      if (arguments.length > 1) {
-        for (var _i2 = 0; _i2 < arguments.length; _i2++) {
-          if (nT(arguments[_i2], 'undefined')) return false;
-        }return true;
-      }
-      return nT(arguments[0], 'undefined');
-    },
     Arr: function Arr(val) {
       return Array.isArray(val);
+    },
+    Arrlike: function Arrlike(val) {
+      if ('length' in val && val !== window && !is.Func(val)) {
+        if (is.Num(val.length)) return true;
+      }
+      return false;
     },
     String: function String(val) {
       return isT(val, 'string');
@@ -69,16 +57,35 @@ window.CurrentBrowser = {
     Num: function Num(val) {
       return isT(val, 'number');
     },
-    Null: function Null(val) {
-      if (arguments.length > 1) {
-        for (var _i3 = 0; _i3 < arguments.length; _i3++) {
-          if (arguments[_i3] === null) return true;
-        }return false;
+    Undef: function Undef() {
+      for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+        args[_key] = arguments[_key];
       }
-      return val === null;
+
+      return args.every(function (o) {
+        return isT(o, 'undefined');
+      });
+    },
+    Def: function Def() {
+      for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+        args[_key2] = arguments[_key2];
+      }
+
+      return args.every(function (o) {
+        return nT(o, 'undefined');
+      });
+    },
+    Null: function Null() {
+      for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+        args[_key3] = arguments[_key3];
+      }
+
+      return args.every(function (o) {
+        return o === null;
+      });
     },
     Node: (function (_Node) {
-      function Node(_x) {
+      function Node() {
         return _Node.apply(this, arguments);
       }
 
@@ -87,61 +94,94 @@ window.CurrentBrowser = {
       };
 
       return Node;
-    })(function (val) {
-      if (arguments.length > 1) {
-        for (var _i4 = 0; _i4 < arguments.length; _i4++) {
-          if (is.Null(arguments[_i4]) || !(arguments[_i4] instanceof Node)) return false;
-        }return true;
-      }
-      return !is.Null(val) && val instanceof Node;
-    }),
-    NodeList: (function (_NodeList) {
-      function NodeList(_x2) {
-        return _NodeList.apply(this, arguments);
+    })(function () {
+      for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+        args[_key4] = arguments[_key4];
       }
 
-      NodeList.toString = function () {
-        return _NodeList.toString();
-      };
-
-      return NodeList;
-    })(function (val) {
-      if (arguments.length > 1) {
-        for (var _i5 = 0; _i5 < arguments.length; _i5++) {
-          if (arguments[_i5] === null || !(arguments[_i5] instanceof NodeList)) return false;
-        }return true;
-      }
-      return !is.Null(val) && val instanceof NodeList;
+      return args.every(function (o) {
+        return o instanceof Node;
+      });
     }),
-    File: function File(obj) {
-      return isStr(obj, '[object File]');
+    NodeList: function NodeList() {
+      for (var _len5 = arguments.length, args = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+        args[_key5] = arguments[_key5];
+      }
+
+      for (var arg in args) {
+        if (Array.from(arg).every(function (n) {
+          return is.Node(n);
+        })) return true;
+      }return false;
     },
-    FormData: function FormData(obj) {
-      return isStr(obj, '[object FormData]');
+    Object: function Object() {
+      for (var _len6 = arguments.length, args = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+        args[_key6] = arguments[_key6];
+      }
+
+      return args.every(function (o) {
+        return type(o, '[object Object]');
+      });
+    },
+    Element: function Element() {
+      for (var _len7 = arguments.length, args = Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
+        args[_key7] = arguments[_key7];
+      }
+
+      return args.every(function (o) {
+        return type(o, '[object HTMLElement]');
+      });
+    },
+    File: function File() {
+      for (var _len8 = arguments.length, args = Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
+        args[_key8] = arguments[_key8];
+      }
+
+      return args.every(function (o) {
+        return type(o, '[object File]');
+      });
+    },
+    FormData: function FormData() {
+      for (var _len9 = arguments.length, args = Array(_len9), _key9 = 0; _key9 < _len9; _key9++) {
+        args[_key9] = arguments[_key9];
+      }
+
+      return args.every(function (o) {
+        return type(o, '[object FormData]');
+      });
+    },
+    Map: function Map() {
+      for (var _len10 = arguments.length, args = Array(_len10), _key10 = 0; _key10 < _len10; _key10++) {
+        args[_key10] = arguments[_key10];
+      }
+
+      return args.every(function (o) {
+        return type(o, '[object Map]');
+      });
+    },
+    Func: function Func() {
+      for (var _len11 = arguments.length, args = Array(_len11), _key11 = 0; _key11 < _len11; _key11++) {
+        args[_key11] = arguments[_key11];
+      }
+
+      return args.every(function (o) {
+        return typeof o === 'function';
+      });
     },
     Blob: function Blob(obj) {
-      return isStr(obj, '[object Blob]');
-    },
-    Object: function Object(obj) {
-      return isStr(obj, '[object Object]');
+      return type(obj, '[object Blob]');
     },
     RegExp: function RegExp(obj) {
-      return isStr(obj, '[object RegExp]');
+      return type(obj, '[object RegExp]');
     },
     Date: function Date(obj) {
-      return isStr(obj, '[object Date]');
-    },
-    Map: function Map(obj) {
-      return isStr(obj, '[object Map]');
+      return type(obj, '[object Date]');
     },
     Set: function Set(obj) {
-      return isStr(obj, '[object Set]');
+      return type(obj, '[object Set]');
     },
     Symbol: function Symbol(obj) {
-      return isStr(obj, '[object Symbol]');
-    },
-    Element: function Element(obj) {
-      return isStr(obj, '[object HTMLElement]');
+      return type(obj, '[object Symbol]');
     },
     UpperCase: function UpperCase(char) {
       return char >= 'A' && char <= 'Z';
@@ -149,10 +189,6 @@ window.CurrentBrowser = {
     Email: function Email(email) {
       return (/(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))/.test(email)
       );
-    },
-    Native: function Native(val) {
-      var type = typeof val === 'undefined' ? 'undefined' : _typeof(val);
-      return type === 'function' ? RegExp('^' + String(Object.prototype.toString).replace(/[.*+?^${}()|[\]\/\\]/g, '\\$&').replace(/toString|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$').test(Function.prototype.toString.call(val)) : val && type == 'object' && /^\[object .+?Constructor\]$/.test(val.toString) || false;
     },
     Between: function Between(val, max, min) {
       return val <= max && val >= min;
@@ -162,41 +198,66 @@ window.CurrentBrowser = {
     },
     lte: function lte(val, other) {
       return val <= other;
+    },
+    bt: function bt(val, other) {
+      return val > other;
+    },
+    bte: function bte(val, other) {
+      return val >= other;
+    },
+    Native: function Native(val) {
+      var type = typeof val === 'undefined' ? 'undefined' : _typeof(val);
+      return type === 'function' ? RegExp('^' + String(Object.prototype.toString).replace(/[.*+?^${}()|[\]\/\\]/g, '\\$&').replace(/toString|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$').test(Function.prototype.toString.call(val)) : val && type == 'object' && /^\[object .+?Constructor\]$/.test(val.toString) || false;
     }
   };
 
-  window.forEach = function (iterable, func) {
+  root.forEach = function (iterable, func) {
     if (is.Func(func)) {
       var index = 0;
-      if (is.Arr(iterable) || is.NodeList(iterable) || is.String(iterable)) {
+      if (!is.Object(iterable)) {
         for (; index < iterable.length; index++) func(iterable[index], index);
-      } else if (is.Object(iterable)) {
+      } else {
         for (index in iterable) if (iterable.hasOwnProperty(index)) func(iterable[index], index);
       }
     } else log("err", "No Function Provided for forEach");
   };
 
-  window.query = function (selector, element) {
-    if (is.Undef(element)) return document.querySelector(selector);
-    return element.querySelector(selector);
-  };
-
-  window.queryAll = function (selector, element) {
-    if (is.Undef(element)) return document.querySelectorAll(selector);
-    return element.querySelectorAll(selector);
-  };
-
-  window.$ = function (selector, forceSelectAll, noCraft) {
-    var element = queryAll(selector);
-    if (!is.Null(element)) {
-      if (element.length > 1 || forceSelectAll === true && is.NodeList(element)) {
-        return noCraft ? element : craft(element);
-      } else if (is.Node(element[0]) || forceSelectAll === false) return noCraft ? element[0] : craft(element[0]);
+  root.query = function (selector, element) {
+    if (is.Def(element)) {
+      if (is.String(element)) return doc.querySelector(element).querySelector(selector);
+      return element.querySelector(selector);
     }
+    return doc.querySelector(selector);
+  };
+  root.queryAll = function (selector, element) {
+    if (is.Def(element)) {
+      if (is.String(element)) return doc.querySelector(element).querySelectorAll(selector);
+      return element.querySelectorAll(selector);
+    }
+    return doc.querySelectorAll(selector);
+  };
+
+  root.queryEach = function (selector, element, func) {
+    if (is.Func(element)) {
+      func = element;
+      element = document;
+    }
+    var elements = undefined;
+    if (is.String(element)) elements = doc.querySelector(element).querySelectorAll(selector);
+    elements = element.querySelectorAll(selector);
+    for (var _i = 0; _i < elements.length; _i++) {
+      func(elements[_i], _i);
+    }
+  };
+
+  root.$ = function (selector, forceSelectAll) {
+    var element = queryAll(selector);
+    if (element.length > 1 || forceSelectAll === true || forceSelectAll === '*') return craft(element);
+    if (!is.Null(element[0]) && forceSelectAll === false) return craft(element[0]);
     return null;
   };
 
-  window.log = function (type, msg) {
+  root.log = function (type, msg) {
     switch (type) {
       case 'err':
         console.error(msg);
@@ -215,15 +276,15 @@ window.CurrentBrowser = {
     }
   };
 
-  window.On = function (eventType, SelectorNode, func) {
+  root.On = function (eventType, SelectorNode, func) {
     if (is.Def(SelectorNode)) {
       if (is.String(SelectorNode)) {
-        forEach(queryAll(SelectorNode), function (el) {
+        queryEach(SelectorNode, function (el) {
           return el.addEventListener(eventType, function (e) {
             return func(e, el);
           });
         });
-      } else if (is.Node(SelectorNode) || SelectorNode === window || SelectorNode === document) {
+      } else if (is.Node(SelectorNode) || SelectorNode === root || SelectorNode === doc) {
         SelectorNode.addEventListener(eventType, function (e) {
           return func(e, SelectorNode);
         });
@@ -233,21 +294,21 @@ window.CurrentBrowser = {
             return func(e, el);
           });
         });
-      } else if (is.Func(SelectorNode)) window.addEventListener(eventType, function (e) {
+      } else if (is.Func(SelectorNode)) root.addEventListener(eventType, function (e) {
         return SelectorNode(e, e.target);
       });
     }
   };
 
-  window.Off = function (eventType, SelectorNode, func) {
+  root.Off = function (eventType, SelectorNode, func) {
     if (SelectorNode !== undefined) {
       if (is.String(SelectorNode)) {
-        forEach(queryAll(SelectorNode), function (el) {
+        queryEach(SelectorNode, function (el) {
           return el.removeEventListener(eventType, function (e) {
             return func(e, e.target);
           });
         });
-      } else if (is.Node(SelectorNode) || SelectorNode === window || SelectorNode === document) {
+      } else if (is.Node(SelectorNode) || SelectorNode === root || SelectorNode === doc) {
         SelectorNode.removeEventListener(eventType, function (e) {
           return func(e, e.target);
         });
@@ -257,13 +318,140 @@ window.CurrentBrowser = {
             return func(e, e.target);
           });
         });
-      } else if (is.Func(SelectorNode)) window.removeEventListener(eventType, function (e) {
+      } else if (is.Func(SelectorNode)) root.removeEventListener(eventType, function (e) {
         return SelectorNode(e, e.target);
       });
     }
   };
 
-  window.craft = function (element) {
+  var CraftImport = function CraftImport(obj) {
+    var now = +new Date(),
+        key = obj.key || obj.url,
+        src = Craftloader.get(key);
+    if (src || src.expire - now > 0) return new Promise(function (resolve) {
+      return resolve(src);
+    });
+    return new Promise(function (success, failed) {
+      return fetch(obj.url).then(function (res) {
+        return res.text().then(function (data) {
+          obj.data = data;
+          obj.stamp = now;
+          obj.expire = now + (obj.expire || 4000) * 60 * 60 * 1000;
+          if (obj.cache) localStorage.setItem(Craftloader.pre + key, JSON.stringify(obj));
+          success(obj);
+        });
+      }).catch(function (err) {
+        return failed('Craftloader: problem fetching import -> ' + err);
+      });
+    });
+  },
+      execute = function execute(src) {
+    return src.map(function (obj) {
+      var el = obj.type === 'css' ? doc.createElement('style') : doc.createElement('script');
+      el.defer = obj.defer || undefined;
+      el.innerHTML = obj.data;
+      if (obj.exec) doc.head.appendChild(el);
+    });
+  },
+      preOrKey = function preOrKey(key) {
+    return key.includes(Craftloader.pre) ? key : Craftloader.pre + key;
+  };
+  root.Craftloader = {
+    pre: 'craft:',
+    Import: function Import() {
+      for (var _len12 = arguments.length, args = Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
+        args[_key12] = arguments[_key12];
+      }
+
+      var obj = undefined,
+          promises = [];
+      args.forEach(function (arg) {
+        obj = {
+          url: arg.css || arg.script,
+          type: arg.css ? 'css' : 'script',
+          exec: arg.execute !== false,
+          cache: arg.cache !== false
+        };
+        if (is.Def(arg.key)) obj.key = arg.key;
+        if (is.Def(arg.defer)) obj.defer = arg.defer;
+        if (is.Def(arg.expire)) obj.expire = arg.expire;
+        arg.test === false ? Craftloader.remove(obj.url) : promises.push(CraftImport(obj));
+      });
+      return Promise.all(promises).then(execute);
+    },
+    setPrekey: function setPrekey(str) {
+      return Craftloader.pre = str + ':';
+    },
+    get: function get(key) {
+      return JSON.parse(localStorage.getItem(preOrKey(key)) || false);
+    },
+    remove: function remove(key) {
+      return localStorage.removeItem(preOrKey(key));
+    },
+    removeAll: function removeAll(expired) {
+      for (var _i2 in localStorage) {
+        if (!expired || Craftloader.get(_i2).expire <= +new Date()) Craftloader.remove(_i2);
+      }
+    }
+  };
+  Craftloader.removeAll(true);
+
+  root.CraftRouter = {
+    handle: function handle(RouteLink, func) {
+      if (location.hash === RouteLink || location === RouteLink) func();
+      Craft.router.handlers.push({
+        link: RouteLink,
+        func: func
+      });
+    },
+    handlers: [],
+    links: [],
+    makeLink: function makeLink(Selector, link, newtab, eventType) {
+      return Craft.router.links.push(function () {
+        return On(is.Undef(eventType) ? 'click' : eventType, query(Selector), function (e) {
+          return Craft.router.open(link, newtab);
+        });
+      });
+    },
+    open: (function (_open) {
+      function open(_x, _x2) {
+        return _open.apply(this, arguments);
+      }
+
+      open.toString = function () {
+        return _open.toString();
+      };
+
+      return open;
+    })(function (link, newtab) {
+      return newtab ? open(link) : location = link;
+    }),
+    setTitle: function setTitle(title) {
+      return document.title = title;
+    },
+    setView: function setView(viewHostSelector, view) {
+      return query(viewHostSelector).innerHTML = view;
+    },
+    fetchView: function fetchView(viewHostSelector, viewURL, cache, id) {
+      if (is.Null(localStorage.getItem("RT_" + id)) || is.Undef(localStorage.getItem("RT_" + id))) {
+        fetch(viewURL).then(function (res) {
+          res.text().then(function (txt) {
+            if (cache && is.Def(id) && is.String(id) && (is.Null(localStorage.getItem("RT_" + id)) || is.Undef(localStorage.getItem("RT_" + id)))) localStorage.setItem("RT_" + id, txt);
+            query(viewHostSelector).innerHTML = txt;
+          });
+        }).catch(function (msg) {
+          return log('warn', 'Could not fetch view -> ' + msg);
+        });
+      } else if (cache) query(viewHostSelector).innerHTML = localStorage.getItem("RT_" + id);
+    },
+    clearCache: function clearCache() {
+      for (var _i3 in localStorage) {
+        if (localStorage.key(_i3).includes("RT_")) localStorage.removeItem(localStorage.key(_i3));
+      }
+    }
+  };
+
+  root.craft = function (element) {
     if (is.NodeList(element)) {
       element.forEach = function (func) {
         if (is.Func(func)) {
@@ -285,8 +473,8 @@ window.CurrentBrowser = {
         return element;
       };
       element.includes = function (SelectorNode) {
-        if (is.String(SelectorNode)) SelectorNode = query(SelectorNode);
-        if (is.Node(SelectorNode)) for (var index = 0; index < element.length; index++) {
+        if (!is.Node(SelectorNode)) SelectorNode = query(SelectorNode);
+        for (var index = 0; index < element.length; index++) {
           if (element[index] === SelectorNode) return true;
         }return false;
       };
@@ -299,12 +487,11 @@ window.CurrentBrowser = {
       };
     } else if (is.Node(element)) {
       element.getSiblings = function () {
-        var siblings = [];
-        var AllChildren = element.parentNode.childNodes;
-        for (var _i6 = 0; _i6 < AllChildren.length; _i6++) {
-          if (AllChildren[_i6] !== element) siblings.push(AllChildren[_i6]);
-        }
-        return siblings;
+        var siblings = [],
+            AllChildren = element.parentNode.childNodes;
+        for (var _i4 = 0; _i4 < AllChildren.length; _i4++) {
+          if (AllChildren[_i4] !== element) siblings.push(AllChildren[_i4]);
+        }return siblings;
       };
       element.getWidth = function () {
         return element.getBoundingClientRect().width;
@@ -316,10 +503,12 @@ window.CurrentBrowser = {
         return element.getBoundingClientRect();
       };
       element.setWidth = function (Width) {
-        return element.style.width = Height;
+        element.style.width = Height;
+        return element;
       };
       element.setHeight = function (Height) {
-        return element.style.height = Height;
+        element.style.height = Height;
+        return element;
       };
       element.On = function (eventType, func) {
         On(eventType, element, func);
@@ -327,12 +516,8 @@ window.CurrentBrowser = {
       };
       element.find = function (selector, forceSelectAll, returncraft) {
         var Localelement = queryAll(selector, element);
-        if (Localelement.length > 1 || forceSelectAll === true && !is.Null(Localelement) && is.NodeList(Localelement)) {
-          return craft(Localelement);
-        } else if (!is.Null(Localelement) && is.Node(Localelement[0])) {
-          if (returncraft === false) return Localelement[0];
-          return craft(Localelement[0]);
-        }
+        if (Localelement.length > 1 || forceSelectAll === true && !is.Null(Localelement)) return craft(Localelement);
+        if (!is.Null(Localelement)) return craft(Localelement[0]);
         return null;
       };
       element.replace = function (el) {
@@ -350,15 +535,13 @@ window.CurrentBrowser = {
         return element;
       };
       element.hasChild = function (SelectorNode) {
-        if (is.String(SelectorNode)) SelectorNode = query(SelectorNode, element);
-        if (is.Node(SelectorNode) && !is.Null(SelectorNode)) return true;
+        if (!is.Node(SelectorNode)) SelectorNode = query(SelectorNode, element);
+        if (!is.Null(SelectorNode)) return true;
         return false;
       };
       element.hasClass = function (className, func) {
-        var has = false;
-        element.classList.contains(className) ? has = true : has = false;
-        if (is.Def(func) && is.Func(func)) func(has);
-        return has;
+        if (is.Func(func)) func(element.classList.contains(className));
+        return element.classList.contains(className);
       };
       element.isTag = function (tagName, func) {
         if (element.tagName === tagName.toUpperCase()) {
@@ -368,16 +551,17 @@ window.CurrentBrowser = {
         return false;
       };
       element.css = function (styles) {
-        return is.Def(styles) ? forEach(styles, function (prop, key) {
+        is.Def(styles) ? forEach(styles, function (prop, key) {
           return element.style[key] = prop;
         }) : log('err', 'Styles Object undefined');
+        return element;
       };
-      element.hide = function (speed, timingFunction) {
-        if (is.Undef(timingFunction)) timingFunction = 'linear';
-        if (is.Undef(speed)) speed = 0;
+      element.hide = function (speed, timing) {
+        timing = timing || 'linear';
+        speed = speed || 0;
 
         function HideElement() {
-          element.style.transition = 'opacity ' + speed + 'ms ' + timingFunction;
+          element.style.transition = 'opacity ' + speed + 'ms ' + timing;
           element.style.opacity = '0';
           element.effectInProgress = {
             status: true,
@@ -443,26 +627,32 @@ window.CurrentBrowser = {
     return element;
   };
 
-  window.Craft = {
+  root.Craft = {
     ArraytoObject: function ArraytoObject(arr) {
       var NewObject = {};
-      for (var _i7 in arr) {
-        if (is.Def(arr[_i7])) NewObject[_i7] = arr[_i7];
+      for (var _i5 in arr) {
+        if (is.Def(arr[_i5])) NewObject[_i5] = arr[_i5];
       }return NewObject;
     },
-    IndexOfArrInArr: function IndexOfArrInArr(Arr, searchArr) {
-      for (var _i8 = 0; _i8 < searchArr.length; _i8++) {
-        if (Arr[0] === searchArr[_i8]) {
+    toArray: function toArray(obj) {
+      return slice.call(obj);
+    },
+    IndexOfArrayInArray: function IndexOfArrayInArray(Arr, searchArr) {
+      for (var _i6 = 0; _i6 < searchArr.length; _i6++) {
+        if (Arr[0] === searchArr[_i6]) {
           for (var c = 0; c < Arr.length; c++) {
-            if (Arr[c] === searchArr[_i8 + c]) {
+            if (Arr[c] === searchArr[_i6 + c]) {
               if (c == Arr.length - 1) {
-                return _i8;
+                return _i6;
               } else continue;
             } else break;
           }
         }
       }
       return -1;
+    },
+    trim: function trim(text) {
+      return is.Null(text) ? "" : (text + "").replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, "");
     },
     bindNode: function bindNode(SelectorNode, ContextObject, func) {
       var element = is.Node(SelectorNode) ? SelectorNode : query(SelectorNode),
@@ -474,12 +664,10 @@ window.CurrentBrowser = {
       if (!is.Null(element) && is.Def(func) && is.Func(func)) {
         element.isbound = true;
         Object.observe(ContextObject, function (changes) {
-          if (element.isbound) {
-            changes.forEach(function (ch) {
-              Changes = ch;
-              func(element, ch);
-            });
-          }
+          if (element.isbound) changes.forEach(function (ch) {
+            Changes = ch;
+            func(element, ch);
+          });
         });
         func(element, Changes);
       } else log("err", "No matching element");
@@ -508,8 +696,8 @@ window.CurrentBrowser = {
       var timeout = undefined;
       return function () {
         var context = this,
-            args = arguments;
-        var later = function later() {
+            args = arguments,
+            later = function later() {
           timeout = null;
           if (!immediate) func.apply(context, args);
         };
@@ -566,20 +754,20 @@ window.CurrentBrowser = {
       }) : log('err', 'invalid args');
     },
     hasCapitals: function hasCapitals(string) {
-      for (var _i9 = 0; _i9 < string.length; _i9++) {
-        if (is.UpperCase(string[_i9])) return true;
+      for (var _i7 = 0; _i7 < string.length; _i7++) {
+        if (is.UpperCase(string[_i7])) return true;
       }return false;
     },
     OverrideFunction: function OverrideFunction(funcName, Func, ContextObject) {
       var namespaces = funcName.split("."),
           func = namespaces.pop();
-      for (var _i10 = 0; _i10 < namespaces.length; _i10++) {
-        ContextObject = ContextObject[namespaces[_i10]];
+      for (var _i8 = 0; _i8 < namespaces.length; _i8++) {
+        ContextObject = ContextObject[namespaces[_i8]];
       }ContextObject[func] = Func;
     },
     concatObjects: function concatObjects(hostobj) {
-      for (var _len = arguments.length, Objs = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-        Objs[_key - 1] = arguments[_key];
+      for (var _len13 = arguments.length, Objs = Array(_len13 > 1 ? _len13 - 1 : 0), _key13 = 1; _key13 < _len13; _key13++) {
+        Objs[_key13 - 1] = arguments[_key13];
       }
 
       forEach(hostobj, function () {
@@ -596,8 +784,8 @@ window.CurrentBrowser = {
       return hostobj;
     },
     mergeObjects: function mergeObjects(hostobj) {
-      for (var _len2 = arguments.length, Objs = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-        Objs[_key2 - 1] = arguments[_key2];
+      for (var _len14 = arguments.length, Objs = Array(_len14 > 1 ? _len14 - 1 : 0), _key14 = 1; _key14 < _len14; _key14++) {
+        Objs[_key14 - 1] = arguments[_key14];
       }
 
       return Object.assign(hostobj, Objs);
@@ -611,9 +799,21 @@ window.CurrentBrowser = {
         log('err', 'could not find length of value');
       }
     },
+    type: function type() {
+      for (var _len15 = arguments.length, args = Array(_len15), _key15 = 0; _key15 < _len15; _key15++) {
+        args[_key15] = arguments[_key15];
+      }
+
+      var types = [];
+      args.forEach(function (arg) {
+        return types.push(typeof arg === 'undefined' ? 'undefined' : _typeof(arg));
+      });
+      if (types.length < 2) return types[0];
+      return types;
+    },
     indexOfDate: function indexOfDate(Collection, date) {
-      for (var _i11 = 0; _i11 < undefined.length; _i11++) {
-        if (+undefined[_i11] === +date) return _i11;
+      for (var _i9 = 0; _i9 < Collection.length; _i9++) {
+        if (+Collection[_i9] === +date) return _i9;
       }return -1;
     },
     removeArrItem: function removeArrItem(Arr, val) {
@@ -639,13 +839,26 @@ window.CurrentBrowser = {
       }
       return obj;
     },
+    resolveQueryOrNode: function resolveQueryOrNode(val) {
+      if (is.String(val)) {
+        val = query(val);
+        if (val !== null) {
+          return val;
+        } else {
+          log('query returns null');
+          return null;
+        }
+      }
+      if (is.Node(val)) return val;
+      log('warn', 'value is of incorrect Type  string/node');
+    },
     Scope: {},
     mouse: {
       x: 0,
       y: 0
     },
     nodeExists: function nodeExists(selector, within) {
-      if (is.Node(within)) return queryAll(selector, within) !== null;
+      return queryAll(selector, is.Node(within) ? within = within : within = query(within)) !== null;
       return queryAll(selector) !== null;
     },
     ObjToFormData: function ObjToFormData(obj) {
@@ -657,62 +870,17 @@ window.CurrentBrowser = {
     URLfrom: function URLfrom(text) {
       return URL.createObjectURL(new Blob([text]));
     },
+    OnScroll: function OnScroll(element, func) {
+      var up = false;
+      if (is.Func(func)) {
+        On(element, function (e) {
+          e.deltaY < 1 ? up = false : up = true;
+          func(up, e);
+        });
+      } else log('err', 'second param needs to be a function');
+    },
     OnResize: function OnResize(func) {
       return is.Func(func) ? Craft.ResizeHandlers.add(func) : log("err", "TypeError : Craft.OnResize -> func is not a function");
-    },
-    router: {
-      handle: function handle(RouteLink, func) {
-        if (location.hash === RouteLink || location === RouteLink) func();
-        Craft.router.handlers.push({
-          link: RouteLink,
-          func: func
-        });
-      },
-      handlers: [],
-      links: [],
-      makeLink: function makeLink(Selector, link, newtab, eventType) {
-        return Craft.router.links.push(function () {
-          return On(is.Undef(eventType) ? 'click' : eventType, query(Selector), function (e) {
-            return Craft.router.open(link, newtab);
-          });
-        });
-      },
-      open: (function (_open) {
-        function open(_x3, _x4) {
-          return _open.apply(this, arguments);
-        }
-
-        open.toString = function () {
-          return _open.toString();
-        };
-
-        return open;
-      })(function (link, newtab) {
-        return newtab ? open(link) : location = link;
-      }),
-      setTitle: function setTitle(title) {
-        return document.title = title;
-      },
-      setView: function setView(viewHostSelector, view) {
-        return query(viewHostSelector).innerHTML = view;
-      },
-      fetchView: function fetchView(viewHostSelector, viewURL, cache, id) {
-        if (is.Null(localStorage.getItem("RT_" + id)) || is.Undef(localStorage.getItem("RT_" + id))) {
-          fetch(viewURL).then(function (res) {
-            res.text().then(function (txt) {
-              if (cache && is.Def(id) && is.String(id) && (is.Null(localStorage.getItem("RT_" + id)) || is.Undef(localStorage.getItem("RT_" + id)))) localStorage.setItem("RT_" + id, txt);
-              query(viewHostSelector).innerHTML = txt;
-            });
-          }).catch(function (msg) {
-            return log('warn', 'Could not fetch view -> ' + msg);
-          });
-        } else if (cache) query(viewHostSelector).innerHTML = localStorage.getItem("RT_" + id);
-      },
-      clearCache: function clearCache() {
-        for (var _i12 in localStorage) {
-          if (localStorage.key(_i12).includes("RT_")) localStorage.removeItem(localStorage.key(_i12));
-        }
-      }
     },
     randomString: function randomString() {
       return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
@@ -740,12 +908,12 @@ window.CurrentBrowser = {
             } else if (key !== 'extends' && !is.Func(prop)) element[key] = prop;
           });
           if ('extends' in config) {
-            document.registerElement(Name, {
+            doc.registerElement(Name, {
               prototype: element,
               extends: config.extends
             });
           } else {
-            document.registerElement(Name, {
+            doc.registerElement(Name, {
               prototype: element
             });
           }
@@ -754,7 +922,7 @@ window.CurrentBrowser = {
     }
   };
 
-  window.FunctionIterator = (function () {
+  root.FunctionIterator = (function () {
     function FuncIterator() {
       _classCallCheck(this, FuncIterator);
 
@@ -798,8 +966,8 @@ window.CurrentBrowser = {
     }, {
       key: 'runEach',
       value: function runEach() {
-        for (var _i13 in this.functions) {
-          this.functions[_i13].apply(this, arguments);
+        for (var _i10 in this.functions) {
+          this.functions[_i10].apply(this, arguments);
         }
       }
     }, {
@@ -812,12 +980,68 @@ window.CurrentBrowser = {
     return FuncIterator;
   })();
 
+  root.ReactiveVar = (function () {
+    function ReactiveVariable(val, handle) {
+      _classCallCheck(this, ReactiveVariable);
+
+      if (is.Func(handle)) {
+        this.Value = val;
+        this.Handle = handle;
+      } else log('err', 'ReactiveVariable needs a handler function after the value');
+      return this.Value;
+    }
+
+    _createClass(ReactiveVariable, [{
+      key: 'set',
+      value: function set(val) {
+        if (this.Value !== val) {
+          this.Oldval = this.Value;
+          this.Value = val;
+          this.Handle(this.Oldval, val);
+        }
+        return this.Value;
+      }
+    }, {
+      key: 'get',
+      value: function get() {
+        return this.Value;
+      }
+    }, {
+      key: 'Reset',
+      value: function Reset(handle) {
+        if (is.Func(handle)) {
+          this.Handle = handle;
+        } else log('err', 'ReactiveVariable.Reset only takes a function');
+      }
+    }]);
+
+    return ReactiveVariable;
+  })();
+
+  Craft.Binds = new Map();
+  var CrafterStyles = document.createElement('style');
+  CrafterStyles.setAttribute('CrafterStyles', '');
+  CrafterStyles.innerHTML = '\n  @keyframes NodeInserted {\n    from {opacity: 0.99;}\n    to {opacity: 1;}\n  }\n  [view-bind] {\n    animation-duration: 0.001s;\n    animation-name: NodeInserted;\n  }';
+  doc.head.appendChild(CrafterStyles);
+
+  On('animationstart', document, function (e) {
+    if (e.animationName === 'NodeInserted' && is.Node(e.target)) {
+      if (e.target.hasAttribute('[view-bind]')) {
+        if (Craft.Binds.has(e.target.getAttribute('view-bind'))) e.target.innerHTML = Craft.Binds.get(e.target.getAttribute('view-bind')).get();
+      }
+    }
+  });
+
+  forEach(queryAll('[view-bind]'), function (el) {
+    if (Craft.DataBindScope.has(el.getAttribute('view-bind'))) el.innerHTML = Craft.DataBindScope.get(el.getAttribute('view-bind'));
+  });
+
   Craft.ResizeHandlers = new FunctionIterator();
 
-  window.onresize = Craft.throttle(450, function (e) {
+  root.onresize = Craft.throttle(450, function (e) {
     return Craft.ResizeHandlers.runEach(e);
   });
-  window.onmousemove = function (ev) {
+  root.onmousemove = function (ev) {
     Craft.mouse.x = ev.clientX;
     Craft.mouse.y = ev.clientY;
   };
@@ -825,12 +1049,12 @@ window.CurrentBrowser = {
       Ready = false && DomReady;
 
   On('DOMContentLoaded', function () {
-    forEach(queryAll('[link]'), function (el) {
+    queryEach('[link]', function (el) {
       return On('click', el, function (e) {
-        return el.hasAttribute('newtab') ? open(el.getAttribute('link')) : Craft.router.open(el.getAttribute('link'));
+        return el.hasAttribute('newtab') ? open(el.getAttribute('link')) : CraftRouter.open(el.getAttribute('link'));
       });
     });
-    Craft.router.links.forEach(function (link) {
+    CraftRouter.links.forEach(function (link) {
       return link();
     });
     DomReady = true;
@@ -839,13 +1063,17 @@ window.CurrentBrowser = {
   On('WebComponentsReady', function (e) {
     Ready = true && DomReady;
     setTimeout(function () {
-      if (!Ready) Ready = true;
+      if (!Ready) {
+        Ready = true;
+        log('warn', 'loading took longer than expected');
+      }
     }, 3500);
   });
-  window.WhenReady = function () {
+
+  root.WhenReady = function () {
     return new Promise(function (resolve, reject) {
       if (Ready) {
-        if (Current.browser.includes("Firefox")) {
+        if (Current.browser.includes("Firefox") || CurrentBrowser.browser.includes("msie")) {
           setTimeout(function () {
             return resolve(Craft.Scope);
           }, 600);
@@ -858,12 +1086,12 @@ window.CurrentBrowser = {
                 setTimeout(function () {
                   return resolve(Craft.Scope);
                 }, 650);
-                resolve(Craft.Scope);
               } else resolve(Craft.Scope);
               clearInterval(ReadyYet);
             }
           }, 50);
           setTimeout(function () {
+            clearInterval(ReadyYet);
             if (!Ready) reject("WebComponents didn't load correctly/intime -> load failed");
           }, 4500);
         })();
@@ -872,16 +1100,10 @@ window.CurrentBrowser = {
   };
 
   On('hashchange', function (e) {
-    return Craft.router.handlers.forEach(function (handler) {
+    return CraftRouter.handlers.forEach(function (handler) {
       return location.hash === handler.link || location === handler.link ? handler.func() : null;
     });
   });
 
-  Object.observe(Craft.Scope, function (changes) {
-    changes.forEach(function (change) {
-      forEach(queryAll('[view-bind]'), function (el) {
-        if (is.Def(Craft.Scope[el.getAttribute('view-bind')])) el.innerHTML = Craft.Scope[el.getAttribute('view-bind')];
-      });
-    });
-  });
+  root.dispatchEvent(new CustomEvent('CrafterReady'));
 })();

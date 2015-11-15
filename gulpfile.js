@@ -43,7 +43,7 @@ gulp.task('babelize_webcomponents', function () {
     .pipe(babel({
       presets: ['es2015']
     })).pipe(rename({
-      extname: ".es"
+      extname: ".bs"
     })).pipe(gulp.dest('./src/pre-webcomponents/'));
 });
 
@@ -57,7 +57,6 @@ gulp.task('build_webcomponents', ['babelize_webcomponents'], function () {
       console.log(file.substring(0, file.length - 3));
     }
   });
-  console.log(FileNames);
   FileNames.forEach(FileName => {
     var ScriptFile, StyleFile;
     if (fs.statSync('./src/pre-webcomponents/' + FileName + '.css').isFile() && fs.statSync('./src/pre-webcomponents/' + FileName + '.bs').isFile()) {

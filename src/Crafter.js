@@ -13,38 +13,48 @@
   self.CurrentBrowser = {
     is: browser => {
       if (CurrentBrowser.browser.toLowerCase().includes(browser.toLowerCase())) return true;
-      return false;
+      return false
     },
     browser: Br.join(' ')
   };
 
-  let tStr = (obj, str) => toString.call(obj) === str,
+  let type = (obj, str) => toString.call(obj) === str,
     isT = (val, str) => typeof val === str,
     nT = (val, str) => typeof val !== str,
-    root = self,
+    root = document.defaultView,
     doc = document;
 
   root.is = {
     Bool: val => typeof val === 'boolean',
     Arr: val => Array.isArray(val),
+    Arrlike: val => {
+      if ('length' in val && val !== window && !is.Func(val)) {
+        if (is.Num(val.length)) return true;
+      }
+      return false;
+    },
     String: val => isT(val, 'string'),
     Num: val => isT(val, 'number'),
     Undef: (...args) => args.every(o => isT(o, 'undefined')),
     Def: (...args) => args.every(o => nT(o, 'undefined')),
     Null: (...args) => args.every(o => o === null),
     Node: (...args) => args.every(o => o instanceof Node),
-    NodeList: (...args) => args.every(o => o instanceof NodeList),
-    Object: (...args) => args.every(o => tStr(o, '[object Object]')),
-    Element: (...args) => args.every(o => tStr(o, '[object HTMLElement]')),
-    File: (...args) => args.every(o => tStr(o, '[object File]')),
-    FormData: (...args) => args.every(o => tStr(o, '[object FormData]')),
+    NodeList: (...args) => {
+      for (let arg in args)
+        if (Array.from(arg).every(n => is.Node(n))) return true;
+      return false;
+    },
+    Object: (...args) => args.every(o => type(o, '[object Object]')),
+    Element: (...args) => args.every(o => type(o, '[object HTMLElement]')),
+    File: (...args) => args.every(o => type(o, '[object File]')),
+    FormData: (...args) => args.every(o => type(o, '[object FormData]')),
+    Map: (...args) => args.every(o => type(o, '[object Map]')),
     Func: (...args) => args.every(o => typeof o === 'function'),
-    Blob: obj => tStr(obj, '[object Blob]'),
-    RegExp: obj => tStr(obj, '[object RegExp]'),
-    Date: obj => tStr(obj, '[object Date]'),
-    Map: obj => tStr(obj, '[object Map]'),
-    Set: obj => tStr(obj, '[object Set]'),
-    Symbol: obj => tStr(obj, '[object Symbol]'),
+    Blob: obj => type(obj, '[object Blob]'),
+    RegExp: obj => type(obj, '[object RegExp]'),
+    Date: obj => type(obj, '[object Date]'),
+    Set: obj => type(obj, '[object Set]'),
+    Symbol: obj => type(obj, '[object Symbol]'),
     UpperCase: char => (char >= 'A') && (char <= 'Z'),
     Email: email => /(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))/.test(email),
     Between: (val, max, min) => (val <= max && val >= min),
@@ -62,17 +72,40 @@
   root.forEach = (iterable, func) => {
     if (is.Func(func)) {
       let index = 0;
-      if (is.Arr(iterable) || is.NodeList(iterable) || is.String(iterable)) {
+      if (!is.Object(iterable)) {
         for (; index < iterable.length; index++) func(iterable[index], index);
-      } else if (is.Object(iterable)) {
+      } else {
         for (index in iterable)
           if (iterable.hasOwnProperty(index)) func(iterable[index], index);
       }
     } else log("err", "No Function Provided for forEach");
   }
 
-  root.query = (selector, element) => is.Def(element) ? element.querySelector(selector) : doc.querySelector(selector);
-  root.queryAll = (selector, element) => is.Def(element) ? element.querySelectorAll(selector) : doc.querySelectorAll(selector);
+  root.query = (selector, element) => {
+    if (is.Def(element)) {
+      if (is.String(element)) return doc.querySelector(element).querySelector(selector);
+      return element.querySelector(selector);
+    }
+    return doc.querySelector(selector);
+  }
+  root.queryAll = (selector, element) => {
+    if (is.Def(element)) {
+      if (is.String(element)) return doc.querySelector(element).querySelectorAll(selector);
+      return element.querySelectorAll(selector);
+    }
+    return doc.querySelectorAll(selector);
+  }
+
+  root.queryEach = (selector, element, func) => {
+    if (is.Func(element)) {
+      func = element;
+      element = document;
+    }
+    let elements;
+    if (is.String(element)) elements = doc.querySelector(element).querySelectorAll(selector);
+    elements = element.querySelectorAll(selector);
+    for (let i = 0; i < elements.length; i++) func(elements[i], i);
+  }
 
   root.$ = (selector, forceSelectAll) => {
     let element = queryAll(selector);
@@ -103,7 +136,7 @@
   root.On = (eventType, SelectorNode, func) => {
     if (is.Def(SelectorNode)) {
       if (is.String(SelectorNode)) {
-        forEach(queryAll(SelectorNode), el => el.addEventListener(eventType, e => func(e, el)));
+        queryEach(SelectorNode, el => el.addEventListener(eventType, e => func(e, el)));
       } else if (is.Node(SelectorNode) || SelectorNode === root || SelectorNode === doc) {
         SelectorNode.addEventListener(eventType, e => func(e, SelectorNode));
       } else if (is.NodeList(SelectorNode)) {
@@ -115,7 +148,7 @@
   root.Off = (eventType, SelectorNode, func) => {
     if (SelectorNode !== undefined) {
       if (is.String(SelectorNode)) {
-        forEach(queryAll(SelectorNode), el => el.removeEventListener(eventType, e => func(e, e.target)));
+        queryEach(SelectorNode, el => el.removeEventListener(eventType, e => func(e, e.target)));
       } else if (is.Node(SelectorNode) || SelectorNode === root || SelectorNode === doc) {
         SelectorNode.removeEventListener(eventType, e => func(e, e.target));
       } else if (is.NodeList(SelectorNode)) {
@@ -153,7 +186,7 @@
           url: (arg.css || arg.script),
           type: arg.css ? 'css' : 'script',
           exec: arg.execute !== false,
-          cache: arg.noCache !== false
+          cache: arg.cache !== false
         };
         if (is.Def(arg.key)) obj.key = arg.key;
         if (is.Def(arg.defer)) obj.defer = arg.defer;
@@ -237,8 +270,14 @@
       element.getWidth = () => element.getBoundingClientRect().width;
       element.getHeight = () => element.getBoundingClientRect().height;
       element.getRect = () => element.getBoundingClientRect();
-      element.setWidth = Width => element.style.width = Height;
-      element.setHeight = Height => element.style.height = Height;
+      element.setWidth = Width => {
+        element.style.width = Height;
+        return element;
+      }
+      element.setHeight = Height => {
+        element.style.height = Height;
+        return element;
+      }
       element.On = (eventType, func) => {
         On(eventType, element, func);
         return element;
@@ -275,7 +314,10 @@
         }
         return false;
       }
-      element.css = styles => (is.Def(styles)) ? forEach(styles, (prop, key) => element.style[key] = prop) : log('err', 'Styles Object undefined');
+      element.css = styles => {
+        (is.Def(styles)) ? forEach(styles, (prop, key) => element.style[key] = prop): log('err', 'Styles Object undefined');
+        return element;
+      }
       element.hide = (speed, timing) => {
         timing = timing || 'linear';
         speed = speed || 0;
@@ -327,7 +369,6 @@
               type: 'none'
             };
           }, speed);
-
         }
         if (is.Def(element.effectInProgress) && element.effectInProgress.status === true) {
           let CheckDone = setInterval(() => {
@@ -352,7 +393,8 @@
         if (is.Def(arr[i])) NewObject[i] = arr[i];
       return NewObject;
     },
-    IndexOfArrInArr: (Arr, searchArr) => {
+    toArray: obj => slice.call(obj),
+    IndexOfArrayInArray: (Arr, searchArr) => {
       for (let i = 0; i < searchArr.length; i++) {
         if (Arr[0] === searchArr[i]) {
           for (let c = 0; c < Arr.length; c++) {
@@ -366,6 +408,7 @@
       }
       return -1
     },
+    trim: text => is.Null(text) ? "" : (text + "").replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, ""),
     bindNode: (SelectorNode, ContextObject, func) => {
       let element = is.Node(SelectorNode) ? SelectorNode : query(SelectorNode),
         Changes;
@@ -376,12 +419,10 @@
       if (!is.Null(element) && is.Def(func) && is.Func(func)) {
         element.isbound = true;
         Object.observe(ContextObject, changes => {
-          if (element.isbound) {
-            changes.forEach(ch => {
-              Changes = ch;
-              func(element, ch);
-            });
-          }
+          if (element.isbound) changes.forEach(ch => {
+            Changes = ch;
+            func(element, ch);
+          });
         });
         func(element, Changes);
       } else log("err", "No matching element");
@@ -410,11 +451,11 @@
       let timeout;
       return function () {
         let context = this,
-          args = arguments;
-        let later = () => {
-          timeout = null;
-          if (!immediate) func.apply(context, args);
-        };
+          args = arguments,
+          later = () => {
+            timeout = null;
+            if (!immediate) func.apply(context, args);
+          };
         let callNow = immediate && !timeout;
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);
@@ -496,6 +537,12 @@
         log('err', 'could not find length of value');
       }
     },
+    type: (...args) => {
+      let types = [];
+      args.forEach(arg => types.push(typeof arg));
+      if (types.length < 2) return types[0];
+      return types;
+    },
     indexOfDate: (Collection, date) => {
       for (let i = 0; i < Collection.length; i++)
         if (+Collection[i] === +date) return i;
@@ -525,6 +572,19 @@
       }
       return obj;
     },
+    resolveQueryOrNode: (val) => {
+      if (is.String(val)) {
+        val = query(val);
+        if (val !== null) {
+          return val;
+        } else {
+          log('query returns null');
+          return null;
+        }
+      }
+      if (is.Node(val)) return val;
+      log('warn', 'value is of incorrect Type  string/node');
+    },
     Scope: {},
     mouse: {
       x: 0,
@@ -541,6 +601,15 @@
       return formData;
     },
     URLfrom: text => URL.createObjectURL(new Blob([text])),
+    OnScroll: (element, func) => {
+      let up = false;
+      if (is.Func(func)) {
+        On(element, e => {
+          (e.deltaY < 1) ? up = false: up = true;
+          func(up, e);
+        });
+      } else log('err', 'second param needs to be a function');
+    },
     OnResize: func => is.Func(func) ? Craft.ResizeHandlers.add(func) : log("err", "TypeError : Craft.OnResize -> func is not a function"),
     randomString: () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1),
     GenUID: () => Craft.randomString() + Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString() + Craft.randomString() + Craft.randomString(),
@@ -614,12 +683,56 @@
     }
   }
 
-  Object.observe(Craft.Scope, changes => {
-    changes.forEach(change => {
-      forEach(queryAll('[view-bind]'), el => {
-        if (is.Def(Craft.Scope[el.getAttribute('view-bind')])) el.innerHTML = Craft.Scope[el.getAttribute('view-bind')];
-      });
-    });
+  root.ReactiveVar = class ReactiveVariable {
+    constructor(val, handle) {
+      if (is.Func(handle)) {
+        this.Value = val;
+        this.Handle = handle;
+      } else log('err', 'ReactiveVariable needs a handler function after the value');
+      return this.Value;
+    }
+    set(val) {
+      if (this.Value !== val) {
+        this.Oldval = this.Value;
+        this.Value = val;
+        this.Handle(this.Oldval, val);
+      }
+      return this.Value;
+    }
+    get() {
+      return this.Value;
+    }
+    Reset(handle) {
+      if (is.Func(handle)) {
+        this.Handle = handle;
+      } else log('err', 'ReactiveVariable.Reset only takes a function');
+    }
+  }
+
+  Craft.Binds = new Map;
+  var CrafterStyles = document.createElement('style');
+  CrafterStyles.setAttribute('CrafterStyles', '');
+  CrafterStyles.innerHTML = `
+  @keyframes NodeInserted {
+    from {opacity: 0.99;}
+    to {opacity: 1;}
+  }
+  [view-bind] {
+    animation-duration: 0.001s;
+    animation-name: NodeInserted;
+  }`;
+  doc.head.appendChild(CrafterStyles);
+
+  On('animationstart', document, e => {
+    if (e.animationName === 'NodeInserted' && is.Node(e.target)) {
+      if (e.target.hasAttribute('[view-bind]')) {
+        if (Craft.Binds.has(e.target.getAttribute('view-bind'))) e.target.innerHTML = Craft.Binds.get(e.target.getAttribute('view-bind')).get();
+      }
+    }
+  });
+
+  forEach(queryAll('[view-bind]'), el => {
+    if (Craft.DataBindScope.has(el.getAttribute('view-bind'))) el.innerHTML = Craft.DataBindScope.get(el.getAttribute('view-bind'));
   });
 
   Craft.ResizeHandlers = new FunctionIterator;
@@ -630,11 +743,10 @@
     Craft.mouse.y = ev.clientY;
   }
   let DomReady = false,
-    Ready = (false && DomReady),
-    CrafterReady = new CustomEvent('CrafterReady');
+    Ready = (false && DomReady);
 
   On('DOMContentLoaded', () => {
-    forEach(queryAll('[link]'), el => On('click', el, e => el.hasAttribute('newtab') ? open(el.getAttribute('link')) : CraftRouter.open(el.getAttribute('link'))));
+    queryEach('[link]', el => On('click', el, e => el.hasAttribute('newtab') ? open(el.getAttribute('link')) : CraftRouter.open(el.getAttribute('link'))));
     CraftRouter.links.forEach(link => link());
     DomReady = true;
   });
@@ -642,33 +754,35 @@
   On('WebComponentsReady', e => {
     Ready = (true && DomReady);
     setTimeout(() => {
-      if (!Ready) Ready = true;
+      if (!Ready) {
+        Ready = true;
+        log('warn', 'loading took longer than expected');
+      }
     }, 3500);
   });
-  root.WhenReady = function () {
-    return new Promise((resolve, reject) => {
-      if (Ready) {
-        root.dispatchEvent(CrafterReady);
-        if (Current.browser.includes("Firefox")) {
-          setTimeout(() => resolve(Craft.Scope), 600);
-        } else resolve(Craft.Scope);
-      } else {
-        let ReadyYet = setInterval(() => {
-          if (Ready) {
-            root.dispatchEvent(CrafterReady);
-            if (CurrentBrowser.browser.includes("Firefox") || CurrentBrowser.browser.includes("msie")) {
-              setTimeout(() => resolve(Craft.Scope), 650);
-            } else resolve(Craft.Scope);
-            clearInterval(ReadyYet);
-          }
-        }, 50);
-        setTimeout(() => {
+
+  root.WhenReady = () => new Promise((resolve, reject) => {
+    if (Ready) {
+      if (Current.browser.includes("Firefox") || CurrentBrowser.browser.includes("msie")) {
+        setTimeout(() => resolve(Craft.Scope), 600);
+      } else resolve(Craft.Scope);
+    } else {
+      let ReadyYet = setInterval(() => {
+        if (Ready) {
+          if (CurrentBrowser.browser.includes("Firefox") || CurrentBrowser.browser.includes("msie")) {
+            setTimeout(() => resolve(Craft.Scope), 650);
+          } else resolve(Craft.Scope);
           clearInterval(ReadyYet);
-          if (!Ready) reject("WebComponents didn't load correctly/intime -> load failed");
-        }, 4500);
-      }
-    });
-  }
+        }
+      }, 50);
+      setTimeout(() => {
+        clearInterval(ReadyYet);
+        if (!Ready) reject("WebComponents didn't load correctly/intime -> load failed");
+      }, 4500);
+    }
+  });
 
   On('hashchange', e => CraftRouter.handlers.forEach(handler => (location.hash === handler.link || location === handler.link) ? handler.func() : null));
+
+  root.dispatchEvent(new CustomEvent('CrafterReady'));
 })();
