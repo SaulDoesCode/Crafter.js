@@ -1,0 +1,273 @@
+<script type="text/javascript">
+	'use strict';
+
+window.addEventListener('CrafterReady', function () {
+
+  Craft.newComponent('side-bar', {
+    created: function created() {
+      if (this.hasAttribute('color-accent')) this.color = this.getAttribute('color-accent');
+      if (!this.hasAttribute('sidebar-direction')) this.setAttribute('sidebar-direction', 'left');
+      if (!this.classList.contains('sidebar-hidden')) {
+        this.setAttribute('sidebar-toggle', 'true');
+      } else this.setAttribute('sidebar-toggle', 'false');
+    },
+    setToggleElement: function setToggleElement(SelectorOrNode) {
+      var _this = this;
+
+      var Toggle = Craft.resolveQueryOrNode(SelectorOrNode);
+      this.open = true;
+      On('click', Toggle, function (ev) {
+        _this.open = !_this.open;
+        _this.setAttribute('sidebar-toggle', _this.open.toString());
+      });
+    },
+    toggle: function toggle() {
+      if (is.Undef(this.open)) this.open = true;
+      this.open = !this.open;
+      this.setAttribute('sidebar-toggle', this.open.toString());
+    },
+    attr: function attr(attrName, oldVal, newVal) {
+      if (!this.classList.contains('sidebar-hidden')) {
+        this.setAttribute('sidebar-toggle', 'true');
+      } else this.setAttribute('sidebar-toggle', 'false');
+    }
+  });
+
+  Craft.newComponent('sidebar-mainheading', {
+    extends: 'div'
+  });
+  Craft.newComponent('sidebar-icon', {
+    extends: 'span'
+  });
+
+  Craft.newComponent('sidebar-heading', {
+    created: function created() {
+      var _this2 = this;
+
+      if (this.hasAttribute('ripple')) this.color = this.getAttribute('ripple');
+      if (this.hasAttribute('color-accent')) this.color = this.getAttribute('color-accent');
+      if (query('sidebar-icon', this) !== null) query('sidebar-icon', this).style.color = this.color;
+      setTimeout(function () {
+        if (_this2.textContent.length > 40) _this2.style.height = 'auto';
+      }, 50);
+    },
+    attr: function attr() {
+      if (attrName === 'ripple') this.color = newVal;
+      if (attrName === 'color-accent') this.color = newVal;
+      if (query('sidebar-icon', this) !== null) query('sidebar-icon', this).style.color = this.color;
+    }
+  });
+
+  Craft.newComponent('sidebar-item', {
+    created: function created() {
+      var _this3 = this;
+
+      if (this.hasAttribute('ripple')) this.color = this.getAttribute('ripple');
+      if (this.hasAttribute('color-accent')) this.color = this.getAttribute('color-accent');
+      this.style.borderColor = this.color;
+      if (query('sidebar-icon', this) !== null) query('sidebar-icon', this).style.color = this.color;
+      this.onclick = function (e) {
+        if (_this3.parentNode !== null && (_this3.parentNode.tagName === 'SIDE-BAR' || _this3.parentNode.tagName === 'SIDEBAR-ACCORDION')) {
+          if (_this3 === query('[selected]', _this3.parentNode)) {
+            _this3.removeAttribute('selected');
+          } else {
+            forEach(queryAll('[selected]', _this3.parentNode), function (el) {
+              return el.removeAttribute('selected');
+            });
+            setTimeout(function () {
+              return _this3.setAttribute('selected', '');
+            }, 100);
+          }
+        }
+      };
+    },
+    attr: function attr(attrName, oldVal, newVal) {
+      if (attrName === 'ripple') this.color = newVal;
+      if (attrName === 'color-accent') this.color = newVal;
+      this.style.borderColor = this.color;
+      if (query('sidebar-icon', this) !== null) query('sidebar-icon', this).style.color = this.color;
+    }
+  });
+
+  Craft.newComponent('sidebar-accordion', {
+    created: function created() {
+      var _this4 = this;
+
+      this.open = false;
+      if (this.getAttribute('accordion') === 'open') {
+        this.open = true;
+        this.setAttribute('accordion', 'open');
+      } else {
+        this.open = false;
+        this.setAttribute('accordion', 'closed');
+      }
+      var heading = query('sidebar-heading', this),
+          headingColor = undefined;
+      if (heading.hasAttribute('ripple') || heading.hasAttribute('color-accent')) {
+        if (heading.hasAttribute('ripple')) headingColor = heading.getAttribute('ripple');
+        if (heading.hasAttribute('color-accent')) headingColor = heading.getAttribute('color-accent');
+        forEach(queryAll('sidebar-item', this), function (el) {
+          if (!el.hasAttribute('ripple') && !el.hasAttribute('color-accent')) el.setAttribute('color-accent', headingColor);
+        });
+      }
+
+      heading.onclick = function (e) {
+        _this4.open = !_this4.open;
+        _this4.open ? _this4.setAttribute('accordion', 'open') : _this4.setAttribute('accordion', 'closed');
+      };
+    },
+    attr: function attr() {
+      if (this.getAttribute('accordion') === 'open') {
+        this.open = true;
+        this.setAttribute('accordion', 'open');
+      } else {
+        this.open = false;
+        this.setAttribute('accordion', 'closed');
+      }
+    }
+  });
+});</script>
+<style>
+	side-bar, side-bar > *, side-bar > * > * {
+  box-sizing: border-box;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
+}
+side-bar {
+  position: absolute;
+  display: flex;
+  flex-flow: column nowrap;
+  justify-content: flex-start;
+  align-content: center;
+  align-items: center;
+  width: 200px;
+  height: 100%;
+  border-right:4px solid hsl(0, 0%, 48%);
+  background: hsl(0, 0%, 99%);
+  overflow: auto;
+  color: hsl(0, 0%, 44%);
+}
+side-bar[sidebar-direction="left"] {
+  left: 0;
+  box-shadow: 0 0 3px hsla(0, 0%, 12%, 0.5);
+}
+side-bar[sidebar-direction="right"] {
+  right: 0;
+  box-shadow: 0 0 3px hsla(0, 0%, 12%, 0.5);
+}
+sidebar-mainheading {
+  display: inline-flex;
+  position: relative;
+  overflow: hidden;
+  flex: 0 1 auto;
+  justify-content: center;
+  align-content: center;
+  align-items: center;
+  height: 13mm;
+  width: 100%;
+  color: hsl(0, 0%, 100%);
+  text-shadow: 0 2px 3px hsla(0, 0%, 70%, 0.6);
+  background: hsl(0, 0%,48%);
+  font-size: 1.1em;
+}
+sidebar-heading {
+  display: flex;
+  position: relative;
+  flex-flow: row nowrap;
+  overflow: hidden;
+  flex: 0 1 auto;
+  align-content: center;
+  align-items: center;
+  justify-content:flex-start;
+  height: 12mm;
+  width: 100%;
+  margin: -0.5px 0 -0.5px 0;
+  font-size:0.95em;
+  font-weight: 500;
+  padding-left:5%;
+  padding-right:8mm;
+  z-index: 5;
+  background: hsl(0, 0%, 100%);
+  border-top: 1px solid hsl(0, 0%, 92%);
+  border-bottom: 1px solid hsl(0, 0%, 92%);
+}
+sidebar-heading:hover {
+  color: hsl(0, 0%, 50%);
+  background: hsl(0, 0%, 98%);
+  /*box-shadow: 0 0 3px hsla(0, 0%, 16%, 0.25);*/
+  z-index: 6;
+  cursor: pointer;
+}
+sidebar-accordion {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: transparent;
+}
+sidebar-accordion[accordion="open"] > sidebar-heading {
+  border-bottom: none;
+  background:hsl(0, 0%, 94%);
+}
+sidebar-accordion[accordion="open"] > sidebar-item {
+  height: 10mm;
+  pointer-events: all;
+}
+sidebar-accordion[accordion="closed"] > sidebar-item {
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+sidebar-accordion[accordion="open"] > sidebar-item:first-of-type {
+  box-shadow: inset 0 2px 3px -1px hsla(0, 0%, 20%, 0.24);
+}
+sidebar-accordion[accordion="open"] > sidebar-item:last-of-type {
+  box-shadow: inset 0 -2px 3px -1px hsla(0, 0%, 20%, 0.24);
+}
+sidebar-item {
+  display: flex;
+  flex-flow: row nowrap;
+  flex: 0 1 auto;
+  align-items: center;
+  align-content: center;
+  justify-content: flex-start;
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  background: hsl(0, 0%, 98%);
+  font-size: 0.95em;
+  padding-left: 10%;
+  border-left: 0 solid #656565;
+  width: 100%;
+  height: 8mm;
+  transition: all 140ms ease, height 280ms ease-in, opacity 440ms ease-in-out, borderWidth 40ms ease;
+}
+side-bar > sidebar-item:hover, side-bar > sidebar-accordion > sidebar-item:hover {
+  background: hsl(0, 0%, 92%);
+}
+side-bar[sidebar-direction="left"] > sidebar-item:hover, side-bar[sidebar-direction="left"] > sidebar-accordion > sidebar-item:hover {
+  border-width: 5px;
+}
+sidebar-item:active , sidebar-item[selected] {
+  z-index: 6;
+  border-width: 3px;
+  box-shadow: inset 0 0 6px hsla(0, 0%, 20%, 0.24) !important;
+}
+sidebar-icon {
+  display: inline-flex;
+  position: absolute;
+  align-items: center;
+  align-content: center;
+  justify-content:center;
+  right:0;
+  top:0;
+  cursor: inherit;
+  font-size: 1.1em;
+  height: 100%;
+  width: 10mm;
+  margin: 0 !important;
+}
+
+</style>
