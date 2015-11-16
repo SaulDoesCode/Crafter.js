@@ -1,8 +1,7 @@
-window.addEventListener('CrafterReady', function () {
+(function () {
   "use strict";
-    Craft.WigetsDefined = true;
-
-    self.Ripple = function (SelectorOrNode,options) {
+  let CrafterWidgets = () => {
+    window.Ripple = function (SelectorOrNode, options) {
       options = options || {};
       let color = options.color || undefined,
         timing = options.timing || 1000;
@@ -172,4 +171,15 @@ window.addEventListener('CrafterReady', function () {
         }
       }
     });
-});
+  }
+  if ("Craft" in window) {
+    CrafterWidgets();
+  } else {
+    let isCrafterReady = setInterval(function () {
+      if ("Craft" in window) {
+        CrafterWidgets();
+        clearInterval(isCrafterReady);
+      }
+    }, 40);
+  }
+})();

@@ -5,24 +5,25 @@
  */
 "use strict";
 (() => {
+
+  let type = (obj, str) => toString.call(obj) === str,
+    isT = (val, str) => typeof val === str,
+    nT = (val, str) => typeof val !== str,
+    root = window,
+    doc = document;
+
   let ua = navigator.userAgent,
     tem, Br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
   if (Br && (tem = ua.match(/version\/([\.\d]+)/i)) !== null) Br[2] = tem[1];
   Br ? [Br[1], Br[2]] : [navigator.appName, navigator.appVersion, '-?'];
 
-  self.CurrentBrowser = {
+  root.CurrentBrowser = {
     is: browser => {
       if (CurrentBrowser.browser.toLowerCase().includes(browser.toLowerCase())) return true;
       return false
     },
     browser: Br.join(' ')
   };
-
-  let type = (obj, str) => toString.call(obj) === str,
-    isT = (val, str) => typeof val === str,
-    nT = (val, str) => typeof val !== str,
-    root = document.defaultView,
-    doc = document;
 
   root.is = {
     Bool: val => typeof val === 'boolean',
@@ -40,8 +41,8 @@
     Null: (...args) => args.every(o => o === null),
     Node: (...args) => args.every(o => o instanceof Node),
     NodeList: (...args) => {
-      for (let arg in args)
-        if (Array.from(arg).every(n => is.Node(n))) return true;
+      for (var i = 0; i < args.length; i++)
+        if (Array.from(args[i]).every(n => is.Node(n))) return true;
       return false;
     },
     Object: (...args) => args.every(o => type(o, '[object Object]')),
@@ -82,24 +83,20 @@
   }
 
   root.query = (selector, element) => {
-    if (is.Def(element)) {
-      if (is.String(element)) return doc.querySelector(element).querySelector(selector);
-      return element.querySelector(selector);
-    }
+    if (is.String(element)) return doc.querySelector(element).querySelector(selector);
+    if (is.Node(element)) return element.querySelector(selector);
     return doc.querySelector(selector);
   }
   root.queryAll = (selector, element) => {
-    if (is.Def(element)) {
-      if (is.String(element)) return doc.querySelector(element).querySelectorAll(selector);
-      return element.querySelectorAll(selector);
-    }
+    if (is.String(element)) return doc.querySelector(element).querySelectorAll(selector);
+    if (is.Node(element)) return element.querySelectorAll(selector);
     return doc.querySelectorAll(selector);
   }
 
   root.queryEach = (selector, element, func) => {
     if (is.Func(element)) {
       func = element;
-      element = document;
+      element = doc;
     }
     let elements;
     if (is.String(element)) elements = doc.querySelector(element).querySelectorAll(selector);
@@ -110,7 +107,7 @@
   root.$ = (selector, forceSelectAll) => {
     let element = queryAll(selector);
     if (element.length > 1 || forceSelectAll === true || forceSelectAll === '*') return craft(element);
-    if (!is.Null(element[0]) && forceSelectAll === false) return craft(element[0]);
+    if (is.Node(element[0]) && forceSelectAll === false) return craft(element[0]);
     return null;
   }
 
@@ -408,10 +405,10 @@
       }
       return -1
     },
+    ifthen: (bools, func, ...args) => new Promise((resolve, reject) => bools ? resolve(args) : reject('ifthen -> bolean logic returned false')),
     trim: text => is.Null(text) ? "" : (text + "").replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, ""),
     bindNode: (SelectorNode, ContextObject, func) => {
-      let element = is.Node(SelectorNode) ? SelectorNode : query(SelectorNode),
-        Changes;
+      let Changes, element = is.Node(SelectorNode) ? SelectorNode : query(SelectorNode);
       if (is.Func(ContextObject)) {
         func = ContextObject;
         ContextObject = Craft.Scope;
@@ -551,10 +548,15 @@
     removeArrItem: (Arr, val) => {
       let index = Arr.IndexOf(val),
         temp = [],
+        string = false,
         i = 0;
+      if (is.String(Arr)) {
+        Arr = Array.from(Arr);
+        string = true;
+      }
       for (; i < Arr.length; i++)
         if (i !== index) temp.push(Arr[i]);
-      return temp;
+      return string ? temp : temp;
     },
     omit: (obj, val) => {
       if (is.Object(obj)) {
@@ -590,10 +592,7 @@
       x: 0,
       y: 0
     },
-    nodeExists: (selector, within) => {
-      return queryAll(selector, (is.Node(within) ? within = within : within = query(within))) !== null;
-      return queryAll(selector) !== null;
-    },
+    nodeExists: (selector, within) => queryAll(selector, (is.Node(within) ? within = within : within = query(within))) !== null,
     ObjToFormData: obj => {
       let formData = new FormData(),
         key;
@@ -742,17 +741,23 @@
     Craft.mouse.x = ev.clientX;
     Craft.mouse.y = ev.clientY;
   }
-  let DomReady = false,
-    Ready = (false && DomReady);
+  let Ready = 0;
 
   On('DOMContentLoaded', () => {
     queryEach('[link]', el => On('click', el, e => el.hasAttribute('newtab') ? open(el.getAttribute('link')) : CraftRouter.open(el.getAttribute('link'))));
     CraftRouter.links.forEach(link => link());
-    DomReady = true;
+    Ready++;
   });
 
   On('WebComponentsReady', e => {
-    Ready = (true && DomReady);
+    Ready++;
+    if(Ready === 2) {
+      Ready = true;
+    } else {
+      setTimeout(function () {
+        if(Ready === 2) Ready = true;
+      }, 200);
+    }
     setTimeout(() => {
       if (!Ready) {
         Ready = true;
@@ -783,6 +788,4 @@
   });
 
   On('hashchange', e => CraftRouter.handlers.forEach(handler => (location.hash === handler.link || location === handler.link) ? handler.func() : null));
-
-  root.dispatchEvent(new CustomEvent('CrafterReady'));
 })();

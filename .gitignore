@@ -5,3 +5,4 @@ node_modules
 #FileTypes
 *.log
 *.exe
+*.bs

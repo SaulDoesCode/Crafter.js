@@ -12,19 +12,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
 
 (function () {
-  var ua = navigator.userAgent,
-      tem = undefined,
-      Br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
-  if (Br && (tem = ua.match(/version\/([\.\d]+)/i)) !== null) Br[2] = tem[1];
-  Br ? [Br[1], Br[2]] : [navigator.appName, navigator.appVersion, '-?'];
-
-  self.CurrentBrowser = {
-    is: function is(browser) {
-      if (CurrentBrowser.browser.toLowerCase().includes(browser.toLowerCase())) return true;
-      return false;
-    },
-    browser: Br.join(' ')
-  };
 
   var type = function type(obj, str) {
     return toString.call(obj) === str;
@@ -35,8 +22,22 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       nT = function nT(val, str) {
     return (typeof val === 'undefined' ? 'undefined' : _typeof(val)) !== str;
   },
-      root = document.defaultView,
+      root = window,
       doc = document;
+
+  var ua = navigator.userAgent,
+      tem = undefined,
+      Br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
+  if (Br && (tem = ua.match(/version\/([\.\d]+)/i)) !== null) Br[2] = tem[1];
+  Br ? [Br[1], Br[2]] : [navigator.appName, navigator.appVersion, '-?'];
+
+  root.CurrentBrowser = {
+    is: function is(browser) {
+      if (CurrentBrowser.browser.toLowerCase().includes(browser.toLowerCase())) return true;
+      return false;
+    },
+    browser: Br.join(' ')
+  };
 
   root.is = {
     Bool: function Bool(val) {
@@ -108,11 +109,10 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         args[_key5] = arguments[_key5];
       }
 
-      for (var arg in args) {
-        if (Array.from(arg).every(function (n) {
-          return is.Node(n);
-        })) return true;
-      }return false;
+      for (var i = 0; i < args.length; i++) if (Array.from(args[i]).every(function (n) {
+        return is.Node(n);
+      })) return true;
+      return false;
     },
     Object: function Object() {
       for (var _len6 = arguments.length, args = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
@@ -223,24 +223,20 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
   };
 
   root.query = function (selector, element) {
-    if (is.Def(element)) {
-      if (is.String(element)) return doc.querySelector(element).querySelector(selector);
-      return element.querySelector(selector);
-    }
+    if (is.String(element)) return doc.querySelector(element).querySelector(selector);
+    if (is.Node(element)) return element.querySelector(selector);
     return doc.querySelector(selector);
   };
   root.queryAll = function (selector, element) {
-    if (is.Def(element)) {
-      if (is.String(element)) return doc.querySelector(element).querySelectorAll(selector);
-      return element.querySelectorAll(selector);
-    }
+    if (is.String(element)) return doc.querySelector(element).querySelectorAll(selector);
+    if (is.Node(element)) return element.querySelectorAll(selector);
     return doc.querySelectorAll(selector);
   };
 
   root.queryEach = function (selector, element, func) {
     if (is.Func(element)) {
       func = element;
-      element = document;
+      element = doc;
     }
     var elements = undefined;
     if (is.String(element)) elements = doc.querySelector(element).querySelectorAll(selector);
@@ -253,7 +249,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
   root.$ = function (selector, forceSelectAll) {
     var element = queryAll(selector);
     if (element.length > 1 || forceSelectAll === true || forceSelectAll === '*') return craft(element);
-    if (!is.Null(element[0]) && forceSelectAll === false) return craft(element[0]);
+    if (is.Node(element[0]) && forceSelectAll === false) return craft(element[0]);
     return null;
   };
 
@@ -651,12 +647,21 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       }
       return -1;
     },
+    ifthen: function ifthen(bools, func) {
+      for (var _len13 = arguments.length, args = Array(_len13 > 2 ? _len13 - 2 : 0), _key13 = 2; _key13 < _len13; _key13++) {
+        args[_key13 - 2] = arguments[_key13];
+      }
+
+      return new Promise(function (resolve, reject) {
+        return bools ? resolve(args) : reject('ifthen -> bolean logic returned false');
+      });
+    },
     trim: function trim(text) {
       return is.Null(text) ? "" : (text + "").replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, "");
     },
     bindNode: function bindNode(SelectorNode, ContextObject, func) {
-      var element = is.Node(SelectorNode) ? SelectorNode : query(SelectorNode),
-          Changes = undefined;
+      var Changes = undefined,
+          element = is.Node(SelectorNode) ? SelectorNode : query(SelectorNode);
       if (is.Func(ContextObject)) {
         func = ContextObject;
         ContextObject = Craft.Scope;
@@ -766,8 +771,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       }ContextObject[func] = Func;
     },
     concatObjects: function concatObjects(hostobj) {
-      for (var _len13 = arguments.length, Objs = Array(_len13 > 1 ? _len13 - 1 : 0), _key13 = 1; _key13 < _len13; _key13++) {
-        Objs[_key13 - 1] = arguments[_key13];
+      for (var _len14 = arguments.length, Objs = Array(_len14 > 1 ? _len14 - 1 : 0), _key14 = 1; _key14 < _len14; _key14++) {
+        Objs[_key14 - 1] = arguments[_key14];
       }
 
       forEach(hostobj, function () {
@@ -784,8 +789,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       return hostobj;
     },
     mergeObjects: function mergeObjects(hostobj) {
-      for (var _len14 = arguments.length, Objs = Array(_len14 > 1 ? _len14 - 1 : 0), _key14 = 1; _key14 < _len14; _key14++) {
-        Objs[_key14 - 1] = arguments[_key14];
+      for (var _len15 = arguments.length, Objs = Array(_len15 > 1 ? _len15 - 1 : 0), _key15 = 1; _key15 < _len15; _key15++) {
+        Objs[_key15 - 1] = arguments[_key15];
       }
 
       return Object.assign(hostobj, Objs);
@@ -800,8 +805,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       }
     },
     type: function type() {
-      for (var _len15 = arguments.length, args = Array(_len15), _key15 = 0; _key15 < _len15; _key15++) {
-        args[_key15] = arguments[_key15];
+      for (var _len16 = arguments.length, args = Array(_len16), _key16 = 0; _key16 < _len16; _key16++) {
+        args[_key16] = arguments[_key16];
       }
 
       var types = [];
@@ -819,9 +824,14 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     removeArrItem: function removeArrItem(Arr, val) {
       var index = Arr.IndexOf(val),
           temp = [],
+          string = false,
           i = 0;
+      if (is.String(Arr)) {
+        Arr = Array.from(Arr);
+        string = true;
+      }
       for (; i < Arr.length; i++) if (i !== index) temp.push(Arr[i]);
-      return temp;
+      return string ? temp : temp;
     },
     omit: function omit(obj, val) {
       if (is.Object(obj)) {
@@ -859,7 +869,6 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     },
     nodeExists: function nodeExists(selector, within) {
       return queryAll(selector, is.Node(within) ? within = within : within = query(within)) !== null;
-      return queryAll(selector) !== null;
     },
     ObjToFormData: function ObjToFormData(obj) {
       var formData = new FormData(),
@@ -1045,8 +1054,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     Craft.mouse.x = ev.clientX;
     Craft.mouse.y = ev.clientY;
   };
-  var DomReady = false,
-      Ready = false && DomReady;
+  var Ready = 0;
 
   On('DOMContentLoaded', function () {
     queryEach('[link]', function (el) {
@@ -1057,11 +1065,18 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     CraftRouter.links.forEach(function (link) {
       return link();
     });
-    DomReady = true;
+    Ready++;
   });
 
   On('WebComponentsReady', function (e) {
-    Ready = true && DomReady;
+    Ready++;
+    if (Ready === 2) {
+      Ready = true;
+    } else {
+      setTimeout(function () {
+        if (Ready === 2) Ready = true;
+      }, 200);
+    }
     setTimeout(function () {
       if (!Ready) {
         Ready = true;
@@ -1104,6 +1119,4 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       return location.hash === handler.link || location === handler.link ? handler.func() : null;
     });
   });
-
-  root.dispatchEvent(new CustomEvent('CrafterReady'));
 })();
