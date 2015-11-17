@@ -1,12 +1,12 @@
 (function () {
   "use strict";
   let CrafterWidgets = () => {
-    window.Ripple = function (SelectorOrNode, options) {
+    Craft.Ripple = function (SelectorOrNode, options) {
       options = options || {};
       let color = options.color || undefined,
-        timing = options.timing || 1000;
-      SelectorOrNode = Array.from((is.String(SelectorOrNode) ? queryAll(SelectorOrNode) : is.NodeList(SelectorOrNode) ? SelectorOrNode : [SelectorOrNode]));
-      SelectorOrNode.forEach(element => {
+        timing = options.timing || 1600;
+      SelectorOrNode = QueryOrNodetoNodeArray(SelectorOrNode);
+      forEach(SelectorOrNode, element => {
         if (element.hasAttribute("ripple")) color = element.getAttribute("ripple");
         element.onmousedown = e => {
           let circle = document.createElement('div'),
@@ -69,7 +69,7 @@
     On('animationstart', document, e => {
       if (e.animationName === 'nodeInserted' && is.Node(e.target)) {
         let element = e.target;
-        if (element.hasAttribute('ripple')) Ripple(element);
+        if (element.hasAttribute('ripple')) Craft.Ripple(element);
         if (element.hasAttribute('tooltip')) {
           forEach(queryAll(`[owner="${e.target.parentNode.tagName.toLowerCase()} ${e.target.tagName.toLowerCase()} ${e.target.className}"]`), el => el.remove());
           let show = false,
@@ -180,6 +180,6 @@
         CrafterWidgets();
         clearInterval(isCrafterReady);
       }
-    }, 40);
+    }, 20);
   }
 })();

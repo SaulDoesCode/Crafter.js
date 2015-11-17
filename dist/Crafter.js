@@ -22,6 +22,9 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       nT = function nT(val, str) {
     return (typeof val === 'undefined' ? 'undefined' : _typeof(val)) !== str;
   },
+      trace = function trace() {
+    return new Error().stack;
+  },
       root = window,
       doc = document;
 
@@ -46,7 +49,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     Arr: function Arr(val) {
       return Array.isArray(val);
     },
-    Arrlike: function Arrlike(val) {
+    Arraylike: function Arraylike(val) {
       if ('length' in val && val !== window && !is.Func(val)) {
         if (is.Num(val.length)) return true;
       }
@@ -109,7 +112,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         args[_key5] = arguments[_key5];
       }
 
-      for (var i = 0; i < args.length; i++) if (Array.from(args[i]).every(function (n) {
+      for (var i = 0; i < args.length; i++) if ('length' in args[i] && Array.from(args[i]).every(function (n) {
         return is.Node(n);
       })) return true;
       return false;
@@ -219,7 +222,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       } else {
         for (index in iterable) if (iterable.hasOwnProperty(index)) func(iterable[index], index);
       }
-    } else log("err", "No Function Provided for forEach");
+    } else throw new Error("No Function Provided for forEach");
   };
 
   root.query = function (selector, element) {
@@ -253,22 +256,22 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     return null;
   };
 
-  root.log = function (type, msg) {
-    switch (type) {
-      case 'err':
+  root.log = function (Type, msg) {
+    switch (Type) {
+      case 'err' || 'e':
         console.error(msg);
         break;
-      case 'warn':
+      case 'warn' || 'w':
         console.warn(msg);
         break;
-      case 'success':
+      case 'success' || 's':
         console.log('%c' + msg, 'color:green;');
         break;
-      case 'info':
+      case 'info' || 'i':
         console.info(msg);
         break;
       default:
-        console.log(type);
+        console.log(Type);
     }
   };
 
@@ -392,61 +395,6 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
   };
   Craftloader.removeAll(true);
 
-  root.CraftRouter = {
-    handle: function handle(RouteLink, func) {
-      if (location.hash === RouteLink || location === RouteLink) func();
-      Craft.router.handlers.push({
-        link: RouteLink,
-        func: func
-      });
-    },
-    handlers: [],
-    links: [],
-    makeLink: function makeLink(Selector, link, newtab, eventType) {
-      return Craft.router.links.push(function () {
-        return On(is.Undef(eventType) ? 'click' : eventType, query(Selector), function (e) {
-          return Craft.router.open(link, newtab);
-        });
-      });
-    },
-    open: (function (_open) {
-      function open(_x, _x2) {
-        return _open.apply(this, arguments);
-      }
-
-      open.toString = function () {
-        return _open.toString();
-      };
-
-      return open;
-    })(function (link, newtab) {
-      return newtab ? open(link) : location = link;
-    }),
-    setTitle: function setTitle(title) {
-      return document.title = title;
-    },
-    setView: function setView(viewHostSelector, view) {
-      return query(viewHostSelector).innerHTML = view;
-    },
-    fetchView: function fetchView(viewHostSelector, viewURL, cache, id) {
-      if (is.Null(localStorage.getItem("RT_" + id)) || is.Undef(localStorage.getItem("RT_" + id))) {
-        fetch(viewURL).then(function (res) {
-          res.text().then(function (txt) {
-            if (cache && is.Def(id) && is.String(id) && (is.Null(localStorage.getItem("RT_" + id)) || is.Undef(localStorage.getItem("RT_" + id)))) localStorage.setItem("RT_" + id, txt);
-            query(viewHostSelector).innerHTML = txt;
-          });
-        }).catch(function (msg) {
-          return log('warn', 'Could not fetch view -> ' + msg);
-        });
-      } else if (cache) query(viewHostSelector).innerHTML = localStorage.getItem("RT_" + id);
-    },
-    clearCache: function clearCache() {
-      for (var _i3 in localStorage) {
-        if (localStorage.key(_i3).includes("RT_")) localStorage.removeItem(localStorage.key(_i3));
-      }
-    }
-  };
-
   root.craft = function (element) {
     if (is.NodeList(element)) {
       element.forEach = function (func) {
@@ -479,14 +427,14 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
           return forEach(styles, function (prop, key) {
             return el.style[key] = prop;
           });
-        }) : log("err", 'invalid styles');
+        }) : console.error('invalid styles');
       };
     } else if (is.Node(element)) {
       element.getSiblings = function () {
         var siblings = [],
             AllChildren = element.parentNode.childNodes;
-        for (var _i4 = 0; _i4 < AllChildren.length; _i4++) {
-          if (AllChildren[_i4] !== element) siblings.push(AllChildren[_i4]);
+        for (var _i3 = 0; _i3 < AllChildren.length; _i3++) {
+          if (AllChildren[_i3] !== element) siblings.push(AllChildren[_i3]);
         }return siblings;
       };
       element.getWidth = function () {
@@ -530,8 +478,14 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         is.String(val) ? element.innerHTML = val + element.innerHTML : element.insertBefore(val, element.firstChild);
         return element;
       };
+      element.html = function (val) {
+        return val ? element.innerHTML = val : element.innerHTML;
+      };
+      element.text = function (val) {
+        return val ? element.textContent = val : element.textContent;
+      };
       element.hasChild = function (SelectorNode) {
-        if (!is.Node(SelectorNode)) SelectorNode = query(SelectorNode, element);
+        if (is.String(SelectorNode)) SelectorNode = query(SelectorNode, element);
         if (!is.Null(SelectorNode)) return true;
         return false;
       };
@@ -549,73 +503,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       element.css = function (styles) {
         is.Def(styles) ? forEach(styles, function (prop, key) {
           return element.style[key] = prop;
-        }) : log('err', 'Styles Object undefined');
-        return element;
-      };
-      element.hide = function (speed, timing) {
-        timing = timing || 'linear';
-        speed = speed || 0;
-
-        function HideElement() {
-          element.style.transition = 'opacity ' + speed + 'ms ' + timing;
-          element.style.opacity = '0';
-          element.effectInProgress = {
-            status: true,
-            type: 'hide'
-          };
-          setTimeout(function () {
-            element.style.display = 'none';
-            element.style.transition = '';
-            element.effectInProgress = {
-              status: false,
-              type: 'none'
-            };
-          }, speed);
-        }
-
-        if (is.Def(element.effectInProgress) && element.effectInProgress.status === true) {
-          (function () {
-            var CheckDone = setInterval(function () {
-              if (element.effectInProgress.status === false) {
-                HideElement();
-                clearInterval(CheckDone);
-              }
-            }, 10);
-          })();
-        } else HideElement();
-        return element;
-      };
-      element.show = function (speed, timingFunction) {
-        if (is.Undef(timingFunction)) timingFunction = 'linear';
-        if (is.Undef(speed)) speed = 0;
-
-        function ShowElement() {
-          element.style.transition = 'opacity ' + speed + 'ms ' + timingFunction;
-          element.style.display = '';
-          element.style.opacity = '1';
-          element.effectInProgress = {
-            status: true,
-            type: 'show'
-          };
-          setTimeout(function () {
-            element.style.opacity = '';
-            element.style.transition = '';
-            element.effectInProgress = {
-              status: false,
-              type: 'none'
-            };
-          }, speed);
-        }
-        if (is.Def(element.effectInProgress) && element.effectInProgress.status === true) {
-          (function () {
-            var CheckDone = setInterval(function () {
-              if (element.effectInProgress.status === false) {
-                ShowElement();
-                clearInterval(CheckDone);
-              }
-            }, 10);
-          })();
-        } else ShowElement();
+        }) : console.error('Styles Object undefined');
         return element;
       };
     }
@@ -626,20 +514,20 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
   root.Craft = {
     ArraytoObject: function ArraytoObject(arr) {
       var NewObject = {};
-      for (var _i5 in arr) {
-        if (is.Def(arr[_i5])) NewObject[_i5] = arr[_i5];
+      for (var _i4 in arr) {
+        if (is.Def(arr[_i4])) NewObject[_i4] = arr[_i4];
       }return NewObject;
     },
     toArray: function toArray(obj) {
       return slice.call(obj);
     },
     IndexOfArrayInArray: function IndexOfArrayInArray(Arr, searchArr) {
-      for (var _i6 = 0; _i6 < searchArr.length; _i6++) {
-        if (Arr[0] === searchArr[_i6]) {
+      for (var _i5 = 0; _i5 < searchArr.length; _i5++) {
+        if (Arr[0] === searchArr[_i5]) {
           for (var c = 0; c < Arr.length; c++) {
-            if (Arr[c] === searchArr[_i6 + c]) {
+            if (Arr[c] === searchArr[_i5 + c]) {
               if (c == Arr.length - 1) {
-                return _i6;
+                return _i5;
               } else continue;
             } else break;
           }
@@ -647,9 +535,63 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       }
       return -1;
     },
-    ifthen: function ifthen(bools, func) {
-      for (var _len13 = arguments.length, args = Array(_len13 > 2 ? _len13 - 2 : 0), _key13 = 2; _key13 < _len13; _key13++) {
-        args[_key13 - 2] = arguments[_key13];
+    Router: {
+      handle: function handle(RouteLink, func) {
+        if (location.hash === RouteLink || location === RouteLink) func();
+        Craft.router.handlers.push({
+          link: RouteLink,
+          func: func
+        });
+      },
+      handlers: [],
+      links: [],
+      makeLink: function makeLink(Selector, link, newtab, eventType) {
+        return Craft.router.links.push(function () {
+          return On(is.Undef(eventType) ? 'click' : eventType, query(Selector), function (e) {
+            return Craft.router.open(link, newtab);
+          });
+        });
+      },
+      open: (function (_open) {
+        function open(_x, _x2) {
+          return _open.apply(this, arguments);
+        }
+
+        open.toString = function () {
+          return _open.toString();
+        };
+
+        return open;
+      })(function (link, newtab) {
+        return newtab ? open(link) : location = link;
+      }),
+      setTitle: function setTitle(title) {
+        return document.title = title;
+      },
+      setView: function setView(viewHostSelector, view) {
+        return query(viewHostSelector).innerHTML = view;
+      },
+      fetchView: function fetchView(viewHostSelector, viewURL, cache, id) {
+        if (is.Null(localStorage.getItem("RT_" + id)) || is.Undef(localStorage.getItem("RT_" + id))) {
+          fetch(viewURL).then(function (res) {
+            res.text().then(function (txt) {
+              if (cache && is.Def(id) && is.String(id) && (is.Null(localStorage.getItem("RT_" + id)) || is.Undef(localStorage.getItem("RT_" + id)))) localStorage.setItem("RT_" + id, txt);
+              query(viewHostSelector).innerHTML = txt;
+            });
+          }).catch(function (msg) {
+            return log('warn', 'Could not fetch view -> ' + msg);
+          });
+        } else if (cache) query(viewHostSelector).innerHTML = localStorage.getItem("RT_" + id);
+      },
+      clearCache: function clearCache() {
+        for (var _i6 in localStorage) {
+          if (localStorage.key(_i6).includes("RT_")) localStorage.removeItem(localStorage.key(_i6));
+        }
+      }
+    },
+    ifthen: function ifthen(bools) {
+      for (var _len13 = arguments.length, args = Array(_len13 > 1 ? _len13 - 1 : 0), _key13 = 1; _key13 < _len13; _key13++) {
+        args[_key13 - 1] = arguments[_key13];
       }
 
       return new Promise(function (resolve, reject) {
@@ -801,7 +743,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       try {
         return val.length;
       } catch (e) {
-        log('err', 'could not find length of value');
+        console.error('could not find length of value');
       }
     },
     type: function type() {
@@ -845,22 +787,20 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         obj.forEach(function (i) {
           if (val === i) obj = Craft.removeArrItem(obj, i);
         });
-        if (val.IndexOf(i) !== -1) log('err', 'couldn\'t omit ' + val + 'from Array or String');
+        if (val.IndexOf(i) !== -1) console.error('couldn\'t omit ' + val + ' from Array or String');
       }
       return obj;
     },
-    resolveQueryOrNode: function resolveQueryOrNode(val) {
+    resolveQueryOrNode: function resolveQueryOrNode(val, all) {
       if (is.String(val)) {
-        val = query(val);
-        if (val !== null) {
+        all ? val = queryAll(val) : val = query(val);
+        if (is.Node(val) || is.NodeList(val)) {
           return val;
-        } else {
-          log('query returns null');
-          return null;
-        }
+        } else console.warn('query returns null');
+        return null;
       }
       if (is.Node(val)) return val;
-      log('warn', 'value is of incorrect Type  string/node');
+      console.warn('value is of incorrect Type  string/node');
     },
     Scope: {},
     mouse: {
@@ -886,7 +826,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
           e.deltaY < 1 ? up = false : up = true;
           func(up, e);
         });
-      } else log('err', 'second param needs to be a function');
+      } else console.error('second param needs to be a function');
     },
     OnResize: function OnResize(func) {
       return is.Func(func) ? Craft.ResizeHandlers.add(func) : log("err", "TypeError : Craft.OnResize -> func is not a function");
@@ -930,6 +870,15 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       }
     }
   };
+
+  var CraftElement = function CraftElement(SelectorNode) {
+    _classCallCheck(this, CraftElement);
+
+    console.log(this);
+    this.element = Craft.resolveQueryOrNode(SelectorNode);
+  };
+
+  new CraftElement(document.createElement('p'));
 
   root.FunctionIterator = (function () {
     function FuncIterator() {

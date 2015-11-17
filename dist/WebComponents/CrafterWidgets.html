@@ -5,12 +5,12 @@
   "use strict";
 
   var CrafterWidgets = function CrafterWidgets() {
-    window.Ripple = function (SelectorOrNode, options) {
+    Craft.Ripple = function (SelectorOrNode, options) {
       options = options || {};
       var color = options.color || undefined,
-          timing = options.timing || 1000;
-      SelectorOrNode = Array.from(is.String(SelectorOrNode) ? queryAll(SelectorOrNode) : is.NodeList(SelectorOrNode) ? SelectorOrNode : [SelectorOrNode]);
-      SelectorOrNode.forEach(function (element) {
+          timing = options.timing || 1200;
+      SelectorOrNode = QueryOrNodetoNodeArray(SelectorOrNode);
+      forEach(SelectorOrNode, function (element) {
         if (element.hasAttribute("ripple")) color = element.getAttribute("ripple");
         element.onmousedown = function (e) {
           var circle = document.createElement('div'),
@@ -90,7 +90,7 @@
       if (e.animationName === 'nodeInserted' && is.Node(e.target)) {
         (function () {
           var element = e.target;
-          if (element.hasAttribute('ripple')) Ripple(element);
+          if (element.hasAttribute('ripple')) Craft.Ripple(element);
           if (element.hasAttribute('tooltip')) {
             (function () {
               forEach(queryAll("[owner=\"" + e.target.parentNode.tagName.toLowerCase() + " " + e.target.tagName.toLowerCase() + " " + e.target.className + "\"]"), function (el) {
@@ -221,7 +221,7 @@
           CrafterWidgets();
           clearInterval(isCrafterReady);
         }
-      }, 40);
+      }, 20);
     })();
   }
 })();</script>
@@ -375,6 +375,7 @@ context-menu > section:hover {
   height: 240px;
   margin: 5px;
   display: inline-block;
+  position: relative;
   vertical-align: top;
   overflow: hidden;
   transition: all 0.3s cubic-bezier(.4, .2, .5, 1.4);
@@ -394,7 +395,7 @@ context-menu > section:hover {
   width: 480px;
   height: 480px;
 }
-.Biscuit-Title {
+.biscuit-title {
   position: relative;
   text-align: left;
   font-size: 1.2em;

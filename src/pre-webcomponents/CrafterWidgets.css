@@ -147,6 +147,7 @@ context-menu > section:hover {
   height: 240px;
   margin: 5px;
   display: inline-block;
+  position: relative;
   vertical-align: top;
   overflow: hidden;
   transition: all 0.3s cubic-bezier(.4, .2, .5, 1.4);
@@ -166,7 +167,7 @@ context-menu > section:hover {
   width: 480px;
   height: 480px;
 }
-.Biscuit-Title {
+.biscuit-title {
   position: relative;
   text-align: left;
   font-size: 1.2em;

@@ -9,6 +9,7 @@
   let type = (obj, str) => toString.call(obj) === str,
     isT = (val, str) => typeof val === str,
     nT = (val, str) => typeof val !== str,
+    trace = () => new Error().stack,
     root = window,
     doc = document;
 
@@ -23,12 +24,12 @@
       return false
     },
     browser: Br.join(' ')
-  };
+  }
 
   root.is = {
     Bool: val => typeof val === 'boolean',
     Arr: val => Array.isArray(val),
-    Arrlike: val => {
+    Arraylike: val => {
       if ('length' in val && val !== window && !is.Func(val)) {
         if (is.Num(val.length)) return true;
       }
@@ -79,8 +80,15 @@
         for (index in iterable)
           if (iterable.hasOwnProperty(index)) func(iterable[index], index);
       }
-    } else log("err", "No Function Provided for forEach");
+    } else throw new Error("No Function Provided for forEach");
   }
+
+  root.QueryOrNodetoNodeArray = (val) => {
+    if (is.String(val)) val = queryAll(val);
+    if (is.Null(val)) return null;
+    if (is.Node(val)) return [val];
+    if (is.NodeList(val)) return Array.from(val);
+  };
 
   root.query = (selector, element) => {
     if (is.String(element)) return doc.querySelector(element).querySelector(selector);
@@ -107,132 +115,65 @@
   root.$ = (selector, forceSelectAll) => {
     let element = queryAll(selector);
     if (element.length > 1 || forceSelectAll === true || forceSelectAll === '*') return craft(element);
-    if (is.Node(element[0]) && forceSelectAll === false) return craft(element[0]);
+    if (is.Node(element[0]) || forceSelectAll === false) return craft(element[0]);
     return null;
   }
 
-  root.log = function (type, msg) {
-    switch (type) {
-      case 'err':
-        console.error(msg);
+  root.log = function (Type, msg) {
+    switch (Type) {
+      case 'err' || 'e':
+        console.error(msg)
         break;
-      case 'warn':
-        console.warn(msg);
+      case 'warn' || 'w':
+        console.warn(msg)
         break;
-      case 'success':
-        console.log('%c' + msg, 'color:green;');
+      case 'success' || 's':
+        console.log('%c' + msg, 'color:green;')
         break;
-      case 'info':
-        console.info(msg);
+      case 'info' || 'i':
+        console.info(msg)
         break;
       default:
-        console.log(type);
+        console.log(Type)
     }
-  }
+  };
 
   root.On = (eventType, SelectorNode, func) => {
-    if (is.Def(SelectorNode)) {
-      if (is.String(SelectorNode)) {
-        queryEach(SelectorNode, el => el.addEventListener(eventType, e => func(e, el)));
-      } else if (is.Node(SelectorNode) || SelectorNode === root || SelectorNode === doc) {
-        SelectorNode.addEventListener(eventType, e => func(e, SelectorNode));
-      } else if (is.NodeList(SelectorNode)) {
-        forEach(SelectorNode, el => el.addEventListener(eventType, e => func(e, el)));
-      } else if (is.Func(SelectorNode)) root.addEventListener(eventType, e => SelectorNode(e, e.target));
-    }
+    if (!is.Func(SelectorNode) && is.Node(SelectorNode) || is.NodeList(SelectorNode) || is.String(SelectorNode)) {
+      let elements = QueryOrNodetoNodeArray(SelectorNode);
+      elements.forEach(el => el.addEventListener(eventType, e => func(e, el)));
+    } else if (is.Func(SelectorNode)) {
+      window.addEventListener(eventType,SelectorNode);
+    } else SelectorNode.addEventListener(eventType, func);
   }
 
   root.Off = (eventType, SelectorNode, func) => {
-    if (SelectorNode !== undefined) {
-      if (is.String(SelectorNode)) {
-        queryEach(SelectorNode, el => el.removeEventListener(eventType, e => func(e, e.target)));
-      } else if (is.Node(SelectorNode) || SelectorNode === root || SelectorNode === doc) {
-        SelectorNode.removeEventListener(eventType, e => func(e, e.target));
-      } else if (is.NodeList(SelectorNode)) {
-        forEach(SelectorNode, el => el.removeEventListener(eventType, e => func(e, e.target)));
-      } else if (is.Func(SelectorNode)) root.removeEventListener(eventType, e => SelectorNode(e, e.target));
-    }
+    if (!is.Func(SelectorNode,func) && is.Node(SelectorNode) || is.NodeList(SelectorNode) || is.String(SelectorNode)) {
+      let elements = QueryOrNodetoNodeArray(SelectorNode);
+      elements.forEach(el => el.removeEventListener(eventType, e => func(e, el)));
+    } else if (is.Func(SelectorNode)) {
+      window.removeEventListener(eventType, func);
+    } else SelectorNode.removeEventListener(eventType, func);
   }
 
-  var CraftImport = obj => {
-      let now = +new Date(),
-        key = (obj.key || obj.url),
-        src = Craftloader.get(key);
-      if (src || src.expire - now > 0) return new Promise(resolve => resolve(src));
-      return new Promise((success, failed) => fetch(obj.url).then(res => res.text().then(data => {
-        obj.data = data;
-        obj.stamp = now;
-        obj.expire = now + ((obj.expire || 4000) * 60 * 60 * 1000);
-        if (obj.cache) localStorage.setItem(Craftloader.pre + key, JSON.stringify(obj));
-        success(obj);
-      })).catch(err => failed(`Craftloader: problem fetching import -> ${err}`)));
-    },
-    execute = src => src.map(obj => {
-      let el = (obj.type === 'css') ? doc.createElement('style') : doc.createElement('script');
-      el.defer = obj.defer || undefined;
-      el.innerHTML = obj.data;
-      if (obj.exec) doc.head.appendChild(el);
-    }),
-    preOrKey = key => key.includes(Craftloader.pre) ? key : Craftloader.pre + key;
-  root.Craftloader = {
-    pre: 'craft:',
-    Import: (...args) => {
-      let obj, promises = [];
-      args.forEach(arg => {
-        obj = {
-          url: (arg.css || arg.script),
-          type: arg.css ? 'css' : 'script',
-          exec: arg.execute !== false,
-          cache: arg.cache !== false
-        };
-        if (is.Def(arg.key)) obj.key = arg.key;
-        if (is.Def(arg.defer)) obj.defer = arg.defer;
-        if (is.Def(arg.expire)) obj.expire = arg.expire;
-        arg.test === false ? Craftloader.remove(obj.url) : promises.push(CraftImport(obj));
-      });
-      return Promise.all(promises).then(execute);
-    },
-    setPrekey: str => Craftloader.pre = str + ':',
-    get: key => JSON.parse(localStorage.getItem(preOrKey(key)) || false),
-    remove: key => localStorage.removeItem(preOrKey(key)),
-    removeAll: expired => {
-      for (let i in localStorage)
-        if (!expired || Craftloader.get(i).expire <= +new Date()) Craftloader.remove(i)
+  root.Once = (eventType, SelectorNode, func) => {
+    let El;
+    function addListener(e) {
+      if(!is.Node(El)) El = e.target;
+      func(e, El);
+      this.removeEventListener(eventType,addListener);
     }
-  };
-  Craftloader.removeAll(true);
-
-  root.CraftRouter = {
-    handle: (RouteLink, func) => {
-      if (location.hash === RouteLink || location === RouteLink) func();
-      Craft.router.handlers.push({
-        link: RouteLink,
-        func: func
+    if (is.Node(SelectorNode) || is.NodeList(SelectorNode) || is.String(SelectorNode)) {
+      let elements = QueryOrNodetoNodeArray(SelectorNode);
+      elements.forEach(el => {
+        El = el;
+        el.addEventListener(eventType,addListener);
       });
-    },
-    handlers: [],
-    links: [],
-    makeLink: (Selector, link, newtab, eventType) => Craft.router.links.push(() => On((is.Undef(eventType) ? 'click' : eventType), query(Selector), e => Craft.router.open(link, newtab))),
-    open: (link, newtab) => newtab ? open(link) : location = link,
-    setTitle: title => document.title = title,
-    setView: (viewHostSelector, view) => query(viewHostSelector).innerHTML = view,
-    fetchView: (viewHostSelector, viewURL, cache, id) => {
-      if (is.Null(localStorage.getItem("RT_" + id)) || is.Undef(localStorage.getItem("RT_" + id))) {
-        fetch(viewURL).then(res => {
-          res.text().then(txt => {
-            if (cache && is.Def(id) && is.String(id) && (is.Null(localStorage.getItem("RT_" + id)) || is.Undef(localStorage.getItem("RT_" + id)))) localStorage.setItem(("RT_" + id), txt);
-            query(viewHostSelector).innerHTML = txt;
-          });
-        }).catch(msg => log('warn', 'Could not fetch view -> ' + msg));
-      } else if (cache) query(viewHostSelector).innerHTML = localStorage.getItem("RT_" + id);
-    },
-    clearCache: () => {
-      for (let i in localStorage)
-        if (localStorage.key(i).includes("RT_")) localStorage.removeItem(localStorage.key(i));
-    },
-  };
-
-
+    } else if (is.Func(SelectorNode)) {
+      func = SelectorNode;
+      window.addEventListener(eventType,addListener);
+    } else SelectorNode.addEventListener(eventType, addListener);
+  }
 
   root.craft = element => {
     if (is.NodeList(element)) {
@@ -255,7 +196,7 @@
           if (element[index] === SelectorNode) return true;
         return false;
       }
-      element.css = styles => (is.Def(styles)) ? forEach(element, el => forEach(styles, (prop, key) => el.style[key] = prop)) : log("err", 'invalid styles');
+      element.css = styles => (is.Def(styles)) ? forEach(element, el => forEach(styles, (prop, key) => el.style[key] = prop)) : console.error('invalid styles');
     } else if (is.Node(element)) {
       element.getSiblings = () => {
         let siblings = [],
@@ -295,8 +236,10 @@
         is.String(val) ? element.innerHTML = val + element.innerHTML : element.insertBefore(val, element.firstChild);
         return element;
       }
+      element.html = val => val ? element.innerHTML = val : element.innerHTML;
+      element.text = val => val ? element.textContent = val : element.textContent;
       element.hasChild = (SelectorNode) => {
-        if (!is.Node(SelectorNode)) SelectorNode = query(SelectorNode, element);
+        if (is.String(SelectorNode)) SelectorNode = query(SelectorNode, element);
         if (!is.Null(SelectorNode)) return true;
         return false;
       }
@@ -312,76 +255,14 @@
         return false;
       }
       element.css = styles => {
-        (is.Def(styles)) ? forEach(styles, (prop, key) => element.style[key] = prop): log('err', 'Styles Object undefined');
+        (is.Def(styles)) ? forEach(styles, (prop, key) => element.style[key] = prop): console.error('Styles Object undefined');
         return element;
       }
-      element.hide = (speed, timing) => {
-        timing = timing || 'linear';
-        speed = speed || 0;
-
-        function HideElement() {
-          element.style.transition = 'opacity ' + speed + 'ms ' + timing;
-          element.style.opacity = '0';
-          element.effectInProgress = {
-            status: true,
-            type: 'hide'
-          };
-          setTimeout(() => {
-            element.style.display = 'none';
-            element.style.transition = '';
-            element.effectInProgress = {
-              status: false,
-              type: 'none',
-            };
-          }, speed);
-        }
-
-        if (is.Def(element.effectInProgress) && element.effectInProgress.status === true) {
-          let CheckDone = setInterval(() => {
-            if (element.effectInProgress.status === false) {
-              HideElement();
-              clearInterval(CheckDone);
-            }
-          }, 10);
-        } else HideElement();
-        return element;
-      }
-      element.show = (speed, timingFunction) => {
-        if (is.Undef(timingFunction)) timingFunction = 'linear';
-        if (is.Undef(speed)) speed = 0;
-
-        function ShowElement() {
-          element.style.transition = 'opacity ' + speed + 'ms ' + timingFunction;
-          element.style.display = '';
-          element.style.opacity = '1';
-          element.effectInProgress = {
-            status: true,
-            type: 'show'
-          };
-          setTimeout(() => {
-            element.style.opacity = '';
-            element.style.transition = '';
-            element.effectInProgress = {
-              status: false,
-              type: 'none'
-            };
-          }, speed);
-        }
-        if (is.Def(element.effectInProgress) && element.effectInProgress.status === true) {
-          let CheckDone = setInterval(() => {
-            if (element.effectInProgress.status === false) {
-              ShowElement();
-              clearInterval(CheckDone);
-            }
-          }, 10);
-        } else ShowElement();
-        return element;
-      }
-
     }
     if (is.String(element)) return $(element);
     return element;
   }
+
 
   root.Craft = {
     ArraytoObject: arr => {
@@ -405,7 +286,80 @@
       }
       return -1
     },
-    ifthen: (bools, func, ...args) => new Promise((resolve, reject) => bools ? resolve(args) : reject('ifthen -> bolean logic returned false')),
+    loader: {
+      pre: 'craft:',
+      CraftImport: obj => {
+        let now = +new Date(),
+          key = (obj.key || obj.url),
+          src = Craft.loader.get(key);
+        if (src || src.expire - now > 0) return new Promise(resolve => resolve(src));
+        return new Promise((success, failed) => fetch(obj.url).then(res => res.text().then(data => {
+          obj.data = data;
+          obj.stamp = now;
+          obj.expire = now + ((obj.expire || 4000) * 60 * 60 * 1000);
+          if (obj.cache) localStorage.setItem(Craft.loader.pre + key, JSON.stringify(obj));
+          success(obj);
+        })).catch(err => failed(`Craft.loader: problem fetching import -> ${err}`)));
+      },
+      Import: (...args) => {
+        let obj, promises = [];
+        args.forEach(arg => {
+          obj = {
+            url: (arg.css || arg.script),
+            type: arg.css ? 'css' : 'script',
+            exec: arg.execute !== false,
+            cache: arg.cache !== false
+          };
+          if (is.Def(arg.key)) obj.key = arg.key;
+          if (is.Def(arg.defer)) obj.defer = arg.defer;
+          if (is.Def(arg.expire)) obj.expire = arg.expire;
+          arg.test === false ? Craft.loader.remove(obj.url) : promises.push(Craft.loader.CraftImport(obj));
+        });
+        return Promise.all(promises).then(src => src.map(obj => {
+          let el = (obj.type === 'css') ? doc.createElement('style') : doc.createElement('script');
+          el.defer = obj.defer || undefined;
+          el.innerHTML = obj.data;
+          if (obj.exec) doc.head.appendChild(el);
+        }));
+      },
+      setPrekey: str => Craft.loader.pre = str + ':',
+      get: key => JSON.parse(localStorage.getItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key) || false),
+      remove: key => localStorage.removeItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key),
+      removeAll: expired => {
+        for (let i in localStorage)
+          if (!expired || Craft.loader.get(i).expire <= +new Date()) Craft.loader.remove(i)
+      }
+    },
+    Router: {
+      handle: (RouteLink, func) => {
+        if (location.hash === RouteLink || location === RouteLink) func();
+        Craft.router.handlers.push({
+          link: RouteLink,
+          func: func
+        });
+      },
+      handlers: [],
+      links: [],
+      makeLink: (Selector, link, newtab, eventType) => Craft.router.links.push(() => On((is.Undef(eventType) ? 'click' : eventType), query(Selector), e => Craft.router.open(link, newtab))),
+      open: (link, newtab) => newtab ? open(link) : location = link,
+      setTitle: title => document.title = title,
+      setView: (viewHostSelector, view) => query(viewHostSelector).innerHTML = view,
+      fetchView: (viewHostSelector, viewURL, cache, id) => {
+        if (is.Null(localStorage.getItem("RT_" + id)) || is.Undef(localStorage.getItem("RT_" + id))) {
+          fetch(viewURL).then(res => {
+            res.text().then(txt => {
+              if (cache && is.Def(id) && is.String(id) && (is.Null(localStorage.getItem("RT_" + id)) || is.Undef(localStorage.getItem("RT_" + id)))) localStorage.setItem(("RT_" + id), txt);
+              query(viewHostSelector).innerHTML = txt;
+            });
+          }).catch(msg => log('warn', 'Could not fetch view -> ' + msg));
+        } else if (cache) query(viewHostSelector).innerHTML = localStorage.getItem("RT_" + id);
+      },
+      clearCache: () => {
+        for (let i in localStorage)
+          if (localStorage.key(i).includes("RT_")) localStorage.removeItem(localStorage.key(i));
+      },
+    },
+    ifthen: (bools, ...args) => new Promise((resolve, reject) => bools ? resolve(args) : reject('ifthen -> bolean logic returned false')),
     trim: text => is.Null(text) ? "" : (text + "").replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, ""),
     bindNode: (SelectorNode, ContextObject, func) => {
       let Changes, element = is.Node(SelectorNode) ? SelectorNode : query(SelectorNode);
@@ -531,7 +485,7 @@
       try {
         return val.length;
       } catch (e) {
-        log('err', 'could not find length of value');
+        console.error('could not find length of value');
       }
     },
     type: (...args) => {
@@ -570,22 +524,9 @@
         obj.forEach(i => {
           if (val === i) obj = Craft.removeArrItem(obj, i);
         });
-        if (val.IndexOf(i) !== -1) log('err', 'couldn\'t omit ' + val + 'from Array or String');
+        if (val.IndexOf(i) !== -1) console.error(`couldn't omit ${val} from Array or String`);
       }
       return obj;
-    },
-    resolveQueryOrNode: (val) => {
-      if (is.String(val)) {
-        val = query(val);
-        if (val !== null) {
-          return val;
-        } else {
-          log('query returns null');
-          return null;
-        }
-      }
-      if (is.Node(val)) return val;
-      log('warn', 'value is of incorrect Type  string/node');
     },
     Scope: {},
     mouse: {
@@ -607,7 +548,7 @@
           (e.deltaY < 1) ? up = false: up = true;
           func(up, e);
         });
-      } else log('err', 'second param needs to be a function');
+      } else console.error('second param needs to be a function');
     },
     OnResize: func => is.Func(func) ? Craft.ResizeHandlers.add(func) : log("err", "TypeError : Craft.OnResize -> func is not a function"),
     randomString: () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1),
@@ -643,6 +584,8 @@
       }
     }
   };
+
+  Craft.loader.removeAll(true);
 
   root.FunctionIterator = class FuncIterator {
     constructor() {
@@ -743,19 +686,19 @@
   }
   let Ready = 0;
 
-  On('DOMContentLoaded', () => {
+  Once('DOMContentLoaded', () => {
     queryEach('[link]', el => On('click', el, e => el.hasAttribute('newtab') ? open(el.getAttribute('link')) : CraftRouter.open(el.getAttribute('link'))));
     CraftRouter.links.forEach(link => link());
     Ready++;
   });
 
-  On('WebComponentsReady', e => {
+  Once('WebComponentsReady', e => {
     Ready++;
-    if(Ready === 2) {
+    if (Ready === 2) {
       Ready = true;
     } else {
       setTimeout(function () {
-        if(Ready === 2) Ready = true;
+        if (Ready === 2) Ready = true;
       }, 200);
     }
     setTimeout(() => {

@@ -208,6 +208,25 @@ sidebar-heading:hover {
   z-index: 6;
   cursor: pointer;
 }
+sidebar-heading:hover > sidebar-icon {
+  filter: drop-shadow(0 1px 1px hsla(0, 0%, 10%, 0.25));
+  -webkit-filter: drop-shadow(0 1px 1px hsla(0, 0%, 10%, 0.25));
+  -moz-filter: drop-shadow(0 1px 1px hsla(0, 0%, 10%, 0.25));
+}
+sidebar-icon {
+  display: inline-flex;
+  position: absolute;
+  align-items: center;
+  align-content: center;
+  justify-content:center;
+  right:0;
+  top:0;
+  cursor: inherit;
+  font-size: 1.1em;
+  height: 100%;
+  width: 10mm;
+  margin: 0 !important;
+}
 sidebar-accordion {
   display: block;
   width: 100%;
@@ -262,20 +281,6 @@ sidebar-item:active , sidebar-item[selected] {
   z-index: 6;
   border-width: 3px;
   box-shadow: inset 0 0 6px hsla(0, 0%, 20%, 0.24) !important;
-}
-sidebar-icon {
-  display: inline-flex;
-  position: absolute;
-  align-items: center;
-  align-content: center;
-  justify-content:center;
-  right:0;
-  top:0;
-  cursor: inherit;
-  font-size: 1.1em;
-  height: 100%;
-  width: 10mm;
-  margin: 0 !important;
 }
 
 </style>
