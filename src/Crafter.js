@@ -4,14 +4,11 @@
  *   /[^{}]+(?=\})/g    find between curly braces
  */
 "use strict";
-(() => {
+((doc, root) => {
 
   let type = (obj, str) => toString.call(obj) === str,
     isT = (val, str) => typeof val === str,
-    nT = (val, str) => typeof val !== str,
-    trace = () => new Error().stack,
-    root = window,
-    doc = document;
+    nT = (val, str) => typeof val !== str;
 
   let ua = navigator.userAgent,
     tem, Br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
@@ -112,14 +109,7 @@
     for (let i = 0; i < elements.length; i++) func(elements[i], i);
   }
 
-  root.$ = (selector, forceSelectAll) => {
-    let element = queryAll(selector);
-    if (element.length > 1 || forceSelectAll === true || forceSelectAll === '*') return craft(element);
-    if (is.Node(element[0]) || forceSelectAll === false) return craft(element[0]);
-    return null;
-  }
-
-  root.log = function (Type, msg) {
+  root.log = (Type, msg) => {
     switch (Type) {
       case 'err' || 'e':
         console.error(msg)
@@ -138,130 +128,143 @@
     }
   };
 
-  root.On = (eventType, SelectorNode, func) => {
-    if (!is.Func(SelectorNode) && is.Node(SelectorNode) || is.NodeList(SelectorNode) || is.String(SelectorNode)) {
-      let elements = QueryOrNodetoNodeArray(SelectorNode);
-      elements.forEach(el => el.addEventListener(eventType, e => func(e, el)));
-    } else if (is.Func(SelectorNode)) {
-      window.addEventListener(eventType,SelectorNode);
-    } else SelectorNode.addEventListener(eventType, func);
+  root.EventHandler = class EventHandler {
+    constructor(EventType, Target, Func, ...args) {
+      this.EventType = EventType;
+      this.Func = Func;
+      this.Target = (Target !== window && Target !== document) ? QueryOrNodetoNodeArray(Target) : Target;
+      this.args = args || [];
+      this.FuncWrapper = e => Func(e, e.srcElement, ...this.args);
+    }
+    On() {
+      if (is.Arr(this.Target)) {
+        this.Target.forEach(target => target.addEventListener(this.EventType, this.FuncWrapper));
+      } else this.Target.addEventListener(this.EventType, this.FuncWrapper);
+    }
+    Off() {
+      if (is.Arr(this.Target)) {
+        this.Target.forEach(target => target.removeEventListener(this.EventType, this.FuncWrapper));
+      } else this.Target.removeEventListener(this.EventType, this.FuncWrapper);
+    }
+    Once() {
+      let Func = this.FuncWrapper,
+        Target = this.Target,
+        EventType = this.EventType,
+        ListenOnce = e => {
+          Func(e);
+          if (is.Arr(Target)) {
+            Target.forEach(target => target.removeEventListener(EventType, ListenOnce));
+          } else Target.removeEventListener(EventType, ListenOnce);
+        }
+      if (is.Arr(Target)) {
+        Target.forEach(target => target.addEventListener(EventType, ListenOnce));
+      } else Target.addEventListener(EventType, ListenOnce);
+    }
   }
 
-  root.Off = (eventType, SelectorNode, func) => {
-    if (!is.Func(SelectorNode,func) && is.Node(SelectorNode) || is.NodeList(SelectorNode) || is.String(SelectorNode)) {
-      let elements = QueryOrNodetoNodeArray(SelectorNode);
-      elements.forEach(el => el.removeEventListener(eventType, e => func(e, el)));
-    } else if (is.Func(SelectorNode)) {
-      window.removeEventListener(eventType, func);
-    } else SelectorNode.removeEventListener(eventType, func);
+  root.On = (eventType, SelectorNode, func) => {
+    if (is.Func(SelectorNode)) {
+      func = SelectorNode;
+      SelectorNode = window;
+    }
+    let handle = new EventHandler(eventType, SelectorNode, func);
+    handle.On();
+    return handle;
   }
 
   root.Once = (eventType, SelectorNode, func) => {
-    let El;
-    function addListener(e) {
-      if(!is.Node(El)) El = e.target;
-      func(e, El);
-      this.removeEventListener(eventType,addListener);
-    }
-    if (is.Node(SelectorNode) || is.NodeList(SelectorNode) || is.String(SelectorNode)) {
-      let elements = QueryOrNodetoNodeArray(SelectorNode);
-      elements.forEach(el => {
-        El = el;
-        el.addEventListener(eventType,addListener);
-      });
-    } else if (is.Func(SelectorNode)) {
+    if (is.Func(SelectorNode)) {
       func = SelectorNode;
-      window.addEventListener(eventType,addListener);
-    } else SelectorNode.addEventListener(eventType, addListener);
+      SelectorNode = window;
+    }
+    let handle = new EventHandler(eventType, SelectorNode, func);
+    handle.Once();
+    return handle;
   }
 
-  root.craft = element => {
-    if (is.NodeList(element)) {
-      element.forEach = func => {
-        if (is.Func(func)) {
-          for (let index = 0; index < element.length; index++) func(craft(element[index]), index);
-        } else log("err", "No function Provided for NodeList.forEach");
+  root.make_element = (name, inner, attributes, NodeForm) => {
+    if (is.Bool(attributes)) {
+      NodeForm = attributes;
+      attributes = undefined;
+    }
+    if (NodeForm === true) {
+      let newEl = doc.createElement(name);
+      if (is.String(inner)) newEl.innerHTML = inner;
+      if (is.Def(attributes)) {
+        if (is.Object(attributes)) forEach(attributes, (val, attr) => newEl.setAttribute(attr, val));
+        if (is.String(attributes)) newEl.setAttribute(attributes, '');
       }
-      element.On = (eventType, func) => {
-        On(eventType, element, func);
-        return element;
+      return newEl;
+    } else {
+      if (is.Def(attributes) && is.String(attributes)) {
+        return `<${name} ${attributes}>${inner}</${name}>`;
+      } else {
+        let attrString = ``;
+        if (is.Def(attributes) && is.Object(attributes)) forEach(attributes, (val, attr) => attrString = attrString + ` ${attr}="${val}" `);
+        return `<${name} ${attrString}>${inner}</${name}>`;
       }
-      element.Off = (eventType, func) => {
-        element.forEach((element, i) => element.removeEventListener(eventType, e => (is.Def(e.target) && is.Node(e.target)) ? func(e, craft(e.target), i) : func(e, e.target, i)));
-        return element;
-      }
-      element.includes = SelectorNode => {
-        if (!is.Node(SelectorNode)) SelectorNode = query(SelectorNode);
-        for (let index = 0; index < element.length; index++)
-          if (element[index] === SelectorNode) return true;
-        return false;
-      }
-      element.css = styles => (is.Def(styles)) ? forEach(element, el => forEach(styles, (prop, key) => el.style[key] = prop)) : console.error('invalid styles');
-    } else if (is.Node(element)) {
-      element.getSiblings = () => {
+    }
+  }
+
+  root.dom = element => {
+    if (is.String(element)) {
+      let elements = resolveQueryOrNode(element);
+    }
+    if (is.Node(element)) return {
+      html: val => val ? element.innerHTML = val : element.innerHTML,
+      text: val => val ? element.textContent = val : element.textContent,
+      replace: val => element.parentNode.replaceChild(el, element),
+      remove: () => element.parentNode.removeChild(element),
+      appendTo: val => {
+        let el;
+        is.Node(val) ? el = val : el = query(val);
+        if (el !== null) el.appendChild(element);
+      },
+      append: val => is.String(val) ? element.innerHTML += val : element.appendChild(element),
+      prepend: val => is.String(val) ? element.innerHTML = val + element.innerHTML : element.insertBefore(val, element.firstChild),
+      On: (eventType, func) => On(eventType, element, func),
+      css: styles => is.Def(styles) ? forEach(styles, (prop, key) => element.style[key] = prop) : console.error('Styles Object undefined'),
+      getSiblings: () => {
         let siblings = [],
           AllChildren = element.parentNode.childNodes;
         for (let i = 0; i < AllChildren.length; i++)
           if (AllChildren[i] !== element) siblings.push(AllChildren[i]);
         return siblings;
-      }
-      element.getWidth = () => element.getBoundingClientRect().width;
-      element.getHeight = () => element.getBoundingClientRect().height;
-      element.getRect = () => element.getBoundingClientRect();
-      element.setWidth = Width => {
-        element.style.width = Height;
-        return element;
-      }
-      element.setHeight = Height => {
-        element.style.height = Height;
-        return element;
-      }
-      element.On = (eventType, func) => {
-        On(eventType, element, func);
-        return element;
-      }
-      element.find = (selector, forceSelectAll, returncraft) => {
+      },
+      Width: () => element.getBoundingClientRect().width,
+      Height: () => element.getBoundingClientRect().height,
+      getRect: () => element.getBoundingClientRect(),
+      setWidth: Width => element.style.width = Width,
+      setHeight: Height => element.style.height = Height,
+      find: (selector, forceSelectAll, returncraft) => {
         let Localelement = queryAll(selector, element);
-        if (Localelement.length > 1 || forceSelectAll === true && !is.Null(Localelement)) return craft(Localelement);
-        if (!is.Null(Localelement)) return craft(Localelement[0]);
+        if (Localelement.length > 1 || forceSelectAll === true && !is.Null(Localelement)) return Localelement;
+        if (!is.Null(Localelement)) return Localelement[0];
         return null;
       }
-      element.replace = el => element.parentNode.replaceChild(el, element);
-      element.remove = () => element.parentNode.removeChild(element);
-      element.append = val => {
-        is.String(val) ? element.innerHTML += val : element.appendChild(element);
-        return element;
-      }
-      element.prepend = val => {
-        is.String(val) ? element.innerHTML = val + element.innerHTML : element.insertBefore(val, element.firstChild);
-        return element;
-      }
-      element.html = val => val ? element.innerHTML = val : element.innerHTML;
-      element.text = val => val ? element.textContent = val : element.textContent;
-      element.hasChild = (SelectorNode) => {
-        if (is.String(SelectorNode)) SelectorNode = query(SelectorNode, element);
-        if (!is.Null(SelectorNode)) return true;
-        return false;
-      }
-      element.hasClass = (className, func) => {
-        if (is.Func(func)) func(element.classList.contains(className));
-        return element.classList.contains(className);
-      }
-      element.isTag = (tagName, func) => {
-        if (element.tagName === tagName.toUpperCase()) {
-          if (is.Func(func)) func(craft(element));
-          return true;
-        }
-        return false;
-      }
-      element.css = styles => {
-        (is.Def(styles)) ? forEach(styles, (prop, key) => element.style[key] = prop): console.error('Styles Object undefined');
-        return element;
-      }
     }
-    if (is.String(element)) return $(element);
-    return element;
-  }
+    if (is.NodeList(element)) return {
+      On: (eventType, func) => On(eventType, element, func),
+      find: (selector, forceSelectAll, returncraft) => {
+        let Localelement = queryAll(selector, element);
+        if (Localelement.length > 1 || forceSelectAll === true && !is.Null(Localelement)) return Localelement;
+        if (!is.Null(Localelement)) return Localelement[0];
+        return null;
+      },
+      includes: SelectorNode => {
+        if (!is.Node(SelectorNode)) SelectorNode = query(SelectorNode);
+        for (let index = 0; index < element.length; index++)
+          if (element[index] === SelectorNode) return true;
+        return false;
+      },
+      css: styles => is.Def(styles) ? forEach(element, el => forEach(styles, (prop, key) => el.style[key] = prop)) : console.error('styles unefined'),
+    }
+    return {
+      div: (inner, attr) => make_element('div', inner, attr),
+      span: (inner, attr) => make_element('span', inner, attr),
+      label: (inner, attr) => make_element('label', inner, attr),
+    }
+  };
 
 
   root.Craft = {
@@ -359,32 +362,7 @@
           if (localStorage.key(i).includes("RT_")) localStorage.removeItem(localStorage.key(i));
       },
     },
-    ifthen: (bools, ...args) => new Promise((resolve, reject) => bools ? resolve(args) : reject('ifthen -> bolean logic returned false')),
     trim: text => is.Null(text) ? "" : (text + "").replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, ""),
-    bindNode: (SelectorNode, ContextObject, func) => {
-      let Changes, element = is.Node(SelectorNode) ? SelectorNode : query(SelectorNode);
-      if (is.Func(ContextObject)) {
-        func = ContextObject;
-        ContextObject = Craft.Scope;
-      }
-      if (!is.Null(element) && is.Def(func) && is.Func(func)) {
-        element.isbound = true;
-        Object.observe(ContextObject, changes => {
-          if (element.isbound) changes.forEach(ch => {
-            Changes = ch;
-            func(element, ch);
-          });
-        });
-        func(element, Changes);
-      } else log("err", "No matching element");
-    },
-    unbindNode: (SelectorNode, func) => {
-      let element = is.Node(SelectorNode) ? SelectorNode : query(SelectorNode);
-      if (!is.Null(element)) {
-        element.isbound = false;
-        func(element);
-      } else log("err", "No matching element");
-    },
     after: function (n, func) {
       if (!is.Func(func)) {
         if (is.Func(n)) {
@@ -550,7 +528,26 @@
         });
       } else console.error('second param needs to be a function');
     },
-    OnResize: func => is.Func(func) ? Craft.ResizeHandlers.add(func) : log("err", "TypeError : Craft.OnResize -> func is not a function"),
+    OnResize: func => is.Func(func) ? Craft.ResizeHandlers.add(func) : cerr("TypeError : Craft.OnResize -> func is not a function"),
+    poll: (test, interval, timeout, success, fail) => {
+      return (() => {
+        if (is.Func(timeout)) {
+          if (is.Func(success)) fail = success;
+          success = timeout;
+          timeout = undefined;
+        }
+        let Interval = setInterval(() => {
+          if ((is.Bool(test) && test === true) || (is.Func(test) && test() === true)) {
+            success();
+            clearInterval(Interval);
+          }
+        }, interval || 20);
+        if (is.Num(timeout)) setTimeout(() => {
+          clearInterval(Interval);
+          if ((is.Bool(test) && test === false) || (is.Func(test) && test() === false)) fail();
+        }, timeout);
+      })();
+    },
     randomString: () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1),
     GenUID: () => Craft.randomString() + Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString() + Craft.randomString() + Craft.randomString(),
     newComponent: function (Name, config) {
@@ -576,11 +573,9 @@
             prototype: element,
             extends: config.extends
           });
-        } else {
-          doc.registerElement(Name, {
-            prototype: element
-          });
-        }
+        } else doc.registerElement(Name, {
+          prototype: element
+        });
       }
     }
   };
@@ -625,26 +620,26 @@
     }
   }
 
-  root.ReactiveVar = class ReactiveVariable {
+  root.ReactiveVariable = class ReactiveVariable {
     constructor(val, handle) {
       if (is.Func(handle)) {
-        this.Value = val;
+        this.val = val;
         this.Handle = handle;
       } else log('err', 'ReactiveVariable needs a handler function after the value');
-      return this.Value;
+      return this.val;
     }
     set(val) {
-      if (this.Value !== val) {
-        this.Oldval = this.Value;
-        this.Value = val;
+      if (this.val !== val) {
+        this.Oldval = this.val;
+        this.val = val;
         this.Handle(this.Oldval, val);
       }
-      return this.Value;
+      return this.val;
     }
     get() {
-      return this.Value;
+      return this.val;
     }
-    Reset(handle) {
+    reset(handle) {
       if (is.Func(handle)) {
         this.Handle = handle;
       } else log('err', 'ReactiveVariable.Reset only takes a function');
@@ -652,18 +647,20 @@
   }
 
   Craft.Binds = new Map;
-  var CrafterStyles = document.createElement('style');
-  CrafterStyles.setAttribute('CrafterStyles', '');
-  CrafterStyles.innerHTML = `
-  @keyframes NodeInserted {
-    from {opacity: 0.99;}
-    to {opacity: 1;}
-  }
-  [view-bind] {
-    animation-duration: 0.001s;
-    animation-name: NodeInserted;
-  }`;
-  doc.head.appendChild(CrafterStyles);
+  Craft.newBind = (key, val, handle) => {
+    is.Func(handle) ? Craft.Binds.set(key, new ReactiveVariable(val, handle)) : Craft.Binds.set(key, val);
+    queryEach('[view-bind]', el => {
+      if (Craft.Binds.has(el.getAttribute('view-bind'))) el.innerHTML = is.Func(handle) ? Craft.Binds.get(el.getAttribute('view-bind')).get() : Craft.Binds.get(el.getAttribute('view-bind'));
+    });
+  };
+  Craft.setBind = (key, val) => {
+    Craft.Binds.get(key).set(val);
+    queryEach('[view-bind]', el => {
+      if (Craft.Binds.has(el.getAttribute('view-bind'))) el.innerHTML = Craft.Binds.get(el.getAttribute('view-bind')).get();
+    });
+  };
+
+  doc.head.innerHTML += make_element('style', `  @keyframes NodeInserted {from {opacity:.99;} to {opacity: 1;}}[view-bind] {animation-duration: 0.001s;animation-name: NodeInserted;}`, 'crafterstyles');
 
   On('animationstart', document, e => {
     if (e.animationName === 'NodeInserted' && is.Node(e.target)) {
@@ -673,10 +670,6 @@
     }
   });
 
-  forEach(queryAll('[view-bind]'), el => {
-    if (Craft.DataBindScope.has(el.getAttribute('view-bind'))) el.innerHTML = Craft.DataBindScope.get(el.getAttribute('view-bind'));
-  });
-
   Craft.ResizeHandlers = new FunctionIterator;
 
   root.onresize = Craft.throttle(450, e => Craft.ResizeHandlers.runEach(e));
@@ -684,51 +677,45 @@
     Craft.mouse.x = ev.clientX;
     Craft.mouse.y = ev.clientY;
   }
-  let Ready = 0;
+  let Ready = false,
+    ReadyStage = 0;
 
   Once('DOMContentLoaded', () => {
-    queryEach('[link]', el => On('click', el, e => el.hasAttribute('newtab') ? open(el.getAttribute('link')) : CraftRouter.open(el.getAttribute('link'))));
-    CraftRouter.links.forEach(link => link());
-    Ready++;
+    queryEach('[link]', el => On('click', el, e => el.hasAttribute('newtab') ? open(el.getAttribute('link')) : Craft.Router.open(el.getAttribute('link'))));
+    Craft.Router.links.forEach(link => link());
+      ReadyStage++;
   });
 
   Once('WebComponentsReady', e => {
-    Ready++;
-    if (Ready === 2) {
+    ReadyStage++;
+    ReadyStage === 2 ? Ready = true : Craft.poll(() => ReadyStage === 2, 20 , 1500, () => Ready = true, () => {
+      console.warn('loading took longer than expected');
       Ready = true;
-    } else {
-      setTimeout(function () {
-        if (Ready === 2) Ready = true;
-      }, 200);
-    }
-    setTimeout(() => {
-      if (!Ready) {
-        Ready = true;
-        log('warn', 'loading took longer than expected');
-      }
-    }, 3500);
+    });
   });
 
-  root.WhenReady = () => new Promise((resolve, reject) => {
-    if (Ready) {
-      if (Current.browser.includes("Firefox") || CurrentBrowser.browser.includes("msie")) {
-        setTimeout(() => resolve(Craft.Scope), 600);
-      } else resolve(Craft.Scope);
-    } else {
-      let ReadyYet = setInterval(() => {
-        if (Ready) {
-          if (CurrentBrowser.browser.includes("Firefox") || CurrentBrowser.browser.includes("msie")) {
-            setTimeout(() => resolve(Craft.Scope), 650);
-          } else resolve(Craft.Scope);
+  Craft.WhenReady = () => {
+    return new Promise((resolve, reject) => {
+      if (Ready) {
+        if (Current.browser.includes("Firefox") || CurrentBrowser.browser.includes("msie")) {
+          setTimeout(() => resolve(Craft.Scope), 500);
+        } else resolve(Craft.Scope);
+      } else {
+        let ReadyYet = setInterval(() => {
+          if (Ready) {
+            if (CurrentBrowser.browser.includes("Firefox") || CurrentBrowser.browser.includes("msie")) {
+              setTimeout(() => resolve(Craft.Scope), 500);
+            } else resolve(Craft.Scope);
+            clearInterval(ReadyYet);
+          }
+        }, 50);
+        setTimeout(() => {
           clearInterval(ReadyYet);
-        }
-      }, 50);
-      setTimeout(() => {
-        clearInterval(ReadyYet);
-        if (!Ready) reject("WebComponents didn't load correctly/intime -> load failed");
-      }, 4500);
-    }
-  });
+          if (!Ready) reject("Things didn't load correctly/intime -> load failed");
+        }, 3500);
+      }
+    })
+  }
 
   On('hashchange', e => CraftRouter.handlers.forEach(handler => (location.hash === handler.link || location === handler.link) ? handler.func() : null));
-})();
+})(document, self);

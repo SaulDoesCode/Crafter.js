@@ -8,7 +8,7 @@
     Craft.Ripple = function (SelectorOrNode, options) {
       options = options || {};
       var color = options.color || undefined,
-          timing = options.timing || 1200;
+          timing = options.timing || 1600;
       SelectorOrNode = QueryOrNodetoNodeArray(SelectorOrNode);
       forEach(SelectorOrNode, function (element) {
         if (element.hasAttribute("ripple")) color = element.getAttribute("ripple");

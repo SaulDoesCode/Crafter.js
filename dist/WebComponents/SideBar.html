@@ -14,14 +14,11 @@
         if (!this.classList.contains('sidebar-hidden')) {
           this.setAttribute('sidebar-toggle', 'true');
         } else this.setAttribute('sidebar-toggle', 'false');
-        On('click', queryAll('sidebar-item', this), function (e, el) {
-          forEach(queryAll('sidebar-item[selected]', _this), function (El) {
-            return El.removeAttribute('selected');
+        this.onclick = function (e) {
+          return queryEach('sidebar-item[selected]', _this, function (el) {
+            return el.removeAttribute('selected');
           });
-          el.hasAttribute('selected') ? el.removeAttribute('selected') : setTimeout(function () {
-            return el.setAttribute('selected', '');
-          }, 50);
-        });
+        };
       },
       setToggleElement: function setToggleElement(SelectorOrNode) {
         var _this2 = this;
@@ -72,14 +69,20 @@
 
     Craft.newComponent('sidebar-item', {
       created: function created() {
+        var _this4 = this;
+
         if (this.hasAttribute('ripple')) this.color = this.getAttribute('ripple');
         if (this.hasAttribute('color-accent')) this.color = this.getAttribute('color-accent');
         this.style.borderColor = this.color;
         if (query('sidebar-icon', this) !== null) query('sidebar-icon', this).style.color = this.color;
+        this.onclick = function (e) {
+          return _this4.hasAttribute('selected') ? _this4.removeAttribute('selected') : setTimeout(function () {
+            return _this4.setAttribute('selected', '');
+          }, 50);
+        };
       },
       attr: function attr(attrName, oldVal, newVal) {
-        if (attrName === 'ripple') this.color = newVal;
-        if (attrName === 'color-accent') this.color = newVal;
+        if (attrName === 'ripple' || attrName === 'color-accent') this.color = newVal;
         this.style.borderColor = this.color;
         if (query('sidebar-icon', this) !== null) query('sidebar-icon', this).style.color = this.color;
       }
@@ -87,7 +90,7 @@
 
     Craft.newComponent('sidebar-accordion', {
       created: function created() {
-        var _this4 = this;
+        var _this5 = this;
 
         this.open = false;
         if (this.getAttribute('accordion') === 'open') {
@@ -97,20 +100,18 @@
           this.open = false;
           this.setAttribute('accordion', 'closed');
         }
-        var heading = query('sidebar-heading', this),
-            headingColor = undefined;
-        if (heading.hasAttribute('ripple') || heading.hasAttribute('color-accent')) {
-          if (heading.hasAttribute('ripple')) headingColor = heading.getAttribute('ripple');
-          if (heading.hasAttribute('color-accent')) headingColor = heading.getAttribute('color-accent');
-          forEach(queryAll('sidebar-item', this), function (el) {
-            if (!el.hasAttribute('ripple') && !el.hasAttribute('color-accent')) el.setAttribute('color-accent', headingColor);
+        setTimeout(function () {
+          var heading = query('sidebar-heading', _this5);
+          heading.onclick = function (e) {
+            _this5.open = !_this5.open;
+            _this5.open ? _this5.setAttribute('accordion', 'open') : _this5.setAttribute('accordion', 'closed');
+          };
+          if (heading.hasAttribute('ripple')) _this5.color = heading.getAttribute('ripple');
+          if (heading.hasAttribute('color-accent')) _this5.color = heading.getAttribute('color-accent');
+          queryEach('sidebar-item', _this5, function (item) {
+            if (is.Def(_this5.color)) item.setAttribute('color-accent', _this5.color);
           });
-        }
-
-        heading.onclick = function (e) {
-          _this4.open = !_this4.open;
-          _this4.open ? _this4.setAttribute('accordion', 'open') : _this4.setAttribute('accordion', 'closed');
-        };
+        }, 40);
       },
       attr: function attr() {
         if (this.getAttribute('accordion') === 'open') {
@@ -153,7 +154,7 @@ side-bar {
   align-items: center;
   width: 200px;
   height: 100%;
-  border-right:4px solid hsl(0, 0%, 48%);
+  border-right:3px solid hsl(0, 0%, 85%);
   background: hsl(0, 0%, 99%);
   overflow: auto;
   color: hsl(0, 0%, 44%);
@@ -174,12 +175,12 @@ sidebar-mainheading {
   justify-content: center;
   align-content: center;
   align-items: center;
-  height: 13mm;
+  height: 12mm;
   width: 100%;
   color: hsl(0, 0%, 100%);
-  text-shadow: 0 2px 3px hsla(0, 0%, 70%, 0.6);
-  background: hsl(0, 0%,48%);
-  font-size: 1.1em;
+  text-shadow: 0 2px 3px hsla(0, 0%, 50%, 0.6);
+  background: hsl(0, 0%,85%);
+  font-size: 1.15em;
 }
 sidebar-heading {
   display: flex;
@@ -203,7 +204,7 @@ sidebar-heading {
 }
 sidebar-heading:hover {
   color: hsl(0, 0%, 50%);
-  background: hsl(0, 0%, 98%);
+  background: hsl(0, 0%, 96%);
   /*box-shadow: 0 0 3px hsla(0, 0%, 16%, 0.25);*/
   z-index: 6;
   cursor: pointer;
@@ -237,6 +238,9 @@ sidebar-accordion[accordion="open"] > sidebar-heading {
   border-bottom: none;
   background:hsl(0, 0%, 94%);
 }
+sidebar-item {
+  height: 10mm;
+}
 sidebar-accordion[accordion="open"] > sidebar-item {
   height: 10mm;
   pointer-events: all;
@@ -249,7 +253,7 @@ sidebar-accordion[accordion="closed"] > sidebar-item {
 sidebar-accordion[accordion="open"] > sidebar-item:first-of-type {
   box-shadow: inset 0 2px 3px -1px hsla(0, 0%, 20%, 0.24);
 }
-sidebar-accordion[accordion="open"] > sidebar-item:last-of-type {
+sidebar-accordion[accordion="open"] {
   box-shadow: inset 0 -2px 3px -1px hsla(0, 0%, 20%, 0.24);
 }
 sidebar-item {

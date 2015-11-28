@@ -175,7 +175,7 @@
   if ("Craft" in window) {
     CrafterWidgets();
   } else {
-    let isCrafterReady = setInterval(function () {
+    let isCrafterReady = setInterval(() => {
       if ("Craft" in window) {
         CrafterWidgets();
         clearInterval(isCrafterReady);
