@@ -1,14 +1,10 @@
 (function() {
   'use strict';
 
-  if (self.fetch) {
-    return
-  }
+  if (self.fetch) return;
 
   function normalizeName(name) {
-    if (typeof name !== 'string') {
-      name = String(name)
-    }
+    if (typeof name !== 'string') name = String(name)
     if (/[^a-z0-9\-#$%&'*+.\^_`|~]/i.test(name)) {
       throw new TypeError('Invalid character in header field name')
     }
@@ -16,25 +12,19 @@
   }
 
   function normalizeValue(value) {
-    if (typeof value !== 'string') {
-      value = String(value)
-    }
+    if (typeof value !== 'string') value = String(value)
     return value
   }
 
   function Headers(headers) {
     this.map = {}
-
     if (headers instanceof Headers) {
       headers.forEach(function(value, name) {
         this.append(name, value)
       }, this)
-
-    } else if (headers) {
-      Object.getOwnPropertyNames(headers).forEach(function(name) {
+    } else if (headers) Object.getOwnPropertyNames(headers).forEach(function(name) {
         this.append(name, headers[name])
-      }, this)
-    }
+    }, this)
   }
 
   Headers.prototype.append = function(name, value) {
@@ -78,9 +68,7 @@
   }
 
   function consumed(body) {
-    if (body.bodyUsed) {
-      return Promise.reject(new TypeError('Already read'))
-    }
+    if (body.bodyUsed) return Promise.reject(new TypeError('Already read'))
     body.bodyUsed = true
   }
 
@@ -122,7 +110,6 @@
 
   function Body() {
     this.bodyUsed = false
-
 
     this._initBody = function(body) {
       this._bodyInit = body
@@ -183,10 +170,8 @@
       }
     }
 
-    if (support.formData) {
-      this.formData = function() {
+    if (support.formData) this.formData = function() {
         return this.text().then(decode)
-      }
     }
 
     this.json = function() {
@@ -272,9 +257,7 @@
   Body.call(Request.prototype)
 
   function Response(bodyInit, options) {
-    if (!options) {
-      options = {}
-    }
+    if (!options) options = {}
 
     this._initBody(bodyInit)
     this.type = 'default'
@@ -308,7 +291,6 @@
     if (redirectStatuses.indexOf(status) === -1) {
       throw new RangeError('Invalid status code')
     }
-
     return new Response(null, {status: status, headers: {location: url}})
   }
 
@@ -319,24 +301,13 @@
   self.fetch = function(input, init) {
     return new Promise(function(resolve, reject) {
       var request
-      if (Request.prototype.isPrototypeOf(input) && !init) {
-        request = input
-      } else {
-        request = new Request(input, init)
-      }
+      (Request.prototype.isPrototypeOf(input) && !init) ? request = input : request = new Request(input, init);
 
       var xhr = new XMLHttpRequest()
 
       function responseURL() {
-        if ('responseURL' in xhr) {
-          return xhr.responseURL
-        }
-
-        // Avoid security warnings on getResponseHeader when not allowed by CORS
-        if (/^X-Request-URL:/m.test(xhr.getAllResponseHeaders())) {
-          return xhr.getResponseHeader('X-Request-URL')
-        }
-
+        if ('responseURL' in xhr) return xhr.responseURL
+        if (/^X-Request-URL:/m.test(xhr.getAllResponseHeaders())) return xhr.getResponseHeader('X-Request-URL')
         return;
       }
 
@@ -362,13 +333,8 @@
 
       xhr.open(request.method, request.url, true)
 
-      if (request.credentials === 'include') {
-        xhr.withCredentials = true
-      }
-
-      if ('responseType' in xhr && support.blob) {
-        xhr.responseType = 'blob'
-      }
+      if (request.credentials === 'include') xhr.withCredentials = true
+      if ('responseType' in xhr && support.blob) xhr.responseType = 'blob'
 
       request.headers.forEach(function(value, name) {
         xhr.setRequestHeader(name, value)

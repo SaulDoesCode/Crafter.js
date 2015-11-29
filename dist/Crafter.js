@@ -1,6 +1,6 @@
-/*
- *  Saul's Crafter JS
- *  License MIT
+/** @license MIT
+ *  @overview Crafter.js , minimalist front-end library
+ *  @author Saul van der Walt - https://github.com/SaulDoesCode/
  *   /[^{}]+(?=\})/g    find between curly braces
  */
 "use strict";
@@ -22,10 +22,12 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     return (typeof val === 'undefined' ? 'undefined' : _typeof(val)) === str;
   },
       nT = function nT(val, str) {
-    return (typeof val === 'undefined' ? 'undefined' : _typeof(val)) !== str;
-  };
-
-  var ua = navigator.userAgent,
+    return !isT(val, str);
+  },
+      Ready = false,
+      head = doc.getElementsByTagName('head')[0],
+      CrafterStyles = doc.createElement('style'),
+      ua = navigator.userAgent,
       tem = undefined,
       Br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
   if (Br && (tem = ua.match(/version\/([\.\d]+)/i)) !== null) Br[2] = tem[1];
@@ -38,6 +40,11 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     },
     browser: Br.join(' ')
   };
+
+  CrafterStyles.setAttribute('crafterstyles', '');
+  CrafterStyles.innerHTML = '\n@keyframes NodeInserted {from {opacity:.99;}to {opacity: 1;}}[view-bind] {animation-duration: 0.001s;animation-name: NodeInserted;}';
+  head.appendChild(CrafterStyles);
+  CrafterStyles = doc.querySelector('[crafterstyles]', head);
 
   root.is = {
     Bool: function Bool(val) {
@@ -213,13 +220,13 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
 
   root.forEach = function (iterable, func) {
     if (is.Func(func)) {
-      var index = 0;
+      var _i = 0;
       if (!is.Object(iterable)) {
-        for (; index < iterable.length; index++) func(iterable[index], index);
+        for (; _i < iterable.length; _i++) func(iterable[_i], _i);
       } else {
-        for (index in iterable) if (iterable.hasOwnProperty(index)) func(iterable[index], index);
+        for (_i in iterable) if (iterable.hasOwnProperty(_i)) func(iterable[_i], _i);
       }
-    } else throw new Error("No Function Provided for forEach");
+    } else throw new Error("forEach : invalid or undefined function provided");
   };
 
   root.QueryOrNodetoNodeArray = function (val) {
@@ -248,8 +255,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     var elements = undefined;
     if (is.String(element)) elements = doc.querySelector(element).querySelectorAll(selector);
     elements = element.querySelectorAll(selector);
-    for (var _i = 0; _i < elements.length; _i++) {
-      func(elements[_i], _i);
+    for (var _i2 = 0; _i2 < elements.length; _i2++) {
+      func(elements[_i2], _i2);
     }
   };
 
@@ -281,14 +288,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       this.EventType = EventType;
       this.Func = Func;
       this.Target = Target !== window && Target !== document ? QueryOrNodetoNodeArray(Target) : Target;
-
-      for (var _len12 = arguments.length, args = Array(_len12 > 3 ? _len12 - 3 : 0), _key12 = 3; _key12 < _len12; _key12++) {
-        args[_key12 - 3] = arguments[_key12];
-      }
-
-      this.args = args || [];
       this.FuncWrapper = function (e) {
-        return Func.apply(undefined, [e, e.srcElement].concat(_toConsumableArray(_this.args)));
+        return Func.apply(undefined, [e, e.srcElement].concat(_toConsumableArray(_this.args || [])));
       };
     }
 
@@ -297,22 +298,18 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       value: function On() {
         var _this2 = this;
 
-        if (is.Arr(this.Target)) {
-          this.Target.forEach(function (target) {
-            return target.addEventListener(_this2.EventType, _this2.FuncWrapper);
-          });
-        } else this.Target.addEventListener(this.EventType, this.FuncWrapper);
+        is.Arr(this.Target) ? this.Target.forEach(function (target) {
+          return target.addEventListener(_this2.EventType, _this2.FuncWrapper);
+        }) : this.Target.addEventListener(this.EventType, this.FuncWrapper);
       }
     }, {
       key: 'Off',
       value: function Off() {
         var _this3 = this;
 
-        if (is.Arr(this.Target)) {
-          this.Target.forEach(function (target) {
-            return target.removeEventListener(_this3.EventType, _this3.FuncWrapper);
-          });
-        } else this.Target.removeEventListener(this.EventType, this.FuncWrapper);
+        is.Arr(this.Target) ? this.Target.forEach(function (target) {
+          return target.removeEventListener(_this3.EventType, _this3.FuncWrapper);
+        }) : this.Target.removeEventListener(this.EventType, this.FuncWrapper);
       }
     }, {
       key: 'Once',
@@ -322,17 +319,13 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
             EventType = this.EventType,
             ListenOnce = function ListenOnce(e) {
           Func(e);
-          if (is.Arr(Target)) {
-            Target.forEach(function (target) {
-              return target.removeEventListener(EventType, ListenOnce);
-            });
-          } else Target.removeEventListener(EventType, ListenOnce);
+          is.Arr(Target) ? Target.forEach(function (target) {
+            return target.removeEventListener(EventType, ListenOnce);
+          }) : Target.removeEventListener(EventType, ListenOnce);
         };
-        if (is.Arr(Target)) {
-          Target.forEach(function (target) {
-            return target.addEventListener(EventType, ListenOnce);
-          });
-        } else Target.addEventListener(EventType, ListenOnce);
+        is.Arr(Target) ? Target.forEach(function (target) {
+          return target.addEventListener(EventType, ListenOnce);
+        }) : Target.addEventListener(EventType, ListenOnce);
       }
     }]);
 
@@ -401,7 +394,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
 
   root.dom = function (element) {
     if (is.String(element)) {
-      var elements = resolveQueryOrNode(element);
+      var elements = queryAll(element);
+      elements.length > 1 ? element = elements : element = elements[0];
     }
     if (is.Node(element)) return {
       html: function html(val) {
@@ -448,8 +442,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       getSiblings: function getSiblings() {
         var siblings = [],
             AllChildren = element.parentNode.childNodes;
-        for (var _i2 = 0; _i2 < AllChildren.length; _i2++) {
-          if (AllChildren[_i2] !== element) siblings.push(AllChildren[_i2]);
+        for (var _i3 = 0; _i3 < AllChildren.length; _i3++) {
+          if (AllChildren[_i3] !== element) siblings.push(AllChildren[_i3]);
         }return siblings;
       },
       Width: function Width() {
@@ -524,20 +518,20 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
   root.Craft = {
     ArraytoObject: function ArraytoObject(arr) {
       var NewObject = {};
-      for (var _i3 in arr) {
-        if (is.Def(arr[_i3])) NewObject[_i3] = arr[_i3];
+      for (var _i4 in arr) {
+        if (is.Def(arr[_i4])) NewObject[_i4] = arr[_i4];
       }return NewObject;
     },
     toArray: function toArray(obj) {
       return slice.call(obj);
     },
     IndexOfArrayInArray: function IndexOfArrayInArray(Arr, searchArr) {
-      for (var _i4 = 0; _i4 < searchArr.length; _i4++) {
-        if (Arr[0] === searchArr[_i4]) {
+      for (var _i5 = 0; _i5 < searchArr.length; _i5++) {
+        if (Arr[0] === searchArr[_i5]) {
           for (var c = 0; c < Arr.length; c++) {
-            if (Arr[c] === searchArr[_i4 + c]) {
+            if (Arr[c] === searchArr[_i5 + c]) {
               if (c == Arr.length - 1) {
-                return _i4;
+                return _i5;
               } else continue;
             } else break;
           }
@@ -569,8 +563,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         });
       },
       Import: function Import() {
-        for (var _len13 = arguments.length, args = Array(_len13), _key13 = 0; _key13 < _len13; _key13++) {
-          args[_key13] = arguments[_key13];
+        for (var _len12 = arguments.length, args = Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
+          args[_key12] = arguments[_key12];
         }
 
         var obj = undefined,
@@ -589,10 +583,13 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         });
         return Promise.all(promises).then(function (src) {
           return src.map(function (obj) {
-            var el = obj.type === 'css' ? doc.createElement('style') : doc.createElement('script');
-            el.defer = obj.defer || undefined;
-            el.innerHTML = obj.data;
-            if (obj.exec) doc.head.appendChild(el);
+            if (obj.type === 'css') {
+              CrafterStyles.innerHTML += ' \n' + obj.data;
+            } else {
+              var _el = make_element('script', obj.data, { type: 'text/javascript' }, true);
+              _el.defer = obj.defer || undefined;
+              if (obj.exec) head.appendChild(_el);
+            }
           });
         });
       },
@@ -606,8 +603,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         return localStorage.removeItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key);
       },
       removeAll: function removeAll(expired) {
-        for (var _i5 in localStorage) {
-          if (!expired || Craft.loader.get(_i5).expire <= +new Date()) Craft.loader.remove(_i5);
+        for (var _i6 in localStorage) {
+          if (!expired || Craft.loader.get(_i6).expire <= +new Date()) Craft.loader.remove(_i6);
         }
       }
     },
@@ -648,10 +645,10 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         return query(viewHostSelector).innerHTML = view;
       },
       fetchView: function fetchView(viewHostSelector, viewURL, cache, id) {
-        if (is.Null(localStorage.getItem("RT_" + id)) || is.Undef(localStorage.getItem("RT_" + id))) {
+        if (is.Null(localStorage.getItem("RT_" + id))) {
           fetch(viewURL).then(function (res) {
             res.text().then(function (txt) {
-              if (cache && is.Def(id) && is.String(id) && (is.Null(localStorage.getItem("RT_" + id)) || is.Undef(localStorage.getItem("RT_" + id)))) localStorage.setItem("RT_" + id, txt);
+              if (cache && is.Def(id) && is.String(id) && is.Null(localStorage.getItem("RT_" + id))) localStorage.setItem("RT_" + id, txt);
               query(viewHostSelector).innerHTML = txt;
             });
           }).catch(function (msg) {
@@ -660,8 +657,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         } else if (cache) query(viewHostSelector).innerHTML = localStorage.getItem("RT_" + id);
       },
       clearCache: function clearCache() {
-        for (var _i6 in localStorage) {
-          if (localStorage.key(_i6).includes("RT_")) localStorage.removeItem(localStorage.key(_i6));
+        for (var _i7 in localStorage) {
+          if (localStorage.key(_i7).includes("RT_")) localStorage.removeItem(localStorage.key(_i7));
         }
       }
     },
@@ -669,6 +666,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       return is.Null(text) ? "" : (text + "").replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, "");
     },
     after: function after(n, func) {
+      var _this4 = this;
+
       if (!is.Func(func)) {
         if (is.Func(n)) {
           var temp = n;
@@ -678,7 +677,11 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       }
       n = Number.isFinite(n = +n) ? n : 0;
       return function () {
-        if (--n < 1) return func.apply(this, arguments);
+        for (var _len13 = arguments.length, args = Array(_len13), _key13 = 0; _key13 < _len13; _key13++) {
+          args[_key13] = arguments[_key13];
+        }
+
+        if (--n < 1) return func.apply(_this4, args);
       };
     },
     debounce: function debounce(wait, func, immediate) {
@@ -743,15 +746,15 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       }) : log('err', 'invalid args');
     },
     hasCapitals: function hasCapitals(string) {
-      for (var _i7 = 0; _i7 < string.length; _i7++) {
-        if (is.UpperCase(string[_i7])) return true;
+      for (var _i8 = 0; _i8 < string.length; _i8++) {
+        if (is.UpperCase(string[_i8])) return true;
       }return false;
     },
     OverrideFunction: function OverrideFunction(funcName, Func, ContextObject) {
       var namespaces = funcName.split("."),
           func = namespaces.pop();
-      for (var _i8 = 0; _i8 < namespaces.length; _i8++) {
-        ContextObject = ContextObject[namespaces[_i8]];
+      for (var _i9 = 0; _i9 < namespaces.length; _i9++) {
+        ContextObject = ContextObject[namespaces[_i9]];
       }ContextObject[func] = Func;
     },
     concatObjects: function concatObjects(hostobj) {
@@ -801,8 +804,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       return types;
     },
     indexOfDate: function indexOfDate(Collection, date) {
-      for (var _i9 = 0; _i9 < Collection.length; _i9++) {
-        if (+Collection[_i9] === +date) return _i9;
+      for (var _i10 = 0; _i10 < Collection.length; _i10++) {
+        if (+Collection[_i10] === +date) return _i10;
       }return -1;
     },
     removeArrItem: function removeArrItem(Arr, val) {
@@ -834,6 +837,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       return obj;
     },
     Scope: {},
+    WebComponents: [],
     mouse: {
       x: 0,
       y: 0
@@ -887,9 +891,9 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     GenUID: function GenUID() {
       return Craft.randomString() + Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString() + Craft.randomString() + Craft.randomString();
     },
-    newComponent: function newComponent(Name, config) {
+    newComponent: function newComponent(tag, config) {
       if (is.Undef(config)) {
-        log("err", "Invalid Component Configuration");
+        console.error("Invalid Component Configuration");
       } else {
         (function () {
           var element = Object.create(HTMLElement.prototype);
@@ -907,11 +911,11 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
             } else if (key !== 'extends' && !is.Func(prop)) element[key] = prop;
           });
           if ('extends' in config) {
-            doc.registerElement(Name, {
+            doc.registerElement(tag, {
               prototype: element,
               extends: config.extends
             });
-          } else doc.registerElement(Name, {
+          } else doc.registerElement(tag, {
             prototype: element
           });
         })();
@@ -922,14 +926,14 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
   Craft.loader.removeAll(true);
 
   root.FunctionIterator = (function () {
-    function FuncIterator() {
-      _classCallCheck(this, FuncIterator);
+    function FunctionIterator() {
+      _classCallCheck(this, FunctionIterator);
 
       this.functions = {};
       this.length = Object.keys(this.functions).length;
     }
 
-    _createClass(FuncIterator, [{
+    _createClass(FunctionIterator, [{
       key: 'has',
       value: function has(funcName) {
         if (this.functions.has(funcName)) return true;
@@ -965,8 +969,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     }, {
       key: 'runEach',
       value: function runEach() {
-        for (var _i10 in this.functions) {
-          this.functions[_i10].apply(this, arguments);
+        for (var _i11 in this.functions) {
+          this.functions[_i11].apply(this, arguments);
         }
       }
     }, {
@@ -976,7 +980,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       }
     }]);
 
-    return FuncIterator;
+    return FunctionIterator;
   })();
 
   root.ReactiveVariable = (function () {
@@ -1031,8 +1035,6 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     });
   };
 
-  doc.head.innerHTML += make_element('style', '  @keyframes NodeInserted {from {opacity:.99;} to {opacity: 1;}}[view-bind] {animation-duration: 0.001s;animation-name: NodeInserted;}', 'crafterstyles');
-
   On('animationstart', document, function (e) {
     if (e.animationName === 'NodeInserted' && is.Node(e.target)) {
       if (e.target.hasAttribute('[view-bind]')) {
@@ -1046,12 +1048,58 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
   root.onresize = Craft.throttle(450, function (e) {
     return Craft.ResizeHandlers.runEach(e);
   });
-  root.onmousemove = function (ev) {
-    Craft.mouse.x = ev.clientX;
-    Craft.mouse.y = ev.clientY;
+  root.onmousemove = function (e) {
+    Craft.mouse.x = e.clientX;
+    Craft.mouse.y = e.clientY;
   };
-  var Ready = false,
-      ReadyStage = 0;
+
+  Craft.newComponent('fetch-webcomponent', {
+    created: function created() {
+      var _this5 = this;
+
+      if (this.hasAttribute('src')) {
+        var wc = null;
+        if (this.hasAttribute('cache-component') && this.getAttribute('cache-component') === 'true') {
+          wc = localStorage.getItem(this.getAttribute('src'));
+          if (wc !== null) {
+            (function () {
+              var webcomponent = JSON.parse(wc);
+              CrafterStyles.innerHTML += webcomponent.css;
+              var wcJS = make_element('script', '', {
+                src: Craft.URLfrom(webcomponent.js),
+                type: 'text/javascript',
+                webcomponent: webcomponent.name
+              }, true);
+              wcJS.setAttribute('webcomponent', webcomponent.name);
+              wcJS.onload = function (e) {
+                return Craft.WebComponents.push(webcomponent.name);
+              };
+              head.appendChild(wcJS);
+            })();
+          }
+        }
+        if (wc === null) fetch(this.getAttribute('src')).then(function (res) {
+          res.json().then(function (webcomponent) {
+            CrafterStyles.innerHTML += webcomponent.css;
+            var wcJS = make_element('script', '', {
+              src: Craft.URLfrom(webcomponent.js),
+              type: 'text/javascript',
+              webcomponent: webcomponent.name
+            }, true);
+            wcJS.onload = function (e) {
+              Craft.WebComponents.push(webcomponent.name);
+              wcJS = null;
+              webcomponent = null;
+            };
+            head.appendChild(wcJS);
+            if (_this5.hasAttribute('cache-component') && _this5.getAttribute('cache-component') === 'true') localStorage.setItem(_this5.getAttribute('src'), JSON.stringify(webcomponent));
+          });
+        }).catch(function (err) {
+          return console.error(err + ': could not load webcomponent');
+        });
+      }
+    }
+  });
 
   Once('DOMContentLoaded', function () {
     queryEach('[link]', function (el) {
@@ -1062,45 +1110,40 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     Craft.Router.links.forEach(function (link) {
       return link();
     });
-    ReadyStage++;
-  });
-
-  Once('WebComponentsReady', function (e) {
-    ReadyStage++;
-    ReadyStage === 2 ? Ready = true : Craft.poll(function () {
-      return ReadyStage === 2;
-    }, 20, 1500, function () {
+    if (Craft.WebComponents.length === queryAll('fetch-webcomponent').length) {
+      Ready = true;
+    } else Craft.poll(function () {
+      return Craft.WebComponents.length === queryAll('fetch-webcomponent').length;
+    }, 35, 2000, function () {
       return Ready = true;
     }, function () {
-      console.warn('loading took longer than expected');
+      console.log('loading is taking longer than usual :(');
       Ready = true;
     });
   });
 
-  Craft.WhenReady = function () {
+  Craft.WhenReady = function (Scope) {
     return new Promise(function (resolve, reject) {
+      var waitIncase = CurrentBrowser.is("Firefox") || CurrentBrowser.is("msie");
+      Scope = Scope || Craft.Scope;
       if (Ready) {
-        if (Current.browser.includes("Firefox") || CurrentBrowser.browser.includes("msie")) {
-          setTimeout(function () {
-            return resolve(Craft.Scope);
-          }, 500);
-        } else resolve(Craft.Scope);
+        waitIncase ? setTimeout(function () {
+          return resolve(Scope);
+        }, 500) : resolve(Scope);
       } else {
         (function () {
           var ReadyYet = setInterval(function () {
             if (Ready) {
-              if (CurrentBrowser.browser.includes("Firefox") || CurrentBrowser.browser.includes("msie")) {
-                setTimeout(function () {
-                  return resolve(Craft.Scope);
-                }, 500);
-              } else resolve(Craft.Scope);
+              waitIncase ? setTimeout(function () {
+                return resolve(Scope);
+              }, 500) : resolve(Scope);
               clearInterval(ReadyYet);
             }
-          }, 50);
+          }, 20);
           setTimeout(function () {
             clearInterval(ReadyYet);
             if (!Ready) reject("Things didn't load correctly/intime -> load failed");
-          }, 3500);
+          }, 4500);
         })();
       }
     });

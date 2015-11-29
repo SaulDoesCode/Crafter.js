@@ -1,6 +1,5 @@
 (function () {
   "use strict";
-  let CrafterWidgets = () => {
     Craft.Ripple = function (SelectorOrNode, options) {
       options = options || {};
       let color = options.color || undefined,
@@ -26,7 +25,7 @@
           element.insertBefore(circle, element.firstChild);
           if (is.Def(circle)) setTimeout(() => circle.remove(), timing);
         }
-        element.onmouseup = e => forEach(queryAll('.circle', element), Childcircle => {
+        element.onmouseup = e => queryEach('.circle', element, Childcircle => {
           if (!is.Null(Childcircle)) setTimeout(() => Childcircle.remove(), timing);
         });
       });
@@ -43,7 +42,7 @@
               this.Show(true, ev);
             }
           });
-        } else log('err', 'no scope elements/attribute found on context-menu element \n can\' operate without a scope');
+        } else console.error('no scope elements/attribute found on context-menu element \n can\' operate without a scope');
       },
       destroyed: function () {
         forEach(queryAll(this.getAttribute('scope')), el => el.oncontextmenu = null);
@@ -171,15 +170,4 @@
         }
       }
     });
-  }
-  if ("Craft" in window) {
-    CrafterWidgets();
-  } else {
-    let isCrafterReady = setInterval(() => {
-      if ("Craft" in window) {
-        CrafterWidgets();
-        clearInterval(isCrafterReady);
-      }
-    }, 20);
-  }
 })();

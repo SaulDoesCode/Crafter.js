@@ -64,8 +64,12 @@ gulp.task('build_webcomponents', ['babelize_webcomponents'], function () {
       StyleFile = fs.readFileSync('./src/pre-webcomponents/' + FileName + '.css', 'utf8');
       ScriptFile = fs.readFileSync('./src/pre-webcomponents/' + FileName + '.bs', 'utf8');
 
-      var WebComponentInner = '<script type="text/javascript">\n\t' + ScriptFile + '</script>\n<style>\n\t' + StyleFile + '\n</style>';
-      fs.writeFile('./dist/WebComponents/' + FileName + '.html', WebComponentInner, 'utf8', err => {
+      var WebComponentInner = JSON.stringify({
+        name : FileName,
+        css : StyleFile,
+        js : ScriptFile
+      });
+      fs.writeFile('./dist/WebComponents/' + FileName + '.wc', WebComponentInner, 'utf8', err => {
         if (err) console.error(err);
         console.log('Success -> WebComponents Created!');
       });
@@ -75,13 +79,8 @@ gulp.task('build_webcomponents', ['babelize_webcomponents'], function () {
   });
 });
 
-gulp.task('watchWebComponents', function () {
-  gulp.watch(['./src/pre-webcomponents/*.js', './src/pre-webcomponents/*.css'], ['build_webcomponents']);
-});
-
-gulp.task('watchSource', function () {
-  gulp.watch('./src/*.js', ['babel']);
-});
+gulp.task('watchWebComponents', () => gulp.watch(['./src/pre-webcomponents/*.js', './src/pre-webcomponents/*.css'], ['build_webcomponents']));
+gulp.task('watchSource', () => gulp.watch('./src/*.js', ['babel']));
 
 gulp.task('polyfills', function () {
   gulp.src('./polyfills/*.js')
