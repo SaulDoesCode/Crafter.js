@@ -662,6 +662,36 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         }
       }
     },
+    Cookies: {
+      get: function get(key) {
+        return key ? decodeURIComponent(doc.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1")) || null : null;
+      },
+      set: function set(key, val, expires, path, domain, secure) {
+        if (!key || /^(?:expires|max\-age|path|domain|secure)$/i.test(key)) return false;
+        var expiry = "";
+        if (expires) {
+          if (is.Num(expires)) expiry = expires === Infinity ? "; expires=Fri, 11 April 9997 23:59:59 UTC" : "; max-age=" + expires;
+          if (is.String(expires)) expiry = "; expires=" + expires;
+          if (is.Date(expires)) expiry = "; expires=" + expires.toUTCString();
+        }
+        doc.cookie = encodeURIComponent(key) + "=" + encodeURIComponent(val) + expiry + (domain ? "; domain=" + domain : "") + (path ? "; path=" + path : "") + (secure ? "; secure" : "");
+        return true;
+      },
+      remove: function remove(key, path, domain) {
+        if (!Craft.Cookies.has(key)) return false;
+        doc.cookie = encodeURIComponent(key) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT" + (domain ? "; domain=" + domain : "") + (path ? "; path=" + path : "");
+        return true;
+      },
+      has: function has(key) {
+        return key ? new RegExp("(?:^|;\\s*)" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=").test(doc.cookie) : false;
+      },
+      keys: function keys() {
+        var all = doc.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/),
+            i = 0;
+        for (; i < all.length; i++) all[i] = decodeURIComponent(all[i]);
+        return all;
+      }
+    },
     trim: function trim(text) {
       return is.Null(text) ? "" : (text + "").replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, "");
     },
@@ -840,7 +870,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     WebComponents: [],
     mouse: {
       x: 0,
-      y: 0
+      y: 0,
+      over: null
     },
     nodeExists: function nodeExists(selector, within) {
       return queryAll(selector, is.Node(within) ? within = within : within = query(within)) !== null;
@@ -1051,6 +1082,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
   root.onmousemove = function (e) {
     Craft.mouse.x = e.clientX;
     Craft.mouse.y = e.clientY;
+    Craft.mouse.over = e.target;
   };
 
   Craft.newComponent('fetch-webcomponent', {

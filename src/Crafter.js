@@ -18,10 +18,7 @@
   Br ? [Br[1], Br[2]] : [navigator.appName, navigator.appVersion, '-?'];
 
   root.CurrentBrowser = {
-    is: browser => {
-      if (CurrentBrowser.browser.toLowerCase().includes(browser.toLowerCase())) return true;
-      return false
-    },
+    is: browser => Br.join(' ').toLowerCase().includes(browser.toLowerCase()) ? true : false,
     browser: Br.join(' ')
   }
 
@@ -34,9 +31,7 @@
     Bool: val => typeof val === 'boolean',
     Arr: val => Array.isArray(val),
     Arraylike: val => {
-      if ('length' in val && val !== window && !is.Func(val)) {
-        if (is.Num(val.length)) return true;
-      }
+      if ('length' in val && isT(val.length, 'number')) return true;
       return false;
     },
     String: val => isT(val, 'string'),
@@ -46,7 +41,7 @@
     Null: (...args) => args.every(o => o === null),
     Node: (...args) => args.every(o => o instanceof Node),
     NodeList: (...args) => {
-      for (var i = 0; i < args.length; i++)
+      for (let i = 0; i < args.length; i++)
         if (Array.from(args[i]).every(n => is.Node(n))) return true;
       return false;
     },
@@ -76,22 +71,19 @@
 
 
   root.forEach = (iterable, func) => {
-    if (is.Func(func)) {
-      let i = 0;
-      if (!is.Object(iterable)) {
-        for (; i < iterable.length; i++) func(iterable[i], i);
-      } else {
-        for (i in iterable)
-          if (iterable.hasOwnProperty(i)) func(iterable[i], i);
-      }
-    } else throw new Error("forEach : invalid or undefined function provided");
+    if (!is.Func(func)) throw new Error("forEach -> invalid or undefined function provided");
+    let i = 0;
+    if (!is.Object(iterable))
+      for (; i < iterable.length; i++) func(iterable[i], i);
+    else
+      for (i in iterable)
+        if (iterable.hasOwnProperty(i)) func(iterable[i], i);
   }
 
   root.QueryOrNodetoNodeArray = (val) => {
     if (is.String(val)) val = queryAll(val);
-    if (is.Null(val)) return null;
-    if (is.Node(val)) return [val];
     if (is.NodeList(val)) return Array.from(val);
+    return is.Node(val) ? [val] : null
   };
 
   root.query = (selector, element) => {
@@ -117,22 +109,12 @@
   }
 
   root.log = (Type, msg) => {
-    switch (Type) {
-      case 'err' || 'e':
-        console.error(msg)
-        break;
-      case 'warn' || 'w':
-        console.warn(msg)
-        break;
-      case 'success' || 's':
-        console.log('%c' + msg, 'color:green;')
-        break;
-      case 'info' || 'i':
-        console.info(msg)
-        break;
-      default:
-        console.log(Type)
-    }
+    let Is = (...args) => args.some(str => Type === str);
+    if (Is('err', 'e')) console.error(msg);
+    else if (Is('warn', 'w')) console.warn(msg);
+    else if (Is('info', 'i')) console.info(msg);
+    else if (Is('success', 's')) console.log('%c' + msg, 'color:green;');
+    else console.log(Type);
   };
 
   root.EventHandler = class EventHandler {
@@ -140,7 +122,7 @@
       this.EventType = EventType;
       this.Func = Func;
       this.Target = (Target !== window && Target !== document) ? QueryOrNodetoNodeArray(Target) : Target;
-      this.FuncWrapper = e => Func(e, e.srcElement, ...this.args || []);
+      this.FuncWrapper = e => Func(e, e.srcElement, args || []);
     }
     On() {
       is.Arr(this.Target) ? this.Target.forEach(target => target.addEventListener(this.EventType, this.FuncWrapper)) : this.Target.addEventListener(this.EventType, this.FuncWrapper)
@@ -149,21 +131,21 @@
       is.Arr(this.Target) ? this.Target.forEach(target => target.removeEventListener(this.EventType, this.FuncWrapper)) : this.Target.removeEventListener(this.EventType, this.FuncWrapper);
     }
     Once() {
-      let Func = this.FuncWrapper,
-        Target = this.Target,
-        EventType = this.EventType,
-        ListenOnce = e => {
-          Func(e);
-          is.Arr(Target) ? Target.forEach(target => target.removeEventListener(EventType, ListenOnce)) : Target.removeEventListener(EventType, ListenOnce);
+      let func = this.FuncWrapper,
+        target = this.Target,
+        etype = this.EventType,
+        listenOnce = e => {
+          func(e);
+          is.Arr(target) ? target.forEach(t => t.removeEventListener(etype, listenOnce)) : target.removeEventListener(etype, listenOnce);
         }
-      is.Arr(Target) ? Target.forEach(target => target.addEventListener(EventType, ListenOnce)) : Target.addEventListener(EventType, ListenOnce);
+      is.Arr(target) ? target.forEach(t => t.addEventListener(etype, listenOnce)) : target.addEventListener(etype, listenOnce);
     }
   }
 
   root.On = (eventType, SelectorNode, func) => {
     if (is.Func(SelectorNode)) {
       func = SelectorNode;
-      SelectorNode = window;
+      SelectorNode = root;
     }
     let handle = new EventHandler(eventType, SelectorNode, func);
     handle.On();
@@ -173,7 +155,7 @@
   root.Once = (eventType, SelectorNode, func) => {
     if (is.Func(SelectorNode)) {
       func = SelectorNode;
-      SelectorNode = window;
+      SelectorNode = root;
     }
     let handle = new EventHandler(eventType, SelectorNode, func);
     handle.Once();
@@ -187,21 +169,15 @@
     }
     if (NodeForm === true) {
       let newEl = doc.createElement(name);
-      if (is.String(inner)) newEl.innerHTML = inner;
-      if (is.Def(attributes)) {
-        if (is.Object(attributes)) forEach(attributes, (val, attr) => newEl.setAttribute(attr, val));
-        if (is.String(attributes)) newEl.setAttribute(attributes, '');
-      }
+      newEl.innerHTML = inner;
+      if (is.Object(attributes)) forEach(attributes, (val, attr) => newEl.setAttribute(attr, val));
+      if (is.String(attributes)) attributes.includes('&') ? attributes.split('&').forEach(attr => is.Def(newEl.setAttribute(attr.split('=')[0], attr.split('=')[1]) ? attr.split('=')[1] : '')) : newEl.setAttribute(attributes.split('=')[0], attributes.split('=')[1] !== undefined ? attributes.split('=')[1] : '');
       return newEl;
-    } else {
-      if (is.Def(attributes) && is.String(attributes)) {
-        return `<${name} ${attributes}>${inner}</${name}>`;
-      } else {
-        let attrString = ``;
-        if (is.Def(attributes) && is.Object(attributes)) forEach(attributes, (val, attr) => attrString = attrString + ` ${attr}="${val}" `);
-        return `<${name} ${attrString}>${inner}</${name}>`;
-      }
     }
+    if (is.String(attributes)) return `<${name} ${attributes}>${inner}</${name}>`;
+    let attrString = ``;
+    if (is.Object(attributes)) forEach(attributes, (val, attr) => attrString += ` ${attr}="${val}" `);
+    return `<${name} ${attrString}>${inner}</${name}>`;
   }
 
   root.dom = element => {
@@ -235,7 +211,7 @@
       getRect: () => element.getBoundingClientRect(),
       setWidth: Width => element.style.width = Width,
       setHeight: Height => element.style.height = Height,
-      find: (selector, forceSelectAll, returncraft) => {
+      find: (selector, forceSelectAll) => {
         let Localelement = queryAll(selector, element);
         if (Localelement.length > 1 || forceSelectAll === true && !is.Null(Localelement)) return Localelement;
         if (!is.Null(Localelement)) return Localelement[0];
@@ -244,7 +220,7 @@
     }
     if (is.NodeList(element)) return {
       On: (eventType, func) => On(eventType, element, func),
-      find: (selector, forceSelectAll, returncraft) => {
+      find: (selector, forceSelectAll) => {
         let Localelement = queryAll(selector, element);
         if (Localelement.length > 1 || forceSelectAll === true && !is.Null(Localelement)) return Localelement;
         if (!is.Null(Localelement)) return Localelement[0];
@@ -268,31 +244,30 @@
 
   root.Craft = {
     ArraytoObject: arr => {
-      let NewObject = {};
-      for (let i in arr)
+      let i, NewObject = {};
+      for (i in arr)
         if (is.Def(arr[i])) NewObject[i] = arr[i];
       return NewObject;
     },
-    toArray: obj => slice.call(obj),
-    IndexOfArrayInArray: (Arr, searchArr) => {
-      for (let i = 0; i < searchArr.length; i++) {
-        if (Arr[0] === searchArr[i]) {
-          for (let c = 0; c < Arr.length; c++) {
-            if (Arr[c] === searchArr[i + c]) {
-              if (c == (Arr.length - 1)) {
-                return i
-              } else continue
-            } else break
-          }
-        }
-      }
-      return -1
+    filterArr: (arr, func) => {
+      let i = -1,
+        x = -1,
+        result = [];
+      while (++i < arr.length)
+        if (func(arr[i], i, arr)) result[++x] = arr[i];
+      return result;
+    },
+    sameArray : (arr1, arr2) => {
+      let i = arr1.length;
+      if (i !== arr2.length) return false;
+      while (i--) if (arr1[i] !== arr2[i]) return false;
+      return true;
     },
     loader: {
       pre: 'craft:',
       CraftImport: obj => {
         let now = +new Date(),
-          key = (obj.key || obj.url),
+          key = obj.key || obj.url,
           src = Craft.loader.get(key);
         if (src || src.expire - now > 0) return new Promise(resolve => resolve(src));
         return new Promise((success, failed) => fetch(obj.url).then(res => res.text().then(data => {
@@ -307,25 +282,24 @@
         let obj, promises = [];
         args.forEach(arg => {
           obj = {
-            url: (arg.css || arg.script),
+            url: arg.css || arg.script,
             type: arg.css ? 'css' : 'script',
             exec: arg.execute !== false,
             cache: arg.cache !== false
-          };
+          }
           if (is.Def(arg.key)) obj.key = arg.key;
           if (is.Def(arg.defer)) obj.defer = arg.defer;
           if (is.Def(arg.expire)) obj.expire = arg.expire;
           arg.test === false ? Craft.loader.remove(obj.url) : promises.push(Craft.loader.CraftImport(obj));
         });
         return Promise.all(promises).then(src => src.map(obj => {
-          if (obj.type === 'css') {
-             CrafterStyles.innerHTML += ' \n' + obj.data;
-          } else {
-            let el = make_element('script',obj.data,{type : 'text/javascript'},true);
+          if (obj.type === 'css') CrafterStyles.innerHTML += '\n' + obj.data;
+          else if (obj.exec) {
+            let el = make_element('script', obj.data, "type=text/javascript", true);
             el.defer = obj.defer || undefined;
-            if (obj.exec) head.appendChild(el);
+            head.appendChild(el);
           }
-        }));
+        }))
       },
       setPrekey: str => Craft.loader.pre = str + ':',
       get: key => JSON.parse(localStorage.getItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key) || false),
@@ -335,62 +309,77 @@
           if (!expired || Craft.loader.get(i).expire <= +new Date()) Craft.loader.remove(i)
       }
     },
-    Router: {
+    router: {
       handle: (RouteLink, func) => {
         if (location.hash === RouteLink || location === RouteLink) func();
         Craft.router.handlers.push({
           link: RouteLink,
           func: func
-        });
+        })
       },
       handlers: [],
       links: [],
-      makeLink: (Selector, link, newtab, eventType) => Craft.router.links.push(() => On((is.Undef(eventType) ? 'click' : eventType), query(Selector), e => Craft.router.open(link, newtab))),
+      link: (Selector, link, newtab, eventType) => Craft.router.links.push(() => On(is.Def(eventType) ? eventType : 'click', query(Selector), e => newtab ? open(link) : location = link)),
       open: (link, newtab) => newtab ? open(link) : location = link,
       setTitle: title => document.title = title,
       setView: (viewHostSelector, view) => query(viewHostSelector).innerHTML = view,
       fetchView: (viewHostSelector, viewURL, cache, id) => {
-        if (is.Null(localStorage.getItem("RT_" + id))) {
-          fetch(viewURL).then(res => {
-            res.text().then(txt => {
-              if (cache && is.Def(id) && is.String(id) && is.Null(localStorage.getItem("RT_" + id))) localStorage.setItem(("RT_" + id), txt);
-              query(viewHostSelector).innerHTML = txt;
-            });
-          }).catch(msg => log('warn', 'Could not fetch view -> ' + msg));
-        } else if (cache) query(viewHostSelector).innerHTML = localStorage.getItem("RT_" + id);
+        if (is.Null(localStorage.getItem("RT_" + id))) fetch(viewURL).then(res => {
+          res.text().then(txt => {
+            if (cache && is.Def(id) && is.String(id) && is.Null(localStorage.getItem("RT_" + id))) localStorage.setItem(("RT_" + id), txt);
+            query(viewHostSelector).innerHTML = txt;
+          });
+        }).catch(msg => log('warn', 'Could not fetch view -> ' + msg));
+        else if (cache) query(viewHostSelector).innerHTML = localStorage.getItem("RT_" + id)
       },
       clearCache: () => {
         for (let i in localStorage)
           if (localStorage.key(i).includes("RT_")) localStorage.removeItem(localStorage.key(i));
       },
     },
+    Cookies: {
+      get: (key) => key ? decodeURIComponent(doc.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1")) || null : null,
+      set: (key, val, expires, path, domain, secure) => {
+        if (!key || /^(?:expires|max\-age|path|domain|secure)$/i.test(key)) return false;
+        let expiry = "";
+        if (expires) {
+          if (is.Num(expires)) expiry = expires === Infinity ? "; expires=Fri, 11 April 9997 23:59:59 UTC" : "; max-age=" + expires;
+          if (is.String(expires)) expiry = "; expires=" + expires;
+          if (is.Date(expires)) expiry = "; expires=" + expires.toUTCString();
+        }
+        doc.cookie = encodeURIComponent(key) + "=" + encodeURIComponent(val) + expiry + (domain ? "; domain=" + domain : "") + (path ? "; path=" + path : "") + (secure ? "; secure" : "");
+        return true;
+      },
+      remove: (key, path, domain) => {
+        if (!Craft.Cookies.has(key)) return false;
+        doc.cookie = encodeURIComponent(key) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT" + (domain ? "; domain=" + domain : "") + (path ? "; path=" + path : "");
+        return true;
+      },
+      has: key => key ? (new RegExp("(?:^|;\\s*)" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=")).test(doc.cookie) : false,
+      keys: () => {
+        let all = doc.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/);
+        all.forEach(c => decodeURIComponent(c));
+        return all;
+      }
+    },
     trim: text => is.Null(text) ? "" : (text + "").replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, ""),
     after: function (n, func) {
-      if (!is.Func(func)) {
-        if (is.Func(n)) {
-          let temp = n;
-          n = func;
-          func = temp;
-        } else log("err", "after : func is not a function");
-      }
+      if (!is.Func(func)) is.Func(n) ? func = n : console.error("after : func is not a function");
       n = Number.isFinite(n = +n) ? n : 0;
-      return (...args) => {
-        if (--n < 1) return func.apply(this, args);
-      }
+      return (...args) => --n < 1 ? func.apply(this, args) : () => null;
     },
     debounce: function (wait, func, immediate) {
       let timeout;
       return function () {
-        let context = this,
-          args = arguments,
+        let args = arguments,
           later = () => {
             timeout = null;
-            if (!immediate) func.apply(context, args);
-          };
-        let callNow = immediate && !timeout;
+            if (!immediate) func.apply(this, args);
+          },
+          callNow = immediate && !timeout;
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);
-        if (callNow) func.apply(context, args);
+        if (callNow) func.apply(this, args);
       };
     },
     throttle: function (wait, func, options) {
@@ -494,12 +483,10 @@
     },
     omit: (obj, val) => {
       if (is.Object(obj)) {
-        if (obj !== val) {
-          forEach(obj, (prop, key) => {
+        if (obj !== val) forEach(obj, (prop, key) => {
             if (val === key || val === prop) delete obj[key];
-          });
-        }
-        if (obj.hasOwnProperty(val)) log('err', 'couldn\'t omit ' + val + 'from Object');
+        });
+        if (obj.hasOwnProperty(val)) console.error(`couldn't omit ${val} from Object`);
       } else if (is.Arr(obj) || is.String(obj)) {
         obj.forEach(i => {
           if (val === i) obj = Craft.removeArrItem(obj, i);
@@ -508,30 +495,34 @@
       }
       return obj;
     },
+    memoize : function (func, resolver) {
+      if (!is.Func(func) || (resolver && !is.Func(resolver))) throw new TypeError("arg provided is not a function");
+      let cache = new WeakMap;
+      let memoized = function(...args) {
+        let key = resolver ? resolver.apply(this, args) : args[0];
+        if (cache.has(key)) return cache.get(key);
+        let result = func.apply(this, args);
+        memoized.cache = cache.set(key, result);
+        return result;
+      };
+      return memoized;
+    },
     Scope: {},
     WebComponents: [],
     mouse: {
       x: 0,
-      y: 0
+      y: 0,
+      over: null
     },
     nodeExists: (selector, within) => queryAll(selector, (is.Node(within) ? within = within : within = query(within))) !== null,
     ObjToFormData: obj => {
-      let formData = new FormData(),
-        key;
+      let key, formData = new FormData();
       for (key in obj) formData.append(key, obj[key]);
       return formData;
     },
     URLfrom: text => URL.createObjectURL(new Blob([text])),
-    OnScroll: (element, func) => {
-      let up = false;
-      if (is.Func(func)) {
-        On(element, e => {
-          (e.deltaY < 1) ? up = false: up = true;
-          func(up, e);
-        });
-      } else console.error('second param needs to be a function');
-    },
-    OnResize: func => is.Func(func) ? Craft.ResizeHandlers.add(func) : cerr("TypeError : Craft.OnResize -> func is not a function"),
+    OnScroll: (element, func) => is.Func(func) ? On(element, e => func(e.deltaY < 1 ? false : true, e)) : console.error('second param needs to be a function'),
+    OnResize: func => is.Func(func) ? Craft.ResizeHandlers.add(func) : console.error("Craft.OnResize -> func is not a function"),
     poll: (test, interval, timeout, success, fail) => {
       return (() => {
         if (is.Func(timeout)) {
@@ -553,32 +544,34 @@
     },
     randomString: () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1),
     GenUID: () => Craft.randomString() + Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString() + Craft.randomString() + Craft.randomString(),
+    createWebComponent: webcomponent => {
+      if (is.String) webcomponent = JSON.parse(webcomponent);
+      CrafterStyles.innerHTML += webcomponent.css;
+      let wcJS = make_element('script', '', {
+        src: Craft.URLfrom(webcomponent.js),
+        type: 'text/javascript',
+        webcomponent: webcomponent.name
+      }, true);
+      wcJS.setAttribute('webcomponent', webcomponent.name);
+      wcJS.onload = e => Craft.WebComponents.push(webcomponent.name);
+      head.appendChild(wcJS);
+    },
     newComponent: function (tag, config) {
-      if (is.Undef(config)) {
-        console.error("Invalid Component Configuration")
-      } else {
-        let element = Object.create(HTMLElement.prototype);
+      if (is.Undef(config)) console.error("Invalid Component Configuration");
+      else {
+        let element = Object.create(HTMLElement.prototype),
+          settings = {}
         forEach(config, (prop, key) => {
-          if (key === 'created') {
-            element.createdCallback = prop;
-          } else if (key === 'inserted') {
-            element.attachedCallback = prop;
-          } else if (key === 'destroyed') {
-            element.detachedCallback = prop;
-          } else if (key === 'attr') {
-            element.attributeChangedCallback = prop;
-          } else if (is.Func(prop)) {
-            element[key] = prop;
-          } else if (key !== 'extends' && !is.Func(prop)) element[key] = prop;
+          if (key === 'created') element.createdCallback = prop;
+          else if (key === 'inserted') element.attachedCallback = prop;
+          else if (key === 'destroyed') element.detachedCallback = prop;
+          else if (key === 'attr') element.attributeChangedCallback = prop;
+          else if (key === 'extends') settings.extends = prop;
+          else if (is.Func(prop)) element[key] = prop;
+          else if (key !== 'extends' && !is.Func(prop)) element[key] = prop
         });
-        if ('extends' in config) {
-          doc.registerElement(tag, {
-            prototype: element,
-            extends: config.extends
-          })
-        } else doc.registerElement(tag, {
-          prototype: element
-        });
+        settings['prototype'] = element;
+        doc.registerElement(tag, settings)
       }
     }
   };
@@ -599,14 +592,14 @@
         this.functions[funcName] = func;
       } else if (is.Func(funcName)) {
         this.functions[Craft.randomString()] = funcName;
-      } else log("err", "Invalid function parameter in FunctionIterator.add(funcName , _function_ )");
+      } else console.error("Invalid function parameter in FunctionIterator.add(funcName , _function_ )");
       this.length = Object.keys(this.functions).length;
     }
     remove(funcName) {
       if (this.functions.has(funcName)) {
         this.functions[funcName] = null;
         delete this.functions[funcName];
-      } else log("warn", "No Such Function Entry in FunctionIterator");
+      } else console.warn("No Such Function Entry in FunctionIterator");
       this.length = Object.keys(this.functions).length;
     }
     removeAll() {
@@ -619,7 +612,29 @@
       for (let i in this.functions) this.functions[i].apply(this, arguments);
     }
     runOne(funcName, arg) {
-      this.functions.hasOwnProperty(funcName) ? this.functions[funcName].apply(this, arg, arguments) : log("warn", "No Such Function Entry in FunctionIterator");
+      this.functions.hasOwnProperty(funcName) ? this.functions[funcName].apply(this, arg, arguments) : console.warn("No Such Function Entry in FunctionIterator");
+    }
+  }
+
+  root.CraftSocket = class CraftSocket {
+    constructor(wsAddress, protocols) {
+      is.Arr(protocols) ? this.Socket = new WebSocket(wsAddress, protocols) : this.Socket = new WebSocket(wsAddress);
+      this.messageCalls = [];
+      this.RecieveCalls = [];
+      this.Socket.onmessage = e => this.RecieveCalls.forEach(call => call(e));
+    }
+    send(message, func) {
+      this.messageCalls.push(() => {
+        this.Socket.send(message);
+        if (is.Def(func) && is.Func(func)) this.recieve((data, e) => func(data, e));
+      });
+      this.Socket.onopen = e => this.messageCalls[this.messageCalls.length - 1]();
+    }
+    recieve(func) {
+      is.Func(func) ? this.RecieveCalls.push(e => func(e.data, e)) : console.error("callback is not a function or is not defined")
+    }
+    close() {
+      this.Socket.close()
     }
   }
 
@@ -628,7 +643,7 @@
       if (is.Func(handle)) {
         this.val = val;
         this.Handle = handle;
-      } else log('err', 'ReactiveVariable needs a handler function after the value');
+      } else console.error('ReactiveVariable needs a handler function after the value');
       return this.val
     }
     set(val) {
@@ -643,9 +658,7 @@
       return this.val
     }
     reset(handle) {
-      if (is.Func(handle)) {
-        this.Handle = handle
-      } else log('err', 'ReactiveVariable.Reset only takes a function');
+      is.Func(handle) ? this.Handle = handle : console.error('ReactiveVariable.Reset only takes a function');
     }
   }
 
@@ -677,6 +690,7 @@
   root.onmousemove = e => {
     Craft.mouse.x = e.clientX;
     Craft.mouse.y = e.clientY;
+    Craft.mouse.over = e.target;
   }
 
   Craft.newComponent('fetch-webcomponent', {
@@ -689,11 +703,11 @@
             let webcomponent = JSON.parse(wc);
             CrafterStyles.innerHTML += webcomponent.css;
             let wcJS = make_element('script', '', {
-              src : Craft.URLfrom(webcomponent.js),
+              src: Craft.URLfrom(webcomponent.js),
               type: 'text/javascript',
-              webcomponent : webcomponent.name
+              webcomponent: webcomponent.name
             }, true);
-            wcJS.setAttribute('webcomponent',webcomponent.name);
+            wcJS.setAttribute('webcomponent', webcomponent.name);
             wcJS.onload = e => Craft.WebComponents.push(webcomponent.name);
             head.appendChild(wcJS);
           }
@@ -702,9 +716,9 @@
           res.json().then(webcomponent => {
             CrafterStyles.innerHTML += webcomponent.css;
             let wcJS = make_element('script', '', {
-              src : Craft.URLfrom(webcomponent.js),
+              src: Craft.URLfrom(webcomponent.js),
               type: 'text/javascript',
-              webcomponent : webcomponent.name
+              webcomponent: webcomponent.name
             }, true);
             wcJS.onload = e => {
               Craft.WebComponents.push(webcomponent.name);
@@ -712,7 +726,7 @@
               webcomponent = null;
             }
             head.appendChild(wcJS);
-            if (this.hasAttribute('cache-component') && this.getAttribute('cache-component') === 'true') localStorage.setItem(this.getAttribute('src'), JSON.stringify(webcomponent));
+            if (this.getAttribute('cache-component') === 'true') localStorage.setItem(this.getAttribute('src'), JSON.stringify(webcomponent));
           });
         }).catch(err => console.error(err + ': could not load webcomponent'))
       }
@@ -720,22 +734,20 @@
   });
 
   Once('DOMContentLoaded', () => {
-    queryEach('[link]', el => On('click', el, e => el.hasAttribute('newtab') ? open(el.getAttribute('link')) : Craft.Router.open(el.getAttribute('link'))));
-    Craft.Router.links.forEach(link => link());
-    if(Craft.WebComponents.length === queryAll('fetch-webcomponent').length) {
-      Ready = true;
-    } else Craft.poll(() => Craft.WebComponents.length === queryAll('fetch-webcomponent').length,35 ,2000, () => Ready = true, () => {
+    queryEach('[link]', el => On('click', el, e => el.hasAttribute('newtab') ? open(el.getAttribute('link')) : Craft.router.open(el.getAttribute('link'))));
+    Craft.router.links.forEach(link => link());
+    if (Craft.WebComponents.length === queryAll('fetch-webcomponent').length) Ready = true;
+    else Craft.poll(() => Craft.WebComponents.length === queryAll('fetch-webcomponent').length, 35, 2000, () => Ready = true, () => {
       console.log('loading is taking longer than usual :(');
-      Ready = true;
-    });
+      Ready = true
+    })
   });
 
   Craft.WhenReady = Scope => new Promise((resolve, reject) => {
     let waitIncase = CurrentBrowser.is("Firefox") || CurrentBrowser.is("msie");
     Scope = Scope || Craft.Scope;
-    if (Ready) {
-      waitIncase ? setTimeout(() => resolve(Scope), 500) : resolve(Scope);
-    } else {
+    if (Ready) waitIncase ? setTimeout(() => resolve(Scope), 500) : resolve(Scope);
+    else {
       let ReadyYet = setInterval(() => {
         if (Ready) {
           waitIncase ? setTimeout(() => resolve(Scope), 500) : resolve(Scope);
@@ -745,9 +757,9 @@
       setTimeout(() => {
         clearInterval(ReadyYet);
         if (!Ready) reject("Things didn't load correctly/intime -> load failed");
-      }, 4500);
+      }, 4500)
     }
   });
 
-  On('hashchange', e => CraftRouter.handlers.forEach(handler => (location.hash === handler.link || location === handler.link) ? handler.func() : null));
+  On('hashchange', e => Craft.router.handlers.forEach(handler => (location.hash === handler.link || location === handler.link) ? handler.func() : null));
 })(document, self);

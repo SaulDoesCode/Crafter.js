@@ -6,7 +6,7 @@
     opacity: 1;
   }
 }
-[tooltip], [movable] , [ripple] {
+[tooltip], [movable], [ripple] {
   animation-duration: 0.001s;
   animation-name: nodeInserted;
 }
@@ -210,7 +210,7 @@ context-menu > section:hover {
   position: relative;
   display: inline-block;
   overflow: hidden;
-  box-sizing: border-box !important;
+  box-sizing: border-box;
   vertical-align: top;
   height: 10mm;
   line-height: 9.5mm;
@@ -220,10 +220,10 @@ context-menu > section:hover {
   margin: 3px 0;
   padding-left: 10px;
   padding-right: 10px;
-  outline: 0 none !important;
-  border: 1px solid #bbbbbb;
+  outline: 0 !important;
+  border: 1px solid #737373;
   border-radius: 2px;
-  background: linear-gradient(to bottom, #ebebeb 0%, #d6d6d6 6%, #ededed 51%, #d7d5d7 95%, #e6e6e6 100%);
+  background: #b3b3b3;
   user-select: none;
   -moz-user-select: none;
   -webkit-user-select: none;
@@ -240,7 +240,7 @@ input[type='button']:hover, input[type='submit']:hover, button:hover {
 }
 button::-moz-focus-inner, input[type='button']::-moz-focus-inner, input[type='submit']::-moz-focus-inner {
   border: 0;
-  outline: 0 none !important;
+  outline: 0 !important;
 }
 [class*=flatbutton], [flatbutton], [flatbutton-go], [flatbutton-info], [flatbutton-warning], [flatbutton-danger] {
   border-radius: 3px;
@@ -326,4 +326,150 @@ button::-moz-focus-inner, input[type='button']::-moz-focus-inner, input[type='su
 }
 .push-button-warning, [push-button-warning] {
   background: #dfba1c;
+}
+code {
+  padding: .2rem .5rem;
+  margin: 0 .2rem;
+  font-size: 90%;
+  white-space: nowrap;
+  background: #F1F1F1;
+  border: 1px solid #E1E1E1;
+  border-radius: 4px;
+}
+pre > code {
+  display: block;
+  padding: 1rem 1.5rem;
+  white-space: pre;
+}
+ul {
+  list-style: circle inside;
+}
+ol {
+  list-style: decimal inside;
+}
+ol, ul {
+  padding-left: 0;
+  margin-top: 0;
+}
+ul ul, ul ol, ol ol, ol ul {
+  margin: 1.5rem 0 1.5rem 3rem;
+  font-size: 90%;
+}
+li {
+  margin-bottom: 1rem;
+}
+.container, grid-host {
+  position: relative;
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+.container:after, .row:after, grid-row:after, grid-host:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+.column, .columns, .col, .cols {
+  width: 100%;
+  float: left;
+  box-sizing: border-box;
+}
+@media (min-width: 400px) {
+  .container, grid-host {
+    width: 85%;
+    padding: 0;
+  }
+}
+@media (min-width: 550px) {
+  .container, grid-host {
+    width: 80%;
+  }
+  .column, .columns, .col {
+    margin-left: 4%;
+  }
+  .column:first-child, .columns:first-child, .col:first-child {
+    margin-left: 0;
+  }
+  .one.column, .one.columns, .one.col {
+    width: 4.66666666667%;
+  }
+  .two.columns, .two.cols {
+    width: 13.3333333333%;
+  }
+  .three.columns, .three.cols {
+    width: 22%;
+  }
+  .four.columns, .four.cols, .one-third.column {
+    width: 30.6666666667%;
+  }
+  .five.columns, .five.cols {
+    width: 39.3333333333%;
+  }
+  .six.columns, .six.cols, .one-half.column, .one-half.col, .half-col {
+    width: 48%;
+  }
+  .seven.columns, .seven.cols {
+    width: 56.6666666667%;
+  }
+  .eight.columns, .eight.cols, .two-thirds.column {
+    width: 65.3333333333%;
+  }
+  .nine.columns, .nine.cols {
+    width: 74.0%;
+  }
+  .ten.columns, .ten.cols {
+    width: 82.6666666667%;
+  }
+  .eleven.columns, .eleven.cols {
+    width: 91.3333333333%;
+  }
+  .twelve.columns, .twelve.cols {
+    width: 100%;
+    margin-left: 0;
+  }
+  /* Offsets */
+  .offset-by-one.column, .offset-by-one.columns {
+    margin-left: 8.66666666667%;
+  }
+  .offset-by-two.column, .offset-by-two.columns {
+    margin-left: 17.3333333333%;
+  }
+  .offset-by-three.column, .offset-by-three.columns {
+    margin-left: 26%;
+  }
+  .offset-by-four.column, .offset-by-four.columns {
+    margin-left: 34.6666666667%;
+  }
+  .offset-by-five.column, .offset-by-five.columns {
+    margin-left: 43.3333333333%;
+  }
+  .offset-by-six.column, .offset-by-six.columns {
+    margin-left: 52%;
+  }
+  .offset-by-seven.column, .offset-by-seven.columns {
+    margin-left: 60.6666666667%;
+  }
+  .offset-by-eight.column, .offset-by-eight.columns {
+    margin-left: 69.3333333333%;
+  }
+  .offset-by-nine.column, .offset-by-nine.columns {
+    margin-left: 78.0%;
+  }
+  .offset-by-ten.column, .offset-by-ten.columns {
+    margin-left: 86.6666666667%;
+  }
+  .offset-by-eleven.column, .offset-by-eleven.columns {
+    margin-left: 95.3333333333%;
+  }
+  .offset-by-one-third.column, .offset-by-one-third.columns {
+    margin-left: 34.6666666667%;
+  }
+  .offset-by-two-thirds.column, .offset-by-two-thirds.columns {
+    margin-left: 69.3333333333%;
+  }
+  .offset-by-one-half.column, .offset-by-one-half.columns {
+    margin-left: 52%;
+  }
 }
