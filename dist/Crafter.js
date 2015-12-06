@@ -222,8 +222,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
 
   root.QueryOrNodetoNodeArray = function (val) {
     if (is.String(val)) val = queryAll(val);
+    if (is.Node(val)) return [val];
     if (is.NodeList(val)) return Array.from(val);
-    return is.Node(val) ? [val] : null;
   };
 
   root.query = function (selector, element) {

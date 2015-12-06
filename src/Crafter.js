@@ -82,8 +82,8 @@
 
   root.QueryOrNodetoNodeArray = (val) => {
     if (is.String(val)) val = queryAll(val);
+    if (is.Node(val)) return [val];
     if (is.NodeList(val)) return Array.from(val);
-    return is.Node(val) ? [val] : null
   };
 
   root.query = (selector, element) => {
@@ -257,10 +257,11 @@
         if (func(arr[i], i, arr)) result[++x] = arr[i];
       return result;
     },
-    sameArray : (arr1, arr2) => {
+    sameArray: (arr1, arr2) => {
       let i = arr1.length;
       if (i !== arr2.length) return false;
-      while (i--) if (arr1[i] !== arr2[i]) return false;
+      while (i--)
+        if (arr1[i] !== arr2[i]) return false;
       return true;
     },
     loader: {
@@ -484,7 +485,7 @@
     omit: (obj, val) => {
       if (is.Object(obj)) {
         if (obj !== val) forEach(obj, (prop, key) => {
-            if (val === key || val === prop) delete obj[key];
+          if (val === key || val === prop) delete obj[key];
         });
         if (obj.hasOwnProperty(val)) console.error(`couldn't omit ${val} from Object`);
       } else if (is.Arr(obj) || is.String(obj)) {
@@ -495,10 +496,10 @@
       }
       return obj;
     },
-    memoize : function (func, resolver) {
+    memoize: function (func, resolver) {
       if (!is.Func(func) || (resolver && !is.Func(resolver))) throw new TypeError("arg provided is not a function");
       let cache = new WeakMap;
-      let memoized = function(...args) {
+      let memoized = function (...args) {
         let key = resolver ? resolver.apply(this, args) : args[0];
         if (cache.has(key)) return cache.get(key);
         let result = func.apply(this, args);

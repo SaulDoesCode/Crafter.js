@@ -16,36 +16,32 @@ gulp.task('babel', function () {
   console.log('\t babel be done!');
 });
 
-gulp.task('BabelUgly', function () {
-  gulp.src('./src/*.js')
-    .pipe(babel({
-      presets: ['es2015']
-    }))
-    .pipe(uglify({
-      mangle: true,
-      compress: true,
-      compressor: {
-        if_return: true,
-        loops: true,
-        conditionals: true,
-        comparisons: true,
-        sequences: true
-      },
-      output: {
-        comments: true
-      }
-    }))
-    .pipe(gulp.dest('./dist/min/'));
-});
+gulp.task('BabelUgly', () => gulp.src('./src/*.js')
+  .pipe(babel({
+    presets: ['es2015']
+  }))
+  .pipe(uglify({
+    mangle: true,
+    compress: true,
+    compressor: {
+      if_return: true,
+      loops: true,
+      conditionals: true,
+      comparisons: true,
+      sequences: true
+    },
+    output: {
+      comments: true
+    }
+  }))
+  .pipe(gulp.dest('./dist/min/')));
 
-gulp.task('babelize_webcomponents', function () {
-  gulp.src('./src/pre-webcomponents/*.js')
-    .pipe(babel({
-      presets: ['es2015']
-    })).pipe(rename({
-      extname: ".bs"
-    })).pipe(gulp.dest('./src/pre-webcomponents/'));
-});
+gulp.task('babelize_webcomponents', () => gulp.src('./src/pre-webcomponents/*.js')
+  .pipe(babel({
+    presets: ['es2015']
+  })).pipe(rename({
+    extname: ".bs"
+  })).pipe(gulp.dest('./src/pre-webcomponents/')));
 
 
 gulp.task('build_webcomponents', ['babelize_webcomponents'], function () {
@@ -65,9 +61,9 @@ gulp.task('build_webcomponents', ['babelize_webcomponents'], function () {
       ScriptFile = fs.readFileSync('./src/pre-webcomponents/' + FileName + '.bs', 'utf8');
 
       var WebComponentInner = JSON.stringify({
-        name : FileName,
-        css : StyleFile,
-        js : ScriptFile
+        name: FileName,
+        css: StyleFile,
+        js: ScriptFile
       });
       fs.writeFile('./dist/WebComponents/' + FileName + '.wc', WebComponentInner, 'utf8', err => {
         if (err) console.error(err);
