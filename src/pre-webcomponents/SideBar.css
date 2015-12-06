@@ -1,0 +1,146 @@
+side-bar, side-bar > *, side-bar > * > * {
+  box-sizing: border-box;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
+}
+side-bar {
+  position: absolute;
+  display: flex;
+  flex-flow: column nowrap;
+  justify-content: flex-start;
+  align-content: center;
+  align-items: center;
+  width: 200px;
+  height: 100%;
+  background: hsl(0, 0%, 99%);
+  overflow: auto;
+  color: hsl(0, 0%, 44%);
+}
+side-bar[sidebar-direction="left"] {
+  left: 0;
+  box-shadow: 0 0 3px hsla(0, 0%, 12%, 0.5);
+}
+side-bar[sidebar-direction="right"] {
+  right: 0;
+  box-shadow: 0 0 3px hsla(0, 0%, 12%, 0.5);
+}
+sidebar-mainheading {
+  display: inline-flex;
+  position: relative;
+  overflow: hidden;
+  flex: 0 1 auto;
+  justify-content: center;
+  align-content: center;
+  align-items: center;
+  height: 12mm;
+  width: 100%;
+  color: #fff;
+  background: hsl(0, 0%, 35%);
+  font-size: 1.15em;
+  letter-spacing:1px;
+  font-weight: bold;
+}
+sidebar-heading {
+  display: flex;
+  position: relative;
+  flex-flow: row nowrap;
+  overflow: hidden;
+  flex: 0 1 auto;
+  align-content: center;
+  align-items: center;
+  justify-content: flex-start;
+  height: 12mm;
+  width: 100%;
+  font-size: 0.95em;
+  padding-left: 5%;
+  padding-right: 8mm;
+  z-index: 5;
+  border-bottom: 1px solid hsl(0, 0%, 90%);
+  background: hsl(0, 0%, 100%);
+}
+sidebar-heading:hover {
+  color: hsl(0, 0%, 50%);
+  background: hsl(0, 0%, 96%);
+  /*box-shadow: 0 0 3px hsla(0, 0%, 16%, 0.25);*/
+  z-index: 6;
+  cursor: pointer;
+}
+sidebar-heading:hover > sidebar-icon {
+  filter: drop-shadow(0 1px 1px hsla(0, 0%, 10%, 0.25));
+  -webkit-filter: drop-shadow(0 1px 1px hsla(0, 0%, 10%, 0.25));
+  -moz-filter: drop-shadow(0 1px 1px hsla(0, 0%, 10%, 0.25));
+}
+sidebar-icon {
+  display: inline-flex;
+  position: absolute;
+  align-items: center;
+  align-content: center;
+  justify-content: center;
+  pointer-events: none;
+  right: 0;
+  top: 0;
+  cursor: inherit;
+  font-size: 1.1em;
+  height: 100%;
+  width: 10mm;
+  margin: 0 !important;
+}
+sidebar-item {
+  display: flex;
+  flex-flow: row nowrap;
+  flex: 0 1 auto;
+  align-items: center;
+  align-content: center;
+  justify-content: flex-start;
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  background: hsl(0, 0%, 98%);
+  font-size: 0.90em;
+  padding-left: 10%;
+  border-left: 0 solid #656565;
+  width: 100%;
+  height: 8.5mm;
+  transition: all 140ms ease, height 280ms ease-in, opacity 240ms ease-in-out, borderWidth 40ms ease;
+}
+sidebar-accordion {
+  position:relative;
+  display:inline-block;
+  width: 100%;
+  height: 12mm;
+  overflow:hidden;
+  background: transparent;
+  transition: all 200ms ease-in;
+}
+sidebar-accordion[accordion="open"] > sidebar-heading {
+  border-bottom: none;
+  background: hsl(0, 0%, 94%);
+}
+sidebar-accordion[accordion="open"] > sidebar-item {
+  opacity: 1;
+  pointer-events: all;
+}
+sidebar-accordion[accordion="closed"] > sidebar-item {
+  opacity: 0;
+  pointer-events: none;
+}
+sidebar-accordion[accordion="open"] > sidebar-item:first-of-type {
+  box-shadow: inset 0 2px 3px -1px hsla(0, 0%, 20%, 0.24);
+}
+sidebar-accordion[accordion="open"] {
+  box-shadow: inset 0 -2px 3px -1px hsla(0, 0%, 20%, 0.24);
+}
+side-bar > sidebar-item:hover, side-bar > sidebar-accordion > sidebar-item:hover {
+  background: hsl(0, 0%, 92%);
+}
+side-bar[sidebar-direction="left"] > sidebar-item:hover, side-bar[sidebar-direction="left"] > sidebar-accordion > sidebar-item:hover {
+  border-width: 5px;
+}
+sidebar-item:active, sidebar-item[selected] {
+  z-index: 6;
+  border-width: 3px;
+  box-shadow: inset 0 0 6px hsla(0, 0%, 20%, 0.24) !important;
+}
