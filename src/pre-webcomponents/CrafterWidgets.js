@@ -1,14 +1,16 @@
 "use strict";
-(() => {
+(doc => {
   Craft.ripple = function (SelectorOrNode, options) {
+    if(is.Null(SelectorOrNode)) throw new Error('null');
+    if(is.String(SelectorOrNode)) SelectorOrNode = queryAll(SelectorOrNode);
+    if(is.Node(SelectorOrNode)) SelectorOrNode = [SelectorOrNode];
     options = options || {};
     let color = options.color || undefined,
-      timing = options.timing || 1600;
-    SelectorOrNode = QueryOrNodetoNodeArray(SelectorOrNode);
+    timing = options.timing || 1600;
     forEach(SelectorOrNode, element => {
       if (element.hasAttribute("ripple")) color = element.getAttribute("ripple");
       element.onmousedown = e => {
-        let circle = document.createElement('div'),
+        let circle = doc.createElement('div'),
           rect = element.getBoundingClientRect(),
           diameter = Math.max(rect.width, rect.height),
           x = e.clientX - rect.left - (diameter / 2),
@@ -98,13 +100,13 @@
     }
   });
 
-  On('blur', e => forEach(queryAll('context-menu'), el => el.Show()));
+  On('blur', e => queryEach('context-menu', el => el.Show()));
   On('click', document, e => {
     if (is.Node(e.target, e.target.parentNode) && e.target.tagName !== 'SECTION' && e.target.parentNode.tagName !== 'CONTEXT-MENU') queryEach('context-menu', el => el.Show());
   });
 
   On('animationstart', document, e => {
-    if (e.animationName === 'nodeInserted' && is.Node(e.target)) {
+    if (e.animationName === 'NodeInserted' && is.Node(e.target)) {
       let element = e.target;
       if (element.hasAttribute('ripple')) Craft.ripple(element);
       if (element.hasAttribute('tooltip')) {
@@ -181,4 +183,4 @@
       }
     }
   });
-})();
+})(document);

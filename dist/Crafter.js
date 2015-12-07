@@ -22,6 +22,18 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       nT = function nT(val, str) {
     return !isT(val, str);
   },
+      eachisInstanceof = function eachisInstanceof(test, collection) {
+    if (isT(collection, 'string') || collection === undefined || collection === null) return false;
+    var allgood = true,
+        i = 0;
+    for (; i < collection.length; i++) {
+      if (collection[i] instanceof test) {
+        allgood = false;
+        break;
+      }
+    }
+    return allgood;
+  },
       Ready = false,
       head = doc.getElementsByTagName('head')[0],
       CrafterStyles = doc.createElement('style'),
@@ -39,7 +51,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
   };
 
   CrafterStyles.setAttribute('crafterstyles', '');
-  CrafterStyles.innerHTML = '\n@keyframes NodeInserted {from {opacity:.99;}to {opacity: 1;}}[view-bind] {animation-duration: 0.001s;animation-name: NodeInserted;}';
+  CrafterStyles.innerHTML = '\n@keyframes NodeInserted {from {opacity:.99;}to {opacity: 1;}} [view-bind] {animation-duration: 0.001s;animation-name: NodeInserted;}';
   head.appendChild(CrafterStyles);
   CrafterStyles = doc.querySelector('[crafterstyles]', head);
 
@@ -65,7 +77,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         args[_key] = arguments[_key];
       }
 
-      return args.every(function (o) {
+      return args.length && args.every(function (o) {
         return isT(o, 'undefined');
       });
     },
@@ -74,7 +86,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         args[_key2] = arguments[_key2];
       }
 
-      return args.every(function (o) {
+      return args.length && args.every(function (o) {
         return nT(o, 'undefined');
       });
     },
@@ -83,7 +95,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         args[_key3] = arguments[_key3];
       }
 
-      return args.every(function (o) {
+      return args.length && args.every(function (o) {
         return o === null;
       });
     },
@@ -102,27 +114,35 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         args[_key4] = arguments[_key4];
       }
 
-      return args.every(function (o) {
+      return args.length && args.every(function (o) {
         return o instanceof Node;
       });
     }),
-    NodeList: function NodeList() {
+    NodeList: (function (_NodeList) {
+      function NodeList() {
+        return _NodeList.apply(this, arguments);
+      }
+
+      NodeList.toString = function () {
+        return _NodeList.toString();
+      };
+
+      return NodeList;
+    })(function () {
       for (var _len5 = arguments.length, args = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
         args[_key5] = arguments[_key5];
       }
 
-      for (var _i = 0; _i < args.length; _i++) {
-        if (Array.from(args[_i]).every(function (n) {
-          return is.Node(n);
-        })) return true;
-      }return false;
-    },
+      return args.length ? args.every(function (n) {
+        return n === null ? false : n instanceof NodeList || eachisInstanceof(Node, n);
+      }) : false;
+    }),
     Object: function Object() {
       for (var _len6 = arguments.length, args = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
         args[_key6] = arguments[_key6];
       }
 
-      return args.every(function (o) {
+      return args.length && args.every(function (o) {
         return type(o, '[object Object]');
       });
     },
@@ -131,7 +151,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         args[_key7] = arguments[_key7];
       }
 
-      return args.every(function (o) {
+      return args.length && args.every(function (o) {
         return type(o, '[object HTMLElement]');
       });
     },
@@ -140,7 +160,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         args[_key8] = arguments[_key8];
       }
 
-      return args.every(function (o) {
+      return args.length && args.every(function (o) {
         return type(o, '[object File]');
       });
     },
@@ -149,7 +169,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         args[_key9] = arguments[_key9];
       }
 
-      return args.every(function (o) {
+      return args.length && args.every(function (o) {
         return type(o, '[object FormData]');
       });
     },
@@ -158,7 +178,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         args[_key10] = arguments[_key10];
       }
 
-      return args.every(function (o) {
+      return args.length && args.every(function (o) {
         return type(o, '[object Map]');
       });
     },
@@ -167,7 +187,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         args[_key11] = arguments[_key11];
       }
 
-      return args.every(function (o) {
+      return args.length && args.every(function (o) {
         return typeof o === 'function';
       });
     },
@@ -208,6 +228,25 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     bte: function bte(val, other) {
       return val >= other;
     },
+    ReactiveVariable: (function (_ReactiveVariable) {
+      function ReactiveVariable() {
+        return _ReactiveVariable.apply(this, arguments);
+      }
+
+      ReactiveVariable.toString = function () {
+        return _ReactiveVariable.toString();
+      };
+
+      return ReactiveVariable;
+    })(function () {
+      for (var _len12 = arguments.length, args = Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
+        args[_key12] = arguments[_key12];
+      }
+
+      return args.every(function (o) {
+        return o instanceof ReactiveVariable ? true : false;
+      });
+    }),
     Native: function Native(val) {
       var type = typeof val === 'undefined' ? 'undefined' : _typeof(val);
       return type === 'function' ? RegExp('^' + String(Object.prototype.toString).replace(/[.*+?^${}()|[\]\/\\]/g, '\\$&').replace(/toString|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$').test(Function.prototype.toString.call(val)) : val && type == 'object' && /^\[object .+?Constructor\]$/.test(val.toString) || false;
@@ -215,15 +254,15 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
   };
 
   root.forEach = function (iterable, func) {
+    if (is.Undef(iterable)) throw new Error("forEach -> cannot iterate through undefined");
     if (!is.Func(func)) throw new Error("forEach -> invalid or undefined function provided");
     var i = 0;
-    if (!is.Object(iterable)) for (; i < iterable.length; i++) func(iterable[i], i);else for (i in iterable) if (iterable.hasOwnProperty(i)) func(iterable[i], i);
+    if (!is.Object(iterable) && 'length' in iterable) for (; i < iterable.length; i++) func(iterable[i], i);else if (is.Object(iterable)) for (i in iterable) if (iterable.hasOwnProperty(i)) func(iterable[i], i);
   };
 
   root.QueryOrNodetoNodeArray = function (val) {
     if (is.String(val)) val = queryAll(val);
-    if (is.Node(val)) return [val];
-    if (is.NodeList(val)) return Array.from(val);
+    if (is.Node(val)) return [val];else if (is.NodeList(val)) return Array.from(val);
   };
 
   root.query = function (selector, element) {
@@ -245,15 +284,15 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     var elements = undefined;
     if (is.String(element)) elements = doc.querySelector(element).querySelectorAll(selector);
     elements = element.querySelectorAll(selector);
-    for (var _i2 = 0; _i2 < elements.length; _i2++) {
-      func(elements[_i2], _i2);
+    for (var _i = 0; _i < elements.length; _i++) {
+      func(elements[_i], _i);
     }
   };
 
   root.log = function (Type, msg) {
     var Is = function Is() {
-      for (var _len12 = arguments.length, args = Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
-        args[_key12] = arguments[_key12];
+      for (var _len13 = arguments.length, args = Array(_len13), _key13 = 0; _key13 < _len13; _key13++) {
+        args[_key13] = arguments[_key13];
       }
 
       return args.some(function (str) {
@@ -265,8 +304,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
 
   root.EventHandler = (function () {
     function EventHandler(EventType, Target, Func) {
-      for (var _len13 = arguments.length, args = Array(_len13 > 3 ? _len13 - 3 : 0), _key13 = 3; _key13 < _len13; _key13++) {
-        args[_key13 - 3] = arguments[_key13];
+      for (var _len14 = arguments.length, args = Array(_len14 > 3 ? _len14 - 3 : 0), _key14 = 3; _key14 < _len14; _key14++) {
+        args[_key14 - 3] = arguments[_key14];
       }
 
       _classCallCheck(this, EventHandler);
@@ -338,7 +377,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     return handle;
   };
 
-  root.make_element = function (name, inner, attributes, NodeForm) {
+  root.make_element = function (name, inner, attributes, NodeForm, extraAttr) {
     if (is.Bool(attributes)) {
       NodeForm = attributes;
       attributes = undefined;
@@ -350,9 +389,12 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         if (is.Object(attributes)) forEach(attributes, function (val, attr) {
           return newEl.setAttribute(attr, val);
         });
-        if (is.String(attributes)) attributes.includes('&') ? attributes.split('&').forEach(function (attr) {
-          return is.Def(newEl.setAttribute(attr.split('=')[0], attr.split('=')[1]) ? attr.split('=')[1] : '');
-        }) : newEl.setAttribute(attributes.split('=')[0], attributes.split('=')[1] !== undefined ? attributes.split('=')[1] : '');
+        if (is.String(attributes)) attributes.split('&').forEach(function (attr) {
+          return is.Def(attr.split('=')[1]) ? newEl.setAttribute(attr.split('=')[0], attr.split('=')[1]) : newEl.setAttribute(attr.split('=')[0], '');
+        });
+        if (is.Def(extraAttr) && is.Object(extraAttr)) forEach(extraAttr, function (val, attr) {
+          return newEl.setAttribute(attr, val);
+        });
         return {
           v: newEl
         };
@@ -360,9 +402,14 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
 
       if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
     }
-    if (is.String(attributes)) return '<' + name + ' ' + attributes + '>' + inner + '</' + name + '>';
     var attrString = '';
+    if (is.String(attributes)) attributes.split('&').forEach(function (attr) {
+      return attrString += is.Def(attr.split('=')[1]) ? attr.split('=')[0] + '="' + attr.split('=')[1] + '" ' : attr.split('=')[0] + ' ';
+    });
     if (is.Object(attributes)) forEach(attributes, function (val, attr) {
+      return attrString += ' ' + attr + '="' + val + '" ';
+    });
+    if (is.Def(extraAttr) && is.Object(extraAttr)) forEach(extraAttr, function (val, attr) {
       return attrString += ' ' + attr + '="' + val + '" ';
     });
     return '<' + name + ' ' + attrString + '>' + inner + '</' + name + '>';
@@ -418,8 +465,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       getSiblings: function getSiblings() {
         var siblings = [],
             AllChildren = element.parentNode.childNodes;
-        for (var _i3 = 0; _i3 < AllChildren.length; _i3++) {
-          if (AllChildren[_i3] !== element) siblings.push(AllChildren[_i3]);
+        for (var _i2 = 0; _i2 < AllChildren.length; _i2++) {
+          if (AllChildren[_i2] !== element) siblings.push(AllChildren[_i2]);
         }return siblings;
       },
       Width: function Width() {
@@ -479,14 +526,65 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       }
     };
     return {
-      div: function div(inner, attr) {
-        return make_element('div', inner, attr);
+      div: function div(inner, attr, node) {
+        return make_element('div', inner, attr, node);
       },
-      span: function span(inner, attr) {
-        return make_element('span', inner, attr);
+      span: function span(inner, attr, node) {
+        return make_element('span', inner, attr, node);
       },
-      label: function label(inner, attr) {
-        return make_element('label', inner, attr);
+      label: function label(inner, attr, node) {
+        return make_element('label', inner, attr, node);
+      },
+      p: function p(inner, attr, node) {
+        return make_element('p', inner, attr, node);
+      },
+      img: function img(src, alt, inner, attr, node) {
+        return make_element('img', inner, attr, node, {
+          src: src,
+          alt: alt
+        });
+      },
+      ul: function ul(items, attr, node) {
+        var list = '';
+        if (is.Arr(items)) items.forEach(function (item) {
+          if (is.String(item)) list += make_element('li', item);else if (is.Object(items)) list += make_element('li', item.inner, item.attr);
+        });
+        return make_element('ul', list, attr, node);
+      },
+      ol: function ol(items, attr, node) {
+        var list = '';
+        if (is.Arr(items)) items.forEach(function (item) {
+          if (is.String(item)) list += make_element('li', item);else if (is.Object(items)) list += make_element('li', item.inner, item.attr);
+        });
+        return make_element('ol', list, attr, node);
+      },
+      h: function h(level, inner, attr, node) {
+        return make_element('h' + level, inner, attr, node);
+      },
+      a: function a(link, inner, attr, node) {
+        return make_element('a', inner, attr, node, {
+          href: link
+        });
+      },
+      table: function table(options, attr, node) {
+        if (!is.Object(options)) throw new TypeError('dom().table -> first param needs to be an Object');
+        var tableInner = '';
+        forEach(options, function (val, key) {
+          if (key === 'row' && is.Object(val)) {
+            var rowInner = '',
+                _i3 = undefined;
+            for (_i3 in val) if (val.hasOwnProperty(_i3)) {
+              if (_i3 === 'data') {
+                if (is.String(val[_i3])) rowInner += make_element('td', val[_i3]);else if (is.Object(val[_i3])) rowInner += make_element('td', val[_i3].inner, val[_i3].attr);
+              } else if (_i3 === 'head') {
+                if (is.String(val[_i3])) rowInner += make_element('th', val[_i3]);else if (is.Object(val[_i3])) rowInner += make_element('th', val[_i3].inner, val[_i3].attr);
+              }
+            }
+            if ('attr' in val) tableInner += make_element('tr', rowInner, val.attr);
+            tableInner += make_element('tr', rowInner);
+          } else if (is.String(val)) tableInner += make_element('tr', val);
+        });
+        return make_element('table', tableInner, attr, node);
       }
     };
   };
@@ -535,8 +633,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         });
       },
       Import: function Import() {
-        for (var _len14 = arguments.length, args = Array(_len14), _key14 = 0; _key14 < _len14; _key14++) {
-          args[_key14] = arguments[_key14];
+        for (var _len15 = arguments.length, args = Array(_len15), _key15 = 0; _key15 < _len15; _key15++) {
+          args[_key15] = arguments[_key15];
         }
 
         var obj = undefined,
@@ -609,7 +707,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         return newtab ? open(link) : location = link;
       }),
       setTitle: function setTitle(title) {
-        return document.title = title;
+        return doc.title = title;
       },
       setView: function setView(viewHostSelector, view) {
         return query(viewHostSelector).innerHTML = view;
@@ -670,8 +768,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       if (!is.Func(func)) is.Func(n) ? func = n : console.error("after : func is not a function");
       n = Number.isFinite(n = +n) ? n : 0;
       return function () {
-        for (var _len15 = arguments.length, args = Array(_len15), _key15 = 0; _key15 < _len15; _key15++) {
-          args[_key15] = arguments[_key15];
+        for (var _len16 = arguments.length, args = Array(_len16), _key16 = 0; _key16 < _len16; _key16++) {
+          args[_key16] = arguments[_key16];
         }
 
         return --n < 1 ? func.apply(_this3, args) : function () {
@@ -754,8 +852,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       }ContextObject[func] = Func;
     },
     concatObjects: function concatObjects(hostobj) {
-      for (var _len16 = arguments.length, Objs = Array(_len16 > 1 ? _len16 - 1 : 0), _key16 = 1; _key16 < _len16; _key16++) {
-        Objs[_key16 - 1] = arguments[_key16];
+      for (var _len17 = arguments.length, Objs = Array(_len17 > 1 ? _len17 - 1 : 0), _key17 = 1; _key17 < _len17; _key17++) {
+        Objs[_key17 - 1] = arguments[_key17];
       }
 
       forEach(hostobj, function () {
@@ -772,8 +870,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       return hostobj;
     },
     mergeObjects: function mergeObjects(hostobj) {
-      for (var _len17 = arguments.length, Objs = Array(_len17 > 1 ? _len17 - 1 : 0), _key17 = 1; _key17 < _len17; _key17++) {
-        Objs[_key17 - 1] = arguments[_key17];
+      for (var _len18 = arguments.length, Objs = Array(_len18 > 1 ? _len18 - 1 : 0), _key18 = 1; _key18 < _len18; _key18++) {
+        Objs[_key18 - 1] = arguments[_key18];
       }
 
       return Object.assign(hostobj, Objs);
@@ -788,8 +886,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       }
     },
     type: function type() {
-      for (var _len18 = arguments.length, args = Array(_len18), _key18 = 0; _key18 < _len18; _key18++) {
-        args[_key18] = arguments[_key18];
+      for (var _len19 = arguments.length, args = Array(_len19), _key19 = 0; _key19 < _len19; _key19++) {
+        args[_key19] = arguments[_key19];
       }
 
       var types = [];
@@ -834,8 +932,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       if (!is.Func(func) || resolver && !is.Func(resolver)) throw new TypeError("arg provided is not a function");
       var cache = new WeakMap();
       var memoized = function memoized() {
-        for (var _len19 = arguments.length, args = Array(_len19), _key19 = 0; _key19 < _len19; _key19++) {
-          args[_key19] = arguments[_key19];
+        for (var _len20 = arguments.length, args = Array(_len20), _key20 = 0; _key20 < _len20; _key20++) {
+          args[_key20] = arguments[_key20];
         }
 
         var key = resolver ? resolver.apply(this, args) : args[0];
@@ -1066,6 +1164,11 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       value: function reset(handle) {
         is.Func(handle) ? this.Handle = handle : console.error('ReactiveVariable.Reset only takes a function');
       }
+    }, {
+      key: 'isReactiveVar',
+      value: function isReactiveVar() {
+        return true;
+      }
     }]);
 
     return ReactiveVariable;
@@ -1075,21 +1178,19 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
   Craft.newBind = function (key, val, handle) {
     is.Func(handle) ? Craft.Binds.set(key, new ReactiveVariable(val, handle)) : Craft.Binds.set(key, val);
     queryEach('[view-bind]', function (el) {
-      if (Craft.Binds.has(el.getAttribute('view-bind'))) el.innerHTML = is.Func(handle) ? Craft.Binds.get(el.getAttribute('view-bind')).get() : Craft.Binds.get(el.getAttribute('view-bind'));
+      if (Craft.Binds.has(el.getAttribute('view-bind'))) el.innerHTML = is.Func(handle) ? Craft.Binds.get(el.getAttribute('view-bind')).val : Craft.Binds.get(el.getAttribute('view-bind'));
     });
   };
   Craft.setBind = function (key, val) {
-    Craft.Binds.get(key).set(val);
+    is.ReactiveVariable(Craft.Binds.get(key)) ? Craft.Binds.get(key).set(val) : Craft.Binds.set(key, val);
     queryEach('[view-bind]', function (el) {
-      if (Craft.Binds.has(el.getAttribute('view-bind'))) el.innerHTML = Craft.Binds.get(el.getAttribute('view-bind')).get();
+      if (Craft.Binds.has(el.getAttribute('view-bind'))) el.innerHTML = is.ReactiveVariable(Craft.Binds.get(key)) ? Craft.Binds.get(el.getAttribute('view-bind')).val : Craft.Binds.get(el.getAttribute('view-bind'));
     });
   };
 
-  On('animationstart', document, function (e) {
+  On('animationstart', doc, function (e) {
     if (e.animationName === 'NodeInserted' && is.Node(e.target)) {
-      if (e.target.hasAttribute('[view-bind]')) {
-        if (Craft.Binds.has(e.target.getAttribute('view-bind'))) e.target.innerHTML = Craft.Binds.get(e.target.getAttribute('view-bind')).get();
-      }
+      if (e.target.hasAttribute('[view-bind]') && Craft.Binds.has(e.target.getAttribute('view-bind'))) e.target.innerHTML = is.ReactiveVariable(Craft.Binds.get(key)) ? Craft.Binds.get(e.target.getAttribute('view-bind')).val : Craft.Binds.get(e.target.getAttribute('view-bind'));
     }
   });
 
@@ -1103,6 +1204,12 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     Craft.mouse.y = e.clientY;
     Craft.mouse.over = e.target;
   };
+  root.onblur = function (e) {
+    return Craft.tabActive = false;
+  };
+  root.onfocus = function (e) {
+    return Craft.tabActive = true;
+  };
 
   Craft.newComponent('fetch-webcomponent', {
     created: function created() {
@@ -1110,7 +1217,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
 
       if (this.hasAttribute('src')) {
         var wc = null;
-        if (this.hasAttribute('cache-component') && this.getAttribute('cache-component') === 'true') {
+        if (this.getAttribute('cache-component') === 'true') {
           wc = localStorage.getItem(this.getAttribute('src'));
           if (wc !== null) {
             (function () {

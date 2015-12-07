@@ -1,14 +1,6 @@
-@keyframes nodeInserted {
-  from {
-    opacity: 0.99;
-  }
-  to {
-    opacity: 1;
-  }
-}
 [tooltip], [movable], [ripple] {
   animation-duration: 0.001s;
-  animation-name: nodeInserted;
+  animation-name: NodeInserted;
 }
 context-menu {
   position: absolute;

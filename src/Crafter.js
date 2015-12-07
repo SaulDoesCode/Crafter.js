@@ -9,6 +9,17 @@
   let type = (obj, str) => toString.call(obj) === str,
     isT = (val, str) => typeof val === str,
     nT = (val, str) => !isT(val, str),
+    eachisInstanceof = (test,collection) => {
+      if(isT(collection, 'string') || collection === undefined || collection === null) return false;
+      let allgood = true, i = 0;
+      for (; i < collection.length; i++) {
+        if(collection[i] instanceof test) {
+          allgood = false;
+          break;
+        }
+      }
+      return allgood;
+    },
     Ready = false,
     head = doc.getElementsByTagName('head')[0],
     CrafterStyles = doc.createElement('style'),
@@ -23,7 +34,7 @@
   }
 
   CrafterStyles.setAttribute('crafterstyles', '');
-  CrafterStyles.innerHTML = `\n@keyframes NodeInserted {from {opacity:.99;}to {opacity: 1;}}[view-bind] {animation-duration: 0.001s;animation-name: NodeInserted;}`;
+  CrafterStyles.innerHTML = `\n@keyframes NodeInserted {from {opacity:.99;}to {opacity: 1;}} [view-bind] {animation-duration: 0.001s;animation-name: NodeInserted;}`;
   head.appendChild(CrafterStyles);
   CrafterStyles = doc.querySelector('[crafterstyles]', head);
 
@@ -36,21 +47,17 @@
     },
     String: val => isT(val, 'string'),
     Num: val => isT(val, 'number'),
-    Undef: (...args) => args.every(o => isT(o, 'undefined')),
-    Def: (...args) => args.every(o => nT(o, 'undefined')),
-    Null: (...args) => args.every(o => o === null),
-    Node: (...args) => args.every(o => o instanceof Node),
-    NodeList: (...args) => {
-      for (let i = 0; i < args.length; i++)
-        if (Array.from(args[i]).every(n => is.Node(n))) return true;
-      return false;
-    },
-    Object: (...args) => args.every(o => type(o, '[object Object]')),
-    Element: (...args) => args.every(o => type(o, '[object HTMLElement]')),
-    File: (...args) => args.every(o => type(o, '[object File]')),
-    FormData: (...args) => args.every(o => type(o, '[object FormData]')),
-    Map: (...args) => args.every(o => type(o, '[object Map]')),
-    Func: (...args) => args.every(o => typeof o === 'function'),
+    Undef: (...args) => args.length && args.every(o => isT(o, 'undefined')),
+    Def: (...args) => args.length && args.every(o => nT(o, 'undefined')),
+    Null: (...args) => args.length && args.every(o => o === null),
+    Node: (...args) => args.length && args.every(o => o instanceof Node),
+    NodeList: (...args) => args.length ? args.every(n => n === null ? false : n instanceof NodeList || eachisInstanceof(Node,n)) : false,
+    Object: (...args) => args.length && args.every(o => type(o, '[object Object]')),
+    Element: (...args) => args.length && args.every(o => type(o, '[object HTMLElement]')),
+    File: (...args) => args.length && args.every(o => type(o, '[object File]')),
+    FormData: (...args) => args.length && args.every(o => type(o, '[object FormData]')),
+    Map: (...args) => args.length && args.every(o => type(o, '[object Map]')),
+    Func: (...args) => args.length && args.every(o => typeof o === 'function'),
     Blob: obj => type(obj, '[object Blob]'),
     RegExp: obj => type(obj, '[object RegExp]'),
     Date: obj => type(obj, '[object Date]'),
@@ -63,28 +70,31 @@
     lte: (val, other) => val <= other,
     bt: (val, other) => val > other,
     bte: (val, other) => val >= other,
+    ReactiveVariable: (...args) => args.every(o => o instanceof ReactiveVariable ? true : false),
     Native: val => {
       let type = typeof val;
       return type === 'function' ? RegExp('^' + String(Object.prototype.toString).replace(/[.*+?^${}()|[\]\/\\]/g, '\\$&').replace(/toString|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$').test(Function.prototype.toString.call(val)) : (val && type == 'object' && /^\[object .+?Constructor\]$/.test(val.toString)) || false;
     },
   };
 
-
   root.forEach = (iterable, func) => {
+    if (is.Undef(iterable)) throw new Error("forEach -> cannot iterate through undefined");
     if (!is.Func(func)) throw new Error("forEach -> invalid or undefined function provided");
     let i = 0;
-    if (!is.Object(iterable))
+    if (!is.Object(iterable) && 'length' in iterable)
       for (; i < iterable.length; i++) func(iterable[i], i);
-    else
+    else if(is.Object(iterable))
       for (i in iterable)
         if (iterable.hasOwnProperty(i)) func(iterable[i], i);
   }
 
-  root.QueryOrNodetoNodeArray = (val) => {
+
+
+  root.QueryOrNodetoNodeArray = val => {
     if (is.String(val)) val = queryAll(val);
     if (is.Node(val)) return [val];
-    if (is.NodeList(val)) return Array.from(val);
-  };
+    else if (is.NodeList(val)) return Array.from(val);
+  }
 
   root.query = (selector, element) => {
     if (is.String(element)) return doc.querySelector(element).querySelector(selector);
@@ -162,7 +172,7 @@
     return handle;
   }
 
-  root.make_element = (name, inner, attributes, NodeForm) => {
+  root.make_element = (name, inner, attributes, NodeForm, extraAttr) => {
     if (is.Bool(attributes)) {
       NodeForm = attributes;
       attributes = undefined;
@@ -171,12 +181,14 @@
       let newEl = doc.createElement(name);
       newEl.innerHTML = inner;
       if (is.Object(attributes)) forEach(attributes, (val, attr) => newEl.setAttribute(attr, val));
-      if (is.String(attributes)) attributes.includes('&') ? attributes.split('&').forEach(attr => is.Def(newEl.setAttribute(attr.split('=')[0], attr.split('=')[1]) ? attr.split('=')[1] : '')) : newEl.setAttribute(attributes.split('=')[0], attributes.split('=')[1] !== undefined ? attributes.split('=')[1] : '');
+      if (is.String(attributes)) attributes.split('&').forEach(attr => is.Def(attr.split('=')[1]) ? newEl.setAttribute(attr.split('=')[0], attr.split('=')[1]) : newEl.setAttribute(attr.split('=')[0], ''));
+      if (is.Def(extraAttr) && is.Object(extraAttr)) forEach(extraAttr, (val, attr) => newEl.setAttribute(attr, val));
       return newEl;
     }
-    if (is.String(attributes)) return `<${name} ${attributes}>${inner}</${name}>`;
     let attrString = ``;
+    if (is.String(attributes)) attributes.split('&').forEach(attr => attrString += is.Def(attr.split('=')[1]) ? `${attr.split('=')[0]}="${attr.split('=')[1]}" ` : `${attr.split('=')[0]} `);
     if (is.Object(attributes)) forEach(attributes, (val, attr) => attrString += ` ${attr}="${val}" `);
+    if (is.Def(extraAttr) && is.Object(extraAttr)) forEach(extraAttr, (val, attr) => attrString += ` ${attr}="${val}" `);
     return `<${name} ${attrString}>${inner}</${name}>`;
   }
 
@@ -235,9 +247,55 @@
       css: styles => is.Def(styles) ? forEach(element, el => forEach(styles, (prop, key) => el.style[key] = prop)) : console.error('styles unefined'),
     }
     return {
-      div: (inner, attr) => make_element('div', inner, attr),
-      span: (inner, attr) => make_element('span', inner, attr),
-      label: (inner, attr) => make_element('label', inner, attr),
+      div: (inner, attr, node) => make_element('div', inner, attr, node),
+      span: (inner, attr, node) => make_element('span', inner, attr, node),
+      label: (inner, attr, node) => make_element('label', inner, attr, node),
+      p: (inner, attr, node) => make_element('p', inner, attr, node),
+      img: (src, alt, inner, attr, node) => make_element('img', inner, attr, node, {
+        src: src,
+        alt: alt
+      }),
+      ul: (items, attr, node) => {
+        let list = ``;
+        if (is.Arr(items)) items.forEach(item => {
+          if (is.String(item)) list += make_element('li', item);
+          else if (is.Object(items)) list += make_element('li', item.inner, item.attr);
+        });
+        return make_element('ul', list, attr, node)
+      },
+      ol: (items, attr, node) => {
+        let list = ``;
+        if (is.Arr(items)) items.forEach(item => {
+          if (is.String(item)) list += make_element('li', item);
+          else if (is.Object(items)) list += make_element('li', item.inner, item.attr);
+        });
+        return make_element('ol', list, attr, node)
+      },
+      h: (level, inner, attr, node) => make_element('h' + level, inner, attr, node),
+      a: (link, inner, attr, node) => make_element('a', inner, attr, node, {
+        href: link
+      }),
+      table : (options,attr,node) => {
+        if(!is.Object(options)) throw new TypeError('dom().table -> first param needs to be an Object');
+        let tableInner = ``;
+        forEach(options,(val,key) => {
+          if(key === 'row' && is.Object(val)) {
+            let rowInner = ``, i;
+            for (i in val) if(val.hasOwnProperty(i)) {
+                if (i === 'data') {
+                  if(is.String(val[i])) rowInner += make_element('td',val[i]);
+                  else if(is.Object(val[i])) rowInner += make_element('td',val[i].inner,val[i].attr);
+                } else if(i === 'head') {
+                  if(is.String(val[i])) rowInner += make_element('th',val[i]);
+                  else if(is.Object(val[i])) rowInner += make_element('th',val[i].inner,val[i].attr);
+                }
+            }
+            if('attr' in val) tableInner += make_element('tr',rowInner,val.attr);
+            tableInner += make_element('tr',rowInner);
+          } else if(is.String(val)) tableInner += make_element('tr',val);
+        });
+        return make_element('table',tableInner,attr,node);
+      },
     }
   };
 
@@ -322,7 +380,7 @@
       links: [],
       link: (Selector, link, newtab, eventType) => Craft.router.links.push(() => On(is.Def(eventType) ? eventType : 'click', query(Selector), e => newtab ? open(link) : location = link)),
       open: (link, newtab) => newtab ? open(link) : location = link,
-      setTitle: title => document.title = title,
+      setTitle: title => doc.title = title,
       setView: (viewHostSelector, view) => query(viewHostSelector).innerHTML = view,
       fetchView: (viewHostSelector, viewURL, cache, id) => {
         if (is.Null(localStorage.getItem("RT_" + id))) fetch(viewURL).then(res => {
@@ -661,27 +719,28 @@
     reset(handle) {
       is.Func(handle) ? this.Handle = handle : console.error('ReactiveVariable.Reset only takes a function');
     }
+    isReactiveVar() {
+      return true
+    }
   }
 
   Craft.Binds = new Map;
   Craft.newBind = (key, val, handle) => {
     is.Func(handle) ? Craft.Binds.set(key, new ReactiveVariable(val, handle)) : Craft.Binds.set(key, val);
     queryEach('[view-bind]', el => {
-      if (Craft.Binds.has(el.getAttribute('view-bind'))) el.innerHTML = is.Func(handle) ? Craft.Binds.get(el.getAttribute('view-bind')).get() : Craft.Binds.get(el.getAttribute('view-bind'));
+      if (Craft.Binds.has(el.getAttribute('view-bind'))) el.innerHTML = is.Func(handle) ? Craft.Binds.get(el.getAttribute('view-bind')).val : Craft.Binds.get(el.getAttribute('view-bind'));
     });
   };
   Craft.setBind = (key, val) => {
-    Craft.Binds.get(key).set(val);
+    is.ReactiveVariable(Craft.Binds.get(key)) ? Craft.Binds.get(key).set(val) : Craft.Binds.set(key, val);
     queryEach('[view-bind]', el => {
-      if (Craft.Binds.has(el.getAttribute('view-bind'))) el.innerHTML = Craft.Binds.get(el.getAttribute('view-bind')).get();
+      if (Craft.Binds.has(el.getAttribute('view-bind'))) el.innerHTML = is.ReactiveVariable(Craft.Binds.get(key)) ? Craft.Binds.get(el.getAttribute('view-bind')).val : Craft.Binds.get(el.getAttribute('view-bind'))
     });
   };
 
-  On('animationstart', document, e => {
+  On('animationstart', doc, e => {
     if (e.animationName === 'NodeInserted' && is.Node(e.target)) {
-      if (e.target.hasAttribute('[view-bind]')) {
-        if (Craft.Binds.has(e.target.getAttribute('view-bind'))) e.target.innerHTML = Craft.Binds.get(e.target.getAttribute('view-bind')).get();
-      }
+      if (e.target.hasAttribute('[view-bind]') && Craft.Binds.has(e.target.getAttribute('view-bind'))) e.target.innerHTML = is.ReactiveVariable(Craft.Binds.get(key)) ? Craft.Binds.get(e.target.getAttribute('view-bind')).val : Craft.Binds.get(e.target.getAttribute('view-bind'));
     }
   });
 
@@ -693,12 +752,14 @@
     Craft.mouse.y = e.clientY;
     Craft.mouse.over = e.target;
   }
+  root.onblur = e => Craft.tabActive = false;
+  root.onfocus = e => Craft.tabActive = true;
 
   Craft.newComponent('fetch-webcomponent', {
     created: function () {
       if (this.hasAttribute('src')) {
         let wc = null;
-        if (this.hasAttribute('cache-component') && this.getAttribute('cache-component') === 'true') {
+        if (this.getAttribute('cache-component') === 'true') {
           wc = localStorage.getItem(this.getAttribute('src'));
           if (wc !== null) {
             let webcomponent = JSON.parse(wc);
