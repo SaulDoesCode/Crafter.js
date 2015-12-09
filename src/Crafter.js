@@ -64,6 +64,7 @@
     Set: obj => type(obj, '[object Set]'),
     Symbol: obj => type(obj, '[object Symbol]'),
     UpperCase: char => (char >= 'A') && (char <= 'Z'),
+    Alphanumeric : str => /^[0-9a-zA-Z]+$/.test(str),
     Email: email => /(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))/.test(email),
     Between: (val, max, min) => (val <= max && val >= min),
     lt: (val, other) => val < other,
@@ -106,16 +107,16 @@
     if (is.Node(element)) return element.querySelectorAll(selector);
     return doc.querySelectorAll(selector);
   }
-
   root.queryEach = (selector, element, func) => {
     if (is.Func(element)) {
       func = element;
       element = doc;
     }
-    let elements;
-    if (is.String(element)) elements = doc.querySelector(element).querySelectorAll(selector);
-    elements = element.querySelectorAll(selector);
-    for (let i = 0; i < elements.length; i++) func(elements[i], i);
+    let elements, i = 0;
+    if (is.String(element,selector)) elements = doc.querySelector(element).querySelectorAll(selector);
+    if (is.String(selector)) elements = element.querySelectorAll(selector);
+    if(is.Node(selector) || is.Element(selector)) elements = [selector];
+    for (; i < elements.length; i++) func(elements[i], i);
   }
 
   root.log = (Type, msg) => {
@@ -207,7 +208,7 @@
         is.Node(val) ? el = val : el = query(val);
         if (el !== null) el.appendChild(element);
       },
-      append: val => is.String(val) ? element.innerHTML += val : element.appendChild(element),
+      append: val => is.String(val) ? element.innerHTML += val : element.parentNode.appendChild(element),
       prepend: val => is.String(val) ? element.innerHTML = val + element.innerHTML : element.insertBefore(val, element.firstChild),
       On: (eventType, func) => On(eventType, element, func),
       css: styles => is.Def(styles) ? forEach(styles, (prop, key) => element.style[key] = prop) : console.error('Styles Object undefined'),
@@ -275,25 +276,22 @@
       a: (link, inner, attr, node) => make_element('a', inner, attr, node, {
         href: link
       }),
-      table : (options,attr,node) => {
-        if(!is.Object(options)) throw new TypeError('dom().table -> first param needs to be an Object');
+      table : (rows,attr,node) => {
+        if(!is.Arr(rows)) return is.String(rows) ? make_element('table',rows,attr,node) : make_element('table','',attr,node);
+        if(!rows.every(o => is.Object(o))) throw new TypeError('dom.table -> rows : all entries need to be objects');
         let tableInner = ``;
-        forEach(options,(val,key) => {
-          if(key === 'row' && is.Object(val)) {
-            let rowInner = ``, i;
-            for (i in val) if(val.hasOwnProperty(i)) {
-                if (i === 'data') {
-                  if(is.String(val[i])) rowInner += make_element('td',val[i]);
-                  else if(is.Object(val[i])) rowInner += make_element('td',val[i].inner,val[i].attr);
-                } else if(i === 'head') {
-                  if(is.String(val[i])) rowInner += make_element('th',val[i]);
-                  else if(is.Object(val[i])) rowInner += make_element('th',val[i].inner,val[i].attr);
-                }
+        forEach(rows,row => forEach(row,(val,key) => {
+          let row = `<tr>`;
+            if(key === 'cell' || key === 'td' || key === 'data') {
+              if(is.String(val)) row += `<td>${val}</td>`;
+              else if(is.Object(val)) row += make_element('tr',val.inner,val.attr)
+            } else if(key === 'head' || key === 'th') {
+              if(is.String(val)) row += `<th>${val}</th>`;
+              else if(is.Object(val)) row += make_element('th',val.inner,val.attr)
             }
-            if('attr' in val) tableInner += make_element('tr',rowInner,val.attr);
-            tableInner += make_element('tr',rowInner);
-          } else if(is.String(val)) tableInner += make_element('tr',val);
-        });
+            row += '</tr>'
+            tableInner += row;
+        }));
         return make_element('table',tableInner,attr,node);
       },
     }
@@ -600,6 +598,19 @@
           if ((is.Bool(test) && test === false) || (is.Func(test) && test() === false)) fail();
         }, timeout);
       })();
+    },
+    strongPassword : (pass,length,caps,number,...includeChars) => {
+      if(pass.length < length) return false;
+      if(caps === true && !Craft.hasCapitals(pass)) return false;
+      if(number === true && !/\d/g.test(pass)) return false;
+      if(includeChars.length > 0) {
+        let hasChars = true;
+        includeChars.forEach(ch => {
+          if(!pass.includes(ch)) hasChars = false;
+        });
+        if(!hasChars) return false;
+      }
+      return true;
     },
     randomString: () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1),
     GenUID: () => Craft.randomString() + Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString() + Craft.randomString() + Craft.randomString(),

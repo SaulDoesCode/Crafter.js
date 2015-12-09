@@ -209,6 +209,10 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     UpperCase: function UpperCase(char) {
       return char >= 'A' && char <= 'Z';
     },
+    Alphanumeric: function Alphanumeric(str) {
+      return (/^[0-9a-zA-Z]+$/.test(str)
+      );
+    },
     Email: function Email(email) {
       return (/(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))/.test(email)
       );
@@ -275,18 +279,17 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     if (is.Node(element)) return element.querySelectorAll(selector);
     return doc.querySelectorAll(selector);
   };
-
   root.queryEach = function (selector, element, func) {
     if (is.Func(element)) {
       func = element;
       element = doc;
     }
-    var elements = undefined;
-    if (is.String(element)) elements = doc.querySelector(element).querySelectorAll(selector);
-    elements = element.querySelectorAll(selector);
-    for (var _i = 0; _i < elements.length; _i++) {
-      func(elements[_i], _i);
-    }
+    var elements = undefined,
+        i = 0;
+    if (is.String(element, selector)) elements = doc.querySelector(element).querySelectorAll(selector);
+    if (is.String(selector)) elements = element.querySelectorAll(selector);
+    if (is.Node(selector) || is.Element(selector)) elements = [selector];
+    for (; i < elements.length; i++) func(elements[i], i);
   };
 
   root.log = function (Type, msg) {
@@ -439,7 +442,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         if (el !== null) el.appendChild(element);
       },
       append: function append(val) {
-        return is.String(val) ? element.innerHTML += val : element.appendChild(element);
+        return is.String(val) ? element.innerHTML += val : element.parentNode.appendChild(element);
       },
       prepend: function prepend(val) {
         return is.String(val) ? element.innerHTML = val + element.innerHTML : element.insertBefore(val, element.firstChild);
@@ -465,8 +468,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       getSiblings: function getSiblings() {
         var siblings = [],
             AllChildren = element.parentNode.childNodes;
-        for (var _i2 = 0; _i2 < AllChildren.length; _i2++) {
-          if (AllChildren[_i2] !== element) siblings.push(AllChildren[_i2]);
+        for (var _i = 0; _i < AllChildren.length; _i++) {
+          if (AllChildren[_i] !== element) siblings.push(AllChildren[_i]);
         }return siblings;
       },
       Width: function Width() {
@@ -566,23 +569,23 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
           href: link
         });
       },
-      table: function table(options, attr, node) {
-        if (!is.Object(options)) throw new TypeError('dom().table -> first param needs to be an Object');
+      table: function table(rows, attr, node) {
+        if (!is.Arr(rows)) return is.String(rows) ? make_element('table', rows, attr, node) : make_element('table', '', attr, node);
+        if (!rows.every(function (o) {
+          return is.Object(o);
+        })) throw new TypeError('dom.table -> rows : all entries need to be objects');
         var tableInner = '';
-        forEach(options, function (val, key) {
-          if (key === 'row' && is.Object(val)) {
-            var rowInner = '',
-                _i3 = undefined;
-            for (_i3 in val) if (val.hasOwnProperty(_i3)) {
-              if (_i3 === 'data') {
-                if (is.String(val[_i3])) rowInner += make_element('td', val[_i3]);else if (is.Object(val[_i3])) rowInner += make_element('td', val[_i3].inner, val[_i3].attr);
-              } else if (_i3 === 'head') {
-                if (is.String(val[_i3])) rowInner += make_element('th', val[_i3]);else if (is.Object(val[_i3])) rowInner += make_element('th', val[_i3].inner, val[_i3].attr);
-              }
+        forEach(rows, function (row) {
+          return forEach(row, function (val, key) {
+            var row = '<tr>';
+            if (key === 'cell' || key === 'td' || key === 'data') {
+              if (is.String(val)) row += '<td>' + val + '</td>';else if (is.Object(val)) row += make_element('tr', val.inner, val.attr);
+            } else if (key === 'head' || key === 'th') {
+              if (is.String(val)) row += '<th>' + val + '</th>';else if (is.Object(val)) row += make_element('th', val.inner, val.attr);
             }
-            if ('attr' in val) tableInner += make_element('tr', rowInner, val.attr);
-            tableInner += make_element('tr', rowInner);
-          } else if (is.String(val)) tableInner += make_element('tr', val);
+            row += '</tr>';
+            tableInner += row;
+          });
         });
         return make_element('table', tableInner, attr, node);
       }
@@ -671,8 +674,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         return localStorage.removeItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key);
       },
       removeAll: function removeAll(expired) {
-        for (var _i4 in localStorage) {
-          if (!expired || Craft.loader.get(_i4).expire <= +new Date()) Craft.loader.remove(_i4);
+        for (var _i2 in localStorage) {
+          if (!expired || Craft.loader.get(_i2).expire <= +new Date()) Craft.loader.remove(_i2);
         }
       }
     },
@@ -723,8 +726,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         });else if (cache) query(viewHostSelector).innerHTML = localStorage.getItem("RT_" + id);
       },
       clearCache: function clearCache() {
-        for (var _i5 in localStorage) {
-          if (localStorage.key(_i5).includes("RT_")) localStorage.removeItem(localStorage.key(_i5));
+        for (var _i3 in localStorage) {
+          if (localStorage.key(_i3).includes("RT_")) localStorage.removeItem(localStorage.key(_i3));
         }
       }
     },
@@ -840,15 +843,15 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       }) : log('err', 'invalid args');
     },
     hasCapitals: function hasCapitals(string) {
-      for (var _i6 = 0; _i6 < string.length; _i6++) {
-        if (is.UpperCase(string[_i6])) return true;
+      for (var _i4 = 0; _i4 < string.length; _i4++) {
+        if (is.UpperCase(string[_i4])) return true;
       }return false;
     },
     OverrideFunction: function OverrideFunction(funcName, Func, ContextObject) {
       var namespaces = funcName.split("."),
           func = namespaces.pop();
-      for (var _i7 = 0; _i7 < namespaces.length; _i7++) {
-        ContextObject = ContextObject[namespaces[_i7]];
+      for (var _i5 = 0; _i5 < namespaces.length; _i5++) {
+        ContextObject = ContextObject[namespaces[_i5]];
       }ContextObject[func] = Func;
     },
     concatObjects: function concatObjects(hostobj) {
@@ -898,8 +901,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       return types;
     },
     indexOfDate: function indexOfDate(Collection, date) {
-      for (var _i8 = 0; _i8 < Collection.length; _i8++) {
-        if (+Collection[_i8] === +date) return _i8;
+      for (var _i6 = 0; _i6 < Collection.length; _i6++) {
+        if (+Collection[_i6] === +date) return _i6;
       }return -1;
     },
     removeArrItem: function removeArrItem(Arr, val) {
@@ -990,6 +993,23 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         }, timeout);
       })();
     },
+    strongPassword: function strongPassword(pass, length, caps, number) {
+      for (var _len21 = arguments.length, includeChars = Array(_len21 > 4 ? _len21 - 4 : 0), _key21 = 4; _key21 < _len21; _key21++) {
+        includeChars[_key21 - 4] = arguments[_key21];
+      }
+
+      if (pass.length < length) return false;
+      if (caps === true && !Craft.hasCapitals(pass)) return false;
+      if (number === true && !/\d/g.test(pass)) return false;
+      if (includeChars.length > 0) {
+        var hasChars = true;
+        includeChars.forEach(function (ch) {
+          if (!pass.includes(ch)) hasChars = false;
+        });
+        if (!hasChars) return false;
+      }
+      return true;
+    },
     randomString: function randomString() {
       return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
     },
@@ -1071,8 +1091,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     }, {
       key: 'runEach',
       value: function runEach() {
-        for (var _i9 in this.functions) {
-          this.functions[_i9].apply(this, arguments);
+        for (var _i7 in this.functions) {
+          this.functions[_i7].apply(this, arguments);
         }
       }
     }, {

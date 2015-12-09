@@ -130,6 +130,30 @@ context-menu > section:hover {
   margin: 5px 0;
   border-left: 1px solid hsl(0, 0%, 40%);
 }
+.notification-host {
+  background: transparent;
+  position:fixed;
+  top:0;
+  right:0;
+  width: 250px;
+  height: auto;
+}
+.notification-host > craft-notification {
+ position: relative;
+ margin:5%;
+ width: 95%;
+ height:6mm;
+ background: #fff;
+}
+craft-notification[state="bad"] {
+  border-left:4px solid red;
+}
+craft-notification[state="good"] {
+  border-left:4px solid green;
+}
+craft-notification[state="warning"] {
+  border-left:4px solid rgb(223, 176, 7);
+}
 [biscuit-tall], [biscuit-double], .biscuit-tall, .biscuit-double, [biscuit], [class*=biscuit], [biscuit-square], .biscuit-square, .biscuit {
   background: white;
   color: hsl(0, 0%, 25%);

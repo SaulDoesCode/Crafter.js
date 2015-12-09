@@ -1,13 +1,11 @@
 "use strict";
-(doc => {
+((doc,root) => {
   Craft.ripple = function (SelectorOrNode, options) {
-    if(is.Null(SelectorOrNode)) throw new Error('null');
-    if(is.String(SelectorOrNode)) SelectorOrNode = queryAll(SelectorOrNode);
-    if(is.Node(SelectorOrNode)) SelectorOrNode = [SelectorOrNode];
+    if(is.Null(SelectorOrNode)) throw new Error('null selector or node/nodelist');
     options = options || {};
     let color = options.color || undefined,
     timing = options.timing || 1600;
-    forEach(SelectorOrNode, element => {
+    queryEach(SelectorOrNode, element => {
       if (element.hasAttribute("ripple")) color = element.getAttribute("ripple");
       element.onmousedown = e => {
         let circle = doc.createElement('div'),
@@ -41,22 +39,35 @@
     },
   }
 
+  Craft.notification = (msg,state,duration,side) => {
+    if(is.Num(state)) {
+      duration = state;
+      side = duration;
+    }
+    if(query('.notification-host') === null) doc.body.appendChild(make_element('div','','class=notification-host',true));
+    dom('.notification-host').append(make_element('craft-notification',msg,{
+      duration : duration || 600,
+      state : is.Num(state) ? '' : state,
+      side : side
+    },true));
+  }
+
   Craft.JumpTo = function (target, options) {
     options = options || {};
     options.duration = options.duration || 400;
     options.offset = options.offset || 0;
     options.callback = options.callback || undefined;
 
-    let startTime, elapsedTime, start = window.pageYOffset,
+    let startTime, elapsedTime, start = root.pageYOffset,
       distance = is.String(target) ? options.offset + query(target).getBoundingClientRect().top : target,
       loopIteration = 0,
       loop = time => {
         if (loopIteration === 0) startTime = time;
         loopIteration++;
         elapsedTime = time - startTime;
-        window.scrollTo(0, Craft.easing.InOutQuad(elapsedTime, start, distance, options.duration));
+        root.scrollTo(0, Craft.easing.InOutQuad(elapsedTime, start, distance, options.duration));
         elapsedTime < options.duration ? requestAnimationFrame(time => loop(time)) : (() => {
-          window.scrollTo(0, start + distance);
+          root.scrollTo(0, start + distance);
           if (is.Func(options.callback)) options.callback.call();
           startTime = undefined;
         })();
@@ -64,12 +75,17 @@
     requestAnimationFrame(time => loop(time))
   }
 
-  Craft.newComponent('grid-host',{
-    extends : 'div'
-  });
-  Craft.newComponent('grid-row',{
-    extends : 'div'
-  });
+  Craft.newComponent('craft-notification',{
+    created : function() {
+      if(this.hasAttribute('duration')) setTimeout(() => this.remove(), parseInt(this.getAttribute('duration'),10) || 600);
+      if(this.hasAttribute('message')) this.innerHTML = this.getAttribute('message');
+      dom(this).append(dom().div('X','class=notification-close'));
+      this.clickEvent = On('click',query('.notification-close',this),e => this.remove());
+    },
+    destroyed : function () {
+      this.clickEvent.Off();
+    }
+  })
 
   Craft.newComponent('context-menu', {
     created: function () {
@@ -100,20 +116,27 @@
     }
   });
 
+  Craft.newComponent('grid-host',{
+    extends : 'div'
+  });
+  Craft.newComponent('grid-row',{
+    extends : 'div'
+  });
+
   On('blur', e => queryEach('context-menu', el => el.Show()));
-  On('click', document, e => {
+  On('click', doc, e => {
     if (is.Node(e.target, e.target.parentNode) && e.target.tagName !== 'SECTION' && e.target.parentNode.tagName !== 'CONTEXT-MENU') queryEach('context-menu', el => el.Show());
   });
 
-  On('animationstart', document, e => {
+  On('animationstart', doc, e => {
     if (e.animationName === 'NodeInserted' && is.Node(e.target)) {
       let element = e.target;
       if (element.hasAttribute('ripple')) Craft.ripple(element);
       if (element.hasAttribute('tooltip')) {
-        forEach(queryAll(`[owner="${e.target.parentNode.tagName.toLowerCase()} ${e.target.tagName.toLowerCase()} ${e.target.className}"]`), el => el.remove());
+        queryEach(`[owner="${e.target.parentNode.tagName.toLowerCase()} ${e.target.tagName.toLowerCase()} ${e.target.className}"]`, el => el.remove());
         let show = false,
-          tooltip = document.createElement('span');
-        tooltip.appendChild(document.createElement('label'));
+          tooltip = doc.createElement('span');
+        tooltip.appendChild(doc.createElement('label'));
         tooltip.innerHTML += element.getAttribute('tooltip');
         tooltip.setAttribute('owner', `owner="${e.target.parentNode.tagName} ${e.target.tagName} ${e.target.className}"`);
         if (element.hasAttribute('ripple')) tooltip.style.borderColor = element.getAttribute('ripple');
@@ -160,7 +183,7 @@
           tooltip.style.display = show ? 'block' : 'none';
           setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
         }
-        document.body.appendChild(tooltip);
+        doc.body.appendChild(tooltip);
       }
       if (element.hasAttribute('movable')) {
         element.style.position = 'absolute';
@@ -179,8 +202,8 @@
           }, 4);
         });
 
-        On('mouseup', document, e => movable = false);
+        On('mouseup', doc, e => movable = false);
       }
     }
   });
-})(document);
+})(document,window);
