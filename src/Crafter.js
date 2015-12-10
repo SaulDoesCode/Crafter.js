@@ -9,11 +9,12 @@
   let type = (obj, str) => toString.call(obj) === str,
     isT = (val, str) => typeof val === str,
     nT = (val, str) => !isT(val, str),
-    eachisInstanceof = (test,collection) => {
-      if(isT(collection, 'string') || collection === undefined || collection === null) return false;
-      let allgood = true, i = 0;
+    eachisInstanceof = (test, collection) => {
+      if (isT(collection, 'string') || collection === undefined || collection === null) return false;
+      let allgood = true,
+        i = 0;
       for (; i < collection.length; i++) {
-        if(collection[i] instanceof test) {
+        if (collection[i] instanceof test) {
           allgood = false;
           break;
         }
@@ -24,13 +25,13 @@
     head = doc.getElementsByTagName('head')[0],
     CrafterStyles = doc.createElement('style'),
     ua = navigator.userAgent,
-    tem, Br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
-  if (Br && (tem = ua.match(/version\/([\.\d]+)/i)) !== null) Br[2] = tem[1];
-  Br ? [Br[1], Br[2]] : [navigator.appName, navigator.appVersion, '-?'];
+    tem, _br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
+  if (_br && (tem = ua.match(/version\/([\.\d]+)/i)) !== null) _br[2] = tem[1];
+  _br ? [_br[1], _br[2]] : [navigator.appName, navigator.appVersion, '-?'];
 
   root.CurrentBrowser = {
-    is: browser => Br.join(' ').toLowerCase().includes(browser.toLowerCase()) ? true : false,
-    browser: Br.join(' ')
+    is: browser => _br.join(' ').toLowerCase().includes(browser.toLowerCase()) ? true : false,
+    browser: _br.join(' ')
   }
 
   CrafterStyles.setAttribute('crafterstyles', '');
@@ -41,17 +42,14 @@
   root.is = {
     Bool: val => typeof val === 'boolean',
     Arr: val => Array.isArray(val),
-    Arraylike: val => {
-      if ('length' in val && isT(val.length, 'number')) return true;
-      return false;
-    },
+    Arraylike: val => is.Def(val.length) ? true : false,
     String: val => isT(val, 'string'),
     Num: val => isT(val, 'number'),
     Undef: (...args) => args.length && args.every(o => isT(o, 'undefined')),
     Def: (...args) => args.length && args.every(o => nT(o, 'undefined')),
     Null: (...args) => args.length && args.every(o => o === null),
     Node: (...args) => args.length && args.every(o => o instanceof Node),
-    NodeList: (...args) => args.length ? args.every(n => n === null ? false : n instanceof NodeList || eachisInstanceof(Node,n)) : false,
+    NodeList: (...args) => args.length ? args.every(n => n === null ? false : n instanceof NodeList || eachisInstanceof(Node, n)) : false,
     Object: (...args) => args.length && args.every(o => type(o, '[object Object]')),
     Element: (...args) => args.length && args.every(o => type(o, '[object HTMLElement]')),
     File: (...args) => args.length && args.every(o => type(o, '[object File]')),
@@ -64,9 +62,10 @@
     Set: obj => type(obj, '[object Set]'),
     Symbol: obj => type(obj, '[object Symbol]'),
     UpperCase: char => (char >= 'A') && (char <= 'Z'),
-    Alphanumeric : str => /^[0-9a-zA-Z]+$/.test(str),
+    Alphanumeric: str => /^[0-9a-zA-Z]+$/.test(str),
     Email: email => /(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))/.test(email),
     Between: (val, max, min) => (val <= max && val >= min),
+    eq: (a, b) => a === b,
     lt: (val, other) => val < other,
     lte: (val, other) => val <= other,
     bt: (val, other) => val > other,
@@ -82,11 +81,11 @@
     if (is.Undef(iterable)) throw new Error("forEach -> cannot iterate through undefined");
     if (!is.Func(func)) throw new Error("forEach -> invalid or undefined function provided");
     let i = 0;
-    if (!is.Object(iterable) && 'length' in iterable)
+    if (is.Def(iterable.length))
       for (; i < iterable.length; i++) func(iterable[i], i);
-    else if(is.Object(iterable))
+    else
       for (i in iterable)
-        if (iterable.hasOwnProperty(i)) func(iterable[i], i);
+        if (iterable.hasOwnProperty(i)) func(iterable[i], i)
   }
 
 
@@ -113,9 +112,9 @@
       element = doc;
     }
     let elements, i = 0;
-    if (is.String(element,selector)) elements = doc.querySelector(element).querySelectorAll(selector);
+    if (is.String(element, selector)) elements = doc.querySelector(element).querySelectorAll(selector);
     if (is.String(selector)) elements = element.querySelectorAll(selector);
-    if(is.Node(selector) || is.Element(selector)) elements = [selector];
+    if (is.Node(selector) || is.Element(selector)) elements = [selector];
     for (; i < elements.length; i++) func(elements[i], i);
   }
 
@@ -178,6 +177,10 @@
       NodeForm = attributes;
       attributes = undefined;
     }
+    if (is.Bool(inner)) {
+      NodeForm = inner;
+      attributes = undefined;
+    }
     if (NodeForm === true) {
       let newEl = doc.createElement(name);
       newEl.innerHTML = inner;
@@ -212,6 +215,12 @@
       prepend: val => is.String(val) ? element.innerHTML = val + element.innerHTML : element.insertBefore(val, element.firstChild),
       On: (eventType, func) => On(eventType, element, func),
       css: styles => is.Def(styles) ? forEach(styles, (prop, key) => element.style[key] = prop) : console.error('Styles Object undefined'),
+      gotClass: CSSclass => element.classList.contains(CSSclass),
+      addClass: CSSclass => element.classList.add(CSSclass),
+      stripClass: CSSclass => element.classList.remove(CSSclass),
+      hasAttr: Attr => element.hasAttribute(Attr),
+      setAttr: (Attr, val) => element.setAttribute(Attr, val),
+      getAttr: Attr => element.getAttribute(Attr),
       getSiblings: () => {
         let siblings = [],
           AllChildren = element.parentNode.childNodes;
@@ -276,23 +285,26 @@
       a: (link, inner, attr, node) => make_element('a', inner, attr, node, {
         href: link
       }),
-      table : (rows,attr,node) => {
-        if(!is.Arr(rows)) return is.String(rows) ? make_element('table',rows,attr,node) : make_element('table','',attr,node);
-        if(!rows.every(o => is.Object(o))) throw new TypeError('dom.table -> rows : all entries need to be objects');
+      script: (code, attr, node) => make_element('script', code, attr, node, {
+        type: 'text/javascript'
+      }),
+      table: (rows, attr, node) => {
+        if (!is.Arr(rows)) return is.String(rows) ? make_element('table', rows, attr, node) : make_element('table', '', attr, node);
+        if (!rows.every(o => is.Object(o))) throw new TypeError('dom.table -> rows : all entries need to be objects');
         let tableInner = ``;
-        forEach(rows,row => forEach(row,(val,key) => {
+        forEach(rows, row => forEach(row, (val, key) => {
           let row = `<tr>`;
-            if(key === 'cell' || key === 'td' || key === 'data') {
-              if(is.String(val)) row += `<td>${val}</td>`;
-              else if(is.Object(val)) row += make_element('tr',val.inner,val.attr)
-            } else if(key === 'head' || key === 'th') {
-              if(is.String(val)) row += `<th>${val}</th>`;
-              else if(is.Object(val)) row += make_element('th',val.inner,val.attr)
-            }
-            row += '</tr>'
-            tableInner += row;
+          if (key === 'cell' || key === 'td' || key === 'data') {
+            if (is.String(val)) row += `<td>${val}</td>`;
+            else if (is.Object(val)) row += make_element('tr', val.inner, val.attr)
+          } else if (key === 'head' || key === 'th') {
+            if (is.String(val)) row += `<th>${val}</th>`;
+            else if (is.Object(val)) row += make_element('th', val.inner, val.attr)
+          }
+          row += '</tr>'
+          tableInner += row;
         }));
-        return make_element('table',tableInner,attr,node);
+        return make_element('table', tableInner, attr, node);
       },
     }
   };
@@ -352,7 +364,7 @@
         return Promise.all(promises).then(src => src.map(obj => {
           if (obj.type === 'css') CrafterStyles.innerHTML += '\n' + obj.data;
           else if (obj.exec) {
-            let el = make_element('script', obj.data, "type=text/javascript", true);
+            let el = dom().script(obj.data, true);
             el.defer = obj.defer || undefined;
             head.appendChild(el);
           }
@@ -599,16 +611,16 @@
         }, timeout);
       })();
     },
-    strongPassword : (pass,length,caps,number,...includeChars) => {
-      if(pass.length < length) return false;
-      if(caps === true && !Craft.hasCapitals(pass)) return false;
-      if(number === true && !/\d/g.test(pass)) return false;
-      if(includeChars.length > 0) {
+    strongPassword: (pass, length, caps, number, ...includeChars) => {
+      if (pass.length <= length) return false;
+      if (caps === true && Craft.hasCapitals(pass) === false) return false;
+      if (number === true && /\d/g.test(pass) === false) return false;
+      if (includeChars.length !== 0) {
         let hasChars = true;
         includeChars.forEach(ch => {
-          if(!pass.includes(ch)) hasChars = false;
+          if (!pass.includes(ch)) hasChars = false;
         });
-        if(!hasChars) return false;
+        if (!hasChars) return false
       }
       return true;
     },
@@ -617,12 +629,10 @@
     createWebComponent: webcomponent => {
       if (is.String) webcomponent = JSON.parse(webcomponent);
       CrafterStyles.innerHTML += webcomponent.css;
-      let wcJS = make_element('script', '', {
+      let wcJS = dom().script('', {
         src: Craft.URLfrom(webcomponent.js),
-        type: 'text/javascript',
         webcomponent: webcomponent.name
       }, true);
-      wcJS.setAttribute('webcomponent', webcomponent.name);
       wcJS.onload = e => Craft.WebComponents.push(webcomponent.name);
       head.appendChild(wcJS);
     },
@@ -770,38 +780,24 @@
     created: function () {
       if (this.hasAttribute('src')) {
         let wc = null;
-        if (this.getAttribute('cache-component') === 'true') {
+        if (this.hasAttribute('cache-component')) {
           wc = localStorage.getItem(this.getAttribute('src'));
-          if (wc !== null) {
-            let webcomponent = JSON.parse(wc);
-            CrafterStyles.innerHTML += webcomponent.css;
-            let wcJS = make_element('script', '', {
-              src: Craft.URLfrom(webcomponent.js),
-              type: 'text/javascript',
-              webcomponent: webcomponent.name
-            }, true);
-            wcJS.setAttribute('webcomponent', webcomponent.name);
-            wcJS.onload = e => Craft.WebComponents.push(webcomponent.name);
-            head.appendChild(wcJS);
-          }
+          if (wc !== null) Craft.createWebComponent(wc);
         }
-        if (wc === null) fetch(this.getAttribute('src')).then(res => {
-          res.json().then(webcomponent => {
-            CrafterStyles.innerHTML += webcomponent.css;
-            let wcJS = make_element('script', '', {
-              src: Craft.URLfrom(webcomponent.js),
-              type: 'text/javascript',
-              webcomponent: webcomponent.name
-            }, true);
-            wcJS.onload = e => {
-              Craft.WebComponents.push(webcomponent.name);
-              wcJS = null;
-              webcomponent = null;
-            }
-            head.appendChild(wcJS);
-            if (this.getAttribute('cache-component') === 'true') localStorage.setItem(this.getAttribute('src'), JSON.stringify(webcomponent));
-          });
-        }).catch(err => console.error(err + ': could not load webcomponent'))
+        if (wc === null) fetch(this.getAttribute('src')).then(res => res.json().then(webcomponent => {
+          CrafterStyles.innerHTML += webcomponent.css;
+          let wcJS = dom().script('', {
+            src: Craft.URLfrom(webcomponent.js),
+            webcomponent: webcomponent.name
+          }, true);
+          wcJS.onload = e => {
+            Craft.WebComponents.push(webcomponent.name);
+            wcJS = null;
+            webcomponent = null;
+          }
+          head.appendChild(wcJS);
+          if (this.getAttribute('cache-component') === 'true') localStorage.setItem(this.getAttribute('src'), JSON.stringify(webcomponent));
+        })).catch(err => console.error(err + ': could not load webcomponent'))
       }
     }
   });
