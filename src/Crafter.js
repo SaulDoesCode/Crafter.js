@@ -1,7 +1,6 @@
 /** @license MIT
  *  @overview Crafter.js , minimalist front-end library
  *  @author Saul van der Walt - https://github.com/SaulDoesCode/
- *   /[^{}]+(?=\})/g    find between curly braces
  */
 "use strict";
 ((doc, root) => {
@@ -11,8 +10,8 @@
     nT = (val, str) => !isT(val, str),
     eachisInstanceof = (test, collection) => {
       if (isT(collection, 'string') || collection === undefined || collection === null) return false;
-      let allgood = true,
-        i = 0;
+      let i = 0,
+        allgood = true;
       for (; i < collection.length; i++) {
         if (collection[i] instanceof test) {
           allgood = false;
@@ -29,17 +28,16 @@
   if (_br && (tem = ua.match(/version\/([\.\d]+)/i)) !== null) _br[2] = tem[1];
   _br ? [_br[1], _br[2]] : [navigator.appName, navigator.appVersion, '-?'];
 
-  root.CurrentBrowser = {
-    is: browser => _br.join(' ').toLowerCase().includes(browser.toLowerCase()) ? true : false,
-    browser: _br.join(' ')
-  }
-
   CrafterStyles.setAttribute('crafterstyles', '');
   CrafterStyles.innerHTML = `\n@keyframes NodeInserted {from {opacity:.99;}to {opacity: 1;}} [view-bind] {animation-duration: 0.001s;animation-name: NodeInserted;}`;
   head.appendChild(CrafterStyles);
   CrafterStyles = doc.querySelector('[crafterstyles]', head);
 
-  root.is = {
+  /**
+   * is - Type Testing / Assertion
+   * @namespace is
+   */
+  var is = {
     Bool: val => typeof val === 'boolean',
     Arr: val => Array.isArray(val),
     Arraylike: val => is.Def(val.length) ? true : false,
@@ -77,7 +75,18 @@
     },
   };
 
-  root.FunctionIterator = class FunctionIterator {
+  /** Converts any Query/QueryAll to an Array of Nodes even if there is only one Node */
+  function QueryOrNodetoNodeArray(val) {
+    if (is.String(val)) val = queryAll(val);
+    if (is.Node(val)) return [val];
+    else if (is.NodeList(val)) return Array.from(val);
+  }
+
+  /**
+   *
+   * @class FunctionIterator
+   */
+  class FunctionIterator {
     constructor() {
       this.functions = {};
       this.length = Object.keys(this.functions).length;
@@ -114,8 +123,8 @@
       this.functions.hasOwnProperty(funcName) ? this.functions[funcName].apply(this, arg, arguments) : console.warn("No Such Function Entry in FunctionIterator");
     }
   }
-
-  root.CraftSocket = class CraftSocket {
+  /** Handles WebSockets in a contained manner with send and recieve methods */
+  class CraftSocket {
     constructor(wsAddress, protocols) {
       is.Arr(protocols) ? this.Socket = new WebSocket(wsAddress, protocols) : this.Socket = new WebSocket(wsAddress);
       this.messageCalls = [];
@@ -137,7 +146,8 @@
     }
   }
 
-  root.ReactiveVariable = class ReactiveVariable {
+  /** Variable that is used for Data Binding and other reactive processes */
+  class ReactiveVariable {
     constructor(val, handle) {
       if (is.Func(handle)) {
         this.val = val;
@@ -164,55 +174,8 @@
     }
   }
 
-  root.forEach = (iterable, func) => {
-    if (is.Undef(iterable)) throw new Error("forEach -> cannot iterate through undefined");
-    if (!is.Func(func)) throw new Error("forEach -> invalid or undefined function provided");
-    let i = 0;
-    if (is.Def(iterable.length))
-      for (; i < iterable.length; i++) func(iterable[i], i);
-    else
-      for (i in iterable)
-        if (iterable.hasOwnProperty(i)) func(iterable[i], i)
-  }
-
-  root.QueryOrNodetoNodeArray = val => {
-    if (is.String(val)) val = queryAll(val);
-    if (is.Node(val)) return [val];
-    else if (is.NodeList(val)) return Array.from(val);
-  }
-
-  root.query = (selector, element) => {
-    if (is.String(element)) return doc.querySelector(element).querySelector(selector);
-    if (is.Node(element)) return element.querySelector(selector);
-    return doc.querySelector(selector);
-  }
-  root.queryAll = (selector, element) => {
-    if (is.String(element)) return doc.querySelector(element).querySelectorAll(selector);
-    if (is.Node(element)) return element.querySelectorAll(selector);
-    return doc.querySelectorAll(selector);
-  }
-  root.queryEach = (selector, element, func) => {
-    if (is.Func(element)) {
-      func = element;
-      element = doc;
-    }
-    let elements, i = 0;
-    if (is.String(element, selector)) elements = doc.querySelector(element).querySelectorAll(selector);
-    if (is.String(selector)) elements = element.querySelectorAll(selector);
-    if (is.Node(selector) || is.Element(selector)) elements = [selector];
-    for (; i < elements.length; i++) func(elements[i], i);
-  }
-
-  root.log = (Type, msg) => {
-    let Is = (...args) => args.some(str => Type === str);
-    if (Is('err', 'e')) console.error(msg);
-    else if (Is('warn', 'w')) console.warn(msg);
-    else if (Is('info', 'i')) console.info(msg);
-    else if (Is('success', 's')) console.log('%c' + msg, 'color:green;');
-    else console.log(Type);
-  };
-
-  root.EventHandler = class EventHandler {
+  /** Event handeling class */
+  class EventHandler {
     constructor(EventType, Target, Func, ...args) {
       this.EventType = EventType;
       this.Func = Func;
@@ -237,7 +200,44 @@
     }
   }
 
-  root.On = (eventType, SelectorNode, func) => {
+  /** forEach is an easy way to loop through Collections and Objects */
+  function forEach(iterable, func) {
+    if (is.Undef(iterable)) throw new Error("forEach -> cannot iterate through undefined");
+    if (!is.Func(func)) throw new Error("forEach -> invalid or undefined function provided");
+    let i = 0;
+    if (is.Def(iterable.length))
+      for (; i < iterable.length; i++) func(iterable[i], i);
+    else
+      for (i in iterable)
+        if (iterable.hasOwnProperty(i)) func(iterable[i], i)
+  }
+
+  /** easy way to get an element either in the document or in another element using CSS selectors */
+  function query(selector, element) {
+    if (is.String(element)) return doc.querySelector(element).querySelector(selector);
+    if (is.Node(element)) return element.querySelector(selector);
+    return doc.querySelector(selector);
+  }
+  /** easy way to query all elements either in the document or in another element using CSS selectors */
+  function queryAll(selector, element) {
+    if (is.String(element)) return doc.querySelector(element).querySelectorAll(selector);
+    if (is.Node(element)) return element.querySelectorAll(selector);
+    return doc.querySelectorAll(selector);
+  }
+  /** similar to forEach in that you can loop through all the elements found with a CSS selector */
+  function queryEach(selector, element, func) {
+    if (is.Func(element)) {
+      func = element;
+      element = doc;
+    }
+    let elements, i = 0;
+    if (is.String(element, selector)) elements = doc.querySelector(element).querySelectorAll(selector);
+    if (is.String(selector)) elements = element.querySelectorAll(selector);
+    if (is.Node(selector) || is.Element(selector)) elements = [selector];
+    for (; i < elements.length; i++) func(elements[i], i);
+  }
+
+  function On(eventType, SelectorNode, func) {
     if (is.Func(SelectorNode)) {
       func = SelectorNode;
       SelectorNode = root;
@@ -247,7 +247,7 @@
     return handle;
   }
 
-  root.Once = (eventType, SelectorNode, func) => {
+  function Once(eventType, SelectorNode, func) {
     if (is.Func(SelectorNode)) {
       func = SelectorNode;
       SelectorNode = root;
@@ -257,7 +257,7 @@
     return handle;
   }
 
-  root.make_element = (name, inner, attributes, NodeForm, extraAttr) => {
+  function make_element(name, inner, attributes, NodeForm, extraAttr) {
     if (is.Bool(attributes)) {
       NodeForm = attributes;
       attributes = undefined;
@@ -281,7 +281,8 @@
     return `<${name} ${attrString}>${inner}</${name}>`;
   }
 
-  root.dom = element => {
+  /** Object containing many useful methods for interacting with and manipulating the DOM or creating elements */
+  var dom = element => {
     if (is.String(element)) {
       let elements = queryAll(element);
       (elements.length > 1) ? element = elements: element = elements[0];
@@ -325,8 +326,8 @@
         if (!is.Null(Localelement)) return Localelement[0];
         return null;
       }
-    }
-    if (is.NodeList(element)) return {
+    };
+    else if (is.NodeList(element)) return {
       On: (eventType, func) => On(eventType, element, func),
       find: (selector, forceSelectAll) => {
         let Localelement = queryAll(selector, element);
@@ -395,7 +396,10 @@
     }
   };
 
-  root.Craft = {
+  /**
+   * Craft - Crafter.js Core Object containing most methods
+   */
+  var Craft = {
     ArraytoObject: arr => {
       let i, NewObject = {};
       for (i in arr)
@@ -416,6 +420,10 @@
       while (i--)
         if (arr1[i] !== arr2[i]) return false;
       return true;
+    },
+    CurrentBrowser: {
+      is: browser => _br.join(' ').toLowerCase().includes(browser.toLowerCase()) ? true : false,
+      browser: _br.join(' ')
     },
     loader: {
       pre: 'craft:',
@@ -483,7 +491,7 @@
             if (cache && is.Def(id) && is.String(id) && is.Null(localStorage.getItem("RT_" + id))) localStorage.setItem(("RT_" + id), txt);
             query(viewHostSelector).innerHTML = txt;
           });
-        }).catch(msg => log('warn', 'Could not fetch view -> ' + msg));
+        }).catch(msg => console.warn('Could not fetch view -> ' + msg));
         else if (cache) query(viewHostSelector).innerHTML = localStorage.getItem("RT_" + id)
       },
       clearCache: () => {
@@ -516,7 +524,6 @@
         return all;
       }
     },
-    trim: text => is.Null(text) ? "" : (text + "").replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, ""),
     after: function (n, func) {
       if (!is.Func(func)) is.Func(n) ? func = n : console.error("after : func is not a function");
       n = Number.isFinite(n = +n) ? n : 0;
@@ -575,7 +582,7 @@
         return res;
       }
     },
-    css: (el, styles) => (is.Def(styles, el) && is.Node(el)) ? forEach(styles, (prop, key) => el.style[key] = prop) : log('err', 'invalid args'),
+    css: (el, styles) => (is.Def(styles, el) && is.Node(el)) ? forEach(styles, (prop, key) => el.style[key] = prop) : console.error('invalid args'),
     hasCapitals: string => {
       for (let i = 0; i < string.length; i++)
         if (is.UpperCase(string[i])) return true;
@@ -679,17 +686,38 @@
     URLfrom: text => URL.createObjectURL(new Blob([text])),
     OnScroll: (element, func) => is.Func(func) ? On('scroll', element, e => func(e.deltaY < 1 ? false : true, e)) : console.error('second param needs to be a function'),
     OnResize: func => is.Func(func) ? Craft.ResizeHandlers.add(func) : console.error("Craft.OnResize -> func is not a function"),
-    WhenScrolledTo: Scroll => new Promise((resolve, reject) => {
-        let scrollEvent = On('scroll',e => {
-          if(pageYOffset >= Scroll || pageYOffset <= Scroll) {
-            scrollEvent.Off();
-            resolve(e);
-          }
-        })
+    OnScrolledTo: (Scroll, ifFunc, elseFunc) => On('scroll', e => {
+      if (pageYOffset >= Scroll) ifFunc(e);
+      else if (is.Def(elseFunc)) elseFunc(e);
     }),
-    OnScrolledTo : (Scroll,ifFunc,elseFunc) => On('scroll',e => {
-      if(pageYOffset >= Scroll) ifFunc(e);
-      else if(is.Def(elseFunc)) elseFunc(e);
+    WhenScrolledTo: Scroll => new Promise((resolve, reject) => {
+      let scrollEvent = On('scroll', e => {
+        if (pageYOffset >= Scroll || pageYOffset <= Scroll) {
+          scrollEvent.Off();
+          resolve(e);
+        }
+      })
+    }),
+    /**
+     * function that returns a promise when the DOM and WebComponents are finished loading
+     * @namespace Craft
+     */
+    WhenReady: Scope => new Promise((resolve, reject) => {
+      let waitIncase = Craft.CurrentBrowser.is("Firefox") || Craft.CurrentBrowser.is("msie");
+      Scope = Scope || Craft.Scope;
+      if (Ready) waitIncase ? setTimeout(() => resolve(Scope), 500) : resolve(Scope);
+      else {
+        let ReadyYet = setInterval(() => {
+          if (Ready) {
+            waitIncase ? setTimeout(() => resolve(Scope), 500) : resolve(Scope);
+            clearInterval(ReadyYet);
+          }
+        }, 20);
+        setTimeout(() => {
+          clearInterval(ReadyYet);
+          if (!Ready) reject("Things didn't load correctly/intime -> load failed");
+        }, 4500)
+      }
     }),
     poll: (test, interval, timeout, success, fail) => {
       return (() => {
@@ -710,6 +738,9 @@
         }, timeout);
       })();
     },
+    /**
+     * Usefull method for validating passwords
+     */
     strongPassword: (pass, length, caps, number, ...includeChars) => {
       if (pass.length <= length) return false;
       if (caps === true && Craft.hasCapitals(pass) === false) return false;
@@ -723,6 +754,7 @@
       }
       return true;
     },
+    /** method for generating random alphanumeric strings*/
     randomString: () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1),
     GenUID: () => Craft.randomString() + Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString() + Craft.randomString() + Craft.randomString(),
     createWebComponent: webcomponent => {
@@ -735,6 +767,10 @@
       wcJS.onload = e => Craft.WebComponents.push(webcomponent.name);
       head.appendChild(wcJS);
     },
+    /**
+     * method for creating custom elements
+     * configuring their lifecycle's and inheritance
+     */
     newComponent: function (tag, config) {
       if (is.Undef(config)) console.error("Invalid Component Configuration");
       else {
@@ -752,23 +788,24 @@
         settings['prototype'] = element;
         doc.registerElement(tag, settings)
       }
-    }
+    },
+    /** creates a new bound variable , part of Crafter.js's Data Binding System */
+    newBind: (key, val, handle) => {
+      is.Func(handle) ? Craft.Binds.set(key, new ReactiveVariable(val, handle)) : Craft.Binds.set(key, val);
+      queryEach('[view-bind]', el => {
+        if (Craft.Binds.has(el.getAttribute('view-bind'))) el.innerHTML = is.Func(handle) ? Craft.Binds.get(el.getAttribute('view-bind')).val : Craft.Binds.get(el.getAttribute('view-bind'));
+      });
+    },
+    /** sets the value of a bound variable */
+    setBind: (key, val) => {
+      is.ReactiveVariable(Craft.Binds.get(key)) ? Craft.Binds.get(key).set(val) : Craft.Binds.set(key, val);
+      queryEach('[view-bind]', el => {
+        if (Craft.Binds.has(el.getAttribute('view-bind'))) el.innerHTML = is.ReactiveVariable(Craft.Binds.get(key)) ? Craft.Binds.get(el.getAttribute('view-bind')).val : Craft.Binds.get(el.getAttribute('view-bind'))
+      });
+    },
   };
 
   Craft.loader.removeAll(true);
-
-  Craft.newBind = (key, val, handle) => {
-    is.Func(handle) ? Craft.Binds.set(key, new ReactiveVariable(val, handle)) : Craft.Binds.set(key, val);
-    queryEach('[view-bind]', el => {
-      if (Craft.Binds.has(el.getAttribute('view-bind'))) el.innerHTML = is.Func(handle) ? Craft.Binds.get(el.getAttribute('view-bind')).val : Craft.Binds.get(el.getAttribute('view-bind'));
-    });
-  };
-  Craft.setBind = (key, val) => {
-    is.ReactiveVariable(Craft.Binds.get(key)) ? Craft.Binds.get(key).set(val) : Craft.Binds.set(key, val);
-    queryEach('[view-bind]', el => {
-      if (Craft.Binds.has(el.getAttribute('view-bind'))) el.innerHTML = is.ReactiveVariable(Craft.Binds.get(key)) ? Craft.Binds.get(el.getAttribute('view-bind')).val : Craft.Binds.get(el.getAttribute('view-bind'))
-    });
-  };
 
   On('animationstart', doc, e => {
     if (e.animationName === 'NodeInserted' && is.Node(e.target)) {
@@ -821,23 +858,22 @@
     })
   });
 
-  Craft.WhenReady = Scope => new Promise((resolve, reject) => {
-    let waitIncase = CurrentBrowser.is("Firefox") || CurrentBrowser.is("msie");
-    Scope = Scope || Craft.Scope;
-    if (Ready) waitIncase ? setTimeout(() => resolve(Scope), 500) : resolve(Scope);
-    else {
-      let ReadyYet = setInterval(() => {
-        if (Ready) {
-          waitIncase ? setTimeout(() => resolve(Scope), 500) : resolve(Scope);
-          clearInterval(ReadyYet);
-        }
-      }, 20);
-      setTimeout(() => {
-        clearInterval(ReadyYet);
-        if (!Ready) reject("Things didn't load correctly/intime -> load failed");
-      }, 4500)
-    }
-  });
 
   On('hashchange', e => Craft.router.handlers.forEach(handler => (location.hash === handler.link || location === handler.link) ? handler.func() : null));
+
+  root.is = is;
+  root.dom = dom;
+  root.Craft = Craft;
+  root.On = On;
+  root.Once = Once;
+  root.forEach = forEach;
+  root.QueryOrNodetoNodeArray = QueryOrNodetoNodeArray;
+  root.make_element = make_element;
+  root.FunctionIterator = FunctionIterator;
+  root.CraftSocket = CraftSocket;
+  root.EventHandler = EventHandler;
+  root.ReactiveVariable = ReactiveVariable;
+  root.query = query;
+  root.queryAll = queryAll;
+  root.queryEach = queryEach;
 })(document, self);

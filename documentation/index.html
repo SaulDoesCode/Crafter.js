@@ -1,0 +1,597 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset='utf-8' />
+  <title>  | Documentation</title>
+  <meta name='viewport' content='width=device-width,initial-scale=1'>
+  <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Source+Code+Pro:400,500,700' rel='stylesheet' type='text/css'>
+  <link href='assets/bass.css' type='text/css' rel='stylesheet' />
+  <link href='assets/style.css' type='text/css' rel='stylesheet' />
+  <link href='assets/github.css' type='text/css' rel='stylesheet' />
+</head>
+<body class='documentation'>
+  <div class='container'>
+    <div class='clearfix md-mxn2'>
+      <div class='fixed md-show fix-3 overflow-auto max-height-100'>
+        <div class='py1 px2'>
+          <h3 class='mb0 no-anchor'></h3>
+          <div class='mb1'><code></code></div>
+          <input
+            placeholder='Filter'
+            id='filter-input'
+            class='col12 block field'
+            type='text' />
+          <div id='toc'>
+              <a
+                href='#'
+                class='block bold'>
+                
+              </a>
+              <a
+                href='#Craft'
+                class='block bold'>
+                Craft
+              </a>
+                <a
+                  href='#Craft.newBind'
+                  class='regular block'>
+                  .newBind
+                </a>
+                <a
+                  href='#Craft.newComponent'
+                  class='regular block'>
+                  .newComponent
+                </a>
+                <a
+                  href='#Craft.randomString'
+                  class='regular block'>
+                  .randomString
+                </a>
+                <a
+                  href='#Craft.setBind'
+                  class='regular block'>
+                  .setBind
+                </a>
+                <a
+                  href='#Craft.strongPassword'
+                  class='regular block'>
+                  .strongPassword
+                </a>
+                <a
+                  href='#Craft.WhenReady'
+                  class='regular block'>
+                  .WhenReady
+                </a>
+              <a
+                href='#CraftSocket'
+                class='block bold'>
+                CraftSocket
+              </a>
+              <a
+                href='#dom'
+                class='block bold'>
+                dom
+              </a>
+              <a
+                href='#EventHandler'
+                class='block bold'>
+                EventHandler
+              </a>
+              <a
+                href='#forEach'
+                class='block bold'>
+                forEach
+              </a>
+              <a
+                href='#FunctionIterator'
+                class='block bold'>
+                FunctionIterator
+              </a>
+              <a
+                href='#is'
+                class='block bold'>
+                is
+              </a>
+              <a
+                href='#query'
+                class='block bold'>
+                query
+              </a>
+              <a
+                href='#queryAll'
+                class='block bold'>
+                queryAll
+              </a>
+              <a
+                href='#queryEach'
+                class='block bold'>
+                queryEach
+              </a>
+              <a
+                href='#QueryOrNodetoNodeArray'
+                class='block bold'>
+                QueryOrNodetoNodeArray
+              </a>
+              <a
+                href='#ReactiveVariable'
+                class='block bold'>
+                ReactiveVariable
+              </a>
+          </div>
+        </div>
+      </div>
+      <div class='fix-margin-3'>
+        <div class='px2'>
+<div class='py1'><section class='py2 clearfix'>
+  <h2 id='' class='mt0'>
+    <span class='gray'></span>
+  </h2>
+  
+</section>
+</div><div class='py1'><section class='py2 clearfix'>
+  <h2 id='Craft' class='mt0'>
+    Craft<span class='gray'>(arr)</span>
+  </h2>
+  <p>Craft - Crafter.js Core Object containing most methods</p>
+
+    <h4>Parameters</h4>
+    <ul class='suppress-p-margin'>
+        <li> <strong>arr</strong>
+          :
+          <div class='force-inline'>
+            
+          </div>
+        </li>
+    </ul>
+      <h4>Static members</h4>
+        <div class='collapsible' id='Craft.newBind'>
+          <a href='#Craft.newBind'>
+            <code>
+              .newBind<span class='gray'>(key, val, handle)</span>
+            </code>
+            <div class='force-inline'>
+              <p>creates a new bound variable , part of Crafter.js&apos;s Data Binding System</p>
+
+            </div>
+          </a>
+          <div class='collapser border px2 m2'>
+            <section class='py2 clearfix'>
+              <h2 id='Craft.newBind' class='mt0'>
+                newBind<span class='gray'>(key, val, handle)</span>
+              </h2>
+              <p>creates a new bound variable , part of Crafter.js&apos;s Data Binding System</p>
+            
+                <h4>Parameters</h4>
+                <ul class='suppress-p-margin'>
+                    <li> <strong>key</strong>
+                      :
+                      <div class='force-inline'>
+                        
+                      </div>
+                    </li>
+                    <li> <strong>val</strong>
+                      :
+                      <div class='force-inline'>
+                        
+                      </div>
+                    </li>
+                    <li> <strong>handle</strong>
+                      :
+                      <div class='force-inline'>
+                        
+                      </div>
+                    </li>
+                </ul>
+            </section>
+          </div>
+        </div>
+        <div class='collapsible' id='Craft.newComponent'>
+          <a href='#Craft.newComponent'>
+            <code>
+              .newComponent<span class='gray'>(tag, config)</span>
+            </code>
+            <div class='force-inline'>
+              <p>method for creating custom elements
+configuring their lifecycle&apos;s and inheritance</p>
+
+            </div>
+          </a>
+          <div class='collapser border px2 m2'>
+            <section class='py2 clearfix'>
+              <h2 id='Craft.newComponent' class='mt0'>
+                newComponent<span class='gray'>(tag, config)</span>
+              </h2>
+              <p>method for creating custom elements
+            configuring their lifecycle&apos;s and inheritance</p>
+            
+                <h4>Parameters</h4>
+                <ul class='suppress-p-margin'>
+                    <li> <strong>tag</strong>
+                      :
+                      <div class='force-inline'>
+                        
+                      </div>
+                    </li>
+                    <li> <strong>config</strong>
+                      :
+                      <div class='force-inline'>
+                        
+                      </div>
+                    </li>
+                </ul>
+            </section>
+          </div>
+        </div>
+        <div class='collapsible' id='Craft.randomString'>
+          <a href='#Craft.randomString'>
+            <code>
+              .randomString<span class='gray'></span>
+            </code>
+            <div class='force-inline'>
+              <p>method for generating random alphanumeric strings</p>
+
+            </div>
+          </a>
+          <div class='collapser border px2 m2'>
+            <section class='py2 clearfix'>
+              <h2 id='Craft.randomString' class='mt0'>
+                randomString<span class='gray'></span>
+              </h2>
+              <p>method for generating random alphanumeric strings</p>
+            
+            </section>
+          </div>
+        </div>
+        <div class='collapsible' id='Craft.setBind'>
+          <a href='#Craft.setBind'>
+            <code>
+              .setBind<span class='gray'>(key, val)</span>
+            </code>
+            <div class='force-inline'>
+              <p>sets the value of a bound variable</p>
+
+            </div>
+          </a>
+          <div class='collapser border px2 m2'>
+            <section class='py2 clearfix'>
+              <h2 id='Craft.setBind' class='mt0'>
+                setBind<span class='gray'>(key, val)</span>
+              </h2>
+              <p>sets the value of a bound variable</p>
+            
+                <h4>Parameters</h4>
+                <ul class='suppress-p-margin'>
+                    <li> <strong>key</strong>
+                      :
+                      <div class='force-inline'>
+                        
+                      </div>
+                    </li>
+                    <li> <strong>val</strong>
+                      :
+                      <div class='force-inline'>
+                        
+                      </div>
+                    </li>
+                </ul>
+            </section>
+          </div>
+        </div>
+        <div class='collapsible' id='Craft.strongPassword'>
+          <a href='#Craft.strongPassword'>
+            <code>
+              .strongPassword<span class='gray'>(pass, length, caps, number, includeChars)</span>
+            </code>
+            <div class='force-inline'>
+              <p>Usefull method for validating passwords</p>
+
+            </div>
+          </a>
+          <div class='collapser border px2 m2'>
+            <section class='py2 clearfix'>
+              <h2 id='Craft.strongPassword' class='mt0'>
+                strongPassword<span class='gray'>(pass, length, caps, number, includeChars)</span>
+              </h2>
+              <p>Usefull method for validating passwords</p>
+            
+                <h4>Parameters</h4>
+                <ul class='suppress-p-margin'>
+                    <li> <strong>pass</strong>
+                      :
+                      <div class='force-inline'>
+                        
+                      </div>
+                    </li>
+                    <li> <strong>length</strong>
+                      :
+                      <div class='force-inline'>
+                        
+                      </div>
+                    </li>
+                    <li> <strong>caps</strong>
+                      :
+                      <div class='force-inline'>
+                        
+                      </div>
+                    </li>
+                    <li> <strong>number</strong>
+                      :
+                      <div class='force-inline'>
+                        
+                      </div>
+                    </li>
+                    <li>... <strong>includeChars</strong>
+                      :
+                      <div class='force-inline'>
+                        
+                      </div>
+                    </li>
+                </ul>
+            </section>
+          </div>
+        </div>
+        <div class='collapsible' id='Craft.WhenReady'>
+          <a href='#Craft.WhenReady'>
+            <code>
+              .WhenReady<span class='gray'>(Scope)</span>
+            </code>
+            <div class='force-inline'>
+              <p>function that returns a promise when the DOM and WebComponents are finished loading</p>
+
+            </div>
+          </a>
+          <div class='collapser border px2 m2'>
+            <section class='py2 clearfix'>
+              <h2 id='Craft.WhenReady' class='mt0'>
+                WhenReady<span class='gray'>(Scope)</span>
+              </h2>
+              <p>function that returns a promise when the DOM and WebComponents are finished loading</p>
+            
+                <h4>Parameters</h4>
+                <ul class='suppress-p-margin'>
+                    <li> <strong>Scope</strong>
+                      :
+                      <div class='force-inline'>
+                        
+                      </div>
+                    </li>
+                </ul>
+            </section>
+          </div>
+        </div>
+</section>
+</div><div class='py1'><section class='py2 clearfix'>
+  <h2 id='CraftSocket' class='mt0'>
+    CraftSocket<span class='gray'>(wsAddress, protocols)</span>
+  </h2>
+  <p>Handles WebSockets in a contained manner with send and recieve methods</p>
+
+    <h4>Parameters</h4>
+    <ul class='suppress-p-margin'>
+        <li> <strong>wsAddress</strong>
+          :
+          <div class='force-inline'>
+            
+          </div>
+        </li>
+        <li> <strong>protocols</strong>
+          :
+          <div class='force-inline'>
+            
+          </div>
+        </li>
+    </ul>
+</section>
+</div><div class='py1'><section class='py2 clearfix'>
+  <h2 id='dom' class='mt0'>
+    dom<span class='gray'>(element)</span>
+  </h2>
+  <p>Object containing many useful methods for interacting with and manipulating the DOM or creating elements</p>
+
+    <h4>Parameters</h4>
+    <ul class='suppress-p-margin'>
+        <li> <strong>element</strong>
+          :
+          <div class='force-inline'>
+            
+          </div>
+        </li>
+    </ul>
+</section>
+</div><div class='py1'><section class='py2 clearfix'>
+  <h2 id='EventHandler' class='mt0'>
+    EventHandler<span class='gray'>(EventType, Target, Func, args)</span>
+  </h2>
+  <p>Event handeling class</p>
+
+    <h4>Parameters</h4>
+    <ul class='suppress-p-margin'>
+        <li> <strong>EventType</strong>
+          :
+          <div class='force-inline'>
+            
+          </div>
+        </li>
+        <li> <strong>Target</strong>
+          :
+          <div class='force-inline'>
+            
+          </div>
+        </li>
+        <li> <strong>Func</strong>
+          :
+          <div class='force-inline'>
+            
+          </div>
+        </li>
+        <li>... <strong>args</strong>
+          :
+          <div class='force-inline'>
+            
+          </div>
+        </li>
+    </ul>
+</section>
+</div><div class='py1'><section class='py2 clearfix'>
+  <h2 id='forEach' class='mt0'>
+    forEach<span class='gray'>(iterable, func)</span>
+  </h2>
+  <p>forEach is an easy way to loop through Collections and Objects</p>
+
+    <h4>Parameters</h4>
+    <ul class='suppress-p-margin'>
+        <li> <strong>iterable</strong>
+          :
+          <div class='force-inline'>
+            
+          </div>
+        </li>
+        <li> <strong>func</strong>
+          :
+          <div class='force-inline'>
+            
+          </div>
+        </li>
+    </ul>
+</section>
+</div><div class='py1'><section class='py2 clearfix'>
+  <h2 id='FunctionIterator' class='mt0'>
+    FunctionIterator<span class='gray'></span>
+  </h2>
+  
+</section>
+</div><div class='py1'><section class='py2 clearfix'>
+  <h2 id='is' class='mt0'>
+    is<span class='gray'>(val)</span>
+  </h2>
+  <p>is - Type Testing / Assertion</p>
+
+    <h4>Parameters</h4>
+    <ul class='suppress-p-margin'>
+        <li> <strong>val</strong>
+          :
+          <div class='force-inline'>
+            
+          </div>
+        </li>
+    </ul>
+</section>
+</div><div class='py1'><section class='py2 clearfix'>
+  <h2 id='query' class='mt0'>
+    query<span class='gray'>(selector, element)</span>
+  </h2>
+  <p>easy way to get an element either in the document or in another element using CSS selectors</p>
+
+    <h4>Parameters</h4>
+    <ul class='suppress-p-margin'>
+        <li> <strong>selector</strong>
+          :
+          <div class='force-inline'>
+            
+          </div>
+        </li>
+        <li> <strong>element</strong>
+          :
+          <div class='force-inline'>
+            
+          </div>
+        </li>
+    </ul>
+</section>
+</div><div class='py1'><section class='py2 clearfix'>
+  <h2 id='queryAll' class='mt0'>
+    queryAll<span class='gray'>(selector, element)</span>
+  </h2>
+  <p>easy way to query all elements either in the document or in another element using CSS selectors</p>
+
+    <h4>Parameters</h4>
+    <ul class='suppress-p-margin'>
+        <li> <strong>selector</strong>
+          :
+          <div class='force-inline'>
+            
+          </div>
+        </li>
+        <li> <strong>element</strong>
+          :
+          <div class='force-inline'>
+            
+          </div>
+        </li>
+    </ul>
+</section>
+</div><div class='py1'><section class='py2 clearfix'>
+  <h2 id='queryEach' class='mt0'>
+    queryEach<span class='gray'>(selector, element, func)</span>
+  </h2>
+  <p>similar to forEach in that you can loop through all the elements found with a CSS selector</p>
+
+    <h4>Parameters</h4>
+    <ul class='suppress-p-margin'>
+        <li> <strong>selector</strong>
+          :
+          <div class='force-inline'>
+            
+          </div>
+        </li>
+        <li> <strong>element</strong>
+          :
+          <div class='force-inline'>
+            
+          </div>
+        </li>
+        <li> <strong>func</strong>
+          :
+          <div class='force-inline'>
+            
+          </div>
+        </li>
+    </ul>
+</section>
+</div><div class='py1'><section class='py2 clearfix'>
+  <h2 id='QueryOrNodetoNodeArray' class='mt0'>
+    QueryOrNodetoNodeArray<span class='gray'>(val)</span>
+  </h2>
+  <p>Converts any Query/QueryAll to an Array of Nodes even if there is only one Node</p>
+
+    <h4>Parameters</h4>
+    <ul class='suppress-p-margin'>
+        <li> <strong>val</strong>
+          :
+          <div class='force-inline'>
+            
+          </div>
+        </li>
+    </ul>
+</section>
+</div><div class='py1'><section class='py2 clearfix'>
+  <h2 id='ReactiveVariable' class='mt0'>
+    ReactiveVariable<span class='gray'>(val, handle)</span>
+  </h2>
+  <p>Variable that is used for Data Binding and other reactive processes</p>
+
+    <h4>Parameters</h4>
+    <ul class='suppress-p-margin'>
+        <li> <strong>val</strong>
+          :
+          <div class='force-inline'>
+            
+          </div>
+        </li>
+        <li> <strong>handle</strong>
+          :
+          <div class='force-inline'>
+            
+          </div>
+        </li>
+    </ul>
+</section>
+</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src='assets/anchor.js'></script>
+  <script src='assets/site.js'></script>
+</body>
+</html>
