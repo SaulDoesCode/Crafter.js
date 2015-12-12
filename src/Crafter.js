@@ -77,6 +77,93 @@
     },
   };
 
+  root.FunctionIterator = class FunctionIterator {
+    constructor() {
+      this.functions = {};
+      this.length = Object.keys(this.functions).length;
+    }
+    has(funcName) {
+      if (this.functions.has(funcName)) return true;
+      return false;
+    }
+    add(funcName, func) {
+      if (is.Func(func)) {
+        this.functions[funcName] = func;
+      } else if (is.Func(funcName)) {
+        this.functions[Craft.randomString()] = funcName;
+      } else console.error("Invalid function parameter in FunctionIterator.add(funcName , _function_ )");
+      this.length = Object.keys(this.functions).length;
+    }
+    remove(funcName) {
+      if (this.functions.has(funcName)) {
+        this.functions[funcName] = null;
+        delete this.functions[funcName];
+      } else console.warn("No Such Function Entry in FunctionIterator");
+      this.length = Object.keys(this.functions).length;
+    }
+    removeAll() {
+      delete this.functions;
+      this.functions = null;
+      this.functions = {};
+      this.length = Object.keys(this.functions).length;
+    }
+    runEach() {
+      for (let i in this.functions) this.functions[i].apply(this, arguments);
+    }
+    runOne(funcName, arg) {
+      this.functions.hasOwnProperty(funcName) ? this.functions[funcName].apply(this, arg, arguments) : console.warn("No Such Function Entry in FunctionIterator");
+    }
+  }
+
+  root.CraftSocket = class CraftSocket {
+    constructor(wsAddress, protocols) {
+      is.Arr(protocols) ? this.Socket = new WebSocket(wsAddress, protocols) : this.Socket = new WebSocket(wsAddress);
+      this.messageCalls = [];
+      this.RecieveCalls = [];
+      this.Socket.onmessage = e => this.RecieveCalls.forEach(call => call(e));
+    }
+    send(message, func) {
+      this.messageCalls.push(() => {
+        this.Socket.send(message);
+        if (is.Def(func) && is.Func(func)) this.recieve((data, e) => func(data, e));
+      });
+      this.Socket.onopen = e => this.messageCalls[this.messageCalls.length - 1]();
+    }
+    recieve(func) {
+      is.Func(func) ? this.RecieveCalls.push(e => func(e.data, e)) : console.error("callback is not a function or is not defined")
+    }
+    close() {
+      this.Socket.close()
+    }
+  }
+
+  root.ReactiveVariable = class ReactiveVariable {
+    constructor(val, handle) {
+      if (is.Func(handle)) {
+        this.val = val;
+        this.Handle = handle;
+      } else console.error('ReactiveVariable needs a handler function after the value');
+      return this.val
+    }
+    set(val) {
+      if (this.val !== val) {
+        this.Oldval = this.val;
+        this.val = val;
+        this.Handle(this.Oldval, val);
+      }
+      return this.val;
+    }
+    get() {
+      return this.val
+    }
+    reset(handle) {
+      is.Func(handle) ? this.Handle = handle : console.error('ReactiveVariable.Reset only takes a function');
+    }
+    isReactiveVar() {
+      return true
+    }
+  }
+
   root.forEach = (iterable, func) => {
     if (is.Undef(iterable)) throw new Error("forEach -> cannot iterate through undefined");
     if (!is.Func(func)) throw new Error("forEach -> invalid or undefined function provided");
@@ -87,8 +174,6 @@
       for (i in iterable)
         if (iterable.hasOwnProperty(i)) func(iterable[i], i)
   }
-
-
 
   root.QueryOrNodetoNodeArray = val => {
     if (is.String(val)) val = queryAll(val);
@@ -218,6 +303,7 @@
       gotClass: CSSclass => element.classList.contains(CSSclass),
       addClass: CSSclass => element.classList.add(CSSclass),
       stripClass: CSSclass => element.classList.remove(CSSclass),
+      stripAttr: Attr => element.removeAttribute(Attr),
       hasAttr: Attr => element.hasAttribute(Attr),
       setAttr: (Attr, val) => element.setAttribute(Attr, val),
       getAttr: Attr => element.getAttribute(Attr),
@@ -308,7 +394,6 @@
       },
     }
   };
-
 
   root.Craft = {
     ArraytoObject: arr => {
@@ -578,6 +663,8 @@
     },
     Scope: {},
     WebComponents: [],
+    ResizeHandlers: new FunctionIterator,
+    Binds: new Map,
     mouse: {
       x: 0,
       y: 0,
@@ -590,8 +677,20 @@
       return formData;
     },
     URLfrom: text => URL.createObjectURL(new Blob([text])),
-    OnScroll: (element, func) => is.Func(func) ? On(element, e => func(e.deltaY < 1 ? false : true, e)) : console.error('second param needs to be a function'),
+    OnScroll: (element, func) => is.Func(func) ? On('scroll', element, e => func(e.deltaY < 1 ? false : true, e)) : console.error('second param needs to be a function'),
     OnResize: func => is.Func(func) ? Craft.ResizeHandlers.add(func) : console.error("Craft.OnResize -> func is not a function"),
+    WhenScrolledTo: Scroll => new Promise((resolve, reject) => {
+        let scrollEvent = On('scroll',e => {
+          if(pageYOffset >= Scroll || pageYOffset <= Scroll) {
+            scrollEvent.Off();
+            resolve(e);
+          }
+        })
+    }),
+    OnScrolledTo : (Scroll,ifFunc,elseFunc) => On('scroll',e => {
+      if(pageYOffset >= Scroll) ifFunc(e);
+      else if(is.Def(elseFunc)) elseFunc(e);
+    }),
     poll: (test, interval, timeout, success, fail) => {
       return (() => {
         if (is.Func(timeout)) {
@@ -658,94 +757,6 @@
 
   Craft.loader.removeAll(true);
 
-  root.FunctionIterator = class FunctionIterator {
-    constructor() {
-      this.functions = {};
-      this.length = Object.keys(this.functions).length;
-    }
-    has(funcName) {
-      if (this.functions.has(funcName)) return true;
-      return false;
-    }
-    add(funcName, func) {
-      if (is.Func(func)) {
-        this.functions[funcName] = func;
-      } else if (is.Func(funcName)) {
-        this.functions[Craft.randomString()] = funcName;
-      } else console.error("Invalid function parameter in FunctionIterator.add(funcName , _function_ )");
-      this.length = Object.keys(this.functions).length;
-    }
-    remove(funcName) {
-      if (this.functions.has(funcName)) {
-        this.functions[funcName] = null;
-        delete this.functions[funcName];
-      } else console.warn("No Such Function Entry in FunctionIterator");
-      this.length = Object.keys(this.functions).length;
-    }
-    removeAll() {
-      delete this.functions;
-      this.functions = null;
-      this.functions = {};
-      this.length = Object.keys(this.functions).length;
-    }
-    runEach() {
-      for (let i in this.functions) this.functions[i].apply(this, arguments);
-    }
-    runOne(funcName, arg) {
-      this.functions.hasOwnProperty(funcName) ? this.functions[funcName].apply(this, arg, arguments) : console.warn("No Such Function Entry in FunctionIterator");
-    }
-  }
-
-  root.CraftSocket = class CraftSocket {
-    constructor(wsAddress, protocols) {
-      is.Arr(protocols) ? this.Socket = new WebSocket(wsAddress, protocols) : this.Socket = new WebSocket(wsAddress);
-      this.messageCalls = [];
-      this.RecieveCalls = [];
-      this.Socket.onmessage = e => this.RecieveCalls.forEach(call => call(e));
-    }
-    send(message, func) {
-      this.messageCalls.push(() => {
-        this.Socket.send(message);
-        if (is.Def(func) && is.Func(func)) this.recieve((data, e) => func(data, e));
-      });
-      this.Socket.onopen = e => this.messageCalls[this.messageCalls.length - 1]();
-    }
-    recieve(func) {
-      is.Func(func) ? this.RecieveCalls.push(e => func(e.data, e)) : console.error("callback is not a function or is not defined")
-    }
-    close() {
-      this.Socket.close()
-    }
-  }
-
-  root.ReactiveVariable = class ReactiveVariable {
-    constructor(val, handle) {
-      if (is.Func(handle)) {
-        this.val = val;
-        this.Handle = handle;
-      } else console.error('ReactiveVariable needs a handler function after the value');
-      return this.val
-    }
-    set(val) {
-      if (this.val !== val) {
-        this.Oldval = this.val;
-        this.val = val;
-        this.Handle(this.Oldval, val);
-      }
-      return this.val;
-    }
-    get() {
-      return this.val
-    }
-    reset(handle) {
-      is.Func(handle) ? this.Handle = handle : console.error('ReactiveVariable.Reset only takes a function');
-    }
-    isReactiveVar() {
-      return true
-    }
-  }
-
-  Craft.Binds = new Map;
   Craft.newBind = (key, val, handle) => {
     is.Func(handle) ? Craft.Binds.set(key, new ReactiveVariable(val, handle)) : Craft.Binds.set(key, val);
     queryEach('[view-bind]', el => {
@@ -764,8 +775,6 @@
       if (e.target.hasAttribute('[view-bind]') && Craft.Binds.has(e.target.getAttribute('view-bind'))) e.target.innerHTML = is.ReactiveVariable(Craft.Binds.get(key)) ? Craft.Binds.get(e.target.getAttribute('view-bind')).val : Craft.Binds.get(e.target.getAttribute('view-bind'));
     }
   });
-
-  Craft.ResizeHandlers = new FunctionIterator;
 
   root.onresize = Craft.throttle(450, e => Craft.ResizeHandlers.runEach(e));
   root.onmousemove = e => {
