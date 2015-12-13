@@ -1,6 +1,7 @@
-/** @license MIT
+/**
  *  @overview Crafter.js , minimalist front-end library
  *  @author Saul van der Walt - https://github.com/SaulDoesCode/
+ *  @license MIT
  */
 "use strict";
 
@@ -47,53 +48,110 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
   head.appendChild(CrafterStyles);
   CrafterStyles = doc.querySelector('[crafterstyles]', head);
 
-  /**
-   * is - Type Testing / Assertion
-   * @namespace is
-   */
+  /** is - Type Testing / Assertion */
   var is = {
+    /**
+     * Test if something is a boolean type
+     * @param val - value to test
+     */
     Bool: function Bool(val) {
       return typeof val === 'boolean';
     },
-    Arr: function Arr(val) {
-      return Array.isArray(val);
-    },
-    Arraylike: function Arraylike(val) {
-      return is.Def(val.length) ? true : false;
-    },
-    String: function String(val) {
-      return isT(val, 'string');
-    },
-    Num: function Num(val) {
-      return isT(val, 'number');
-    },
-    Undef: function Undef() {
+    /**
+     * Test if something is a String
+     * @param args - value/values to test
+     */
+    String: function String() {
       for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
         args[_key] = arguments[_key];
+      }
+
+      return args.length && args.every(function (o) {
+        return isT(o, 'string');
+      });
+    },
+    /**
+     * Test if something is a Number
+     * @param args - value/values to test
+     */
+    Num: function Num() {
+      for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+        args[_key2] = arguments[_key2];
+      }
+
+      return args.length && args.every(function (o) {
+        return isT(o, 'number');
+      });
+    },
+    /**
+     * Test if something is an Array
+     * @param args - value/values to test
+     */
+    Arr: function Arr() {
+      for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+        args[_key3] = arguments[_key3];
+      }
+
+      return args.length && args.every(function (o) {
+        return Array.isArray(o);
+      });
+    },
+    /**
+     * Test if something is an Array-Like
+     * @param args - value/values to test
+     */
+    Arraylike: function Arraylike() {
+      for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+        args[_key4] = arguments[_key4];
+      }
+
+      return args.length && args.every(function (o) {
+        return is.Def(o.length) ? true : false;
+      });
+    },
+    /**
+     * Determine whether a variable is undefined
+     * @param args - value/values to test
+     */
+    Undef: function Undef() {
+      for (var _len5 = arguments.length, args = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+        args[_key5] = arguments[_key5];
       }
 
       return args.length && args.every(function (o) {
         return isT(o, 'undefined');
       });
     },
+    /**
+     * Determine whether a variable is in fact defined
+     * @param args - value/values to test
+     */
     Def: function Def() {
-      for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-        args[_key2] = arguments[_key2];
+      for (var _len6 = arguments.length, args = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+        args[_key6] = arguments[_key6];
       }
 
       return args.length && args.every(function (o) {
         return nT(o, 'undefined');
       });
     },
+    /**
+     * Determine whether a variable is null
+     * @param args - value/values to test
+     */
     Null: function Null() {
-      for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-        args[_key3] = arguments[_key3];
+      for (var _len7 = arguments.length, args = Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
+        args[_key7] = arguments[_key7];
       }
 
       return args.length && args.every(function (o) {
         return o === null;
       });
     },
+    /**
+     * Determine whether a variable is a DOM Node
+     * @param args - value/values to test
+     */
     Node: (function (_Node) {
       function Node() {
         return _Node.apply(this, arguments);
@@ -105,14 +163,18 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
 
       return Node;
     })(function () {
-      for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-        args[_key4] = arguments[_key4];
+      for (var _len8 = arguments.length, args = Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
+        args[_key8] = arguments[_key8];
       }
 
       return args.length && args.every(function (o) {
         return o instanceof Node;
       });
     }),
+    /**
+     * Determine whether a variable is a DOM NodeList or Collection of Nodes
+     * @param args - value/values to test
+     */
     NodeList: (function (_NodeList) {
       function NodeList() {
         return _NodeList.apply(this, arguments);
@@ -124,136 +186,235 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
 
       return NodeList;
     })(function () {
-      for (var _len5 = arguments.length, args = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-        args[_key5] = arguments[_key5];
+      for (var _len9 = arguments.length, args = Array(_len9), _key9 = 0; _key9 < _len9; _key9++) {
+        args[_key9] = arguments[_key9];
       }
 
       return args.length ? args.every(function (n) {
         return n === null ? false : n instanceof NodeList || eachisInstanceof(Node, n);
       }) : false;
     }),
+    /**
+     * Determine if a variable is an Object
+     * @param args - value/values to test
+     */
     Object: function Object() {
-      for (var _len6 = arguments.length, args = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
-        args[_key6] = arguments[_key6];
+      for (var _len10 = arguments.length, args = Array(_len10), _key10 = 0; _key10 < _len10; _key10++) {
+        args[_key10] = arguments[_key10];
       }
 
       return args.length && args.every(function (o) {
         return type(o, '[object Object]');
       });
     },
+    /**
+     * Determine if a variable is a HTMLElement
+     * @param args - value/values to test
+     */
     Element: function Element() {
-      for (var _len7 = arguments.length, args = Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
-        args[_key7] = arguments[_key7];
+      for (var _len11 = arguments.length, args = Array(_len11), _key11 = 0; _key11 < _len11; _key11++) {
+        args[_key11] = arguments[_key11];
       }
 
       return args.length && args.every(function (o) {
         return type(o, '[object HTMLElement]');
       });
     },
+    /**
+     * Determine if a variable is a File Object
+     * @param args - value/values to test
+     */
     File: function File() {
-      for (var _len8 = arguments.length, args = Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
-        args[_key8] = arguments[_key8];
+      for (var _len12 = arguments.length, args = Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
+        args[_key12] = arguments[_key12];
       }
 
       return args.length && args.every(function (o) {
         return type(o, '[object File]');
       });
     },
+    /**
+     * Determine if a variable is of a FormData type
+     * @param args - value/values to test
+     */
     FormData: function FormData() {
-      for (var _len9 = arguments.length, args = Array(_len9), _key9 = 0; _key9 < _len9; _key9++) {
-        args[_key9] = arguments[_key9];
+      for (var _len13 = arguments.length, args = Array(_len13), _key13 = 0; _key13 < _len13; _key13++) {
+        args[_key13] = arguments[_key13];
       }
 
       return args.length && args.every(function (o) {
         return type(o, '[object FormData]');
       });
     },
+    /**
+     * Determine if a variable is a Map
+     * @param args - value/values to test
+     */
     Map: function Map() {
-      for (var _len10 = arguments.length, args = Array(_len10), _key10 = 0; _key10 < _len10; _key10++) {
-        args[_key10] = arguments[_key10];
+      for (var _len14 = arguments.length, args = Array(_len14), _key14 = 0; _key14 < _len14; _key14++) {
+        args[_key14] = arguments[_key14];
       }
 
       return args.length && args.every(function (o) {
         return type(o, '[object Map]');
       });
     },
+    /**
+     * Determine if a variable is a function
+     * @param args - value/values to test
+     */
     Func: function Func() {
-      for (var _len11 = arguments.length, args = Array(_len11), _key11 = 0; _key11 < _len11; _key11++) {
-        args[_key11] = arguments[_key11];
+      for (var _len15 = arguments.length, args = Array(_len15), _key15 = 0; _key15 < _len15; _key15++) {
+        args[_key15] = arguments[_key15];
       }
 
       return args.length && args.every(function (o) {
         return typeof o === 'function';
       });
     },
+    /**
+     * Determine if a variable is of Blob type
+     * @param obj - variable to test
+     */
     Blob: function Blob(obj) {
       return type(obj, '[object Blob]');
     },
+    /**
+     * Determine if a variable is a Regular Expression
+     * @param obj - variable to test
+     */
     RegExp: function RegExp(obj) {
       return type(obj, '[object RegExp]');
     },
+    /**
+     * Determine if a variable is a Date type
+     * @param obj - variable to test
+     */
     Date: function Date(obj) {
       return type(obj, '[object Date]');
     },
+    /**
+     * Determine if a variable is a Set
+     * @param obj - variable to test
+     */
     Set: function Set(obj) {
       return type(obj, '[object Set]');
     },
+    /**
+     * Determine if a variable is a Symbol
+     * @param obj - variable to test
+     */
     Symbol: function Symbol(obj) {
       return type(obj, '[object Symbol]');
     },
+    /**
+     * Determine if a String (Single Character) is UPPERCASE
+     * @param {string} char - variable to test
+     */
     UpperCase: function UpperCase(char) {
       return char >= 'A' && char <= 'Z';
     },
+    /**
+     * Determine if a String contains only characters and numbers (alphanumeric)
+     * @param {string} str - variable to test
+     */
     Alphanumeric: function Alphanumeric(str) {
       return (/^[0-9a-zA-Z]+$/.test(str)
       );
     },
+    /**
+     * Determines whether a String is a valid Email
+     * @param {string} email - variable to test
+     */
     Email: function Email(email) {
       return (/(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))/.test(email)
       );
     },
+    /**
+     * Determines whether a Number is between a maximum and a minimum
+     * @param {Number} val - number value to test
+     * @param {Number} max - maximum to compare the value with
+     * @param {Number} min - minimum to compare the value with
+     * @returns {Boolean} wether or not the value is between the max and min
+     */
     Between: function Between(val, max, min) {
       return val <= max && val >= min;
     },
+    /**
+     * Determines if two variables are equal
+     * @param a - first value to compare
+     * @param b - second value to compare
+     */
     eq: function eq(a, b) {
       return a === b;
     },
+    /**
+     * Determines if a number is LOWER than another
+     * @param {Number} val - value to test
+     * @param {Number} other - num to test with value
+     */
     lt: function lt(val, other) {
       return val < other;
     },
+    /**
+     * Determines if a number is LOWER than or equal to another
+     * @param {Number} val - value to test
+     * @param {Number} other - num to test with value
+     */
     lte: function lte(val, other) {
       return val <= other;
     },
+    /**
+     * Determines if a number is BIGGER than another
+     * @param {Number} val - value to test
+     * @param {Number} other - num to test with value
+     */
     bt: function bt(val, other) {
       return val > other;
     },
+    /**
+     * Determines if a number is BIGGER than or equal to another
+     * @param {Number} val - value to test
+     * @param {Number} other - num to test with value
+     */
     bte: function bte(val, other) {
       return val >= other;
     },
+    /**
+     * Determines if a value is an instance of the ReactiveVariable class
+     * @param args - value/values to test
+     */
     ReactiveVariable: function ReactiveVariable() {
-      for (var _len12 = arguments.length, args = Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
-        args[_key12] = arguments[_key12];
+      for (var _len16 = arguments.length, args = Array(_len16), _key16 = 0; _key16 < _len16; _key16++) {
+        args[_key16] = arguments[_key16];
       }
 
-      return args.every(function (o) {
+      return args.length && args.every(function (o) {
         return o instanceof _ReactiveVariable ? true : false;
       });
     },
+    /**
+     * Test if something is a Native JavaScript feature
+     * @param val - value to test
+     */
     Native: function Native(val) {
       var type = typeof val === 'undefined' ? 'undefined' : _typeof(val);
       return type === 'function' ? RegExp('^' + String(Object.prototype.toString).replace(/[.*+?^${}()|[\]\/\\]/g, '\\$&').replace(/toString|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$').test(Function.prototype.toString.call(val)) : val && type == 'object' && /^\[object .+?Constructor\]$/.test(val.toString) || false;
     }
   };
 
-  /** Converts any Query/QueryAll to an Array of Nodes even if there is only one Node */
+  /**
+   * Converts any Query/QueryAll to an Array of Nodes even if there is only one Node
+   * @param {Node|NodeList|Array|String} val - pass either a CSS Selector string , Node/NodeList or Array of Nodes
+   */
   function QueryOrNodetoNodeArray(val) {
     if (is.String(val)) val = queryAll(val);
     if (is.Node(val)) return [val];else if (is.NodeList(val)) return Array.from(val);
   }
 
   /**
-   *
-   * @class FunctionIterator
+   * associative collection of functions
+   * that can be added,removed or iterated through
    */
 
   var FunctionIterator = (function () {
@@ -263,6 +424,10 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       this.functions = {};
       this.length = Object.keys(this.functions).length;
     }
+    /**
+     * Check if the FunctionIterator Collection contains a certain function
+     * @param {string} funcName - name to identify the function with
+     */
 
     _createClass(FunctionIterator, [{
       key: 'has',
@@ -270,6 +435,12 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         if (this.functions.has(funcName)) return true;
         return false;
       }
+      /**
+       * Add a function to the collection
+       * @param {string} funcName - name to identify the function with
+       * @param {Function} func - function to be stored in the FunctionIterator Collection
+       */
+
     }, {
       key: 'add',
       value: function add(funcName, func) {
@@ -280,6 +451,11 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         } else console.error("Invalid function parameter in FunctionIterator.add(funcName , _function_ )");
         this.length = Object.keys(this.functions).length;
       }
+      /**
+       * Remove a function from the collection
+       * @param {string} funcName - name to identify the function with
+       */
+
     }, {
       key: 'remove',
       value: function remove(funcName) {
@@ -289,6 +465,11 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         } else console.warn("No Such Function Entry in FunctionIterator");
         this.length = Object.keys(this.functions).length;
       }
+      /**
+       * Remove all functions from the collection
+       * @param {string} funcName - name to identify the function with
+       */
+
     }, {
       key: 'removeAll',
       value: function removeAll() {
@@ -297,6 +478,12 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         this.functions = {};
         this.length = Object.keys(this.functions).length;
       }
+      /**
+       * Execute each function in the Collection
+       * all arguments passed will be applied to each function in the collection
+       * usefull for centralizing an Event Listener such as a Window Resize event
+       */
+
     }, {
       key: 'runEach',
       value: function runEach() {
@@ -304,18 +491,31 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
           this.functions[_i].apply(this, arguments);
         }
       }
+      /**
+       * Execute a single function in the collection
+       * @param {string} funcName - name to identify the function with
+       * @param {...*=} args - arguments/parameters to pass to the function
+       */
+
     }, {
       key: 'runOne',
-      value: function runOne(funcName, arg) {
-        this.functions.hasOwnProperty(funcName) ? this.functions[funcName].apply(this, arg, arguments) : console.warn("No Such Function Entry in FunctionIterator");
+      value: function runOne(funcName) {
+        this.functions.hasOwnProperty(funcName) ? this.functions[funcName].apply(this, args) : console.warn("No Such Function Entry in FunctionIterator");
       }
     }]);
 
     return FunctionIterator;
   })();
+
   /** Handles WebSockets in a contained manner with send and recieve methods */
 
   var CraftSocket = (function () {
+    /**
+     * Creates a new WebSocket connection
+     * @param {string} wsAddress - the WebSocket address example "ws://localhost:3000/"
+     * @param {Array=} protocols - the protocols to pass to the WebSocket Connection
+     */
+
     function CraftSocket(wsAddress, protocols) {
       var _this = this;
 
@@ -330,6 +530,11 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         });
       };
     }
+    /**
+     * Sends a message along the WebSocket Connection
+     * @param {string} message - the WebSocket address example "ws://localhost:3000/"
+     * @param {function=} func - optional function to recieve the response with -> "function ( response , event ) { ... } or response => ..."
+     */
 
     _createClass(CraftSocket, [{
       key: 'send',
@@ -346,6 +551,11 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
           return _this2.messageCalls[_this2.messageCalls.length - 1]();
         };
       }
+      /**
+       * Recieves messages from the WebSocket Server
+       * @param {function} func - function to recieve the response and event with -> "function ( response , event ) { ... } or response => ..."
+       */
+
     }, {
       key: 'recieve',
       value: function recieve(func) {
@@ -353,6 +563,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
           return func(e.data, e);
         }) : console.error("callback is not a function or is not defined");
       }
+      /** Closes the WebSocket Connection */
+
     }, {
       key: 'close',
       value: function close() {
@@ -363,9 +575,18 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     return CraftSocket;
   })();
 
-  /** Variable that is used for Data Binding and other reactive processes */
+  /**
+   * Variable that is used for Data Binding and other reactive processes
+   */
 
   var _ReactiveVariable = (function () {
+    /**
+     * Creates a ReactiveVariable
+     * @param {*} val - value you'd liek the ReactiveVariable to Store
+     * @param {function} handle - function that gets called whenever the ReactiveVariable changes -> "function( OldValue , newValue ) {...}"
+     * @returns {*} Returns the value assigned to the ReactiveVariable
+     */
+
     function _ReactiveVariable(val, handle) {
       _classCallCheck(this, _ReactiveVariable);
 
@@ -375,6 +596,10 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       } else console.error('ReactiveVariable needs a handler function after the value');
       return this.val;
     }
+    /**
+     * Sets the new value of the ReactiveVariable , this will also call the handle function
+     * @param {*} val - new value to assign the ReactiveVariable
+     */
 
     _createClass(_ReactiveVariable, [{
       key: 'set',
@@ -386,43 +611,56 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         }
         return this.val;
       }
+      /**
+       * Gets the value of the ReactiveVariable , ReactiveVariable.val also does this
+       */
+
     }, {
       key: 'get',
       value: function get() {
         return this.val;
       }
+      /**
+       * Redefine the handle function of the ReactiveVariable
+       * @param {function} handle - function that gets called whenever the ReactiveVariable changes -> "function( OldValue , newValue ) {...}"
+       */
+
     }, {
       key: 'reset',
       value: function reset(handle) {
         is.Func(handle) ? this.Handle = handle : console.error('ReactiveVariable.Reset only takes a function');
-      }
-    }, {
-      key: 'isReactiveVar',
-      value: function isReactiveVar() {
-        return true;
       }
     }]);
 
     return _ReactiveVariable;
   })();
 
-  /** Event handeling class */
+  /**
+   * Event Handling Class
+   * @param {string} EventType - set the type of event to listen for example "click" or "scroll"
+   * @param {Node|NodeList|window|document} Target - the Event Listener's target , can also be a NodeList to listen on multiple Nodes
+   * @param {function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
+   * @param {...*} args - extra optional arguments/parameters to pass to the handler function
+   * @returns Interface On,Off,Once
+   */
 
   var EventHandler = (function () {
     function EventHandler(EventType, Target, Func) {
-      for (var _len13 = arguments.length, args = Array(_len13 > 3 ? _len13 - 3 : 0), _key13 = 3; _key13 < _len13; _key13++) {
-        args[_key13 - 3] = arguments[_key13];
+      for (var _len17 = arguments.length, args = Array(_len17 > 3 ? _len17 - 3 : 0), _key17 = 3; _key17 < _len17; _key17++) {
+        args[_key17 - 3] = arguments[_key17];
       }
 
       _classCallCheck(this, EventHandler);
 
       this.EventType = EventType;
-      this.Func = Func;
       this.Target = Target !== window && Target !== document ? QueryOrNodetoNodeArray(Target) : Target;
       this.FuncWrapper = function (e) {
         return Func(e, e.srcElement, args || []);
       };
     }
+    /**
+     * Activates the EventHandler to start listening for the EventType on the Target/Targets
+     */
 
     _createClass(EventHandler, [{
       key: 'On',
@@ -433,6 +671,11 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
           return target.addEventListener(_this3.EventType, _this3.FuncWrapper);
         }) : this.Target.addEventListener(this.EventType, this.FuncWrapper);
       }
+      /**
+       * De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
+       * can still optionally be re-activated with On again
+       */
+
     }, {
       key: 'Off',
       value: function Off() {
@@ -442,6 +685,11 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
           return target.removeEventListener(_this4.EventType, _this4.FuncWrapper);
         }) : this.Target.removeEventListener(this.EventType, this.FuncWrapper);
       }
+      /**
+       * Once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
+       * the Handler function will be called only Once
+       */
+
     }, {
       key: 'Once',
       value: function Once() {
@@ -463,7 +711,11 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     return EventHandler;
   })();
 
-  /** forEach is an easy way to loop through Collections and Objects */
+  /**
+   * Easy way to loop through Collections and Objects
+   * @param {Array|Object|NodeList} iterable - any collection that is either an Object or has a .length value
+   * @param {function} func - function called on each iteration -> "function( value , indexOrKey ) {...}"
+   */
 
   function forEach(iterable, func) {
     if (is.Undef(iterable)) throw new Error("forEach -> cannot iterate through undefined");
@@ -472,19 +724,32 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     if (is.Def(iterable.length)) for (; i < iterable.length; i++) func(iterable[i], i);else for (i in iterable) if (iterable.hasOwnProperty(i)) func(iterable[i], i);
   }
 
-  /** easy way to get an element either in the document or in another element using CSS selectors */
+  /**
+   * Easy way to get a DOM Node or Node within another DOM Node using CSS selectors
+   * @param {string} selector - CSS selector to query the DOM Node with
+   * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
+   */
   function query(selector, element) {
     if (is.String(element)) return doc.querySelector(element).querySelector(selector);
     if (is.Node(element)) return element.querySelector(selector);
     return doc.querySelector(selector);
   }
-  /** easy way to query all elements either in the document or in another element using CSS selectors */
+  /**
+   * Easy way to get a DOM NodeList or NodeList within another DOM Node using CSS selectors
+   * @param {string} selector - CSS selector to query the DOM Nodes with
+   * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
+   */
   function queryAll(selector, element) {
     if (is.String(element)) return doc.querySelector(element).querySelectorAll(selector);
     if (is.Node(element)) return element.querySelectorAll(selector);
     return doc.querySelectorAll(selector);
   }
-  /** similar to forEach in that you can loop through all the elements found with a CSS selector */
+  /**
+   * Easy way to loop through Nodes in the DOM using a CSS Selector or a NodeList
+   * @param {string|NodeList} selector - CSS selector to query the DOM Nodes with or NodeList to iterate through
+   * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
+   * @param {function} func - function called on each iteration -> "function( Element , index ) {...}"
+   */
   function queryEach(selector, element, func) {
     if (is.Func(element)) {
       func = element;
@@ -494,26 +759,40 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         i = 0;
     if (is.String(element, selector)) elements = doc.querySelector(element).querySelectorAll(selector);
     if (is.String(selector)) elements = element.querySelectorAll(selector);
-    if (is.Node(selector) || is.Element(selector)) elements = [selector];
+    if (is.NodeList(selector) || is.Element(selector)) elements = [selector];
     for (; i < elements.length; i++) func(elements[i], i);
   }
 
-  function _On(eventType, SelectorNode, func) {
-    if (is.Func(SelectorNode)) {
-      func = SelectorNode;
-      SelectorNode = root;
+  /**
+   * Starts listening for an EventType on the Target/Targets
+   * @param {string} EventType - set the type of event to listen for example "click" or "scroll"
+   * @param {Node|NodeList|window|document} Target - the Event Listener's target , can be a NodeList to listen on multiple Nodes
+   * @param {function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
+   * @returns Off - when On is defined as a variable "var x = On(...)" it allows you to access all the EventHandler interfaces Off,Once,On
+   */
+  function _On(EventType, Target, func) {
+    if (is.Func(Target)) {
+      func = Target;
+      Target = root;
     }
-    var handle = new EventHandler(eventType, SelectorNode, func);
+    var handle = new EventHandler(EventType, Target, func);
     handle.On();
     return handle;
   }
 
-  function Once(eventType, SelectorNode, func) {
-    if (is.Func(SelectorNode)) {
-      func = SelectorNode;
-      SelectorNode = root;
+  /**
+   * Starts listening for an EventType on the Target/Targets ONCE after triggering the Once event Listener will stop listening
+   * @param {string} EventType - set the type of event to listen for example "click" or "scroll"
+   * @param {Node|NodeList|window|document} Target - the Event Listener's target , can be a NodeList to listen on multiple Nodes
+   * @param {function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
+   * @returns On,Off,Once - when Once is defined as a variable "var x = Once(...)" it allows you to access all the EventHandler interfaces Off,Once,On
+   */
+  function Once(EventType, Target, func) {
+    if (is.Func(Target)) {
+      func = Target;
+      Target = root;
     }
-    var handle = new EventHandler(eventType, SelectorNode, func);
+    var handle = new EventHandler(EventType, Target, func);
     handle.Once();
     return handle;
   }
@@ -560,7 +839,10 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     return '<' + name + ' ' + attrString + '>' + inner + '</' + name + '>';
   }
 
-  /** Object containing many useful methods for interacting with and manipulating the DOM or creating elements */
+  /**
+   * Function that returns many useful methods for interacting with and manipulating the DOM or creating elements
+   * @param {Node|NodeList|string=} element - optional Node, NodeList or CSS Selector that will be affected by the methods returned
+   */
   var dom = function dom(element) {
     if (is.String(element)) {
       var elements = queryAll(element);
@@ -647,8 +929,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         if (!is.Null(Localelement)) return Localelement[0];
         return null;
       }
-    };
-    if (is.NodeList(element)) return {
+    };else if (is.NodeList(element)) return {
       On: function On(eventType, func) {
         return _On(eventType, element, func);
       },
@@ -742,8 +1023,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
   };
 
   /**
-   * Craft - Crafter.js Core Object containing most methods
-   * @namespace Craft
+   * Craft is Crafter.js Core Object containing most methods.
+   * @namespace
    */
   var Craft = {
     ArraytoObject: function ArraytoObject(arr) {
@@ -759,11 +1040,62 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       while (++i < arr.length) if (func(arr[i], i, arr)) result[++x] = arr[i];
       return result;
     },
+    removeFromArr: function removeFromArr(Arr, val) {
+      var index = Arr.IndexOf(val),
+          temp = [],
+          string = false,
+          i = 0;
+      if (is.String(Arr)) {
+        Arr = Array.from(Arr);
+        string = true;
+      }
+      for (; i < Arr.length; i++) if (i !== index) temp.push(Arr[i]);
+      return string ? temp : temp;
+    },
     sameArray: function sameArray(arr1, arr2) {
       var i = arr1.length;
       if (i !== arr2.length) return false;
       while (i--) if (arr1[i] !== arr2[i]) return false;
       return true;
+    },
+    concatObjects: function concatObjects(hostobj) {
+      for (var _len18 = arguments.length, Objs = Array(_len18 > 1 ? _len18 - 1 : 0), _key18 = 1; _key18 < _len18; _key18++) {
+        Objs[_key18 - 1] = arguments[_key18];
+      }
+
+      forEach(hostobj, function () {
+        Objs.forEach(function (obj) {
+          forEach(obj, function (prop, key) {
+            if (key in hostobj) {
+              if (is.Arr(hostobj[key])) {
+                if (!hostobj[key].includes(prop)) hostobj[key].push(prop);
+              } else if (prop !== hostobj[key]) hostobj[key] = [prop, hostobj[key]];
+            } else hostobj[key] = prop;
+          });
+        });
+      });
+      return hostobj;
+    },
+    mergeObjects: function mergeObjects(hostobj) {
+      for (var _len19 = arguments.length, Objs = Array(_len19 > 1 ? _len19 - 1 : 0), _key19 = 1; _key19 < _len19; _key19++) {
+        Objs[_key19 - 1] = arguments[_key19];
+      }
+
+      return Object.assign(hostobj, Objs);
+    },
+    omit: function omit(obj, val) {
+      if (is.Object(obj) && obj !== val) {
+        forEach(obj, function (prop, key) {
+          if (val === key || val === prop) delete obj[key];
+        });
+        if (obj.hasOwnProperty(val)) console.error('couldn\'t omit ' + val + ' from Object');
+      } else if (is.Arr(obj) || is.String(obj)) {
+        obj.forEach(function (i) {
+          if (val === i) obj = Craft.removeArrItem(obj, i);
+        });
+        if (val.IndexOf(i) !== -1) console.error('couldn\'t omit ' + val + ' from Array or String');
+      }
+      return obj;
     },
     CurrentBrowser: {
       is: function is(browser) {
@@ -795,8 +1127,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         });
       },
       Import: function Import() {
-        for (var _len14 = arguments.length, args = Array(_len14), _key14 = 0; _key14 < _len14; _key14++) {
-          args[_key14] = arguments[_key14];
+        for (var _len20 = arguments.length, args = Array(_len20), _key20 = 0; _key20 < _len20; _key20++) {
+          args[_key20] = arguments[_key20];
         }
 
         var obj = undefined,
@@ -815,11 +1147,9 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         });
         return Promise.all(promises).then(function (src) {
           return src.map(function (obj) {
-            if (obj.type === 'css') CrafterStyles.innerHTML += '\n' + obj.data;else if (obj.exec) {
-              var _el = dom().script(obj.data, true);
-              _el.defer = obj.defer || undefined;
-              head.appendChild(_el);
-            }
+            return obj.exec ? obj.type === 'css' ? CrafterStyles.innerHTML += '\n' + obj.data : head.appendChild(dom().script(obj.data, {
+              defer: obj.defer || undefined
+            }, true)) : undefined;
           });
         });
       },
@@ -927,8 +1257,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       if (!is.Func(func)) is.Func(n) ? func = n : console.error("after : func is not a function");
       n = Number.isFinite(n = +n) ? n : 0;
       return function () {
-        for (var _len15 = arguments.length, args = Array(_len15), _key15 = 0; _key15 < _len15; _key15++) {
-          args[_key15] = arguments[_key15];
+        for (var _len21 = arguments.length, args = Array(_len21), _key21 = 0; _key21 < _len21; _key21++) {
+          args[_key21] = arguments[_key21];
         }
 
         return --n < 1 ? func.apply(_this5, args) : function () {
@@ -1010,31 +1340,6 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         ContextObject = ContextObject[namespaces[_i6]];
       }ContextObject[func] = Func;
     },
-    concatObjects: function concatObjects(hostobj) {
-      for (var _len16 = arguments.length, Objs = Array(_len16 > 1 ? _len16 - 1 : 0), _key16 = 1; _key16 < _len16; _key16++) {
-        Objs[_key16 - 1] = arguments[_key16];
-      }
-
-      forEach(hostobj, function () {
-        Objs.forEach(function (obj) {
-          forEach(obj, function (prop, key) {
-            if (key in hostobj) {
-              if (is.Arr(hostobj[key])) {
-                if (!hostobj[key].includes(prop)) hostobj[key].push(prop);
-              } else if (prop !== hostobj[key]) hostobj[key] = [prop, hostobj[key]];
-            } else hostobj[key] = prop;
-          });
-        });
-      });
-      return hostobj;
-    },
-    mergeObjects: function mergeObjects(hostobj) {
-      for (var _len17 = arguments.length, Objs = Array(_len17 > 1 ? _len17 - 1 : 0), _key17 = 1; _key17 < _len17; _key17++) {
-        Objs[_key17 - 1] = arguments[_key17];
-      }
-
-      return Object.assign(hostobj, Objs);
-    },
     len: function len(val) {
       if (is.Object(val)) return Object.keys(val).length;
       if (is.Map(val) || is.Set(val)) return val.size;
@@ -1044,9 +1349,14 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         console.error('could not find length of value');
       }
     },
+    indexOfDate: function indexOfDate(Collection, date) {
+      for (var _i7 = 0; _i7 < Collection.length; _i7++) {
+        if (+Collection[_i7] === +date) return _i7;
+      }return -1;
+    },
     type: function type() {
-      for (var _len18 = arguments.length, args = Array(_len18), _key18 = 0; _key18 < _len18; _key18++) {
-        args[_key18] = arguments[_key18];
+      for (var _len22 = arguments.length, args = Array(_len22), _key22 = 0; _key22 < _len22; _key22++) {
+        args[_key22] = arguments[_key22];
       }
 
       var types = [];
@@ -1056,43 +1366,12 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       if (types.length < 2) return types[0];
       return types;
     },
-    indexOfDate: function indexOfDate(Collection, date) {
-      for (var _i7 = 0; _i7 < Collection.length; _i7++) {
-        if (+Collection[_i7] === +date) return _i7;
-      }return -1;
-    },
-    removeArrItem: function removeArrItem(Arr, val) {
-      var index = Arr.IndexOf(val),
-          temp = [],
-          string = false,
-          i = 0;
-      if (is.String(Arr)) {
-        Arr = Array.from(Arr);
-        string = true;
-      }
-      for (; i < Arr.length; i++) if (i !== index) temp.push(Arr[i]);
-      return string ? temp : temp;
-    },
-    omit: function omit(obj, val) {
-      if (is.Object(obj)) {
-        if (obj !== val) forEach(obj, function (prop, key) {
-          if (val === key || val === prop) delete obj[key];
-        });
-        if (obj.hasOwnProperty(val)) console.error('couldn\'t omit ' + val + ' from Object');
-      } else if (is.Arr(obj) || is.String(obj)) {
-        obj.forEach(function (i) {
-          if (val === i) obj = Craft.removeArrItem(obj, i);
-        });
-        if (val.IndexOf(i) !== -1) console.error('couldn\'t omit ' + val + ' from Array or String');
-      }
-      return obj;
-    },
     memoize: function memoize(func, resolver) {
       if (!is.Func(func) || resolver && !is.Func(resolver)) throw new TypeError("arg provided is not a function");
       var cache = new WeakMap();
       var memoized = function memoized() {
-        for (var _len19 = arguments.length, args = Array(_len19), _key19 = 0; _key19 < _len19; _key19++) {
-          args[_key19] = arguments[_key19];
+        for (var _len23 = arguments.length, args = Array(_len23), _key23 = 0; _key23 < _len23; _key23++) {
+          args[_key23] = arguments[_key23];
         }
 
         var key = resolver ? resolver.apply(this, args) : args[0];
@@ -1148,9 +1427,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       });
     },
     /**
-     * WhenReady
-     *
-     *
+     * function that returns a promise when the DOM and WebComponents are finished loading
+     * @param {Object=} Scope - Optional overide to the default Craft.Scope passed to the promise
      */
     WhenReady: function WhenReady(Scope) {
       return new Promise(function (resolve, reject) {
@@ -1195,9 +1473,17 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         }, timeout);
       })();
     },
+    /**
+     * Usefull method for validating passwords , example Craft.strongPassword('#MyFancyPassword18',8,true,true,"#") -> true requirements met
+     * @param {string} pass - string containing the password
+     * @param {Number} length - Character length in numbers (Minimum password length)
+     * @param {Boolean} caps - Should the password contains Capital Letters
+     * @param {Boolean} number - should the password contain Numbers
+     * @param {...string} includeChars - every extra argument should be a string containing a character you want the password to include
+     */
     strongPassword: function strongPassword(pass, length, caps, number) {
-      for (var _len20 = arguments.length, includeChars = Array(_len20 > 4 ? _len20 - 4 : 0), _key20 = 4; _key20 < _len20; _key20++) {
-        includeChars[_key20 - 4] = arguments[_key20];
+      for (var _len24 = arguments.length, includeChars = Array(_len24 > 4 ? _len24 - 4 : 0), _key24 = 4; _key24 < _len24; _key24++) {
+        includeChars[_key24 - 4] = arguments[_key24];
       }
 
       if (pass.length <= length) return false;
@@ -1212,12 +1498,21 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       }
       return true;
     },
+    /** method for generating random alphanumeric strings*/
     randomString: function randomString() {
       return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
     },
+    /**
+    * similar to Craft.randomString in that it generates a unique string , in this case a Unique ID with random alphanumeric strings separated by hyphens
+    * example 0ebf-c7d2-ef81-2667-08ef-4cde
+    */
     GenUID: function GenUID() {
-      return Craft.randomString() + Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString() + Craft.randomString() + Craft.randomString();
+      return Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString();
     },
+    /**
+    * Part of Crafter.js's own WebComponent format (.wc) it takes a json object that contains .css and .js values then imports and executes them
+    * @param {string} webcomponent - JSON string from Crafter.js's (.wc) WebComponent format
+    */
     createWebComponent: function createWebComponent(webcomponent) {
       if (is.String) webcomponent = JSON.parse(webcomponent);
       CrafterStyles.innerHTML += webcomponent.css;
@@ -1231,8 +1526,18 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       head.appendChild(wcJS);
     },
     /**
-     *
-     *
+     * method for creating custom elements configuring their lifecycle's and inheritance
+     * the config Object has 5 distinct options ( created , inserted , destroyed , attr and extends )
+     * Craft.newComponent('custom-element',{
+     * // note : inside each lifecycle method the "this" is a reference to the element being created -> this === element
+     *    created : function () { ... }, // this method gets called when the custom-element is first instanciated
+     *    inserted : function () { ... }, // this method gets called when the custom-element is first inserted into the DOM
+     *    destroyed : function () { ... }, // this method gets called when the custom-element removed from the DOM (AKA. destroyed)
+     *    attr : function (attributeChangedName , oldValue , newValue) { ... }, // attr method gets called when attributes are changed on the element
+     *    extends : 'button' //tagName of element being inherited from should you want to
+     * });
+     * @param {string} tag - a hyphenated custom HTML tagname for the new element -> "custom-element"
+     * @param {object} config - Object containing all the element's lifecycle methods / extends and attached methods or properties
      */
     newComponent: function newComponent(tag, config) {
       if (is.Undef(config)) console.error("Invalid Component Configuration");else {
@@ -1247,12 +1552,14 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         })();
       }
     },
+    /** creates a new bound variable , part of Crafter.js's Data Binding System */
     newBind: function newBind(key, val, handle) {
       is.Func(handle) ? Craft.Binds.set(key, new _ReactiveVariable(val, handle)) : Craft.Binds.set(key, val);
       queryEach('[view-bind]', function (el) {
         if (Craft.Binds.has(el.getAttribute('view-bind'))) el.innerHTML = is.Func(handle) ? Craft.Binds.get(el.getAttribute('view-bind')).val : Craft.Binds.get(el.getAttribute('view-bind'));
       });
     },
+    /** sets the value of a bound variable */
     setBind: function setBind(key, val) {
       is.ReactiveVariable(Craft.Binds.get(key)) ? Craft.Binds.get(key).set(val) : Craft.Binds.set(key, val);
       queryEach('[view-bind]', function (el) {
@@ -1316,7 +1623,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     }
   });
 
-  Once('DOMContentLoaded', function () {
+  Once('DOMContentLoaded', function (e) {
     queryEach('[link]', function (el) {
       return _On('click', el, function (e) {
         return el.hasAttribute('newtab') ? open(el.getAttribute('link')) : Craft.router.open(el.getAttribute('link'));

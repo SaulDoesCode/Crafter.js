@@ -253,31 +253,6 @@
                   #send
                 </a>
               <a
-                href='#EventHandler'
-                class='block bold'>
-                EventHandler
-              </a>
-                <a
-                  href='#EventHandler.constructor'
-                  class='regular block'>
-                  #constructor
-                </a>
-                <a
-                  href='#EventHandler.Off'
-                  class='regular block'>
-                  #Off
-                </a>
-                <a
-                  href='#EventHandler.On'
-                  class='regular block'>
-                  #On
-                </a>
-                <a
-                  href='#EventHandler.Once'
-                  class='regular block'>
-                  #Once
-                </a>
-              <a
                 href='#ReactiveVariable'
                 class='block bold'>
                 ReactiveVariable
@@ -307,6 +282,16 @@
                 class='block bold'>
                 Craft
               </a>
+                <a
+                  href='#Craft.createWebComponent'
+                  class='regular block'>
+                  .createWebComponent
+                </a>
+                <a
+                  href='#Craft.GenUID'
+                  class='regular block'>
+                  .GenUID
+                </a>
                 <a
                   href='#Craft.newBind'
                   class='regular block'>
@@ -342,6 +327,26 @@
                 class='block bold'>
                 dom
               </a>
+              <a
+                href='#EventHandler'
+                class='block bold'>
+                EventHandler
+              </a>
+                <a
+                  href='#EventHandler.Off'
+                  class='regular block'>
+                  #Off
+                </a>
+                <a
+                  href='#EventHandler.On'
+                  class='regular block'>
+                  #On
+                </a>
+                <a
+                  href='#EventHandler.Once'
+                  class='regular block'>
+                  #Once
+                </a>
               <a
                 href='#forEach'
                 class='block bold'>
@@ -1765,163 +1770,6 @@ usefull for centralizing an Event Listener such as a Window Resize event</p>
         </div>
 </section>
 </div><div class='py1'><section class='py2 clearfix'>
-  <h2 id='EventHandler' class='mt0'>
-    EventHandler<span class='gray'>(EventType, Target, Func, args)</span>
-  </h2>
-  <p>Event handeling class</p>
-
-    <h4>Parameters</h4>
-    <ul class='suppress-p-margin'>
-        <li> <strong>EventType</strong>
-          :
-          <div class='force-inline'>
-            
-          </div>
-        </li>
-        <li> <strong>Target</strong>
-          :
-          <div class='force-inline'>
-            
-          </div>
-        </li>
-        <li> <strong>Func</strong>
-          :
-          <div class='force-inline'>
-            
-          </div>
-        </li>
-        <li>... <strong>args</strong>
-          :
-          <div class='force-inline'>
-            
-          </div>
-        </li>
-    </ul>
-      <h4>Instance members</h4>
-        <div class='collapsible' id='EventHandler.constructor'>
-          <a href='#EventHandler.constructor'>
-            <code>
-              #constructor<span class='gray'>(EventType, Target, Func, args)</span>
-            </code>
-            <div class='force-inline'>
-              <p>Creates new EventHandler</p>
-
-            </div>
-          </a>
-          <div class='collapser border px2'>
-            <section class='py2 clearfix'>
-              <h2 id='EventHandler.constructor' class='mt0'>
-                constructor<span class='gray'>(EventType, Target, Func, args)</span>
-              </h2>
-              <p>Creates new EventHandler</p>
-            
-                <h4>Parameters</h4>
-                <ul class='suppress-p-margin'>
-                    <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code> <strong>EventType</strong>
-                      :
-                      <div class='force-inline'>
-                        <p>set the type of event to listen for example &quot;click&quot; or &quot;scroll&quot;</p>
-            
-                      </div>
-                    </li>
-                    <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/API/Node/nextSibling">Node</a></code> or <code><a href="https://developer.mozilla.org/en-US/docs/Web/API/NodeList">NodeList</a></code> or <code><a href="https://developer.mozilla.org/en-US/docs/Web/API/Window">window</a></code> or <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript">document</a></code> <strong>Target</strong>
-                      :
-                      <div class='force-inline'>
-                        <p>the Event Listener&apos;s target , can be a NodeList to listen on multiple Nodes</p>
-            
-                      </div>
-                    </li>
-                    <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function">function</a></code> <strong>Func</strong>
-                      :
-                      <div class='force-inline'>
-                        <p>Handler function that will be called when the event is triggered -&gt; &quot;function( event , event.srcElement ) {...}&quot;</p>
-            
-                      </div>
-                    </li>
-                    <li>...Any <strong>args</strong>
-                      :
-                      <div class='force-inline'>
-                        <p>extra optional arguments/parameters to pass to the handler function</p>
-            
-                      </div>
-                    </li>
-                </ul>
-                  <h4>Returns</h4>
-                  <code></code>
-                  :
-                  <div class='force-inline'>
-                    <p>Interface On,Off,Once</p>
-            
-                  </div>
-            </section>
-          </div>
-        </div>
-        <div class='collapsible' id='EventHandler.Off'>
-          <a href='#EventHandler.Off'>
-            <code>
-              #Off<span class='gray'></span>
-            </code>
-            <div class='force-inline'>
-              <p>De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
-can still optionally be re-activated with On again</p>
-
-            </div>
-          </a>
-          <div class='collapser border px2'>
-            <section class='py2 clearfix'>
-              <h2 id='EventHandler.Off' class='mt0'>
-                Off<span class='gray'></span>
-              </h2>
-              <p>De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
-            can still optionally be re-activated with On again</p>
-            
-            </section>
-          </div>
-        </div>
-        <div class='collapsible' id='EventHandler.On'>
-          <a href='#EventHandler.On'>
-            <code>
-              #On<span class='gray'></span>
-            </code>
-            <div class='force-inline'>
-              <p>Activates the EventHandler to start listening for the EventType on the Target/Targets</p>
-
-            </div>
-          </a>
-          <div class='collapser border px2'>
-            <section class='py2 clearfix'>
-              <h2 id='EventHandler.On' class='mt0'>
-                On<span class='gray'></span>
-              </h2>
-              <p>Activates the EventHandler to start listening for the EventType on the Target/Targets</p>
-            
-            </section>
-          </div>
-        </div>
-        <div class='collapsible' id='EventHandler.Once'>
-          <a href='#EventHandler.Once'>
-            <code>
-              #Once<span class='gray'></span>
-            </code>
-            <div class='force-inline'>
-              <p>Once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
-the Handler function will be called only Once</p>
-
-            </div>
-          </a>
-          <div class='collapser border px2'>
-            <section class='py2 clearfix'>
-              <h2 id='EventHandler.Once' class='mt0'>
-                Once<span class='gray'></span>
-              </h2>
-              <p>Once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
-            the Handler function will be called only Once</p>
-            
-            </section>
-          </div>
-        </div>
-</section>
-</div><div class='py1'><section class='py2 clearfix'>
   <h2 id='ReactiveVariable' class='mt0'>
     ReactiveVariable<span class='gray'>(val, handle)</span>
   </h2>
@@ -2072,7 +1920,7 @@ the Handler function will be called only Once</p>
   <h2 id='Craft' class='mt0'>
     Craft<span class='gray'>(arr)</span>
   </h2>
-  <p>Craft - Crafter.js Core Object containing most methods</p>
+  <p>Craft is Crafter.js Core Object containing most methods.</p>
 
     <h4>Parameters</h4>
     <ul class='suppress-p-margin'>
@@ -2084,6 +1932,58 @@ the Handler function will be called only Once</p>
         </li>
     </ul>
       <h4>Static members</h4>
+        <div class='collapsible' id='Craft.createWebComponent'>
+          <a href='#Craft.createWebComponent'>
+            <code>
+              .createWebComponent<span class='gray'>(webcomponent)</span>
+            </code>
+            <div class='force-inline'>
+              <p>Part of Crafter.js&apos;s own WebComponent format (.wc) it takes a json object that contains .css and .js values then imports and executes them</p>
+
+            </div>
+          </a>
+          <div class='collapser border px2 m2'>
+            <section class='py2 clearfix'>
+              <h2 id='Craft.createWebComponent' class='mt0'>
+                createWebComponent<span class='gray'>(webcomponent)</span>
+              </h2>
+              <p>Part of Crafter.js&apos;s own WebComponent format (.wc) it takes a json object that contains .css and .js values then imports and executes them</p>
+            
+                <h4>Parameters</h4>
+                <ul class='suppress-p-margin'>
+                    <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code> <strong>webcomponent</strong>
+                      :
+                      <div class='force-inline'>
+                        <p>JSON string from Crafter.js&apos;s (.wc) WebComponent format</p>
+            
+                      </div>
+                    </li>
+                </ul>
+            </section>
+          </div>
+        </div>
+        <div class='collapsible' id='Craft.GenUID'>
+          <a href='#Craft.GenUID'>
+            <code>
+              .GenUID<span class='gray'></span>
+            </code>
+            <div class='force-inline'>
+              <p>similar to Craft.randomString in that it generates a unique string , in this case a Unique ID with random alphanumeric strings separated by hyphens
+example 0ebf-c7d2-ef81-2667-08ef-4cde</p>
+
+            </div>
+          </a>
+          <div class='collapser border px2 m2'>
+            <section class='py2 clearfix'>
+              <h2 id='Craft.GenUID' class='mt0'>
+                GenUID<span class='gray'></span>
+              </h2>
+              <p>similar to Craft.randomString in that it generates a unique string , in this case a Unique ID with random alphanumeric strings separated by hyphens
+            example 0ebf-c7d2-ef81-2667-08ef-4cde</p>
+            
+            </section>
+          </div>
+        </div>
         <div class='collapsible' id='Craft.newBind'>
           <a href='#Craft.newBind'>
             <code>
@@ -2131,8 +2031,16 @@ the Handler function will be called only Once</p>
               .newComponent<span class='gray'>(tag, config)</span>
             </code>
             <div class='force-inline'>
-              <p>method for creating custom elements
-configuring their lifecycle&apos;s and inheritance</p>
+              <p>method for creating custom elements configuring their lifecycle&apos;s and inheritance
+the config Object has 5 distinct options ( created , inserted , destroyed , attr and extends )
+Craft.newComponent(&apos;custom-element&apos;,{
+// note : inside each lifecycle method the &quot;this&quot; is a reference to the element being created -&gt; this === element
+created : function () { ... }, // this method gets called when the custom-element is first instanciated
+inserted : function () { ... }, // this method gets called when the custom-element is first inserted into the DOM
+destroyed : function () { ... }, // this method gets called when the custom-element removed from the DOM (AKA. destroyed)
+attr : function (attributeChangedName , oldValue , newValue) { ... }, // attr method gets called when attributes are changed on the element
+extends : &apos;button&apos; //tagName of element being inherited from should you want to
+});</p>
 
             </div>
           </a>
@@ -2141,21 +2049,31 @@ configuring their lifecycle&apos;s and inheritance</p>
               <h2 id='Craft.newComponent' class='mt0'>
                 newComponent<span class='gray'>(tag, config)</span>
               </h2>
-              <p>method for creating custom elements
-            configuring their lifecycle&apos;s and inheritance</p>
+              <p>method for creating custom elements configuring their lifecycle&apos;s and inheritance
+            the config Object has 5 distinct options ( created , inserted , destroyed , attr and extends )
+            Craft.newComponent(&apos;custom-element&apos;,{
+            // note : inside each lifecycle method the &quot;this&quot; is a reference to the element being created -&gt; this === element
+            created : function () { ... }, // this method gets called when the custom-element is first instanciated
+            inserted : function () { ... }, // this method gets called when the custom-element is first inserted into the DOM
+            destroyed : function () { ... }, // this method gets called when the custom-element removed from the DOM (AKA. destroyed)
+            attr : function (attributeChangedName , oldValue , newValue) { ... }, // attr method gets called when attributes are changed on the element
+            extends : &apos;button&apos; //tagName of element being inherited from should you want to
+            });</p>
             
                 <h4>Parameters</h4>
                 <ul class='suppress-p-margin'>
-                    <li> <strong>tag</strong>
+                    <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code> <strong>tag</strong>
                       :
                       <div class='force-inline'>
-                        
+                        <p>a hyphenated custom HTML tagname for the new element -&gt; &quot;custom-element&quot;</p>
+            
                       </div>
                     </li>
-                    <li> <strong>config</strong>
+                    <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object">object</a></code> <strong>config</strong>
                       :
                       <div class='force-inline'>
-                        
+                        <p>Object containing all the element&apos;s lifecycle methods / extends and attached methods or properties</p>
+            
                       </div>
                     </li>
                 </ul>
@@ -2223,7 +2141,7 @@ configuring their lifecycle&apos;s and inheritance</p>
               .strongPassword<span class='gray'>(pass, length, caps, number, includeChars)</span>
             </code>
             <div class='force-inline'>
-              <p>Usefull method for validating passwords</p>
+              <p>Usefull method for validating passwords , example Craft.strongPassword(&apos;#MyFancyPassword18&apos;,8,true,true,&quot;#&quot;) -&gt; true requirements met</p>
 
             </div>
           </a>
@@ -2232,38 +2150,43 @@ configuring their lifecycle&apos;s and inheritance</p>
               <h2 id='Craft.strongPassword' class='mt0'>
                 strongPassword<span class='gray'>(pass, length, caps, number, includeChars)</span>
               </h2>
-              <p>Usefull method for validating passwords</p>
+              <p>Usefull method for validating passwords , example Craft.strongPassword(&apos;#MyFancyPassword18&apos;,8,true,true,&quot;#&quot;) -&gt; true requirements met</p>
             
                 <h4>Parameters</h4>
                 <ul class='suppress-p-margin'>
-                    <li> <strong>pass</strong>
+                    <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code> <strong>pass</strong>
                       :
                       <div class='force-inline'>
-                        
+                        <p>string containing the password</p>
+            
                       </div>
                     </li>
-                    <li> <strong>length</strong>
+                    <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number">Number</a></code> <strong>length</strong>
                       :
                       <div class='force-inline'>
-                        
+                        <p>Character length in numbers (Minimum password length)</p>
+            
                       </div>
                     </li>
-                    <li> <strong>caps</strong>
+                    <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">Boolean</a></code> <strong>caps</strong>
                       :
                       <div class='force-inline'>
-                        
+                        <p>Should the password contains Capital Letters</p>
+            
                       </div>
                     </li>
-                    <li> <strong>number</strong>
+                    <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">Boolean</a></code> <strong>number</strong>
                       :
                       <div class='force-inline'>
-                        
+                        <p>should the password contain Numbers</p>
+            
                       </div>
                     </li>
-                    <li>... <strong>includeChars</strong>
+                    <li>...<code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code> <strong>includeChars</strong>
                       :
                       <div class='force-inline'>
-                        
+                        <p>every extra argument should be a string containing a character you want the password to include</p>
+            
                       </div>
                     </li>
                 </ul>
@@ -2273,7 +2196,7 @@ configuring their lifecycle&apos;s and inheritance</p>
         <div class='collapsible' id='Craft.WhenReady'>
           <a href='#Craft.WhenReady'>
             <code>
-              .WhenReady<span class='gray'>(Scope)</span>
+              .WhenReady<span class='gray'>([Scope])</span>
             </code>
             <div class='force-inline'>
               <p>function that returns a promise when the DOM and WebComponents are finished loading</p>
@@ -2283,16 +2206,17 @@ configuring their lifecycle&apos;s and inheritance</p>
           <div class='collapser border px2 m2'>
             <section class='py2 clearfix'>
               <h2 id='Craft.WhenReady' class='mt0'>
-                WhenReady<span class='gray'>(Scope)</span>
+                WhenReady<span class='gray'>([Scope])</span>
               </h2>
               <p>function that returns a promise when the DOM and WebComponents are finished loading</p>
             
                 <h4>Parameters</h4>
                 <ul class='suppress-p-margin'>
-                    <li> <strong>Scope</strong>
+                    <li><code>[<code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></code>]</code> <strong>Scope</strong>
                       :
                       <div class='force-inline'>
-                        
+                        <p>Optional overide to the default Craft.Scope passed to the promise</p>
+            
                       </div>
                     </li>
                 </ul>
@@ -2316,6 +2240,116 @@ configuring their lifecycle&apos;s and inheritance</p>
           </div>
         </li>
     </ul>
+</section>
+</div><div class='py1'><section class='py2 clearfix'>
+  <h2 id='EventHandler' class='mt0'>
+    EventHandler<span class='gray'>(EventType, Target, Func, args)</span>
+  </h2>
+  <p>Event Handling Class</p>
+
+    <h4>Parameters</h4>
+    <ul class='suppress-p-margin'>
+        <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code> <strong>EventType</strong>
+          :
+          <div class='force-inline'>
+            <p>set the type of event to listen for example &quot;click&quot; or &quot;scroll&quot;</p>
+
+          </div>
+        </li>
+        <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/API/Node/nextSibling">Node</a></code> or <code><a href="https://developer.mozilla.org/en-US/docs/Web/API/NodeList">NodeList</a></code> or <code><a href="https://developer.mozilla.org/en-US/docs/Web/API/Window">window</a></code> or <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript">document</a></code> <strong>Target</strong>
+          :
+          <div class='force-inline'>
+            <p>the Event Listener&apos;s target , can also be a NodeList to listen on multiple Nodes</p>
+
+          </div>
+        </li>
+        <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function">function</a></code> <strong>Func</strong>
+          :
+          <div class='force-inline'>
+            <p>Handler function that will be called when the event is triggered -&gt; &quot;function( event , event.srcElement ) {...}&quot;</p>
+
+          </div>
+        </li>
+        <li>...Any <strong>args</strong>
+          :
+          <div class='force-inline'>
+            <p>extra optional arguments/parameters to pass to the handler function</p>
+
+          </div>
+        </li>
+    </ul>
+      <h4>Returns</h4>
+      <code></code>
+      :
+      <div class='force-inline'>
+        <p>Interface On,Off,Once</p>
+
+      </div>
+      <h4>Instance members</h4>
+        <div class='collapsible' id='EventHandler.Off'>
+          <a href='#EventHandler.Off'>
+            <code>
+              #Off<span class='gray'></span>
+            </code>
+            <div class='force-inline'>
+              <p>De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
+can still optionally be re-activated with On again</p>
+
+            </div>
+          </a>
+          <div class='collapser border px2'>
+            <section class='py2 clearfix'>
+              <h2 id='EventHandler.Off' class='mt0'>
+                Off<span class='gray'></span>
+              </h2>
+              <p>De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
+            can still optionally be re-activated with On again</p>
+            
+            </section>
+          </div>
+        </div>
+        <div class='collapsible' id='EventHandler.On'>
+          <a href='#EventHandler.On'>
+            <code>
+              #On<span class='gray'></span>
+            </code>
+            <div class='force-inline'>
+              <p>Activates the EventHandler to start listening for the EventType on the Target/Targets</p>
+
+            </div>
+          </a>
+          <div class='collapser border px2'>
+            <section class='py2 clearfix'>
+              <h2 id='EventHandler.On' class='mt0'>
+                On<span class='gray'></span>
+              </h2>
+              <p>Activates the EventHandler to start listening for the EventType on the Target/Targets</p>
+            
+            </section>
+          </div>
+        </div>
+        <div class='collapsible' id='EventHandler.Once'>
+          <a href='#EventHandler.Once'>
+            <code>
+              #Once<span class='gray'></span>
+            </code>
+            <div class='force-inline'>
+              <p>Once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
+the Handler function will be called only Once</p>
+
+            </div>
+          </a>
+          <div class='collapser border px2'>
+            <section class='py2 clearfix'>
+              <h2 id='EventHandler.Once' class='mt0'>
+                Once<span class='gray'></span>
+              </h2>
+              <p>Once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
+            the Handler function will be called only Once</p>
+            
+            </section>
+          </div>
+        </div>
 </section>
 </div><div class='py1'><section class='py2 clearfix'>
   <h2 id='forEach' class='mt0'>
