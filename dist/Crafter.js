@@ -34,6 +34,18 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     }
     return allgood;
   },
+      regexps = {
+    // Thanks to github.com/arasatasaygin for these RegExps
+    url: /^(?:(?:https?|ftp):\/\/)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:\/\S*)?$/i,
+    email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
+    timeString: /^(2[0-3]|[01]?[0-9]):([0-5]?[0-9]):([0-5]?[0-9])$/,
+    dateString: /^(1[0-2]|0?[1-9])\/(3[01]|[12][0-9]|0?[1-9])\/(?:[0-9]{2})?[0-9]{2}$/,
+    hexadecimal: /^[0-9a-fA-F]+$/,
+    hexColor: /^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/,
+    ipv4: /^(?:(?:\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.){3}(?:\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])$/,
+    ipv6: /^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/,
+    ip: /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/
+  },
       Ready = false,
       head = doc.getElementsByTagName('head')[0],
       CrafterStyles = doc.createElement('style'),
@@ -195,12 +207,25 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       }) : false;
     }),
     /**
+     * Determine if a variable is a Number
+     * @param {...*} args - value/values to test
+     */
+    Num: function Num() {
+      for (var _len10 = arguments.length, args = Array(_len10), _key10 = 0; _key10 < _len10; _key10++) {
+        args[_key10] = arguments[_key10];
+      }
+
+      return args.length && args.every(function (o) {
+        return type(o, '[object Number]');
+      });
+    },
+    /**
      * Determine if a variable is an Object
      * @param args - value/values to test
      */
     Object: function Object() {
-      for (var _len10 = arguments.length, args = Array(_len10), _key10 = 0; _key10 < _len10; _key10++) {
-        args[_key10] = arguments[_key10];
+      for (var _len11 = arguments.length, args = Array(_len11), _key11 = 0; _key11 < _len11; _key11++) {
+        args[_key11] = arguments[_key11];
       }
 
       return args.length && args.every(function (o) {
@@ -212,8 +237,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
      * @param args - value/values to test
      */
     Element: function Element() {
-      for (var _len11 = arguments.length, args = Array(_len11), _key11 = 0; _key11 < _len11; _key11++) {
-        args[_key11] = arguments[_key11];
+      for (var _len12 = arguments.length, args = Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
+        args[_key12] = arguments[_key12];
       }
 
       return args.length && args.every(function (o) {
@@ -225,8 +250,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
      * @param args - value/values to test
      */
     File: function File() {
-      for (var _len12 = arguments.length, args = Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
-        args[_key12] = arguments[_key12];
+      for (var _len13 = arguments.length, args = Array(_len13), _key13 = 0; _key13 < _len13; _key13++) {
+        args[_key13] = arguments[_key13];
       }
 
       return args.length && args.every(function (o) {
@@ -238,8 +263,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
      * @param args - value/values to test
      */
     FormData: function FormData() {
-      for (var _len13 = arguments.length, args = Array(_len13), _key13 = 0; _key13 < _len13; _key13++) {
-        args[_key13] = arguments[_key13];
+      for (var _len14 = arguments.length, args = Array(_len14), _key14 = 0; _key14 < _len14; _key14++) {
+        args[_key14] = arguments[_key14];
       }
 
       return args.length && args.every(function (o) {
@@ -251,8 +276,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
      * @param args - value/values to test
      */
     Map: function Map() {
-      for (var _len14 = arguments.length, args = Array(_len14), _key14 = 0; _key14 < _len14; _key14++) {
-        args[_key14] = arguments[_key14];
+      for (var _len15 = arguments.length, args = Array(_len15), _key15 = 0; _key15 < _len15; _key15++) {
+        args[_key15] = arguments[_key15];
       }
 
       return args.length && args.every(function (o) {
@@ -264,8 +289,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
      * @param args - value/values to test
      */
     Func: function Func() {
-      for (var _len15 = arguments.length, args = Array(_len15), _key15 = 0; _key15 < _len15; _key15++) {
-        args[_key15] = arguments[_key15];
+      for (var _len16 = arguments.length, args = Array(_len16), _key16 = 0; _key16 < _len16; _key16++) {
+        args[_key16] = arguments[_key16];
       }
 
       return args.length && args.every(function (o) {
@@ -307,12 +332,25 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     Symbol: function Symbol(obj) {
       return type(obj, '[object Symbol]');
     },
+    char: function char(val) {
+      return is.String(val) && val.length === 1;
+    },
+    space: function space(val) {
+      return is.char(val) ? val.charCodeAt(0) > 8 && val.charCodeAt(0) < 14 || val.charCodeAt(0) === 32 : false;
+    },
     /**
-     * Determine if a String (Single Character) is UPPERCASE
+     * Determine if a String is UPPERCASE
      * @param {string} char - variable to test
      */
-    UpperCase: function UpperCase(char) {
-      return char >= 'A' && char <= 'Z';
+    Uppercase: function Uppercase(str) {
+      return is.String(str) && str === str.toUpperCase();
+    },
+    /**
+     * Determine if a String is LOWERCASE
+     * @param {string} char - variable to test
+     */
+    Lowercase: function Lowercase(str) {
+      return is.String(str) && str === str.toLowerCase();
     },
     /**
      * Determine if a String contains only characters and numbers (alphanumeric)
@@ -327,8 +365,100 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
      * @param {string} email - variable to test
      */
     Email: function Email(email) {
-      return (/(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))/.test(email)
-      );
+      return regexps.email.test(email);
+    },
+    /**
+     * Determines whether a String is a URL
+     * @param {string} url - variable to test
+     */
+    URL: function URL(url) {
+      return regexps.url.test(url);
+    },
+    /**
+     * Determines whether a String is a HEX-COLOR (#fff123)
+     * @param {string} HexColor - variable to test
+     */
+    HexColor: function HexColor(hexColor) {
+      return regexps.hexColor.test(hexColor);
+    },
+    /**
+     * Determines whether a String is a ip
+     * @param {string} ip - variable to test
+     */
+    ip: function ip(_ip) {
+      return regexps.ip.test(_ip);
+    },
+    /**
+     * Determines whether a String is a ipv4
+     * @param {string} ipv4 - variable to test
+     */
+    ipv4: function ipv4(_ipv) {
+      return regexps.ipv4.test(_ipv);
+    },
+    /**
+     * Determines whether a String is a ipv6
+     * @param {string} ipv6 - variable to test
+     */
+    ipv6: function ipv6(_ipv2) {
+      return regexps.ipv6.test(_ipv2);
+    },
+    /**
+     * Determines whether a String is hexadecimal
+     * @param {string} hexadecimal - variable to test
+     */
+    hexadecimal: function hexadecimal(_hexadecimal) {
+      return regexps.hexadecimal.test(_hexadecimal);
+    },
+    /**
+    * checks wether a date is today
+    * @param obj - Date to test
+    */
+    today: function today(obj) {
+      return is.Date(obj) && obj.toDateString() === new Date().toDateString();
+    },
+    /**
+    * checks wether a date is yesterday
+    * @param obj - Date to test
+    */
+    yesterday: function yesterday(obj) {
+      var now = new Date();
+      return is.Date(obj) && obj.toDateString() === new Date(now.setDate(now.getDate() - 1)).toDateString();
+    },
+    /**
+    * checks wether a date is tommorow
+    * @param obj - Date to test
+    */
+    tomorrow: function tomorrow(obj) {
+      var now = new Date();
+      return is.Date(obj) && obj.toDateString() === new Date(now.setDate(now.getDate() + 1)).toDateString();
+    },
+    /**
+    * Determines if a date is in the past
+    * @param obj - Date to test
+    */
+    past: function past(obj) {
+      return is.Date(obj) && obj.getTime() < new Date().getTime();
+    },
+    /**
+    * Determines if a date is in the future
+    * @param obj - Date to test
+    */
+    future: function future(obj) {
+      return !is.past(obj);
+    },
+    /**
+     * Determines whether a String is a timeString
+     * @param time - variable to test
+     */
+    time: function time(_time) {
+      return regexps.timeString.test(_time);
+    },
+    /**
+     * Determines whether a String is a dateString
+     * @param {string} dateString - variable to test
+     */
+    dateString: function dateString(_dateString) {
+      return regexps.dateString.test(_dateString);
     },
     /**
      * Determines whether a Number is between a maximum and a minimum
@@ -339,6 +469,41 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
      */
     Between: function Between(val, max, min) {
       return val <= max && val >= min;
+    },
+    /**
+    * checks if a number is an integer
+    * @param val - variable / value to test
+    */
+    int: function int(val) {
+      return is.Num(val) && val % 1 === 0;
+    },
+    /**
+    * checks if a number is an even number
+    * @param val - variable / value to test
+    */
+    even: function even(val) {
+      return is.Num(val) && val % 2 === 0;
+    },
+    /**
+    * checks if a number is an odd number
+    * @param val - variable / value to test
+    */
+    odd: function odd(val) {
+      return is.Num(val) && val % 2 !== 0;
+    },
+    /**
+    * checks if a number is positive
+    * @param val - variable / value to test
+    */
+    positive: function positive(val) {
+      return is.Num(val) && val > 0;
+    },
+    /**
+    * checks if a number is positive
+    * @param val - variable / value to test
+    */
+    negative: function negative(val) {
+      return is.Num(val) && val < 0;
     },
     /**
      * Determines if two variables are equal
@@ -381,12 +546,24 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       return val >= other;
     },
     /**
+    * Determine if a given collection or string is empty
+    * @param {Object|Array|string} val - value to test if empty
+    */
+    empty: function empty(val) {
+      if (is.Object(val)) {
+        var num = Object.getOwnPropertyNames(val).length;
+        if (num === 0 || num === 1 && is.array(val) || num === 2 && is.arguments(val)) return true;
+        return false;
+      } else if (is.Arr(val)) return val.length <= 0;
+      return val === '';
+    },
+    /**
      * Determines if a value is an instance of the ReactiveVariable class
      * @param args - value/values to test
      */
     ReactiveVariable: function ReactiveVariable() {
-      for (var _len16 = arguments.length, args = Array(_len16), _key16 = 0; _key16 < _len16; _key16++) {
-        args[_key16] = arguments[_key16];
+      for (var _len17 = arguments.length, args = Array(_len17), _key17 = 0; _key17 < _len17; _key17++) {
+        args[_key17] = arguments[_key17];
       }
 
       return args.length && args.every(function (o) {
@@ -408,7 +585,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
    * @param {Node|NodeList|Array|String} val - pass either a CSS Selector string , Node/NodeList or Array of Nodes
    */
   function QueryOrNodetoNodeArray(val) {
-    if (is.String(val)) val = queryAll(val);
+    if (is.String(val)) val = _queryAll(val);
     if (is.Node(val)) return [val];else if (is.NodeList(val)) return Array.from(val);
   }
 
@@ -507,15 +684,13 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     return FunctionIterator;
   })();
 
-  /** Handles WebSockets in a contained manner with send and recieve methods */
+  /**
+   * Handles WebSockets in a contained manner with send and recieve methods
+   * @param {string} wsAddress - the WebSocket address example "ws://localhost:3000/"
+   * @param {Array=} protocols - the protocols to pass to the WebSocket Connection
+   */
 
   var CraftSocket = (function () {
-    /**
-     * Creates a new WebSocket connection
-     * @param {string} wsAddress - the WebSocket address example "ws://localhost:3000/"
-     * @param {Array=} protocols - the protocols to pass to the WebSocket Connection
-     */
-
     function CraftSocket(wsAddress, protocols) {
       var _this = this;
 
@@ -577,16 +752,12 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
 
   /**
    * Variable that is used for Data Binding and other reactive processes
+   * @param {*} val - value you'd liek the ReactiveVariable to Store
+   * @param {function} handle - function that gets called whenever the ReactiveVariable changes -> "function( OldValue , newValue ) {...}"
+   * @returns {*} Returns the value assigned to the ReactiveVariable
    */
 
   var _ReactiveVariable = (function () {
-    /**
-     * Creates a ReactiveVariable
-     * @param {*} val - value you'd liek the ReactiveVariable to Store
-     * @param {function} handle - function that gets called whenever the ReactiveVariable changes -> "function( OldValue , newValue ) {...}"
-     * @returns {*} Returns the value assigned to the ReactiveVariable
-     */
-
     function _ReactiveVariable(val, handle) {
       _classCallCheck(this, _ReactiveVariable);
 
@@ -646,8 +817,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
 
   var EventHandler = (function () {
     function EventHandler(EventType, Target, Func) {
-      for (var _len17 = arguments.length, args = Array(_len17 > 3 ? _len17 - 3 : 0), _key17 = 3; _key17 < _len17; _key17++) {
-        args[_key17 - 3] = arguments[_key17];
+      for (var _len18 = arguments.length, args = Array(_len18 > 3 ? _len18 - 3 : 0), _key18 = 3; _key18 < _len18; _key18++) {
+        args[_key18 - 3] = arguments[_key18];
       }
 
       _classCallCheck(this, EventHandler);
@@ -729,7 +900,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
    * @param {string} selector - CSS selector to query the DOM Node with
    * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
    */
-  function query(selector, element) {
+  function _query(selector, element) {
     if (is.String(element)) return doc.querySelector(element).querySelector(selector);
     if (is.Node(element)) return element.querySelector(selector);
     return doc.querySelector(selector);
@@ -739,7 +910,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
    * @param {string} selector - CSS selector to query the DOM Nodes with
    * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
    */
-  function queryAll(selector, element) {
+  function _queryAll(selector, element) {
     if (is.String(element)) return doc.querySelector(element).querySelectorAll(selector);
     if (is.Node(element)) return element.querySelectorAll(selector);
     return doc.querySelectorAll(selector);
@@ -845,62 +1016,126 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
    */
   var dom = function dom(element) {
     if (is.String(element)) {
-      var elements = queryAll(element);
+      var elements = _queryAll(element);
       elements.length > 1 ? element = elements : element = elements[0];
     }
     if (is.Node(element)) return {
+      /**
+       * changes or returns the innerHTML value of a Node
+       * @param {string=} sets the innerHTML value or when undefined gets the innerHTML value
+       * @namespace dom()
+       */
       html: function html(val) {
-        return val ? element.innerHTML = val : element.innerHTML;
+        return is.Def(val) ? element.innerHTML = val : element.innerHTML;
       },
+      /**
+       * changes or returns the textContent value of a Node
+       * @param {string=} sets the textContent value or when undefined gets the textContent value
+       * @namespace dom()
+       */
       text: function text(val) {
-        return val ? element.textContent = val : element.textContent;
+        return is.Def(val) ? element.textContent = val : element.textContent;
       },
+      /**
+       * replaces a Node with another node provided as a parameter/argument
+       * @param {Node} Node to replace with
+       * @namespace dom()
+       */
       replace: function replace(val) {
         return element.parentNode.replaceChild(el, element);
       },
-      remove: function remove() {
-        return element.parentNode.removeChild(element);
-      },
+      /**
+       * append the Element to another node using either a CSS selector or a Node
+       * @param {Node|string} CSS selector or Node to append the element to
+       * @namespace dom()
+       */
       appendTo: function appendTo(val) {
         var el = undefined;
-        is.Node(val) ? el = val : el = query(val);
+        is.Node(val) ? el = val : el = _query(val);
         if (el !== null) el.appendChild(element);
       },
+      /**
+       * append text or a Node to the element
+       * @param {Node|string} String or Node to append to the element
+       * @namespace dom()
+       */
       append: function append(val) {
         return is.String(val) ? element.innerHTML += val : element.parentNode.appendChild(element);
       },
+      /**
+       * prepend text or a Node to the element
+       * @param {Node|string} String or Node to prepend to the element
+       * @namespace dom()
+       */
       prepend: function prepend(val) {
         return is.String(val) ? element.innerHTML = val + element.innerHTML : element.insertBefore(val, element.firstChild);
       },
+      /**
+       * Listen for Events on the element
+       * @param {string} string indicating the type of event to listen for
+       * @param {function} func - handler function for the event
+       * @returns handler (Off,Once,On)
+       * @namespace dom()
+       */
       On: function On(eventType, func) {
         return _On(eventType, element, func);
       },
+      /**
+       * add CSS style rules to the Element or NodeList
+       * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
+       */
       css: function css(styles) {
         return is.Def(styles) ? forEach(styles, function (prop, key) {
           return element.style[key] = prop;
         }) : console.error('Styles Object undefined');
       },
-      gotClass: function gotClass(CSSclass) {
-        return element.classList.contains(CSSclass);
+      /**
+       * check if the element has got a specific CSS class
+       * @param {string} name of the class to check for
+       */
+      gotClass: function gotClass(Class) {
+        return element.classList.contains(Class);
       },
-      addClass: function addClass(CSSclass) {
-        return element.classList.add(CSSclass);
+      /**
+       * Add a CSS class to the element
+       * @param {string} name of the class to add
+       */
+      addClass: function addClass(Class) {
+        return element.classList.add(Class);
       },
-      stripClass: function stripClass(CSSclass) {
-        return element.classList.remove(CSSclass);
+      /**
+       * removes a specific CSS class from the element
+       * @param {string} name of the class to strip
+       */
+      stripClass: function stripClass(Class) {
+        return element.classList.remove(Class);
       },
+      /**
+       * removes a specific Attribute from the element
+       * @param {string} name of the Attribute to strip
+       */
       stripAttr: function stripAttr(Attr) {
         return element.removeAttribute(Attr);
       },
+      /**
+       * checks if the element has a specific Attribute
+       * @param {string} name of the Attribute to check for
+       */
       hasAttr: function hasAttr(Attr) {
         return element.hasAttribute(Attr);
       },
+      /**
+       * Sets or adds an Attribute on the element
+       * @param {string} Name of the Attribute to add/set
+       * @param {string} Value of the Attribute to add/set
+       */
       setAttr: function setAttr(Attr, val) {
         return element.setAttribute(Attr, val);
       },
       getAttr: function getAttr(Attr) {
         return element.getAttribute(Attr);
       },
+      /** gets all the elements siblings within it's parentNode */
       getSiblings: function getSiblings() {
         var siblings = [],
             AllChildren = element.parentNode.childNodes;
@@ -908,39 +1143,64 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
           if (AllChildren[_i2] !== element) siblings.push(AllChildren[_i2]);
         }return siblings;
       },
+      /** gets all the element's pixel width */
       Width: function Width() {
         return element.getBoundingClientRect().width;
       },
+      /** gets all the element's pixel height */
       Height: function Height() {
         return element.getBoundingClientRect().height;
       },
+      /** gets all the element's dimentions (width,height,left,top,bottom,right)*/
       getRect: function getRect() {
         return element.getBoundingClientRect();
       },
+      /**
+       * sets all the element's pixel width
+       * @param {string} pixel value to set
+       */
       setWidth: function setWidth(Width) {
         return element.style.width = Width;
       },
+      /**
+       * sets all the element's pixel height
+       * @param {string} pixel value to set
+       */
       setHeight: function setHeight(Height) {
         return element.style.height = Height;
       },
-      find: function find(selector, forceSelectAll) {
-        var Localelement = queryAll(selector, element);
-        if (Localelement.length > 1 || forceSelectAll === true && !is.Null(Localelement)) return Localelement;
-        if (!is.Null(Localelement)) return Localelement[0];
-        return null;
+      /**
+       * performs a query inside the element
+       * @param {string} CSS selector
+       * @returns {Node|Null}
+       */
+      query: function query(selector) {
+        return _query(selector, element);
+      },
+      /**
+       * performs a queryAll inside the element
+       * @param {string} CSS selector
+       * @returns {NodeList|Null}
+       */
+      queryAll: function queryAll(selctor) {
+        return _queryAll(selector, element);
       }
     };else if (is.NodeList(element)) return {
+      /**
+       * Listen for Events on all the elements in the NodeList
+       * @param {string} string indicating the type of event to listen for
+       * @param {function} func - handler function for the event
+       * @returns handler (Off,Once,On)
+       */
       On: function On(eventType, func) {
         return _On(eventType, element, func);
       },
-      find: function find(selector, forceSelectAll) {
-        var Localelement = queryAll(selector, element);
-        if (Localelement.length > 1 || forceSelectAll === true && !is.Null(Localelement)) return Localelement;
-        if (!is.Null(Localelement)) return Localelement[0];
-        return null;
-      },
+      /**
+       * Checks wether a Node is in the NodeList with either a refference to the Node or a CSS selector
+       * @param {Node|string} Node or CSS selector
+       */
       includes: function includes(SelectorNode) {
-        if (!is.Node(SelectorNode)) SelectorNode = query(SelectorNode);
+        if (!is.Node(SelectorNode)) SelectorNode = _query(SelectorNode);
         for (var index = 0; index < element.length; index++) {
           if (element[index] === SelectorNode) return true;
         }return false;
@@ -954,20 +1214,51 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       }
     };
     return {
+      /**
+       * creates a div element with the options provided
+       * @param {string} sets innerHTML of the div
+       * @param {string|Object=} sets div attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
+       * @param {Boolean=} should the div be a plain String or a Node defaults to string
+       */
       div: function div(inner, attr, node) {
         return make_element('div', inner, attr, node);
       },
+      /**
+       * creates a span element with the options provided
+       * @param {string} sets innerHTML of the span
+       * @param {string|Object=} sets span attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
+       * @param {Boolean=} should the span be a plain String or a Node defaults to string
+       */
       span: function span(inner, attr, node) {
         return make_element('span', inner, attr, node);
       },
+      /**
+       * creates a label element with the options provided
+       * @param {string} sets innerHTML of the label
+       * @param {string|Object=} sets label attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
+       * @param {Boolean=} should the label be a plain String or a Node defaults to string
+       */
       label: function label(inner, attr, node) {
         return make_element('label', inner, attr, node);
       },
+      /**
+       * creates a p (paragraph) element with the options provided
+       * @param {string} sets innerHTML of the p
+       * @param {string|Object=} sets p attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
+       * @param {Boolean=} should the p be a plain String or a Node defaults to string
+       */
       p: function p(inner, attr, node) {
         return make_element('p', inner, attr, node);
       },
-      img: function img(src, alt, inner, attr, node) {
-        return make_element('img', inner, attr, node, {
+      /**
+       * creates an img element with the options provided
+       * @param {string} sets src of the img
+       * @param {string} sets alt of the img
+       * @param {string|Object=} sets p attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
+       * @param {Boolean=} should the p be a plain String or a Node defaults to string
+       */
+      img: function img(src, alt, attr, node) {
+        return make_element('img', '', attr, node, {
           src: src,
           alt: alt
         });
@@ -1023,10 +1314,14 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
   };
 
   /**
-   * Craft is Crafter.js Core Object containing most methods.
+   * Craft is Crafter.js's Core containing most functionality.
    * @namespace
    */
   var Craft = {
+
+    /** Converts an Array to an Object
+     * @param {Array} arr - array to be converted
+     */
     ArraytoObject: function ArraytoObject(arr) {
       var i = undefined,
           NewObject = {};
@@ -1059,8 +1354,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       return true;
     },
     concatObjects: function concatObjects(hostobj) {
-      for (var _len18 = arguments.length, Objs = Array(_len18 > 1 ? _len18 - 1 : 0), _key18 = 1; _key18 < _len18; _key18++) {
-        Objs[_key18 - 1] = arguments[_key18];
+      for (var _len19 = arguments.length, Objs = Array(_len19 > 1 ? _len19 - 1 : 0), _key19 = 1; _key19 < _len19; _key19++) {
+        Objs[_key19 - 1] = arguments[_key19];
       }
 
       forEach(hostobj, function () {
@@ -1077,8 +1372,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       return hostobj;
     },
     mergeObjects: function mergeObjects(hostobj) {
-      for (var _len19 = arguments.length, Objs = Array(_len19 > 1 ? _len19 - 1 : 0), _key19 = 1; _key19 < _len19; _key19++) {
-        Objs[_key19 - 1] = arguments[_key19];
+      for (var _len20 = arguments.length, Objs = Array(_len20 > 1 ? _len20 - 1 : 0), _key20 = 1; _key20 < _len20; _key20++) {
+        Objs[_key20 - 1] = arguments[_key20];
       }
 
       return Object.assign(hostobj, Objs);
@@ -1127,8 +1422,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         });
       },
       Import: function Import() {
-        for (var _len20 = arguments.length, args = Array(_len20), _key20 = 0; _key20 < _len20; _key20++) {
-          args[_key20] = arguments[_key20];
+        for (var _len21 = arguments.length, args = Array(_len21), _key21 = 0; _key21 < _len21; _key21++) {
+          args[_key21] = arguments[_key21];
         }
 
         var obj = undefined,
@@ -1180,7 +1475,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       links: [],
       link: function link(Selector, _link, newtab, eventType) {
         return Craft.router.links.push(function () {
-          return _On(is.Def(eventType) ? eventType : 'click', query(Selector), function (e) {
+          return _On(is.Def(eventType) ? eventType : 'click', _query(Selector), function (e) {
             return newtab ? open(_link) : location = _link;
           });
         });
@@ -1202,17 +1497,17 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         return doc.title = title;
       },
       setView: function setView(viewHostSelector, view) {
-        return query(viewHostSelector).innerHTML = view;
+        return _query(viewHostSelector).innerHTML = view;
       },
       fetchView: function fetchView(viewHostSelector, viewURL, cache, id) {
         if (is.Null(localStorage.getItem("RT_" + id))) fetch(viewURL).then(function (res) {
           res.text().then(function (txt) {
             if (cache && is.Def(id) && is.String(id) && is.Null(localStorage.getItem("RT_" + id))) localStorage.setItem("RT_" + id, txt);
-            query(viewHostSelector).innerHTML = txt;
+            _query(viewHostSelector).innerHTML = txt;
           });
         }).catch(function (msg) {
           return console.warn('Could not fetch view -> ' + msg);
-        });else if (cache) query(viewHostSelector).innerHTML = localStorage.getItem("RT_" + id);
+        });else if (cache) _query(viewHostSelector).innerHTML = localStorage.getItem("RT_" + id);
       },
       clearCache: function clearCache() {
         for (var _i4 in localStorage) {
@@ -1257,8 +1552,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       if (!is.Func(func)) is.Func(n) ? func = n : console.error("after : func is not a function");
       n = Number.isFinite(n = +n) ? n : 0;
       return function () {
-        for (var _len21 = arguments.length, args = Array(_len21), _key21 = 0; _key21 < _len21; _key21++) {
-          args[_key21] = arguments[_key21];
+        for (var _len22 = arguments.length, args = Array(_len22), _key22 = 0; _key22 < _len22; _key22++) {
+          args[_key22] = arguments[_key22];
         }
 
         return --n < 1 ? func.apply(_this5, args) : function () {
@@ -1330,7 +1625,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     },
     hasCapitals: function hasCapitals(string) {
       for (var _i5 = 0; _i5 < string.length; _i5++) {
-        if (is.UpperCase(string[_i5])) return true;
+        if (is.Uppercase(string[_i5])) return true;
       }return false;
     },
     OverrideFunction: function OverrideFunction(funcName, Func, ContextObject) {
@@ -1355,8 +1650,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       }return -1;
     },
     type: function type() {
-      for (var _len22 = arguments.length, args = Array(_len22), _key22 = 0; _key22 < _len22; _key22++) {
-        args[_key22] = arguments[_key22];
+      for (var _len23 = arguments.length, args = Array(_len23), _key23 = 0; _key23 < _len23; _key23++) {
+        args[_key23] = arguments[_key23];
       }
 
       var types = [];
@@ -1370,8 +1665,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       if (!is.Func(func) || resolver && !is.Func(resolver)) throw new TypeError("arg provided is not a function");
       var cache = new WeakMap();
       var memoized = function memoized() {
-        for (var _len23 = arguments.length, args = Array(_len23), _key23 = 0; _key23 < _len23; _key23++) {
-          args[_key23] = arguments[_key23];
+        for (var _len24 = arguments.length, args = Array(_len24), _key24 = 0; _key24 < _len24; _key24++) {
+          args[_key24] = arguments[_key24];
         }
 
         var key = resolver ? resolver.apply(this, args) : args[0];
@@ -1392,7 +1687,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       over: null
     },
     nodeExists: function nodeExists(selector, within) {
-      return queryAll(selector, is.Node(within) ? within = within : within = query(within)) !== null;
+      return _queryAll(selector, is.Node(within) ? within = within : within = _query(within)) !== null;
     },
     ObjToFormData: function ObjToFormData(obj) {
       var key = undefined,
@@ -1482,8 +1777,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
      * @param {...string} includeChars - every extra argument should be a string containing a character you want the password to include
      */
     strongPassword: function strongPassword(pass, length, caps, number) {
-      for (var _len24 = arguments.length, includeChars = Array(_len24 > 4 ? _len24 - 4 : 0), _key24 = 4; _key24 < _len24; _key24++) {
-        includeChars[_key24 - 4] = arguments[_key24];
+      for (var _len25 = arguments.length, includeChars = Array(_len25 > 4 ? _len25 - 4 : 0), _key25 = 4; _key25 < _len25; _key25++) {
+        includeChars[_key25 - 4] = arguments[_key25];
       }
 
       if (pass.length <= length) return false;
@@ -1503,16 +1798,16 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
     },
     /**
-    * similar to Craft.randomString in that it generates a unique string , in this case a Unique ID with random alphanumeric strings separated by hyphens
-    * example 0ebf-c7d2-ef81-2667-08ef-4cde
-    */
+     * similar to Craft.randomString in that it generates a unique string , in this case a Unique ID with random alphanumeric strings separated by hyphens
+     * example 0ebf-c7d2-ef81-2667-08ef-4cde
+     */
     GenUID: function GenUID() {
       return Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString();
     },
     /**
-    * Part of Crafter.js's own WebComponent format (.wc) it takes a json object that contains .css and .js values then imports and executes them
-    * @param {string} webcomponent - JSON string from Crafter.js's (.wc) WebComponent format
-    */
+     * Part of Crafter.js's own WebComponent format (.wc) it takes a json object that contains .css and .js values then imports and executes them
+     * @param {string} webcomponent - JSON string from Crafter.js's (.wc) WebComponent format
+     */
     createWebComponent: function createWebComponent(webcomponent) {
       if (is.String) webcomponent = JSON.parse(webcomponent);
       CrafterStyles.innerHTML += webcomponent.css;
@@ -1632,8 +1927,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     Craft.router.links.forEach(function (link) {
       return link();
     });
-    if (Craft.WebComponents.length === queryAll('fetch-webcomponent').length) Ready = true;else Craft.poll(function () {
-      return Craft.WebComponents.length === queryAll('fetch-webcomponent').length;
+    if (Craft.WebComponents.length === _queryAll('fetch-webcomponent').length) Ready = true;else Craft.poll(function () {
+      return Craft.WebComponents.length === _queryAll('fetch-webcomponent').length;
     }, 35, 2000, function () {
       return Ready = true;
     }, function () {
@@ -1660,7 +1955,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
   root.CraftSocket = CraftSocket;
   root.EventHandler = EventHandler;
   root.ReactiveVariable = _ReactiveVariable;
-  root.query = query;
-  root.queryAll = queryAll;
+  root.query = _query;
+  root.queryAll = _queryAll;
   root.queryEach = queryEach;
 })(document, self);

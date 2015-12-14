@@ -44,7 +44,7 @@ gulp.task('BabelUgly', () => gulp.src('./src/*.js')
       sequences: true
     },
     output: {
-      comments: true
+      comments: false
     }
   }))
   .pipe(gulp.dest('./dist/min/')));
