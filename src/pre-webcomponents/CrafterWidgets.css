@@ -103,14 +103,15 @@ context-menu > section:hover {
 [movehandle] {
   cursor: move;
 }
-.circle {
+ripple-effect {
   display: block;
   position: absolute;
   pointer-events: none;
   user-select: none;
   -moz-user-select: none;
   -webkit-user-select: none;
-  background: hsl(180, 40%, 80%);
+  opacity: 0.8;
+  background:rgb(214, 193, 27);
   border-radius: 100%;
   transform: scale(0);
   z-index: 0;
@@ -138,7 +139,7 @@ context-menu > section:hover {
   width: 250px;
   height: auto;
 }
-.notification-host > craft-notification {
+craft-notification {
  position: relative;
  margin:5%;
  width: 95%;

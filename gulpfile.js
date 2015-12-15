@@ -52,7 +52,20 @@ gulp.task('BabelUgly', () => gulp.src('./src/*.js')
 gulp.task('babelize_webcomponents', () => gulp.src('./src/pre-webcomponents/*.js')
   .pipe(babel({
     presets: ['es2015']
-  })).pipe(rename({
+  })).pipe(uglify({
+      mangle: true,
+      compress: true,
+      compressor: {
+        if_return: true,
+        loops: true,
+        conditionals: true,
+        comparisons: true,
+        sequences: true
+      },
+      output: {
+        comments: false
+      }
+    })).pipe(rename({
     extname: ".bs"
   })).pipe(gulp.dest('./src/pre-webcomponents/')));
 

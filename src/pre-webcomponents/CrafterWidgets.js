@@ -1,34 +1,35 @@
 "use strict";
 ((doc, root) => {
-  Craft.ripple = function (SelectorOrNode, options) {
-    if (is.Null(SelectorOrNode)) throw new Error('null selector or node/nodelist');
-    options = options || {};
-    let color = options.color || undefined,
-      timing = options.timing || 1600;
-    queryEach(SelectorOrNode, element => {
-      if (element.hasAttribute("ripple")) color = element.getAttribute("ripple");
-      element.onmousedown = e => {
-        let circle = doc.createElement('div'),
-          rect = element.getBoundingClientRect(),
-          diameter = Math.max(rect.width, rect.height),
-          x = e.clientX - rect.left - (diameter / 2),
-          y = e.clientY - rect.top - (diameter / 2);
-        circle.classList.add('circle');
-        circle.style.width = diameter + "px";
-        circle.style.height = diameter + "px";
-        circle.style.top = y + "px";
-        circle.style.left = x + "px";
-        circle.style.animation = "ripple " + timing + "ms ease";
+  if (query('.notification-host') === null) doc.body.appendChild(dom().div('', 'class=notification-host', true));
 
-        if (is.Def(color)) circle.style.backgroundColor = color;
-        element.insertBefore(circle, element.firstChild);
-        if (is.Def(circle)) setTimeout(() => circle.remove(), timing);
-      }
-      element.onmouseup = e => queryEach('.circle', element, Childcircle => {
-        if (!is.Null(Childcircle)) setTimeout(() => Childcircle.remove(), timing);
-      });
-    });
+  Craft.ripple = (SelectorOrNode, options) => {
+    if (is.Null(SelectorOrNode)) throw new Error('null selector/node/nodelist');
+    queryEach(SelectorOrNode, element => element.onmousedown = e => element.appendChild(make_element('ripple-effect', '', options || {}, true)));
   }
+
+  Craft.newComponent('ripple-effect', {
+    inserted() {
+      let color, timing = 1600,
+        x = parseInt(this.getAttribute('x')),
+        y = parseInt(this.getAttribute('y')),
+        element = this.parentNode,
+        ripple = this;
+      if (element.hasAttribute("ripple")) color = element.getAttribute("ripple");
+      if (ripple.hasAttribute("color-accent")) color = ripple.getAttribute("color-accent");
+      if (ripple.hasAttribute("timing")) timing = ripple.getAttribute("timing");
+      let rect = element.getBoundingClientRect(),
+        diameter = Math.max(rect.width, rect.height);
+      dom(ripple).css({
+        width: diameter + 'px',
+        height: diameter + 'px',
+        left: Craft.mouse.x - rect.left - (diameter / 2) + 'px',
+        top: Craft.mouse.y - rect.top - (diameter / 2) + 'px',
+        animation: 'ripple ' + timing + 'ms ease'
+      });
+      if (is.Def(color)) ripple.style.backgroundColor = color;
+      setTimeout(() => ripple.remove(), timing);
+    }
+  });
 
   Craft.easing = {
     InOutQuad: (t, b, c, d) => {
@@ -44,7 +45,6 @@
       duration = state;
       side = duration;
     }
-    if (query('.notification-host') === null) doc.body.appendChild(make_element('div', '', 'class=notification-host', true));
     dom('.notification-host').append(make_element('craft-notification', msg, {
       duration: duration || 600,
       state: is.Num(state) ? '' : state,
@@ -52,7 +52,7 @@
     }, true));
   }
 
-  Craft.JumpTo = function (target, options) {
+  Craft.JumpTo = (target, options) => {
     options = options || {};
     options.duration = options.duration || 400;
     options.offset = options.offset || 0;
@@ -76,43 +76,43 @@
   }
 
   Craft.newComponent('craft-notification', {
-    created: function () {
-      if (dom(this).hasAttr('duration')) setTimeout(() => this.remove(), parseInt(dom(this).getAttr('duration'), 10) || 600);
-      if (dom(this).hasAttr('message')) this.innerHTML = dom(this).getAttr('message');
-      dom(this).append(dom().div('X', 'class=notification-close'));
-      this.clickEvent = On('click','.notification-close', this, e => this.remove());
-    },
-    destroyed: function () {
-      this.clickEvent.Off();
-    }
+    created() {
+        if (dom(this).hasAttr('duration')) setTimeout(() => this.remove(), parseInt(dom(this).getAttr('duration'), 10) || 600);
+        if (dom(this).hasAttr('message')) this.innerHTML = dom(this).getAttr('message');
+        dom(this).append(dom().div('X', 'class=notification-close'));
+        this.clickEvent = On('click', '.notification-close', this, e => this.remove());
+      },
+      destroyed() {
+        this.clickEvent.Off();
+      }
   })
 
   var ContextMenus = [];
 
   Craft.newComponent('context-menu', {
-    created: function () {
-      this.show = false;
-      dom(this).hasAttr('scope') ? this.contextmenuEvent = On('contextmenu',dom(this).getAttr('scope'),e => this.Show(true, e)) : console.error('no scope elements/attribute found on context-menu element \n can\' operate without a scope');
-      ContextMenus.push(this);
-    },
-    destroyed: function () {
-      ContextMenus = Craft.omit(ContextMenus,this);
-      this.contextmenuEvent.Off();
-    },
-    Show: function (Show, ev) {
-      if(is.Def(ev)) ev.preventDefault();
-      if (Show) {
-        dom(this).addClass('context-menu-active');
-        dom(this).css({
-          left: (ev.clientX + 5) + 'px',
-          top: (ev.clientY + 5) + 'px'
-        });
-        this.show = true;
-      } else if (dom(this).gotClass('context-menu-active')) {
-        dom(this).stripClass('context-menu-active');
+    created() {
         this.show = false;
+        dom(this).hasAttr('scope') ? this.contextmenuEvent = On('contextmenu', dom(this).getAttr('scope'), e => this.Show(true, e)) : console.error('no scope elements/attribute found on context-menu element \n can\' operate without a scope');
+        ContextMenus.push(this);
+      },
+      destroyed() {
+        ContextMenus = Craft.omit(ContextMenus, this);
+        this.contextmenuEvent.Off();
+      },
+      Show(Show, ev) {
+        if (is.Def(ev)) ev.preventDefault();
+        if (Show) {
+          dom(this).addClass('context-menu-active');
+          dom(this).css({
+            left: (ev.clientX + 5) + 'px',
+            top: (ev.clientY + 5) + 'px'
+          });
+          this.show = true;
+        } else if (dom(this).gotClass('context-menu-active')) {
+          dom(this).stripClass('context-menu-active');
+          this.show = false;
+        }
       }
-    }
   });
 
   Craft.newComponent('grid-host', {
@@ -124,7 +124,7 @@
 
   On('blur', e => queryEach('context-menu', el => el.Show()));
   On('click', doc, e => {
-    if(e.target.parentNode.tagName !== 'CONTEXT-MENU' && e.target.tagName !== 'SECTION') forEach(ContextMenus, el => el.Show());
+    if (e.target.parentNode.tagName !== 'CONTEXT-MENU' && e.target.tagName !== 'SECTION') forEach(ContextMenus, el => el.Show());
   });
 
   On('animationstart', doc, e => {

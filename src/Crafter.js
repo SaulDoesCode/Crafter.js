@@ -43,7 +43,7 @@
   _br ? [_br[1], _br[2]] : [navigator.appName, navigator.appVersion, '-?'];
 
   CrafterStyles.setAttribute('crafterstyles', '');
-  CrafterStyles.innerHTML = `\n@keyframes NodeInserted {from {opacity:.99;}to {opacity: 1;}} [view-bind] {animation-duration: 0.001s;animation-name: NodeInserted;}`;
+  CrafterStyles.innerHTML = `\n@keyframes NodeInserted {from {opacity:.99;}to {opacity: 1;}} [view-bind],[input-bind] {animation-duration: 0.001s;animation-name: NodeInserted;}`;
   head.appendChild(CrafterStyles);
   CrafterStyles = doc.querySelector('[crafterstyles]', head);
 
@@ -569,8 +569,8 @@
    */
   function queryEach(selector, element, func) {
     if (is.Func(element)) func = element;
-    let elements , i = 0;
-    is.Node(selector) ? elements = [selector] : elements = is.Func(element) ? queryAll(selector) : queryAll(selector,element);
+    let elements, i = 0;
+    is.Node(selector) ? elements = [selector] : elements = is.Func(element) ? queryAll(selector) : queryAll(selector, element);
     for (; i < elements.length; i++) func(elements[i], i);
   }
 
@@ -966,19 +966,17 @@
         }
       },
       Import(...args) {
-        let obj, promises = [];
+        let promises = [];
         args.forEach(arg => arg.test === false ? Craft.loader.remove(arg.css || arg.script) : promises.push(Craft.loader.fetchImport({
           url: arg.css || arg.script,
           type: arg.css ? 'css' : 'script',
           exec: arg.execute !== false,
           cache: arg.cache !== false,
-          defer: arg.defer || undefined,
+          defer: arg.defer ? 'defer' : null,
           key: arg.key || undefined,
           expire: arg.expire || undefined
         })));
-        return Promise.all(promises).then(src => src.map(obj => obj.exec ? obj.type === 'css' ? CrafterStyles.innerHTML += '\n' + obj.data : head.appendChild(dom().script(obj.data, {
-          defer: obj.defer || undefined
-        }, true)) : undefined));
+        return Promise.all(promises).then(src => src.map(obj => obj.exec ? obj.type === 'css' ? CrafterStyles.innerHTML += '\n' + obj.data : head.appendChild(dom().script(obj.data,obj.defer, true)) : undefined));
       },
       router: {
         handle(RouteLink, func) {
@@ -1135,7 +1133,7 @@
       },
       Scope: {},
       WebComponents: [],
-      tabActive : true,
+      tabActive: true,
       ResizeHandlers: new FunctionIterator,
       Binds: new Map,
       mouse: {
@@ -1186,21 +1184,21 @@
         }
       }),
       poll: (test, interval, timeout, success, fail) => (() => {
-          if (is.Func(timeout)) {
-            if (is.Func(success)) fail = success;
-            success = timeout;
-            timeout = undefined;
-          }
-          let Interval = setInterval(() => {
-            if ((is.Bool(test) && test === true) || (is.Func(test) && test() === true)) {
-              success();
-              clearInterval(Interval);
-            }
-          }, interval || 20);
-          if (is.Num(timeout)) setTimeout(() => {
+        if (is.Func(timeout)) {
+          if (is.Func(success)) fail = success;
+          success = timeout;
+          timeout = undefined;
+        }
+        let Interval = setInterval(() => {
+          if ((is.Bool(test) && test === true) || (is.Func(test) && test() === true)) {
+            success();
             clearInterval(Interval);
-            if ((is.Bool(test) && test === false) || (is.Func(test) && test() === false)) fail();
-          }, timeout);
+          }
+        }, interval || 20);
+        if (is.Num(timeout)) setTimeout(() => {
+          clearInterval(Interval);
+          if ((is.Bool(test) && test === false) || (is.Func(test) && test() === false)) fail();
+        }, timeout);
       })(),
       /**
        * Usefull method for validating passwords , example Craft.strongPassword('#MyFancyPassword18',8,true,true,"#") -> true requirements met
@@ -1258,9 +1256,8 @@
        * @param {string} tag - a hyphenated custom HTML tagname for the new element -> "custom-element"
        * @param {object} config - Object containing all the element's lifecycle methods / extends and attached methods or properties
        */
-      newComponent: function (tag, config) {
-        if (is.Undef(config)) console.error("Invalid Component Configuration");
-        else {
+      newComponent(tag, config) {
+        if (is.Undef(config)) throw new Error(`Craft.newComponent : ${tag} -> config is undefined`);
           let element = Object.create(HTMLElement.prototype),
             settings = {}
           forEach(config, (prop, key) => {
@@ -1269,34 +1266,63 @@
             else if (key === 'destroyed') element.detachedCallback = prop;
             else if (key === 'attr') element.attributeChangedCallback = prop;
             else if (key === 'extends') settings.extends = prop;
-            else if (is.Func(prop)) element[key] = prop;
-            else if (key !== 'extends' && !is.Func(prop)) element[key] = prop
+            else element[key] = prop;
           });
           settings['prototype'] = element;
           doc.registerElement(tag, settings)
-        }
+      },
+      applyBinds(key) {
+        let bind = Craft.Binds.get(key),
+          val = is.ReactiveVariable(bind) ? bind.val : bind;
+        queryEach(`[input-bind="${key}"],[view-bind="${key}"]`, el => el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' ? el.value = val : el.innerHTML = val);
       },
       /** creates a new bound variable , part of Crafter.js's Data Binding System */
-      newBind: (key, val, handle) => {
+      newBind(key, val, handle) {
         is.Func(handle) ? Craft.Binds.set(key, new ReactiveVariable(val, handle)) : Craft.Binds.set(key, val);
-        queryEach('[view-bind]', el => {
-          if (Craft.Binds.has(el.getAttribute('view-bind'))) el.innerHTML = is.Func(handle) ? Craft.Binds.get(el.getAttribute('view-bind')).val : Craft.Binds.get(el.getAttribute('view-bind'));
-        });
+        Craft.applyBinds(key);
       },
       /** sets the value of a bound variable */
-      setBind: (key, val) => {
-        is.ReactiveVariable(Craft.Binds.get(key)) ? Craft.Binds.get(key).set(val) : Craft.Binds.set(key, val);
-        queryEach('[view-bind]', el => {
-          if (Craft.Binds.has(el.getAttribute('view-bind'))) el.innerHTML = is.ReactiveVariable(Craft.Binds.get(key)) ? Craft.Binds.get(el.getAttribute('view-bind')).val : Craft.Binds.get(el.getAttribute('view-bind'))
-        });
+      setBind(key, val) {
+        let bind = Craft.Binds.get(key);
+        is.ReactiveVariable(bind) ? bind.set(val) : Craft.Binds.set(key, val);
+        Craft.applyBinds(key);
       },
+      getBind(key) {
+        let bind = Craft.Binds.get(key);
+        return is.ReactiveVariable(bind) ? bind.val : bind;
+      },
+      BindExists: key => Craft.Binds.has(key),
   };
 
   Craft.loader.removeAll(true);
 
   On('animationstart', doc, e => {
     if (e.animationName === 'NodeInserted' && is.Node(e.target)) {
-      if (e.target.hasAttribute('[view-bind]') && Craft.Binds.has(e.target.getAttribute('view-bind'))) e.target.innerHTML = is.ReactiveVariable(Craft.Binds.get(key)) ? Craft.Binds.get(e.target.getAttribute('view-bind')).val : Craft.Binds.get(e.target.getAttribute('view-bind'));
+      let element = e.target;
+      if (element.hasAttribute('input-bind')) {
+        let bindAttr = element.getAttribute('input-bind'),
+          isInput = element.tagName === 'INPUT' || element.tagName === 'TEXTAREA',
+          OnInput = On('input', element, () => Craft.setBind(bindAttr, isInput ? element.value : element.innerHTML)),
+          observer = new MutationObserver(mutations => {
+            mutations.forEach(mut => {
+              if (mut.type === 'attributes') {
+                if (mut.attributeName === 'input-bind' && element.hasAttribute('input-bind') === false) {
+                  OnInput.Off();
+                  observer.disconnect();
+                }
+              }
+            });
+          });
+        observer.observe(element, {
+          attributes: true
+        });
+        Craft.BindExists(bindAttr) ? Craft.applyBinds(bindAttr) : Craft.newBind(bindAttr, isInput ? element.value : element.innerHTML);
+      }
+      if (element.hasAttribute('view-bind')) {
+        let bindAttr = element.getAttribute('view-bind');
+        if (Craft.BindExists(bindAttr)) Craft.applyBinds(bindAttr);
+        else Craft.newBind(bindAttr, element.tagName === 'INPUT' || element.tagName === 'TEXTAREA' ? element.value : element.innerHTML);
+      }
     }
   });
 

@@ -1,7 +1,7 @@
 "use strict";
 (() => {
     Craft.newComponent('side-bar', {
-      created: function () {
+      created() {
         if (this.hasAttribute('color-accent')) this.color = this.getAttribute('color-accent');
         if (!this.hasAttribute('sidebar-direction')) this.setAttribute('sidebar-direction', 'left');
         if (!this.classList.contains('sidebar-hidden')) {
@@ -16,7 +16,7 @@
             });
         }
       },
-      setToggleElement: function (SelectorOrNode) {
+      setToggleElement(SelectorOrNode) {
         let Toggle = Craft.resolveQueryOrNode(SelectorOrNode);
         this.open = true;
         On('click', Toggle, ev => {
@@ -24,12 +24,12 @@
           this.setAttribute('sidebar-toggle', this.open.toString());
         });
       },
-      toggle: function () {
+      toggle() {
         if (is.Undef(this.open)) this.open = true;
         this.open = !this.open;
         this.setAttribute('sidebar-toggle', this.open.toString());
       },
-      attr: function (attrName, oldVal, newVal) {
+      attr(attrName, oldVal, newVal) {
         if (!this.classList.contains('sidebar-hidden')) {
           this.setAttribute('sidebar-toggle', 'true');
         } else this.setAttribute('sidebar-toggle', 'false');
@@ -45,7 +45,7 @@
     });
 
     Craft.newComponent('sidebar-heading', {
-      created: function () {
+      created() {
         if (this.hasAttribute('ripple')) this.color = this.getAttribute('ripple');
         if (this.hasAttribute('color-accent')) this.color = this.getAttribute('color-accent');
         if (query('sidebar-icon', this) !== null) query('sidebar-icon', this).style.color = this.color;
@@ -53,7 +53,7 @@
           if (this.textContent.length > 40) this.style.height = 'auto';
         }, 50);
       },
-      attr: function () {
+      attr() {
         if (attrName === 'ripple') this.color = newVal;
         if (attrName === 'color-accent') this.color = newVal;
         if (query('sidebar-icon', this) !== null) query('sidebar-icon', this).style.color = this.color;
@@ -61,22 +61,25 @@
     });
 
     Craft.newComponent('sidebar-item', {
-      created: function () {
+      created () {
         if (this.hasAttribute('ripple')) this.color = this.getAttribute('ripple');
         if (this.hasAttribute('color-accent')) this.color = this.getAttribute('color-accent');
         this.style.borderColor = this.color;
         if (query('sidebar-icon', this) !== null) query('sidebar-icon', this).style.color = this.color;
-        this.onclick = e => this.hasAttribute('selected') ? this.removeAttribute('selected') : setTimeout(() => this.setAttribute('selected', ''), 50);
+        this.Onclick = On('click',this,e => this.hasAttribute('selected') ? this.removeAttribute('selected') : setTimeout(() => this.setAttribute('selected', ''), 50));
       },
-      attr: function (attrName, oldVal, newVal) {
+      attr(attrName, oldVal, newVal) {
         if (attrName === 'ripple' || attrName === 'color-accent') this.color = newVal;
         this.style.borderColor = this.color;
         if (query('sidebar-icon', this) !== null) query('sidebar-icon', this).style.color = this.color;
+      },
+      destroyed() {
+        this.Onclick.Off();
       }
     });
 
     Craft.newComponent('sidebar-accordion', {
-      created: function () {
+      created() {
         this.open = false;
         if (this.getAttribute('accordion') === 'open') {
           this.open = true;
@@ -107,7 +110,7 @@
           });
         }, 40);
       },
-      attr: function () {
+      attr() {
         if (this.getAttribute('accordion') === 'open') {
           this.open = true;
         } else this.open = false;
