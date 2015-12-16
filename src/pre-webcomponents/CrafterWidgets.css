@@ -5,7 +5,7 @@
 context-menu {
   position: absolute;
   display: none;
-  width: 135px;
+  width: 165px;
   height: auto;
   left: 0;
   right: 0;
@@ -130,6 +130,40 @@ ripple-effect {
 .vert-divider {
   margin: 5px 0;
   border-left: 1px solid hsl(0, 0%, 40%);
+}
+toggle-button {
+  box-sizing: border-box;
+  overflow: visible !important;
+  position: relative;
+  display: inline-block;
+  width: 10mm;
+  height:4mm;
+  border-radius: 4mm;
+  background:#e9e9e9;
+  box-shadow: inset 0 0 3px hsla(0, 0%, 20%, 0.2);
+  cursor: pointer;
+  transition: all 130ms ease;
+}
+toggle-button > .toggle {
+  position: absolute;
+  display: inline-block;
+  width:5mm;
+  height:5mm;
+  top:-0.45mm;
+  left:0;
+  border-radius: 100%;
+  background: #ffffff;
+  box-shadow: 0 2px 5px hsla(0,0%,20%,.2), 0 0 2px hsla(0,0%,20%,.2);
+  transition: all 120ms ease;
+}
+toggle-button[open] > .toggle {
+  left:calc(100% - 5mm);
+}
+toggle-button:hover {
+  background:#ebb4b1;
+}
+toggle-button[open]:hover {
+  background:#adeeb7;
 }
 .notification-host {
   background: transparent;
@@ -446,7 +480,6 @@ li {
     width: 100%;
     margin-left: 0;
   }
-  /* Offsets */
   .offset-by-one.column, .offset-by-one.columns {
     margin-left: 8.66666666667%;
   }

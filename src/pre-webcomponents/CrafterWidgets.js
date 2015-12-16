@@ -76,7 +76,7 @@
   }
 
   Craft.newComponent('craft-notification', {
-    created() {
+    inserted() {
         if (dom(this).hasAttr('duration')) setTimeout(() => this.remove(), parseInt(dom(this).getAttr('duration'), 10) || 600);
         if (dom(this).hasAttr('message')) this.innerHTML = dom(this).getAttr('message');
         dom(this).append(dom().div('X', 'class=notification-close'));
@@ -90,16 +90,16 @@
   var ContextMenus = [];
 
   Craft.newComponent('context-menu', {
-    created() {
+    inserted() {
         this.show = false;
         dom(this).hasAttr('scope') ? this.contextmenuEvent = On('contextmenu', dom(this).getAttr('scope'), e => this.Show(true, e)) : console.error('no scope elements/attribute found on context-menu element \n can\' operate without a scope');
         ContextMenus.push(this);
-      },
-      destroyed() {
+    },
+    destroyed() {
         ContextMenus = Craft.omit(ContextMenus, this);
         this.contextmenuEvent.Off();
-      },
-      Show(Show, ev) {
+    },
+    Show(Show, ev) {
         if (is.Def(ev)) ev.preventDefault();
         if (Show) {
           dom(this).addClass('context-menu-active');
@@ -112,7 +112,28 @@
           dom(this).stripClass('context-menu-active');
           this.show = false;
         }
-      }
+    }
+  });
+
+  Craft.newComponent('toggle-button', {
+    created() {
+      this.open ? this.setAttribute('open','') : this.removeAttribute('open');
+      let toggle = this.open;
+      this.click = On('click',this,e => {
+        toggle = !toggle;
+        toggle ? this.setAttribute('open','') : this.removeAttribute('open');
+      });
+      this.appendChild(dom().span('','class=toggle',true));
+    },
+    toggle(open) {
+      open ? this.removeAttribute('open') : this.setAttribute('open','');
+    },
+    attr(attrName,oldVal,newVal) {
+      if(attrName === 'open') newVal ? this.open = true : this.open = false;
+    },
+    destroyed() {
+      this.click.Off();
+    }
   });
 
   Craft.newComponent('grid-host', {

@@ -1,7 +1,7 @@
 "use strict";
 (() => {
     Craft.newComponent('side-bar', {
-      created() {
+      inserted() {
         if (this.hasAttribute('color-accent')) this.color = this.getAttribute('color-accent');
         if (!this.hasAttribute('sidebar-direction')) this.setAttribute('sidebar-direction', 'left');
         if (!this.classList.contains('sidebar-hidden')) {
@@ -51,7 +51,7 @@
         if (query('sidebar-icon', this) !== null) query('sidebar-icon', this).style.color = this.color;
         setTimeout(() => {
           if (this.textContent.length > 40) this.style.height = 'auto';
-        }, 50);
+        }, 40);
       },
       attr() {
         if (attrName === 'ripple') this.color = newVal;
@@ -61,7 +61,7 @@
     });
 
     Craft.newComponent('sidebar-item', {
-      created () {
+      inserted() {
         if (this.hasAttribute('ripple')) this.color = this.getAttribute('ripple');
         if (this.hasAttribute('color-accent')) this.color = this.getAttribute('color-accent');
         this.style.borderColor = this.color;

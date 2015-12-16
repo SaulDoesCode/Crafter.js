@@ -35,6 +35,7 @@
       ip: /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/
     },
     Ready = false,
+    Craft,
     head = doc.getElementsByTagName('head')[0],
     CrafterStyles = doc.createElement('style'),
     ua = navigator.userAgent,
@@ -501,7 +502,7 @@
   class EventHandler {
     constructor(EventType, Target, Func, ...args) {
         this.EventType = EventType;
-        this.Target = (Target !== window && Target !== document) ? QueryOrNodetoNodeArray(Target) : Target;
+        this.Target = (Target !== root && Target !== doc) ? QueryOrNodetoNodeArray(Target) : Target;
         this.FuncWrapper = e => Func(e, e.srcElement, args || []);
       }
       /**
@@ -632,247 +633,239 @@
     return `<${name} ${attrString}>${inner}</${name}>`;
   }
 
-  /**
-   * Function that returns many useful methods for interacting with and manipulating the DOM or creating elements
-   * @param {Node|NodeList|string=} element - optional Node, NodeList or CSS Selector that will be affected by the methods returned
-   */
-  var dom = element => {
-    if (is.String(element)) {
-      let elements = queryAll(element);
-      (elements.length > 1) ? element = elements: element = elements[0];
-    }
-    if (is.Node(element)) return {
+  class domMethods {
+      constructor(element) {
+        if(is.String(element)) element = query(element);
+        this.element = element;
+      }
       /**
        * changes or returns the innerHTML value of a Node
+       * @memberof dom
        * @param {string=} sets the innerHTML value or when undefined gets the innerHTML value
-       * @namespace dom()
        */
-      html: val => is.Def(val) ? element.innerHTML = val : element.innerHTML,
+      html(val) {
+        return is.Def(val) ? this.element.innerHTML = val : this.element.innerHTML;
+      }
       /**
        * changes or returns the textContent value of a Node
+       * @memberof dom
        * @param {string=} sets the textContent value or when undefined gets the textContent value
-       * @namespace dom()
        */
-      text: val => is.Def(val) ? element.textContent = val : element.textContent,
+      text(val) {
+        return is.Def(val) ? this.element.textContent = val : this.element.textContent;
+      }
       /**
        * replaces a Node with another node provided as a parameter/argument
+       * @memberof dom
        * @param {Node} Node to replace with
-       * @namespace dom()
        */
-      replace: val => element.parentNode.replaceChild(el, element),
+      replace(val) {
+        return this.element.parentNode.replaceChild(el, this.element);
+      }
       /**
        * append the Element to another node using either a CSS selector or a Node
-       * @param {Node|string} CSS selector or Node to append the element to
-       * @namespace dom()
+       * @memberof dom
+       * @param {Node|string} CSS selector or Node to append the this.element to
        */
       appendTo(val) {
         let el;
         is.Node(val) ? el = val : el = query(val);
-        if (el !== null) el.appendChild(element);
-      },
+        if (el !== null) el.appendChild(this.element);
+      }
       /**
        * append text or a Node to the element
-       * @param {Node|string} String or Node to append to the element
-       * @namespace dom()
+       * @memberof dom
+       * @param {Node|string} String or Node to append to the this.element
        */
-      append: val => is.String(val) ? element.innerHTML += val : element.parentNode.appendChild(element),
+      append(val) {
+        return is.String(val) ? this.element.innerHTML += val : this.element.parentNode.appendChild(this.element);
+      }
       /**
        * prepend text or a Node to the element
-       * @param {Node|string} String or Node to prepend to the element
-       * @namespace dom()
+       * @memberof dom
+       * @param {Node|string} String or Node to prepend to the this.element
        */
-      prepend: val => is.String(val) ? element.innerHTML = val + element.innerHTML : element.insertBefore(val, element.firstChild),
+      prepend(val) {
+        return is.String(val) ? this.element.innerHTML = val + this.element.innerHTML : this.element.insertBefore(val, this.element.firstChild);
+      }
       /**
-       * Listen for Events on the element
+       * Listen for Events on the element or on all the elements in the NodeList
+       * @memberof dom
        * @param {string} string indicating the type of event to listen for
        * @param {function} func - handler function for the event
        * @returns handler (Off,Once,On)
-       * @namespace dom()
        */
-      On: (eventType, func) => On(eventType, element, func),
+      On(eventType, func) {
+        return On(eventType, this.element, func);
+      }
       /**
        * add CSS style rules to the Element or NodeList
+       * @memberof dom
        * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
        */
-      css: styles => is.Def(styles) ? forEach(styles, (prop, key) => element.style[key] = prop) : console.error('Styles Object undefined'),
+      css(styles) {
+        return is.Def(styles) ? forEach(styles, (prop, key) => this.element.style[key] = prop) : console.error('Styles Object undefined');
+      }
       /**
        * check if the element has got a specific CSS class
+       * @memberof dom
        * @param {string} name of the class to check for
        */
-      gotClass: Class => element.classList.contains(Class),
+      gotClass(Class) {
+        return this.element.classList.contains(Class);
+      }
       /**
        * Add a CSS class to the element
+       * @memberof dom
        * @param {string} name of the class to add
        */
-      addClass: Class => element.classList.add(Class),
+      addClass(Class) {
+        return this.element.classList.add(Class);
+      }
       /**
        * removes a specific CSS class from the element
+       * @memberof dom
        * @param {string} name of the class to strip
        */
-      stripClass: Class => element.classList.remove(Class),
+      stripClass(Class) {
+        return this.element.classList.remove(Class);
+      }
       /**
-       * removes a specific Attribute from the element
+       * removes a specific Attribute from the this.element
+       * @memberof dom
        * @param {string} name of the Attribute to strip
        */
-      stripAttr: Attr => element.removeAttribute(Attr),
+      stripAttr(Attr) {
+        this.element.removeAttribute(Attr);
+      }
       /**
        * checks if the element has a specific Attribute
+       * @memberof dom
        * @param {string} name of the Attribute to check for
        */
-      hasAttr: Attr => element.hasAttribute(Attr),
+      hasAttr(Attr) {
+        return this.element.hasAttribute(Attr);
+      }
       /**
        * Sets or adds an Attribute on the element
+       * @memberof dom
        * @param {string} Name of the Attribute to add/set
        * @param {string} Value of the Attribute to add/set
        */
-      setAttr: (Attr, val) => element.setAttribute(Attr, val),
-      getAttr: Attr => element.getAttribute(Attr),
-      /** gets all the elements siblings within it's parentNode */
+      setAttr(Attr, val) {
+        return this.element.setAttribute(Attr, val);
+      }
+      getAttr(Attr) {
+        return this.element.getAttribute(Attr);
+      }
+      /**
+      * gets all the elements siblings within it's parentNode
+      * @memberof dom
+      */
       getSiblings() {
         let siblings = [],
-          AllChildren = element.parentNode.childNodes;
+          AllChildren = this.element.parentNode.childNodes;
         for (let i = 0; i < AllChildren.length; i++)
-          if (AllChildren[i] !== element) siblings.push(AllChildren[i]);
+          if (AllChildren[i] !== this.element) siblings.push(AllChildren[i]);
         return siblings;
-      },
-      /** gets all the element's pixel width */
-      Width: () => element.getBoundingClientRect().width,
-      /** gets all the element's pixel height */
-      Height: () => element.getBoundingClientRect().height,
-      /** gets all the element's dimentions (width,height,left,top,bottom,right)*/
-      getRect: () => element.getBoundingClientRect(),
+      }
       /**
-       * sets all the element's pixel width
+      * gets all the element's pixel width
+      * @memberof dom
+      */
+      Width() {
+        return this.element.getBoundingClientRect().width;
+      }
+      /**
+      * gets all the element's pixel height
+      * @memberof dom
+      */
+      Height() {
+        return this.element.getBoundingClientRect().height;
+      }
+      /**
+      * gets all the element's dimentions (width,height,left,top,bottom,right)
+      * @memberof dom
+      */
+      getRect() {
+        return this.element.getBoundingClientRect();
+      }
+      /**
+       * sets all the this.element's pixel width
+       * @memberof dom
        * @param {string} pixel value to set
        */
-      setWidth: Width => element.style.width = Width,
+      setWidth(Width) {
+        this.element.style.width = Width;
+      }
       /**
-       * sets all the element's pixel height
+       * sets all the this.element's pixel height
+       * @memberof dom
        * @param {string} pixel value to set
        */
-      setHeight: Height => element.style.height = Height,
+      setHeight(Height) {
+        this.element.style.height = Height;
+      }
       /**
        * performs a query inside the element
+       * @memberof dom
        * @param {string} CSS selector
        * @returns {Node|Null}
        */
-      query: selector => query(selector, element),
+      query(selector) {
+        return query(selector, this.element);
+      }
       /**
        * performs a queryAll inside the element
+       * @memberof dom
        * @param {string} CSS selector
        * @returns {NodeList|Null}
        */
-      queryAll: selctor => queryAll(selector, element),
-    };
-    else if (is.NodeList(element)) return {
+      queryAll(selctor){
+        return queryAll(selector, this.element);
+      }
+  }
+
+  /**
+   * Function that returns many useful methods for interacting with and manipulating the DOM or creating elements
+   * @name dom
+   * @param {Node|NodeList|string=} element - optional Node, NodeList or CSS Selector that will be affected by the methods returned
+   */
+  let dom = element => is.Def(element) ? new domMethods(element) : Craft.dom,
+  domNodeList = (elements) => {
+    return {
       /**
-       * Listen for Events on all the elements in the NodeList
+       * Listen for Events on the NodeList
        * @param {string} string indicating the type of event to listen for
        * @param {function} func - handler function for the event
        * @returns handler (Off,Once,On)
        */
-      On: (eventType, func) => On(eventType, element, func),
+      On(eventType, func) {
+        return On(eventType, elements, func);
+      },
       /**
        * Checks wether a Node is in the NodeList with either a refference to the Node or a CSS selector
        * @param {Node|string} Node or CSS selector
        */
       includes(SelectorNode) {
-        if (!is.Node(SelectorNode)) SelectorNode = query(SelectorNode);
-        for (let index = 0; index < element.length; index++)
-          if (element[index] === SelectorNode) return true;
+        for (let index = 0; index < elements.length; index++)
+          if (elements[index] === SelectorNode) return true;
         return false;
       },
-      css: styles => is.Def(styles) ? forEach(element, el => forEach(styles, (prop, key) => el.style[key] = prop)) : console.error('styles unefined'),
+      /**
+       * add CSS style rules to NodeList
+       * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
+       */
+      css(styles) {
+        return is.Def(styles) ? forEach(this.element, el => forEach(styles, (prop, key) => el.style[key] = prop)) : console.error('styles unefined');
+      }
     }
-    return {
-      /**
-       * creates a div element with the options provided
-       * @param {string} sets innerHTML of the div
-       * @param {string|Object=} sets div attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
-       * @param {Boolean=} should the div be a plain String or a Node defaults to string
-       */
-      div: (inner, attr, node) => make_element('div', inner, attr, node),
-      /**
-       * creates a span element with the options provided
-       * @param {string} sets innerHTML of the span
-       * @param {string|Object=} sets span attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
-       * @param {Boolean=} should the span be a plain String or a Node defaults to string
-       */
-      span: (inner, attr, node) => make_element('span', inner, attr, node),
-      /**
-       * creates a label element with the options provided
-       * @param {string} sets innerHTML of the label
-       * @param {string|Object=} sets label attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
-       * @param {Boolean=} should the label be a plain String or a Node defaults to string
-       */
-      label: (inner, attr, node) => make_element('label', inner, attr, node),
-      /**
-       * creates a p (paragraph) element with the options provided
-       * @param {string} sets innerHTML of the p
-       * @param {string|Object=} sets p attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
-       * @param {Boolean=} should the p be a plain String or a Node defaults to string
-       */
-      p: (inner, attr, node) => make_element('p', inner, attr, node),
-      /**
-       * creates an img element with the options provided
-       * @param {string} sets src of the img
-       * @param {string} sets alt of the img
-       * @param {string|Object=} sets p attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
-       * @param {Boolean=} should the p be a plain String or a Node defaults to string
-       */
-      img: (src, alt, attr, node) => make_element('img', '', attr, node, {
-        src: src,
-        alt: alt
-      }),
-      ul(items, attr, node) {
-        let list = ``;
-        if (is.Arr(items)) items.forEach(item => {
-          if (is.String(item)) list += make_element('li', item);
-          else if (is.Object(items)) list += make_element('li', item.inner, item.attr);
-        });
-        return make_element('ul', list, attr, node)
-      },
-      ol(items, attr, node) {
-        let list = ``;
-        if (is.Arr(items)) items.forEach(item => {
-          if (is.String(item)) list += make_element('li', item);
-          else if (is.Object(items)) list += make_element('li', item.inner, item.attr);
-        });
-        return make_element('ol', list, attr, node)
-      },
-      h: (level, inner, attr, node) => make_element('h' + level, inner, attr, node),
-      a: (link, inner, attr, node) => make_element('a', inner, attr, node, {
-        href: link
-      }),
-      script: (code, attr, node) => make_element('script', code, attr, node, {
-        type: 'text/javascript'
-      }),
-      table(rows, attr, node) {
-        if (!is.Arr(rows)) return is.String(rows) ? make_element('table', rows, attr, node) : make_element('table', '', attr, node);
-        if (!rows.every(o => is.Object(o))) throw new TypeError('dom.table -> rows : all entries need to be objects');
-        let tableInner = ``;
-        forEach(rows, row => forEach(row, (val, key) => {
-          let row = `<tr>`;
-          if (key === 'cell' || key === 'td' || key === 'data') {
-            if (is.String(val)) row += `<td>${val}</td>`;
-            else if (is.Object(val)) row += make_element('tr', val.inner, val.attr)
-          } else if (key === 'head' || key === 'th') {
-            if (is.String(val)) row += `<th>${val}</th>`;
-            else if (is.Object(val)) row += make_element('th', val.inner, val.attr)
-          }
-          row += '</tr>'
-          tableInner += row;
-        }));
-        return make_element('table', tableInner, attr, node);
-      },
-    }
-  };
+  }
 
   /**
    * Craft is Crafter.js's Core containing most functionality.
-   * @namespace
    */
-  var Craft = {
+  Craft = {
 
     /** Converts an Array to an Object
      * @param {Array} arr - array to be converted
@@ -938,6 +931,93 @@
         else if (obj.includes(val)) throw new Error(`couldn't omit ${val} from Array/String`);
         return obj;
       },
+      dom: {
+        /**
+         * creates a div element with the options provided
+         * @memberof dom
+         * @param {string} sets innerHTML of the div
+         * @param {string|Object=} sets div attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
+         * @param {Boolean=} should the div be a plain String or a Node defaults to string
+         */
+        div: (inner, attr, node) => make_element('div', inner, attr, node),
+        /**
+         * creates a span element with the options provided
+         * @memberof dom
+         * @param {string} sets innerHTML of the span
+         * @param {string|Object=} sets span attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
+         * @param {Boolean=} should the span be a plain String or a Node defaults to string
+         */
+        span: (inner, attr, node) => make_element('span', inner, attr, node),
+        /**
+         * creates a label element with the options provided
+         * @memberof dom
+         * @param {string} sets innerHTML of the label
+         * @param {string|Object=} sets label attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
+         * @param {Boolean=} should the label be a plain String or a Node defaults to string
+         */
+        label: (inner, attr, node) => make_element('label', inner, attr, node),
+        /**
+         * creates a p (paragraph) element with the options provided
+         * @memberof dom
+         * @param {string} sets innerHTML of the p
+         * @param {string|Object=} sets p attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
+         * @param {Boolean=} should the p be a plain String or a Node defaults to string
+         */
+        p: (inner, attr, node) => make_element('p', inner, attr, node),
+        /**
+         * creates an img element with the options provided
+         * @memberof dom
+         * @param {string} sets src of the img
+         * @param {string} sets alt of the img
+         * @param {string|Object=} sets p attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
+         * @param {Boolean=} should the p be a plain String or a Node defaults to string
+         */
+        img: (src, alt, attr, node) => make_element('img', '', attr, node, {
+          src: src,
+          alt: alt
+        }),
+        ul(items, attr, node) {
+          let list = ``;
+          if (is.Arr(items)) items.forEach(item => {
+            if (is.String(item)) list += make_element('li', item);
+            else if (is.Object(items)) list += make_element('li', item.inner, item.attr);
+          });
+          return make_element('ul', list, attr, node)
+        },
+        ol(items, attr, node) {
+          let list = ``;
+          if (is.Arr(items)) items.forEach(item => {
+            if (is.String(item)) list += make_element('li', item);
+            else if (is.Object(items)) list += make_element('li', item.inner, item.attr);
+          });
+          return make_element('ol', list, attr, node)
+        },
+        h: (level, inner, attr, node) => make_element('h' + level, inner, attr, node),
+        a: (link, inner, attr, node) => make_element('a', inner, attr, node, {
+          href: link
+        }),
+        script: (code, attr, node) => make_element('script', code, attr, node, {
+          type: 'text/javascript'
+        }),
+        table(rows, attr, node) {
+          if (!is.Arr(rows)) return is.String(rows) ? make_element('table', rows, attr, node) : make_element('table', '', attr, node);
+          if (!rows.every(o => is.Object(o))) throw new TypeError('dom.table -> rows : all entries need to be objects');
+          let tableInner = ``;
+          forEach(rows, row => forEach(row, (val, key) => {
+            let row = `<tr>`;
+            if (key === 'cell' || key === 'td' || key === 'data') {
+              if (is.String(val)) row += `<td>${val}</td>`;
+              else if (is.Object(val)) row += make_element('tr', val.inner, val.attr)
+            } else if (key === 'head' || key === 'th') {
+              if (is.String(val)) row += `<th>${val}</th>`;
+              else if (is.Object(val)) row += make_element('th', val.inner, val.attr)
+            }
+            row += '</tr>'
+            tableInner += row;
+          }));
+          return make_element('table', tableInner, attr, node);
+        },
+      },
       CurrentBrowser: {
         is: browser => _br.join(' ').toLowerCase().includes(browser.toLowerCase()) ? true : false,
         browser: _br.join(' ')
@@ -976,7 +1056,7 @@
           key: arg.key || undefined,
           expire: arg.expire || undefined
         })));
-        return Promise.all(promises).then(src => src.map(obj => obj.exec ? obj.type === 'css' ? CrafterStyles.innerHTML += '\n' + obj.data : head.appendChild(dom().script(obj.data,obj.defer, true)) : undefined));
+        return Promise.all(promises).then(src => src.map(obj => obj.exec ? obj.type === 'css' ? CrafterStyles.innerHTML += '\n' + obj.data : head.appendChild(dom().script(obj.data, obj.defer, true)) : undefined));
       },
       router: {
         handle(RouteLink, func) {
@@ -1166,40 +1246,43 @@
        * function that returns a promise when the DOM and WebComponents are finished loading
        * @param {Object=} Scope - Optional overide to the default Craft.Scope passed to the promise
        */
-      WhenReady: Scope => new Promise((resolve, reject) => {
-        let waitIncase = Craft.CurrentBrowser.is("Firefox") || Craft.CurrentBrowser.is("msie");
-        Scope = Scope || Craft.Scope;
-        if (Ready) waitIncase ? setTimeout(() => resolve(Scope), 500) : resolve(Scope);
-        else {
-          let ReadyYet = setInterval(() => {
-            if (Ready) {
-              waitIncase ? setTimeout(() => resolve(Scope), 500) : resolve(Scope);
+      WhenReady(Scope) {
+        return new Promise((resolve, reject) => {
+          Scope = Scope || Craft.Scope;
+          if (Ready) resolve(Scope);
+          else {
+            let ReadyYet = setInterval(() => {
+              if (Ready) {
+                resolve(Scope);
+                clearInterval(ReadyYet);
+              }
+            }, 20);
+            setTimeout(() => {
               clearInterval(ReadyYet);
-            }
-          }, 20);
-          setTimeout(() => {
-            clearInterval(ReadyYet);
-            if (!Ready) reject("Things didn't load correctly/intime -> load failed");
-          }, 4500)
-        }
-      }),
-      poll: (test, interval, timeout, success, fail) => (() => {
-        if (is.Func(timeout)) {
-          if (is.Func(success)) fail = success;
-          success = timeout;
-          timeout = undefined;
-        }
-        let Interval = setInterval(() => {
-          if ((is.Bool(test) && test === true) || (is.Func(test) && test() === true)) {
-            success();
-            clearInterval(Interval);
+              if (!Ready) reject("Things didn't load correctly/intime -> load failed");
+            }, 4500)
           }
-        }, interval || 20);
-        if (is.Num(timeout)) setTimeout(() => {
-          clearInterval(Interval);
-          if ((is.Bool(test) && test === false) || (is.Func(test) && test() === false)) fail();
-        }, timeout);
-      })(),
+        });
+      },
+      poll(test, interval, timeout, success, fail) {
+        return (() => {
+          if (is.Func(timeout)) {
+            if (is.Func(success)) fail = success;
+            success = timeout;
+            timeout = undefined;
+          }
+          let Interval = setInterval(() => {
+            if ((is.Bool(test) && test === true) || (is.Func(test) && test() === true)) {
+              success();
+              clearInterval(Interval);
+            }
+          }, interval || 20);
+          if (is.Num(timeout)) setTimeout(() => {
+            clearInterval(Interval);
+            if ((is.Bool(test) && test === false) || (is.Func(test) && test() === false)) fail();
+          }, timeout);
+        })()
+      } ,
       /**
        * Usefull method for validating passwords , example Craft.strongPassword('#MyFancyPassword18',8,true,true,"#") -> true requirements met
        * @param {string} pass - string containing the password
@@ -1258,18 +1341,18 @@
        */
       newComponent(tag, config) {
         if (is.Undef(config)) throw new Error(`Craft.newComponent : ${tag} -> config is undefined`);
-          let element = Object.create(HTMLElement.prototype),
-            settings = {}
-          forEach(config, (prop, key) => {
-            if (key === 'created') element.createdCallback = prop;
-            else if (key === 'inserted') element.attachedCallback = prop;
-            else if (key === 'destroyed') element.detachedCallback = prop;
-            else if (key === 'attr') element.attributeChangedCallback = prop;
-            else if (key === 'extends') settings.extends = prop;
-            else element[key] = prop;
-          });
-          settings['prototype'] = element;
-          doc.registerElement(tag, settings)
+        let element = Object.create(HTMLElement.prototype),
+          settings = {}
+        forEach(config, (prop, key) => {
+          if (key === 'created') element.createdCallback = prop;
+          else if (key === 'inserted') element.attachedCallback = prop;
+          else if (key === 'destroyed') element.detachedCallback = prop;
+          else if (key === 'attr') element.attributeChangedCallback = prop;
+          else if (key === 'extends') settings.extends = prop;
+          else element[key] = prop;
+        });
+        settings['prototype'] = element;
+        document.registerElement(tag, settings)
       },
       applyBinds(key) {
         let bind = Craft.Binds.get(key),
@@ -1376,6 +1459,7 @@
 
   root.is = is;
   root.dom = dom;
+  root.domNodeList = domNodeList;
   root.Craft = Craft;
   root.On = On;
   root.Once = Once;

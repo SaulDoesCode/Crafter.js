@@ -69,8 +69,15 @@ gulp.task('babelize_webcomponents', () => gulp.src('./src/pre-webcomponents/*.js
     extname: ".bs"
   })).pipe(gulp.dest('./src/pre-webcomponents/')));
 
+gulp.task('buildWC', () => gulp.src('./src/pre-webcomponents/*.js')
+  .pipe(babel({
+    presets: ['es2015']
+  })).pipe(rename({
+    extname: ".bs"
+  })).pipe(gulp.dest('./src/pre-webcomponents/')));
 
-gulp.task('build_webcomponents', ['babelize_webcomponents'], function () {
+
+gulp.task('build_webcomponents', ['babelize_webcomponents'],() => {
   var FileNames = [],
     files = fs.readdirSync('./src/pre-webcomponents/');
   files.forEach((file, i) => {
