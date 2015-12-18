@@ -934,11 +934,14 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
    * @param {function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
    * @returns Off - when On is defined as a variable "var x = On(...)" it allows you to access all the EventHandler interfaces Off,Once,On
    */
-  function _On(EventType, Target, func) {
+  function _On(EventType, Target, element, func) {
     if (is.Func(Target)) {
       func = Target;
       Target = root;
-    }
+    } else if (is.String(Target) && (is.Node(element) || is.String(element))) {
+      Target = _query(Target, element);
+    } else if (is.Func(element)) func = element;
+
     var handle = new EventHandler(EventType, Target, func);
     handle.On();
     return handle;
@@ -955,20 +958,28 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     if (is.Func(Target)) {
       func = Target;
       Target = root;
-    }
+    } else if (is.String(Target) && (is.Node(element) || is.String(element))) {
+      Target = _query(Target, element);
+    } else if (is.Func(element)) func = element;
+
     var handle = new EventHandler(EventType, Target, func);
     handle.Once();
     return handle;
   }
 
   function make_element(name, inner, attributes, NodeForm, extraAttr) {
+    if (is.Bool(inner) && inner === true) {
+      NodeForm = inner;
+      inner = '';
+      attributes = undefined;
+    }
     if (is.Bool(attributes)) {
       NodeForm = attributes;
       attributes = undefined;
     }
-    if (is.Bool(inner)) {
-      NodeForm = inner;
-      attributes = undefined;
+    if (is.Undef(inner, attributes, NodeForm)) {
+      inner = '';
+      NodeForm = true;
     }
     if (NodeForm === true) {
       var _ret = (function () {
@@ -1003,11 +1014,48 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     return '<' + name + ' ' + attrString + '>' + inner + '</' + name + '>';
   }
 
+  var domNodeList = function domNodeList(elements) {
+    return {
+      /**
+       * Listen for Events on the NodeList
+       * @param {string} string indicating the type of event to listen for
+       * @param {function} func - handler function for the event
+       * @returns handler (Off,Once,On)
+       */
+
+      On: function On(eventType, func) {
+        return _On(eventType, elements, func);
+      },
+
+      /**
+       * Checks wether a Node is in the NodeList with either a refference to the Node or a CSS selector
+       * @param {Node|string} Node or CSS selector
+       */
+      includes: function includes(SelectorNode) {
+        for (var index = 0; index < elements.length; index++) {
+          if (elements[index] === SelectorNode) return true;
+        }return false;
+      },
+
+      /**
+       * add CSS style rules to NodeList
+       * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
+       */
+      css: function css(styles) {
+        return is.Def(styles) ? forEach(this.element, function (el) {
+          return forEach(styles, function (prop, key) {
+            return el.style[key] = prop;
+          });
+        }) : console.error('styles unefined');
+      }
+    };
+  };
+
   var domMethods = (function () {
-    function domMethods(element) {
+    function domMethods(element, within) {
       _classCallCheck(this, domMethods);
 
-      if (is.String(element)) element = _query(element);
+      if (is.String(element)) is.Def(within) ? element = _query(element, within) : element = _query(element);
       this.element = element;
     }
     /**
@@ -1276,47 +1324,17 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
   /**
    * Function that returns many useful methods for interacting with and manipulating the DOM or creating elements
    * @name dom
-   * @param {Node|NodeList|string=} element - optional Node, NodeList or CSS Selector that will be affected by the methods returned
+   * @param {Node|string=} element - optional Node, NodeList or CSS Selector that will be affected by the methods returned
+   * @param {Node|string=} within - optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
    */
 
-  var dom = function dom(element) {
-    return is.Def(element) ? new domMethods(element) : Craft.dom;
-  },
-      domNodeList = function domNodeList(elements) {
-    return {
-      /**
-       * Listen for Events on the NodeList
-       * @param {string} string indicating the type of event to listen for
-       * @param {function} func - handler function for the event
-       * @returns handler (Off,Once,On)
-       */
-
-      On: function On(eventType, func) {
-        return _On(eventType, elements, func);
-      },
-
-      /**
-       * Checks wether a Node is in the NodeList with either a refference to the Node or a CSS selector
-       * @param {Node|string} Node or CSS selector
-       */
-      includes: function includes(SelectorNode) {
-        for (var index = 0; index < elements.length; index++) {
-          if (elements[index] === SelectorNode) return true;
-        }return false;
-      },
-
-      /**
-       * add CSS style rules to NodeList
-       * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
-       */
-      css: function css(styles) {
-        return is.Def(styles) ? forEach(this.element, function (el) {
-          return forEach(styles, function (prop, key) {
-            return el.style[key] = prop;
-          });
-        }) : console.error('styles unefined');
-      }
-    };
+  var dom = function dom(element, within) {
+    if (is.Node(element)) return new domMethods(element);else if (is.String(element)) {
+      var elements = is.String(within) || is.Node(within) ? _queryAll(element, within) : _queryAll(element);
+      if (!elements.length) return console.warn('dom(\'' + element + '\') -> null CSS selector');
+      return elements.length === 1 ? new domMethods(elements[0]) : domNodeList(elements);
+    }
+    return Craft.dom;
   };
 
   /**
@@ -1550,6 +1568,13 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         }
       }
     },
+    /**
+    * Crafter.js module loader,
+    * each import option is an object with properties like 'script/css/wc : "location" ' for resource url
+    * other options include 'cache' - determines wether to cache the resource or not , 'test' : usefull for conditional imports if test is false the resource won't load or execute ,
+    * 'key' custom name to cache the resource in localStorage with instead of the resource location, 'defer' optionally load the script when the dom is loaded or load when it's ready,
+    * {...object} args - Objects containing options for Script/CSS/WebComponent import
+    */
     Import: function Import() {
       var promises = [];
 
@@ -1843,17 +1868,12 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
      */
     WhenReady: function WhenReady(Scope) {
       return new Promise(function (resolve, reject) {
-        var waitIncase = Craft.CurrentBrowser.is("Firefox") || Craft.CurrentBrowser.is("msie");
         Scope = Scope || Craft.Scope;
-        if (Ready) waitIncase ? setTimeout(function () {
-          return resolve(Scope);
-        }, 500) : resolve(Scope);else {
+        if (Ready) resolve(Scope);else {
           (function () {
             var ReadyYet = setInterval(function () {
               if (Ready) {
-                waitIncase ? setTimeout(function () {
-                  return resolve(Scope);
-                }, 500) : resolve(Scope);
+                resolve(Scope);
                 clearInterval(ReadyYet);
               }
             }, 20);

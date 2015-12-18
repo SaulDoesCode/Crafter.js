@@ -217,7 +217,7 @@
      * checks wether a date is yesterday
      * @param obj - Date to test
      */
-    yesterday: obj => {
+    yesterday(obj) {
       let now = new Date();
       return is.Date(obj) && obj.toDateString() === new Date(now.setDate(now.getDate() - 1)).toDateString();
     },
@@ -225,7 +225,7 @@
      * checks wether a date is tommorow
      * @param obj - Date to test
      */
-    tomorrow: obj => {
+    tomorrow(obj) {
       let now = new Date();
       return is.Date(obj) && obj.toDateString() === new Date(now.setDate(now.getDate() + 1)).toDateString();
     },
@@ -316,20 +316,24 @@
      * Determine if a given collection or string is empty
      * @param {Object|Array|string} val - value to test if empty
      */
-    empty: val => ifelse(is.Object(val), () => {
-      let num = Object.getOwnPropertyNames(val).length;
-      return (num === 0 || (num === 1 && is.Arr(val)) || (num === 2 && is.Args(val))) ? true : false;
-    }, () => is.Arr(val) ? val.length <= 0 : val === '')(),
+    empty(val) {
+      if (is.Object(val)) {
+        let num = Object.getOwnPropertyNames(val).length;
+        return (num === 0 || (num === 1 && is.Arr(val)) || (num === 2 && is.Args(val))) ? true : false
+      } else return is.Arr(val) ? val.length <= 0 : val === ''
+    },
     /**
      * Determines if a value is an instance of the ReactiveVariable class
      * @param args - value/values to test
      */
-    ReactiveVariable: (...args) => args.length && args.every(o => o instanceof ReactiveVariable ? true : false),
+    ReactiveVariable(...args) {
+      return args.length && args.every(o => o instanceof ReactiveVariable ? true : false)
+    },
     /**
      * Test if something is a Native JavaScript feature
      * @param val - value to test
      */
-    Native: val => {
+    Native(val) {
       let type = typeof val;
       return type === 'function' ? RegExp('^' + String(Object.prototype.toString).replace(/[.*+?^${}()|[\]\/\\]/g, '\\$&').replace(/toString|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$').test(Function.prototype.toString.call(val)) : (val && type == 'object' && /^\[object .+?Constructor\]$/.test(val.toString)) || false;
     },
@@ -582,11 +586,14 @@
    * @param {function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
    * @returns Off - when On is defined as a variable "var x = On(...)" it allows you to access all the EventHandler interfaces Off,Once,On
    */
-  function On(EventType, Target, func) {
+  function On(EventType, Target, element, func) {
     if (is.Func(Target)) {
       func = Target;
       Target = root;
-    }
+    } else if (is.String(Target) && (is.Node(element) || is.String(element))) {
+      Target = query(Target, element);
+    } else if (is.Func(element)) func = element;
+
     let handle = new EventHandler(EventType, Target, func);
     handle.On();
     return handle;
@@ -603,20 +610,28 @@
     if (is.Func(Target)) {
       func = Target;
       Target = root;
-    }
+    } else if (is.String(Target) && (is.Node(element) || is.String(element))) {
+      Target = query(Target, element);
+    } else if (is.Func(element)) func = element;
+
     let handle = new EventHandler(EventType, Target, func);
     handle.Once();
     return handle;
   }
 
   function make_element(name, inner, attributes, NodeForm, extraAttr) {
+    if (is.Bool(inner) && inner === true) {
+      NodeForm = inner;
+      inner = '';
+      attributes = undefined;
+    }
     if (is.Bool(attributes)) {
       NodeForm = attributes;
       attributes = undefined;
     }
-    if (is.Bool(inner)) {
-      NodeForm = inner;
-      attributes = undefined;
+    if (is.Undef(inner, attributes, NodeForm)) {
+      inner = '';
+      NodeForm = true;
     }
     if (NodeForm === true) {
       let newEl = doc.createElement(name);
@@ -633,9 +648,40 @@
     return `<${name} ${attrString}>${inner}</${name}>`;
   }
 
+
+  let domNodeList = (elements) => {
+    return {
+      /**
+       * Listen for Events on the NodeList
+       * @param {string} string indicating the type of event to listen for
+       * @param {function} func - handler function for the event
+       * @returns handler (Off,Once,On)
+       */
+      On(eventType, func) {
+          return On(eventType, elements, func);
+        },
+        /**
+         * Checks wether a Node is in the NodeList with either a refference to the Node or a CSS selector
+         * @param {Node|string} Node or CSS selector
+         */
+        includes(SelectorNode) {
+          for (let index = 0; index < elements.length; index++)
+            if (elements[index] === SelectorNode) return true;
+          return false;
+        },
+        /**
+         * add CSS style rules to NodeList
+         * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
+         */
+        css(styles) {
+          return is.Def(styles) ? forEach(this.element, el => forEach(styles, (prop, key) => el.style[key] = prop)) : console.error('styles unefined');
+        }
+    }
+  }
+
   class domMethods {
-      constructor(element) {
-        if(is.String(element)) element = query(element);
+    constructor(element, within) {
+        if (is.String(element)) is.Def(within) ? element = query(element, within) : element = query(element);
         this.element = element;
       }
       /**
@@ -643,7 +689,7 @@
        * @memberof dom
        * @param {string=} sets the innerHTML value or when undefined gets the innerHTML value
        */
-      html(val) {
+    html(val) {
         return is.Def(val) ? this.element.innerHTML = val : this.element.innerHTML;
       }
       /**
@@ -651,7 +697,7 @@
        * @memberof dom
        * @param {string=} sets the textContent value or when undefined gets the textContent value
        */
-      text(val) {
+    text(val) {
         return is.Def(val) ? this.element.textContent = val : this.element.textContent;
       }
       /**
@@ -659,7 +705,7 @@
        * @memberof dom
        * @param {Node} Node to replace with
        */
-      replace(val) {
+    replace(val) {
         return this.element.parentNode.replaceChild(el, this.element);
       }
       /**
@@ -667,7 +713,7 @@
        * @memberof dom
        * @param {Node|string} CSS selector or Node to append the this.element to
        */
-      appendTo(val) {
+    appendTo(val) {
         let el;
         is.Node(val) ? el = val : el = query(val);
         if (el !== null) el.appendChild(this.element);
@@ -677,7 +723,7 @@
        * @memberof dom
        * @param {Node|string} String or Node to append to the this.element
        */
-      append(val) {
+    append(val) {
         return is.String(val) ? this.element.innerHTML += val : this.element.parentNode.appendChild(this.element);
       }
       /**
@@ -685,7 +731,7 @@
        * @memberof dom
        * @param {Node|string} String or Node to prepend to the this.element
        */
-      prepend(val) {
+    prepend(val) {
         return is.String(val) ? this.element.innerHTML = val + this.element.innerHTML : this.element.insertBefore(val, this.element.firstChild);
       }
       /**
@@ -695,7 +741,7 @@
        * @param {function} func - handler function for the event
        * @returns handler (Off,Once,On)
        */
-      On(eventType, func) {
+    On(eventType, func) {
         return On(eventType, this.element, func);
       }
       /**
@@ -703,7 +749,7 @@
        * @memberof dom
        * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
        */
-      css(styles) {
+    css(styles) {
         return is.Def(styles) ? forEach(styles, (prop, key) => this.element.style[key] = prop) : console.error('Styles Object undefined');
       }
       /**
@@ -711,7 +757,7 @@
        * @memberof dom
        * @param {string} name of the class to check for
        */
-      gotClass(Class) {
+    gotClass(Class) {
         return this.element.classList.contains(Class);
       }
       /**
@@ -719,7 +765,7 @@
        * @memberof dom
        * @param {string} name of the class to add
        */
-      addClass(Class) {
+    addClass(Class) {
         return this.element.classList.add(Class);
       }
       /**
@@ -727,7 +773,7 @@
        * @memberof dom
        * @param {string} name of the class to strip
        */
-      stripClass(Class) {
+    stripClass(Class) {
         return this.element.classList.remove(Class);
       }
       /**
@@ -735,7 +781,7 @@
        * @memberof dom
        * @param {string} name of the Attribute to strip
        */
-      stripAttr(Attr) {
+    stripAttr(Attr) {
         this.element.removeAttribute(Attr);
       }
       /**
@@ -743,7 +789,7 @@
        * @memberof dom
        * @param {string} name of the Attribute to check for
        */
-      hasAttr(Attr) {
+    hasAttr(Attr) {
         return this.element.hasAttribute(Attr);
       }
       /**
@@ -752,17 +798,17 @@
        * @param {string} Name of the Attribute to add/set
        * @param {string} Value of the Attribute to add/set
        */
-      setAttr(Attr, val) {
-        return this.element.setAttribute(Attr, val);
-      }
-      getAttr(Attr) {
+    setAttr(Attr, val) {
+      return this.element.setAttribute(Attr, val);
+    }
+    getAttr(Attr) {
         return this.element.getAttribute(Attr);
       }
       /**
-      * gets all the elements siblings within it's parentNode
-      * @memberof dom
-      */
-      getSiblings() {
+       * gets all the elements siblings within it's parentNode
+       * @memberof dom
+       */
+    getSiblings() {
         let siblings = [],
           AllChildren = this.element.parentNode.childNodes;
         for (let i = 0; i < AllChildren.length; i++)
@@ -770,24 +816,24 @@
         return siblings;
       }
       /**
-      * gets all the element's pixel width
-      * @memberof dom
-      */
-      Width() {
+       * gets all the element's pixel width
+       * @memberof dom
+       */
+    Width() {
         return this.element.getBoundingClientRect().width;
       }
       /**
-      * gets all the element's pixel height
-      * @memberof dom
-      */
-      Height() {
+       * gets all the element's pixel height
+       * @memberof dom
+       */
+    Height() {
         return this.element.getBoundingClientRect().height;
       }
       /**
-      * gets all the element's dimentions (width,height,left,top,bottom,right)
-      * @memberof dom
-      */
-      getRect() {
+       * gets all the element's dimentions (width,height,left,top,bottom,right)
+       * @memberof dom
+       */
+    getRect() {
         return this.element.getBoundingClientRect();
       }
       /**
@@ -795,7 +841,7 @@
        * @memberof dom
        * @param {string} pixel value to set
        */
-      setWidth(Width) {
+    setWidth(Width) {
         this.element.style.width = Width;
       }
       /**
@@ -803,7 +849,7 @@
        * @memberof dom
        * @param {string} pixel value to set
        */
-      setHeight(Height) {
+    setHeight(Height) {
         this.element.style.height = Height;
       }
       /**
@@ -812,7 +858,7 @@
        * @param {string} CSS selector
        * @returns {Node|Null}
        */
-      query(selector) {
+    query(selector) {
         return query(selector, this.element);
       }
       /**
@@ -821,46 +867,27 @@
        * @param {string} CSS selector
        * @returns {NodeList|Null}
        */
-      queryAll(selctor){
-        return queryAll(selector, this.element);
-      }
+    queryAll(selctor) {
+      return queryAll(selector, this.element);
+    }
   }
 
   /**
    * Function that returns many useful methods for interacting with and manipulating the DOM or creating elements
    * @name dom
-   * @param {Node|NodeList|string=} element - optional Node, NodeList or CSS Selector that will be affected by the methods returned
+   * @param {Node|string=} element - optional Node, NodeList or CSS Selector that will be affected by the methods returned
+   * @param {Node|string=} within - optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
    */
-  let dom = element => is.Def(element) ? new domMethods(element) : Craft.dom,
-  domNodeList = (elements) => {
-    return {
-      /**
-       * Listen for Events on the NodeList
-       * @param {string} string indicating the type of event to listen for
-       * @param {function} func - handler function for the event
-       * @returns handler (Off,Once,On)
-       */
-      On(eventType, func) {
-        return On(eventType, elements, func);
-      },
-      /**
-       * Checks wether a Node is in the NodeList with either a refference to the Node or a CSS selector
-       * @param {Node|string} Node or CSS selector
-       */
-      includes(SelectorNode) {
-        for (let index = 0; index < elements.length; index++)
-          if (elements[index] === SelectorNode) return true;
-        return false;
-      },
-      /**
-       * add CSS style rules to NodeList
-       * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
-       */
-      css(styles) {
-        return is.Def(styles) ? forEach(this.element, el => forEach(styles, (prop, key) => el.style[key] = prop)) : console.error('styles unefined');
-      }
+  let dom = (element, within) => {
+    if (is.Node(element)) return new domMethods(element);
+    else if (is.String(element)) {
+      let elements = is.String(within) || is.Node(within) ? queryAll(element, within) : queryAll(element);
+      if (!elements.length) return console.warn(`dom('${element}') -> null CSS selector`);
+      return elements.length === 1 ? new domMethods(elements[0]) : domNodeList(elements);
     }
+    return Craft.dom;
   }
+
 
   /**
    * Craft is Crafter.js's Core containing most functionality.
@@ -1045,6 +1072,13 @@
             if (!expired || Craft.loader.get(i).expire <= +new Date()) Craft.loader.remove(i)
         }
       },
+      /**
+       * Crafter.js module loader,
+       * each import option is an object with properties like 'script/css/wc : "location" ' for resource url
+       * other options include 'cache' - determines wether to cache the resource or not , 'test' : usefull for conditional imports if test is false the resource won't load or execute ,
+       * 'key' custom name to cache the resource in localStorage with instead of the resource location, 'defer' optionally load the script when the dom is loaded or load when it's ready,
+       * {...object} args - Objects containing options for Script/CSS/WebComponent import
+       */
       Import(...args) {
         let promises = [];
         args.forEach(arg => arg.test === false ? Craft.loader.remove(arg.css || arg.script) : promises.push(Craft.loader.fetchImport({
@@ -1072,12 +1106,15 @@
           open: (link, newtab) => newtab ? open(link) : location = link,
           setTitle: title => doc.title = title,
           setView: (viewHostSelector, view) => query(viewHostSelector).innerHTML = view,
-          fetchView(viewHostSelector, viewURL, cache, id) {
-            if (is.Null(localStorage.getItem("RT_" + id))) fetch(viewURL).then(res => res.text().then(txt => {
-              if (cache && is.Def(id) && is.String(id) && is.Null(localStorage.getItem("RT_" + id))) localStorage.setItem(("RT_" + id), txt);
-              query(viewHostSelector).innerHTML = txt;
-            })).catch(msg => console.warn(`Could not fetch view -> ${msg}`));
-            else if (cache) query(viewHostSelector).innerHTML = localStorage.getItem("RT_" + id)
+          fetchView(viewHostSelector, viewURL, append, cache, id) {
+            let element = query(viewHostSelector),
+              view = is.Def(id) ? localStorage.getItem("RT_" + id) : null;
+            if (element !== null) {
+              is.Null(view) ? fetch(viewURL).then(res => res.text().then(txt => {
+                if (cache === true && is.String(id) && is.Null(view)) localStorage.setItem(("RT_" + id), txt);
+                !append ? element.innerHTML = txt : element.innerHTML += txt;
+              })).catch(err => console.warn(`Could not fetch view -> ${err}`)) : cache === true && !append ? element.innerHTML = view : element.innerHTML += view;
+            }
           },
           clearCache() {
             for (let i in localStorage)
@@ -1128,7 +1165,7 @@
           if (callNow) func.apply(this, args);
         };
       },
-      throttle: function (wait, func, options) {
+      throttle(wait, func, options) {
         let context, args, result,
           timeout = null,
           previous = 0;
@@ -1157,7 +1194,7 @@
           return result;
         };
       },
-      once: (func, context) => {
+      once(func, context) {
         let res;
         return function () {
           if (is.Func(func)) {
@@ -1282,25 +1319,27 @@
             if ((is.Bool(test) && test === false) || (is.Func(test) && test() === false)) fail();
           }, timeout);
         })()
-      } ,
+      },
       /**
        * Usefull method for validating passwords , example Craft.strongPassword('#MyFancyPassword18',8,true,true,"#") -> true requirements met
        * @param {string} pass - string containing the password
        * @param {Number} length - Character length in numbers (Minimum password length)
        * @param {Boolean} caps - Should the password contains Capital Letters
        * @param {Boolean} number - should the password contain Numbers
+       * @param {Boolean} reasons - should the function return a short string explaining the reason exept when it's a pass then it gives a bool;
        * @param {...string} includeChars - every extra argument should be a string containing a character you want the password to include
        */
-      strongPassword: (pass, length, caps, number, ...includeChars) => {
-        if (pass.length <= length) return false;
-        if (caps === true && Craft.hasCapitals(pass) === false) return false;
-        if (number === true && /\d/g.test(pass) === false) return false;
+      strongPassword: (pass, length, caps, number, reasons, ...includeChars) => {
+        if (pass.length <= length) return reasons ? 'Password too short' : false;
+        if (caps === true && Craft.hasCapitals(pass) === false) return reasons ? 'Password does not contain a Capital letter' : false;
+        if (number === true && /\d/g.test(pass) === false) return reasons ? 'Password does not contain a number' : false;
         if (includeChars.length !== 0) {
-          let hasChars = true;
+          let hasChars = true,
+            reason = includeChars.join();
           includeChars.forEach(ch => {
             if (!pass.includes(ch)) hasChars = false;
           });
-          if (!hasChars) return false
+          if (!hasChars) return reasons ? '' : false
         }
         return true;
       },
@@ -1322,7 +1361,7 @@
           src: Craft.URLfrom(webcomponent.js),
           webcomponent: webcomponent.name
         }, true);
-        wcJS.onload = e => Craft.WebComponents.push(webcomponent.name);
+        wcJS.onload = e => Craft.WebComponents.push(src);
         head.appendChild(wcJS);
       },
       /**
@@ -1406,6 +1445,7 @@
         if (Craft.BindExists(bindAttr)) Craft.applyBinds(bindAttr);
         else Craft.newBind(bindAttr, element.tagName === 'INPUT' || element.tagName === 'TEXTAREA' ? element.value : element.innerHTML);
       }
+      if(element.hasAttribute('link')) On('click', element, e => element.hasAttribute('newtab') ? open(element.getAttribute('link')) : Craft.router.open(element.getAttribute('link')));
     }
   });
 
@@ -1419,37 +1459,38 @@
   root.onfocus = e => Craft.tabActive = true;
 
   Craft.newComponent('fetch-webcomponent', {
-    created() {
+    inserted() {
       if (this.hasAttribute('src')) {
-        let wc = null;
+        let wc = null , src = this.getAttribute('src');
+        if(Craft.WebComponents.includes(src)) return false;
         if (this.hasAttribute('cache-component')) {
-          wc = localStorage.getItem(this.getAttribute('src'));
-          if (wc !== null) Craft.createWebComponent(wc);
+          wc = localStorage.getItem(src);
+          if (wc !== null) Craft.createWebComponent(wc,src);
         }
-        if (wc === null) fetch(this.getAttribute('src')).then(res => res.json().then(webcomponent => {
+        if (wc === null) fetch(src).then(res => res.json().then(webcomponent => {
           CrafterStyles.innerHTML += webcomponent.css;
           let wcJS = dom().script('', {
             src: Craft.URLfrom(webcomponent.js),
             webcomponent: webcomponent.name
           }, true);
           wcJS.onload = e => {
-            Craft.WebComponents.push(webcomponent.name);
+            Craft.WebComponents.push(src);
             wcJS = null;
             webcomponent = null;
           }
           head.appendChild(wcJS);
-          if (this.getAttribute('cache-component') === 'true') localStorage.setItem(this.getAttribute('src'), JSON.stringify(webcomponent));
+          if (this.getAttribute('cache-component') === 'true') localStorage.setItem(src, JSON.stringify(webcomponent));
         })).catch(err => console.error(err + ': could not load webcomponent'))
       }
     }
   });
 
   Once('DOMContentLoaded', e => {
-    queryEach('[link]', el => On('click', el, e => el.hasAttribute('newtab') ? open(el.getAttribute('link')) : Craft.router.open(el.getAttribute('link'))));
+    //queryEach('[link]', el => On('click', el, e => el.hasAttribute('newtab') ? open(el.getAttribute('link')) : Craft.router.open(el.getAttribute('link'))));
     Craft.router.links.forEach(link => link());
     if (Craft.WebComponents.length === queryAll('fetch-webcomponent').length) Ready = true;
     else Craft.poll(() => Craft.WebComponents.length === queryAll('fetch-webcomponent').length, 35, 2000, () => Ready = true, () => {
-      console.log('loading is taking longer than usual :(');
+      console.warn('loading is taking longer than usual :(');
       Ready = true
     })
   });

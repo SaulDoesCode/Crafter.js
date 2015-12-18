@@ -34,14 +34,16 @@ context-menu > section:hover {
   position: absolute;
   box-sizing: content-box !important;
   display: none;
+  min-width:18px;
   width: auto;
-  font-size: 0.9em;
+  font-size:15px;
   height: 26px;
   line-height: 26px;
   padding-left: 15px;
   padding-right: 15px;
   background: hsl(0, 0%, 93%);
   border-radius: 3px;
+  white-space: nowrap;
   color: hsl(30, 3%, 40%);
   -webkit-filter: drop-shadow(0 1px 2px hsla(0, 0%, 10%, .35));
   -moz-filter: drop-shadow(0 1px 2px hsla(0, 0%, 10%, .35));
@@ -111,7 +113,7 @@ ripple-effect {
   -moz-user-select: none;
   -webkit-user-select: none;
   opacity: 0.8;
-  background:rgb(214, 193, 27);
+  background: rgb(214, 193, 27);
   border-radius: 100%;
   transform: scale(0);
   z-index: 0;
@@ -137,9 +139,9 @@ toggle-button {
   position: relative;
   display: inline-block;
   width: 10mm;
-  height:4mm;
+  height: 4mm;
   border-radius: 4mm;
-  background:#e9e9e9;
+  background: #e9e9e9;
   box-shadow: inset 0 0 3px hsla(0, 0%, 20%, 0.2);
   cursor: pointer;
   transition: all 130ms ease;
@@ -147,47 +149,100 @@ toggle-button {
 toggle-button > .toggle {
   position: absolute;
   display: inline-block;
-  width:5mm;
-  height:5mm;
-  top:-0.45mm;
-  left:0;
+  width: 5mm;
+  height: 5mm;
+  top: -0.45mm;
+  left: 0;
   border-radius: 100%;
   background: #ffffff;
-  box-shadow: 0 2px 5px hsla(0,0%,20%,.2), 0 0 2px hsla(0,0%,20%,.2);
+  box-shadow: 0 2px 5px hsla(0, 0%, 20%, .2), 0 0 2px hsla(0, 0%, 20%, .2);
   transition: all 120ms ease;
 }
-toggle-button[open] > .toggle {
-  left:calc(100% - 5mm);
+toggle-button[open="true"] > .toggle {
+  left: calc(100% - 5mm);
 }
 toggle-button:hover {
-  background:#ebb4b1;
+  background: #ebb4b1;
 }
-toggle-button[open]:hover {
-  background:#adeeb7;
+toggle-button[open="true"]:hover {
+  background: #adeeb7;
 }
-.notification-host {
-  background: transparent;
-  position:fixed;
-  top:0;
-  right:0;
-  width: 250px;
+.notifications-top-left, .notifications-top-right, .notifications-top-middle, .notifications-bottom-left, .notifications-bottom-right, .notifications-bottom-middle {
+  position: fixed;
+  width: auto;
   height: auto;
+  z-index: 50;
+}
+.notifications-top-left {
+  top: 0;
+  left: 0;
+}
+.notifications-top-right {
+  top: 0;
+  right: 0;
+}
+.notifications-top-middle {
+  top: 0;
+  left: 30%;
+  right: 30%;
+  width: 40%;
+}
+.notifications-bottom-left {
+  bottom: 0;
+  left: 0;
+}
+.notifications-bottom-right {
+  bottom: 0;
+  right: 0;
+}
+.notifications-bottom-middle {
+  bottom: 0;
+  left: 30%;
+  right: 30%;
+  width: 40%;
 }
 craft-notification {
- position: relative;
- margin:5%;
- width: 95%;
- height:6mm;
- background: #fff;
+  position: relative;
+  display: block;
+  pointer-events: all;
+  -webkit-pointer-events: all;
+  -moz-pointer-events: all;
+  border-bottom-left-radius: 2px;
+  border-top-left-radius: 2px;
+  margin:2mm;
+  padding-left: 1mm;
+  padding-right: 6mm;
+  height: 6mm;
+  line-height: 6mm;
+  width: auto;
+  font-size: 0.8em;
+  background: #fff;
+  color: rgb(40, 40, 40);
+  box-shadow: 0 2px 5px rgba(47, 47, 47, 0.17);
+  z-index: 100000;
 }
 craft-notification[state="bad"] {
-  border-left:4px solid red;
+  border-left: 4px solid red;
 }
 craft-notification[state="good"] {
-  border-left:4px solid green;
+  border-left: 4px solid green;
 }
 craft-notification[state="warning"] {
-  border-left:4px solid rgb(223, 176, 7);
+  border-left: 4px solid rgb(223, 176, 7);
+}
+craft-notification > .notification-close {
+  position: absolute;
+  text-align: center;
+  right: 0;
+  top: 0;
+  height: 6mm;
+  line-height: 6mm;
+  font-size: 1.2em;
+  width: 6mm;
+  color: red;
+  text-shadow: 0 1px 2px rgba(52, 52, 52, 0.29);
+  cursor: not-allowed;
+  z-index: 5;
 }
 [biscuit-tall], [biscuit-double], .biscuit-tall, .biscuit-double, [biscuit], [class*=biscuit], [biscuit-square], .biscuit-square, .biscuit {
   background: white;
@@ -521,5 +576,262 @@ li {
   }
   .offset-by-one-half.column, .offset-by-one-half.columns {
     margin-left: 52%;
+  }
+}
+check-box, radio-button, radio-button > *, material-input, material-input > * {
+  box-sizing: border-box;
+}
+check-box {
+  box-sizing: border-box;
+  position: relative;
+  vertical-align: middle;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  line-height: 15px;
+  margin: 0 2px;
+  background: hsl(0, 0%, 90%);
+  border: 1px solid silver;
+  color: hsl(0, 0%, 30%);
+  transition: all 100ms ease;
+}
+check-box[checked="true"]::before {
+  content: '\2714';
+}
+check-box:hover {
+  border: 1px solid #797979;
+}
+radio-button {
+  position: relative;
+  display: inline-block;
+  box-sizing: border-box;
+  overflow: hidden;
+  cursor: pointer;
+  color: hsl(0, 0%, 20%);
+}
+radio-button ~ radio-button, radio-button + radio-button {
+  margin: auto 5px auto 5px;
+}
+radio-button > [radio] {
+  display: inline-block;
+  vertical-align: middle;
+  width: 16px;
+  height: 16px;
+  margin-right: 5px;
+  border-radius: 100%;
+  background: hsl(0, 0%, 60%);
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  transition: all 150ms ease;
+}
+radio-button[disabled] {
+  pointer-events: none;
+  -webkit-pointer-events: none;
+  -moz-pointer-events: none;
+  color: hsl(0, 0%, 65%);
+}
+radio-button[disabled] > [radio] {
+  background: hsl(0, 0%, 80%);
+}
+radio-button > label {
+  cursor: pointer;
+  display: inline-block;
+  vertical-align: middle;
+}
+radio-button[checked='true'] > [radio] {
+  border: 3px solid hsl(0, 0%, 65%);
+  background: hsl(0, 0%, 30%);
+}
+.flat-input {
+  background: #fff;
+  border-bottom: 2px solid rgb(21, 235, 132);
+}
+input[type=range] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  outline: none;
+  border: none;
+  z-index: 500;
+  height: 23px;
+  background: transparent;
+  box-sizing: content-box !important;
+}
+input[type=range]::-moz-focus-inner {
+  border: 0;
+  outline: 0 none !important;
+}
+input[type=range]::-webkit-slider-runnable-track {
+  height: 8px;
+  cursor: pointer;
+  background: hsl(0, 0%, 85%);
+  border-radius: 3px;
+  box-shadow: inset 0 0 5px hsl(0, 0%, 70%);
+  border: 0;
+  outline: 0 none !important;
+}
+input[type=range]::-moz-range-track {
+  height: 8px;
+  cursor: pointer;
+  background: hsl(0, 0%, 85%);
+  border: 0;
+  outline: 0 none !important;
+  border-radius: 3px;
+  box-shadow: inset 0 0 5px hsl(0, 0%, 70%);
+}
+input[type=range]::-webkit-slider-thumb {
+  box-shadow: 0 1px 4px hsla(0, 0%, 20%, 0.5), 0 -1px 3px hsla(0, 0%, 85%, 0.8);
+  height: 18px;
+  width: 18px;
+  border-radius: 100%;
+  background: hsl(0, 0%, 98%);
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  margin-top: -5px;
+}
+input[type=range]::-moz-range-thumb {
+  box-shadow: 0 1px 4px hsla(0, 0%, 20%, 0.5), 0 -1px 3px hsla(0, 0%, 85%, 0.8);
+  height: 18px;
+  width: 18px;
+  border: none;
+  border-radius: 100%;
+  background: hsl(0, 0%, 98%);
+  cursor: pointer;
+  -moz-appearance: none;
+  appearance: none;
+  margin-top: -7px;
+}
+text-collapser {
+  position: relative;
+  display: block;
+  text-align: left;
+  width: auto;
+  height: auto;
+}
+text-collapser > #text {
+  display: none;
+  position: relative;
+  text-align: center;
+  padding-left: 10px;
+  padding-top: 5px;
+}
+text-collapser > #indicator::first-letter {
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+  font-size: 14px;
+  color: hsl(0, 0%, 22%);
+}
+text-collapser > #indicator {
+  position: relative;
+  font-size: 1.04em;
+  display: inline-block;
+  cursor: pointer;
+  text-align: left;
+  padding-right: 5px;
+  padding-left: 5px;
+  width: 100%;
+  height: auto;
+  transform: translateZ(10px);
+  z-index: 2;
+}
+text-collapser[open] > #text {
+  display: inline-block;
+}
+material-input {
+  margin: 20px auto 10px auto;
+  position: relative;
+  display: block;
+  height: 7mm !important;
+  text-align: left;
+  box-sizing: content-box !important;
+}
+material-input > input {
+  display: inline-block;
+  align-items: bottom;
+  width: 80%;
+  height: 7mm;
+  display: block;
+  padding: 0 !important;
+  outline: 0 none !important;
+  border: none;
+  border-top-left-radius: 2px;
+  border-top-right-radius: 2px;
+  border-bottom: 1px solid hsl(216, 74%, 52%);
+  transition: all 250ms ease;
+}
+material-input > input:focus:invalid {
+  border-bottom: 1px solid red;
+}
+material-input > input:focus:valid {
+  border-bottom: 1px solid green;
+}
+material-input > input:focus {
+  background: hsl(0, 0%, 92%);
+  border-bottom: 1px solid grey;
+}
+material-input > label {
+  display: inline-block;
+  position: absolute;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  pointer-events: none;
+  left: 0;
+  font-size: 0.9em;
+  top: 2.5mm;
+  color: hsl(0, 0%, 40%);
+  transition: all 240ms ease;
+}
+material-input > [class*='inputhastext'] + label {
+  top: -10px;
+  font-size: 0.75em;
+}
+material-input > input:focus + label {
+  top: -13px;
+  font-size: 0.76em;
+  color: hsl(0, 0%, 50%);
+}
+material-input > span {
+  position: absolute;
+  cursor: pointer;
+  right: 0;
+  top: 2mm;
+  color: grey;
+  display: none;
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAYAAAA71pVKAAAAq0lEQVR42o2RMQoCMRBFcwQ776C11upOekHEnaC47sQbWomIlWfRSm+wZiBFIAzfgYEw/PeKfLdYdyNiuSz5OHV/TLM9TTSvnPMsVx/ikPadBQh8aZ6C3Fyz62bp8SkFEOT4XQWZ670SaBCCeWwBBm0Bcb+xQSwYEFgLOO5L2LdyAEj9ObpGC7gOavuz0QLu0WoBgqhGCEJBOtwBWAly/qG1jInlWYJIoHnlfhcTzX2HEVUjAAAAAElFTkSuQmCC");
+  background-size: 14px 14px;
+  background-repeat: no-repeat;
+  width: 5mm;
+  height: 5mm;
+  font-size: 1.4em;
+  transition: all 160ms ease;
+}
+material-input > span:hover {
+  color: red;
+}
+@media all and (max-width:480px) {
+  craft-notification {
+    position: relative;
+    text-align: center;
+    width: 95%;
+    font-size: 0.7em;
+    padding-left:4mm;
+    margin:1mm auto;
+  }
+  craft-notification > .notification-close {
+    font-size:1em;
+  }
+  .notifications-top-left, .notifications-top-right, .notifications-top-middle, .notifications-bottom-left, .notifications-bottom-right, .notifications-bottom-middle {
+    position: relative;
+    width:100%;
+    left:0 !important;
+    height: auto;
+    z-index: 50;
   }
 }

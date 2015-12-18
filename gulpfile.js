@@ -4,21 +4,26 @@ var gulp = require('gulp'),
   fs = require('fs'),
   concat = require('gulp-concat'),
   uglify = require('gulp-uglify'),
+  minCss = require('gulp-minify-css'),
   documentation = require('gulp-documentation'),
   rename = require('gulp-rename'),
   babel = require("gulp-babel"),
   docs = './documentation';
 
-  gulp.task('document', function () {
+gulp.task('document', function () {
 
-    gulp.src('./src/Crafter.js')
-      .pipe(documentation({ format: 'json' }))
-      .pipe(gulp.dest(docs));
+  gulp.src('./src/Crafter.js')
+    .pipe(documentation({
+      format: 'json'
+    }))
+    .pipe(gulp.dest(docs));
 
-    gulp.src('./src/Crafter.js')
-      .pipe(documentation({ format: 'html' }))
-      .pipe(gulp.dest(docs));
-  });
+  gulp.src('./src/Crafter.js')
+    .pipe(documentation({
+      format: 'html'
+    }))
+    .pipe(gulp.dest(docs));
+});
 
 gulp.task('babel', function () {
   gulp.src('./src/*.js')
@@ -53,31 +58,36 @@ gulp.task('babelize_webcomponents', () => gulp.src('./src/pre-webcomponents/*.js
   .pipe(babel({
     presets: ['es2015']
   })).pipe(uglify({
-      mangle: true,
-      compress: true,
-      compressor: {
-        if_return: true,
-        loops: true,
-        conditionals: true,
-        comparisons: true,
-        sequences: true
-      },
-      output: {
-        comments: false
-      }
-    })).pipe(rename({
-    extname: ".bs"
-  })).pipe(gulp.dest('./src/pre-webcomponents/')));
-
-gulp.task('buildWC', () => gulp.src('./src/pre-webcomponents/*.js')
-  .pipe(babel({
-    presets: ['es2015']
+    mangle: true,
+    compress: true,
+    compressor: {
+      if_return: true,
+      loops: true,
+      conditionals: true,
+      comparisons: true,
+      sequences: true
+    },
+    output: {
+      comments: false
+    }
   })).pipe(rename({
     extname: ".bs"
   })).pipe(gulp.dest('./src/pre-webcomponents/')));
 
+gulp.task('buildWC', () => gulp.src('./src/pre-webcomponents/*.js').pipe(babel({
+  presets: ['es2015']
+})).pipe(rename({
+  extname: ".bs"
+})).pipe(gulp.dest('./src/pre-webcomponents/')));
 
-gulp.task('build_webcomponents', ['babelize_webcomponents'],() => {
+gulp.task('mincss', () => gulp.src('./src/pre-webcomponents/*.css').pipe(minCss({
+  compatibility: ''
+})).pipe(rename({
+  extname: ".mss"
+})).pipe(gulp.dest('./src/pre-webcomponents/')));
+
+
+gulp.task('build_webcomponents', ['mincss', 'babelize_webcomponents'], () => {
   var FileNames = [],
     files = fs.readdirSync('./src/pre-webcomponents/');
   files.forEach((file, i) => {
@@ -88,9 +98,9 @@ gulp.task('build_webcomponents', ['babelize_webcomponents'],() => {
   });
   FileNames.forEach(FileName => {
     let ScriptFile, StyleFile, WebComponentInner;
-    if (fs.statSync('./src/pre-webcomponents/' + FileName + '.css').isFile() && fs.statSync('./src/pre-webcomponents/' + FileName + '.bs').isFile()) {
+    if (fs.statSync('./src/pre-webcomponents/' + FileName + '.mss').isFile() && fs.statSync('./src/pre-webcomponents/' + FileName + '.bs').isFile()) {
 
-      StyleFile = fs.readFileSync('./src/pre-webcomponents/' + FileName + '.css', 'utf8');
+      StyleFile = fs.readFileSync('./src/pre-webcomponents/' + FileName + '.mss', 'utf8');
       ScriptFile = fs.readFileSync('./src/pre-webcomponents/' + FileName + '.bs', 'utf8');
 
       WebComponentInner = JSON.stringify({
