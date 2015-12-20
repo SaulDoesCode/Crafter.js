@@ -34,11 +34,9 @@ gulp.task('babel', function () {
   console.log('\t babel be done!');
 });
 
-gulp.task('BabelUgly', () => gulp.src('./src/*.js')
-  .pipe(babel({
+gulp.task('BabelUgly', () => gulp.src('./src/*.js').pipe(babel({
     presets: ['es2015']
-  }))
-  .pipe(uglify({
+  })).pipe(uglify({
     mangle: true,
     compress: true,
     compressor: {
@@ -54,7 +52,7 @@ gulp.task('BabelUgly', () => gulp.src('./src/*.js')
   }))
   .pipe(gulp.dest('./dist/min/')));
 
-gulp.task('babelize_webcomponents', () => gulp.src('./src/pre-webcomponents/*.js')
+gulp.task('babelize_webcomponents', () => gulp.src(['./src/pre-webcomponents/*.js', '!./src/pre-webcomponents/*-extra.js'])
   .pipe(babel({
     presets: ['es2015']
   })).pipe(uglify({
@@ -74,11 +72,23 @@ gulp.task('babelize_webcomponents', () => gulp.src('./src/pre-webcomponents/*.js
     extname: ".bs"
   })).pipe(gulp.dest('./src/pre-webcomponents/')));
 
-gulp.task('buildWC', () => gulp.src('./src/pre-webcomponents/*.js').pipe(babel({
-  presets: ['es2015']
+gulp.task('min-extrab-bs', () => gulp.src('./src/pre-webcomponents/*-extra.js').pipe(uglify({
+  mangle: true,
+  compress: true,
+  compressor: {
+    if_return: true,
+    loops: true,
+    conditionals: true,
+    comparisons: true,
+    sequences: true
+  },
+  output: {
+    comments: false
+  }
 })).pipe(rename({
   extname: ".bs"
 })).pipe(gulp.dest('./src/pre-webcomponents/')));
+
 
 gulp.task('mincss', () => gulp.src('./src/pre-webcomponents/*.css').pipe(minCss({
   compatibility: ''
@@ -87,21 +97,29 @@ gulp.task('mincss', () => gulp.src('./src/pre-webcomponents/*.css').pipe(minCss(
 })).pipe(gulp.dest('./src/pre-webcomponents/')));
 
 
-gulp.task('build_webcomponents', ['mincss', 'babelize_webcomponents'], () => {
+gulp.task('build_webcomponents', ['mincss','min-extrab-bs', 'babelize_webcomponents'], () => {
   var FileNames = [],
-    files = fs.readdirSync('./src/pre-webcomponents/');
-  files.forEach((file, i) => {
-    if (file.includes('.bs') && files.indexOf(file.substring(0, file.length - 3) + '.css') !== -1) {
+    Path = './src/pre-webcomponents/',
+    files = fs.readdirSync(Path);
+  files.forEach(file => {
+    if (file.includes('.bs') && files.indexOf(file.substring(0, file.length - 3) + '.mss') !== -1) {
       FileNames.push(file.substring(0, file.length - 3));
       console.log(file.substring(0, file.length - 3));
     }
   });
   FileNames.forEach(FileName => {
-    let ScriptFile, StyleFile, WebComponentInner;
-    if (fs.statSync('./src/pre-webcomponents/' + FileName + '.mss').isFile() && fs.statSync('./src/pre-webcomponents/' + FileName + '.bs').isFile()) {
+    let ScriptFile, StyleFile, WebComponentInner, path = Path + FileName;
+    if (fs.statSync(path + '.mss').isFile() && fs.statSync(path + '.bs').isFile()) {
 
-      StyleFile = fs.readFileSync('./src/pre-webcomponents/' + FileName + '.mss', 'utf8');
-      ScriptFile = fs.readFileSync('./src/pre-webcomponents/' + FileName + '.bs', 'utf8');
+      StyleFile = fs.readFileSync(path + '.mss', 'utf8');
+      ScriptFile = fs.readFileSync(path + '.bs', 'utf8');
+      try {
+        if (fs.statSync(path + '-extra.bs').isFile() === true) {
+          console.log(FileName + ' has extra.bs');
+          ScriptFile = fs.readFileSync(path + '-extra.bs', 'utf8') + '\n' + ScriptFile;
+        }
+      } catch (e) {}
+
 
       WebComponentInner = JSON.stringify({
         name: FileName,
@@ -109,10 +127,13 @@ gulp.task('build_webcomponents', ['mincss', 'babelize_webcomponents'], () => {
         js: ScriptFile
       });
 
-      fs.writeFile('./dist/WebComponents/' + FileName + '.wc', WebComponentInner, 'utf8', err => {
-        if (err) console.error(err);
-        console.log('Success -> WebComponents Created! ');
-      });
+      fs.writeFile('./dist/WebComponents/' + FileName + '.wc', WebComponentInner, 'utf8', err => err ? console.error(err) : console.log('Success -> WebComponents Created! '));
+      try {
+        fs.unlinkSync(path + '.mss');
+        fs.unlinkSync(path + '.bs');
+        if (fs.statSync(path + '-extra.bs').isFile() === true) fs.unlinkSync(path + '-extra.bs');
+      } catch (e) {}
+
     } else console.error("Can't make WebComponent no matching files");
   });
 });

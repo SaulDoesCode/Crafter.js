@@ -1330,7 +1330,7 @@
        * @param {...string} includeChars - every extra argument should be a string containing a character you want the password to include
        */
       strongPassword: (pass, length, caps, number, reasons, ...includeChars) => {
-        if (pass.length <= length) return reasons ? 'Password too short' : false;
+        if (pass.length < length) return reasons ? 'Password too short' : false;
         if (caps === true && Craft.hasCapitals(pass) === false) return reasons ? 'Password does not contain a Capital letter' : false;
         if (number === true && /\d/g.test(pass) === false) return reasons ? 'Password does not contain a number' : false;
         if (includeChars.length !== 0) {
@@ -1354,15 +1354,10 @@
        * Part of Crafter.js's own WebComponent format (.wc) it takes a json object that contains .css and .js values then imports and executes them
        * @param {string} webcomponent - JSON string from Crafter.js's (.wc) WebComponent format
        */
-      createWebComponent: webcomponent => {
+      createWebComponent(webcomponent, src) {
         if (is.String) webcomponent = JSON.parse(webcomponent);
         CrafterStyles.innerHTML += webcomponent.css;
-        let wcJS = dom().script('', {
-          src: Craft.URLfrom(webcomponent.js),
-          webcomponent: webcomponent.name
-        }, true);
-        wcJS.onload = e => Craft.WebComponents.push(src);
-        head.appendChild(wcJS);
+        head.appendChild(dom().script(webcomponent.js + `\nCraft.WebComponents.push('${src}')`, `webcomponent=${webcomponent.name}`, true));
       },
       /**
        * method for creating custom elements configuring their lifecycle's and inheritance
@@ -1445,7 +1440,7 @@
         if (Craft.BindExists(bindAttr)) Craft.applyBinds(bindAttr);
         else Craft.newBind(bindAttr, element.tagName === 'INPUT' || element.tagName === 'TEXTAREA' ? element.value : element.innerHTML);
       }
-      if(element.hasAttribute('link')) On('click', element, e => element.hasAttribute('newtab') ? open(element.getAttribute('link')) : Craft.router.open(element.getAttribute('link')));
+      if (element.hasAttribute('link')) On('click', element, e => element.hasAttribute('newtab') ? open(element.getAttribute('link')) : Craft.router.open(element.getAttribute('link')));
     }
   });
 
@@ -1461,24 +1456,16 @@
   Craft.newComponent('fetch-webcomponent', {
     inserted() {
       if (this.hasAttribute('src')) {
-        let wc = null , src = this.getAttribute('src');
-        if(Craft.WebComponents.includes(src)) return false;
+        let wc = null,
+          src = this.getAttribute('src');
+        if (Craft.WebComponents.includes(src)) return false;
         if (this.hasAttribute('cache-component')) {
           wc = localStorage.getItem(src);
-          if (wc !== null) Craft.createWebComponent(wc,src);
+          if (wc !== null) Craft.createWebComponent(wc, src);
         }
         if (wc === null) fetch(src).then(res => res.json().then(webcomponent => {
           CrafterStyles.innerHTML += webcomponent.css;
-          let wcJS = dom().script('', {
-            src: Craft.URLfrom(webcomponent.js),
-            webcomponent: webcomponent.name
-          }, true);
-          wcJS.onload = e => {
-            Craft.WebComponents.push(src);
-            wcJS = null;
-            webcomponent = null;
-          }
-          head.appendChild(wcJS);
+          head.appendChild(dom().script(webcomponent.js + `\nCraft.WebComponents.push('${src}')`, `webcomponent=${webcomponent.name}`, true));
           if (this.getAttribute('cache-component') === 'true') localStorage.setItem(src, JSON.stringify(webcomponent));
         })).catch(err => console.error(err + ': could not load webcomponent'))
       }
@@ -1486,13 +1473,11 @@
   });
 
   Once('DOMContentLoaded', e => {
-    //queryEach('[link]', el => On('click', el, e => el.hasAttribute('newtab') ? open(el.getAttribute('link')) : Craft.router.open(el.getAttribute('link'))));
     Craft.router.links.forEach(link => link());
-    if (Craft.WebComponents.length === queryAll('fetch-webcomponent').length) Ready = true;
-    else Craft.poll(() => Craft.WebComponents.length === queryAll('fetch-webcomponent').length, 35, 2000, () => Ready = true, () => {
+    Craft.WebComponents.length === queryAll('fetch-webcomponent').length ? Ready = true : Craft.poll(() => Craft.WebComponents.length === queryAll('fetch-webcomponent').length, 35, 2000, () => Ready = true, () => {
       console.warn('loading is taking longer than usual :(');
       Ready = true
-    })
+    });
   });
 
 

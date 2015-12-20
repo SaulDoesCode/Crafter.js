@@ -418,6 +418,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       var now = new Date();
       return is.Date(obj) && obj.toDateString() === new Date(now.setDate(now.getDate() - 1)).toDateString();
     },
+
     /**
      * checks wether a date is tommorow
      * @param obj - Date to test
@@ -426,6 +427,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       var now = new Date();
       return is.Date(obj) && obj.toDateString() === new Date(now.setDate(now.getDate() + 1)).toDateString();
     },
+
     /**
      * Determines if a date is in the past
      * @param obj - Date to test
@@ -544,13 +546,12 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
      * @param {Object|Array|string} val - value to test if empty
      */
     empty: function empty(val) {
-      return ifelse(is.Object(val), function () {
+      if (is.Object(val)) {
         var num = Object.getOwnPropertyNames(val).length;
         return num === 0 || num === 1 && is.Arr(val) || num === 2 && is.Args(val) ? true : false;
-      }, function () {
-        return is.Arr(val) ? val.length <= 0 : val === '';
-      })();
+      } else return is.Arr(val) ? val.length <= 0 : val === '';
     },
+
     /**
      * Determines if a value is an instance of the ReactiveVariable class
      * @param args - value/values to test
@@ -564,6 +565,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         return o instanceof _ReactiveVariable ? true : false;
       });
     },
+
     /**
      * Test if something is a Native JavaScript feature
      * @param val - value to test
@@ -1227,9 +1229,9 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         return this.element.getAttribute(Attr);
       }
       /**
-      * gets all the elements siblings within it's parentNode
-      * @memberof dom
-      */
+       * gets all the elements siblings within it's parentNode
+       * @memberof dom
+       */
 
     }, {
       key: 'getSiblings',
@@ -1241,9 +1243,9 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         }return siblings;
       }
       /**
-      * gets all the element's pixel width
-      * @memberof dom
-      */
+       * gets all the element's pixel width
+       * @memberof dom
+       */
 
     }, {
       key: 'Width',
@@ -1251,9 +1253,9 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         return this.element.getBoundingClientRect().width;
       }
       /**
-      * gets all the element's pixel height
-      * @memberof dom
-      */
+       * gets all the element's pixel height
+       * @memberof dom
+       */
 
     }, {
       key: 'Height',
@@ -1261,9 +1263,9 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         return this.element.getBoundingClientRect().height;
       }
       /**
-      * gets all the element's dimentions (width,height,left,top,bottom,right)
-      * @memberof dom
-      */
+       * gets all the element's dimentions (width,height,left,top,bottom,right)
+       * @memberof dom
+       */
 
     }, {
       key: 'getRect',
@@ -1569,12 +1571,12 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       }
     },
     /**
-    * Crafter.js module loader,
-    * each import option is an object with properties like 'script/css/wc : "location" ' for resource url
-    * other options include 'cache' - determines wether to cache the resource or not , 'test' : usefull for conditional imports if test is false the resource won't load or execute ,
-    * 'key' custom name to cache the resource in localStorage with instead of the resource location, 'defer' optionally load the script when the dom is loaded or load when it's ready,
-    * {...object} args - Objects containing options for Script/CSS/WebComponent import
-    */
+     * Crafter.js module loader,
+     * each import option is an object with properties like 'script/css/wc : "location" ' for resource url
+     * other options include 'cache' - determines wether to cache the resource or not , 'test' : usefull for conditional imports if test is false the resource won't load or execute ,
+     * 'key' custom name to cache the resource in localStorage with instead of the resource location, 'defer' optionally load the script when the dom is loaded or load when it's ready,
+     * {...object} args - Objects containing options for Script/CSS/WebComponent import
+     */
     Import: function Import() {
       var promises = [];
 
@@ -1637,15 +1639,19 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       setView: function setView(viewHostSelector, view) {
         return _query(viewHostSelector).innerHTML = view;
       },
-      fetchView: function fetchView(viewHostSelector, viewURL, cache, id) {
-        if (is.Null(localStorage.getItem("RT_" + id))) fetch(viewURL).then(function (res) {
-          return res.text().then(function (txt) {
-            if (cache && is.Def(id) && is.String(id) && is.Null(localStorage.getItem("RT_" + id))) localStorage.setItem("RT_" + id, txt);
-            _query(viewHostSelector).innerHTML = txt;
-          });
-        }).catch(function (msg) {
-          return console.warn('Could not fetch view -> ' + msg);
-        });else if (cache) _query(viewHostSelector).innerHTML = localStorage.getItem("RT_" + id);
+      fetchView: function fetchView(viewHostSelector, viewURL, append, cache, id) {
+        var element = _query(viewHostSelector),
+            view = is.Def(id) ? localStorage.getItem("RT_" + id) : null;
+        if (element !== null) {
+          is.Null(view) ? fetch(viewURL).then(function (res) {
+            return res.text().then(function (txt) {
+              if (cache === true && is.String(id) && is.Null(view)) localStorage.setItem("RT_" + id, txt);
+              !append ? element.innerHTML = txt : element.innerHTML += txt;
+            });
+          }).catch(function (err) {
+            return console.warn('Could not fetch view -> ' + err);
+          }) : cache === true && !append ? element.innerHTML = view : element.innerHTML += view;
+        }
       },
       clearCache: function clearCache() {
         for (var i in localStorage) {
@@ -1716,7 +1722,6 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         if (callNow) func.apply(this, args);
       };
     },
-
     throttle: function throttle(wait, func, options) {
       var context = undefined,
           args = undefined,
@@ -1758,6 +1763,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         return res;
       };
     },
+
     css: function css(el, styles) {
       return is.Def(styles, el) && is.Node(el) ? forEach(styles, function (prop, key) {
         return el.style[key] = prop;
@@ -1911,22 +1917,24 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
      * @param {Number} length - Character length in numbers (Minimum password length)
      * @param {Boolean} caps - Should the password contains Capital Letters
      * @param {Boolean} number - should the password contain Numbers
+     * @param {Boolean} reasons - should the function return a short string explaining the reason exept when it's a pass then it gives a bool;
      * @param {...string} includeChars - every extra argument should be a string containing a character you want the password to include
      */
-    strongPassword: function strongPassword(pass, length, caps, number) {
-      for (var _len24 = arguments.length, includeChars = Array(_len24 > 4 ? _len24 - 4 : 0), _key24 = 4; _key24 < _len24; _key24++) {
-        includeChars[_key24 - 4] = arguments[_key24];
+    strongPassword: function strongPassword(pass, length, caps, number, reasons) {
+      for (var _len24 = arguments.length, includeChars = Array(_len24 > 5 ? _len24 - 5 : 0), _key24 = 5; _key24 < _len24; _key24++) {
+        includeChars[_key24 - 5] = arguments[_key24];
       }
 
-      if (pass.length <= length) return false;
-      if (caps === true && Craft.hasCapitals(pass) === false) return false;
-      if (number === true && /\d/g.test(pass) === false) return false;
+      if (pass.length < length) return reasons ? 'Password too short' : false;
+      if (caps === true && Craft.hasCapitals(pass) === false) return reasons ? 'Password does not contain a Capital letter' : false;
+      if (number === true && /\d/g.test(pass) === false) return reasons ? 'Password does not contain a number' : false;
       if (includeChars.length !== 0) {
-        var hasChars = true;
+        var hasChars = true,
+            reason = includeChars.join();
         includeChars.forEach(function (ch) {
           if (!pass.includes(ch)) hasChars = false;
         });
-        if (!hasChars) return false;
+        if (!hasChars) return reasons ? '' : false;
       }
       return true;
     },
@@ -1945,18 +1953,12 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
      * Part of Crafter.js's own WebComponent format (.wc) it takes a json object that contains .css and .js values then imports and executes them
      * @param {string} webcomponent - JSON string from Crafter.js's (.wc) WebComponent format
      */
-    createWebComponent: function createWebComponent(webcomponent) {
+    createWebComponent: function createWebComponent(webcomponent, src) {
       if (is.String) webcomponent = JSON.parse(webcomponent);
       CrafterStyles.innerHTML += webcomponent.css;
-      var wcJS = dom().script('', {
-        src: Craft.URLfrom(webcomponent.js),
-        webcomponent: webcomponent.name
-      }, true);
-      wcJS.onload = function (e) {
-        return Craft.WebComponents.push(webcomponent.name);
-      };
-      head.appendChild(wcJS);
+      head.appendChild(dom().script(webcomponent.js + ('\nCraft.WebComponents.push(\'' + src + '\')'), 'webcomponent=' + webcomponent.name, true));
     },
+
     /**
      * method for creating custom elements configuring their lifecycle's and inheritance
      * the config Object has 5 distinct options ( created , inserted , destroyed , attr and extends )
@@ -2044,6 +2046,9 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
           var bindAttr = element.getAttribute('view-bind');
           if (Craft.BindExists(bindAttr)) Craft.applyBinds(bindAttr);else Craft.newBind(bindAttr, element.tagName === 'INPUT' || element.tagName === 'TEXTAREA' ? element.value : element.innerHTML);
         }
+        if (element.hasAttribute('link')) _On('click', element, function (e) {
+          return element.hasAttribute('newtab') ? open(element.getAttribute('link')) : Craft.router.open(element.getAttribute('link'));
+        });
       })();
     }
   });
@@ -2064,52 +2069,46 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
   };
 
   Craft.newComponent('fetch-webcomponent', {
-    created: function created() {
+    inserted: function inserted() {
       var _this8 = this;
 
       if (this.hasAttribute('src')) {
-        var wc = null;
-        if (this.hasAttribute('cache-component')) {
-          wc = localStorage.getItem(this.getAttribute('src'));
-          if (wc !== null) Craft.createWebComponent(wc);
-        }
-        if (wc === null) fetch(this.getAttribute('src')).then(function (res) {
-          return res.json().then(function (webcomponent) {
-            CrafterStyles.innerHTML += webcomponent.css;
-            var wcJS = dom().script('', {
-              src: Craft.URLfrom(webcomponent.js),
-              webcomponent: webcomponent.name
-            }, true);
-            wcJS.onload = function (e) {
-              Craft.WebComponents.push(webcomponent.name);
-              wcJS = null;
-              webcomponent = null;
+        var _ret5 = (function () {
+          var wc = null,
+              src = _this8.getAttribute('src');
+          if (Craft.WebComponents.includes(src)) return {
+              v: false
             };
-            head.appendChild(wcJS);
-            if (_this8.getAttribute('cache-component') === 'true') localStorage.setItem(_this8.getAttribute('src'), JSON.stringify(webcomponent));
+          if (_this8.hasAttribute('cache-component')) {
+            wc = localStorage.getItem(src);
+            if (wc !== null) Craft.createWebComponent(wc, src);
+          }
+          if (wc === null) fetch(src).then(function (res) {
+            return res.json().then(function (webcomponent) {
+              CrafterStyles.innerHTML += webcomponent.css;
+              head.appendChild(dom().script(webcomponent.js + ('\nCraft.WebComponents.push(\'' + src + '\')'), 'webcomponent=' + webcomponent.name, true));
+              if (_this8.getAttribute('cache-component') === 'true') localStorage.setItem(src, JSON.stringify(webcomponent));
+            });
+          }).catch(function (err) {
+            return console.error(err + ': could not load webcomponent');
           });
-        }).catch(function (err) {
-          return console.error(err + ': could not load webcomponent');
-        });
+        })();
+
+        if ((typeof _ret5 === 'undefined' ? 'undefined' : _typeof(_ret5)) === "object") return _ret5.v;
       }
     }
   });
 
   Once('DOMContentLoaded', function (e) {
-    queryEach('[link]', function (el) {
-      return _On('click', el, function (e) {
-        return el.hasAttribute('newtab') ? open(el.getAttribute('link')) : Craft.router.open(el.getAttribute('link'));
-      });
-    });
     Craft.router.links.forEach(function (link) {
       return link();
     });
-    if (Craft.WebComponents.length === _queryAll('fetch-webcomponent').length) Ready = true;else Craft.poll(function () {
+    Craft.WebComponents.length === _queryAll('fetch-webcomponent').length ? Ready = true : Craft.poll(function () {
       return Craft.WebComponents.length === _queryAll('fetch-webcomponent').length;
     }, 35, 2000, function () {
       return Ready = true;
     }, function () {
-      console.log('loading is taking longer than usual :(');
+      console.warn('loading is taking longer than usual :(');
       Ready = true;
     });
   });

@@ -6,7 +6,7 @@ side-bar, side-bar > *, side-bar > * > * {
   cursor: default;
 }
 side-bar {
-  position: absolute;
+  position: fixed;
   display: flex;
   flex-flow: column nowrap;
   justify-content: flex-start;
@@ -17,6 +17,10 @@ side-bar {
   background: hsl(0, 0%, 99%);
   overflow: auto;
   color: hsl(0, 0%, 44%);
+  transition: all 160ms ease-out;
+}
+side-bar[hidden] {
+  transform: translateX(-100%);
 }
 side-bar[sidebar-direction="left"] {
   left: 0;
@@ -27,9 +31,9 @@ side-bar[sidebar-direction="right"] {
   box-shadow: 0 0 3px hsla(0, 0%, 12%, 0.5);
 }
 sidebar-mainheading {
-  display: inline-flex;
   position: relative;
   overflow: hidden;
+  display: inline-flex;
   flex: 0 1 auto;
   justify-content: center;
   align-content: center;
@@ -37,7 +41,7 @@ sidebar-mainheading {
   height: 12mm;
   width: 100%;
   color: #fff;
-  background: hsl(0, 0%, 35%);
+  background: hsl(0, 0%, 40%);
   font-size: 1.15em;
   letter-spacing:1px;
   font-weight: bold;
