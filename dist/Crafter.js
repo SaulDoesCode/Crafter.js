@@ -1184,7 +1184,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     }, {
       key: 'replace',
       value: function replace(val) {
-        return this.element.parentNode.replaceChild(el, this.element);
+        this.element.parentNode.replaceChild(el, this.element);
+        return this;
       }
       /**
        * append the Element to another node using either a CSS selector or a Node
@@ -1198,6 +1199,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         var el = undefined;
         is.Node(val) ? el = val : el = _query(val);
         if (el !== null) el.appendChild(this.element);
+        return this;
       }
       /**
        * append text or a Node to the element
@@ -1208,7 +1210,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     }, {
       key: 'append',
       value: function append(val) {
-        return is.String(val) ? this.element.innerHTML += val : this.element.parentNode.appendChild(this.element);
+        is.String(val) ? this.element.innerHTML += val : this.element.parentNode.appendChild(this.element);
+        return this;
       }
       /**
        * prepend text or a Node to the element
@@ -1219,7 +1222,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     }, {
       key: 'prepend',
       value: function prepend(val) {
-        return is.String(val) ? this.element.innerHTML = val + this.element.innerHTML : this.element.insertBefore(val, this.element.firstChild);
+        is.String(val) ? this.element.innerHTML = val + this.element.innerHTML : this.element.insertBefore(val, this.element.firstChild);
+        return this;
       }
       /**
        * Listen for Events on the element or on all the elements in the NodeList
@@ -1245,9 +1249,10 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       value: function css(styles) {
         var _this5 = this;
 
-        return is.Def(styles) ? forEach(styles, function (prop, key) {
+        is.Def(styles) ? forEach(styles, function (prop, key) {
           return _this5.element.style[key] = prop;
         }) : console.error('Styles Object undefined');
+        return this;
       }
       /**
        * check if the element has got a specific CSS class
@@ -1269,7 +1274,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     }, {
       key: 'addClass',
       value: function addClass(Class) {
-        return this.element.classList.add(Class);
+        this.element.classList.add(Class);
+        return this;
       }
       /**
        * removes a specific CSS class from the element
@@ -1280,7 +1286,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     }, {
       key: 'stripClass',
       value: function stripClass(Class) {
-        return this.element.classList.remove(Class);
+        this.element.classList.remove(Class);
+        return this;
       }
       /**
        * removes a specific Attribute from the this.element
@@ -1292,6 +1299,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       key: 'stripAttr',
       value: function stripAttr(Attr) {
         this.element.removeAttribute(Attr);
+        return this;
       }
       /**
        * checks if the element has a specific Attribute
@@ -1314,7 +1322,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     }, {
       key: 'setAttr',
       value: function setAttr(Attr, val) {
-        return this.element.setAttribute(Attr, val);
+        this.element.setAttribute(Attr, val);
+        return this;
       }
     }, {
       key: 'getAttr',
@@ -1336,23 +1345,33 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         }return siblings;
       }
       /**
-       * gets all the element's pixel width
+       * sets or gets the element's pixel width
        * @memberof dom
+       * @param {string|number=} pixel value to set
        */
 
     }, {
       key: 'Width',
-      value: function Width() {
+      value: function Width(pixels) {
+        if (is.Def(pixels)) {
+          this.element.style.width = pixels;
+          return this;
+        }
         return this.element.getBoundingClientRect().width;
       }
       /**
-       * gets all the element's pixel height
+       * sets or gets the element's pixel height
        * @memberof dom
+       * @param {string|number=} pixel value to set
        */
 
     }, {
       key: 'Height',
-      value: function Height() {
+      value: function Height(pixels) {
+        if (is.Def(pixels)) {
+          this.element.style.height = pixels;
+          return this;
+        }
         return this.element.getBoundingClientRect().height;
       }
       /**
@@ -1364,28 +1383,6 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       key: 'getRect',
       value: function getRect() {
         return this.element.getBoundingClientRect();
-      }
-      /**
-       * sets all the this.element's pixel width
-       * @memberof dom
-       * @param {string} pixel value to set
-       */
-
-    }, {
-      key: 'setWidth',
-      value: function setWidth(Width) {
-        this.element.style.width = Width;
-      }
-      /**
-       * sets all the this.element's pixel height
-       * @memberof dom
-       * @param {string} pixel value to set
-       */
-
-    }, {
-      key: 'setHeight',
-      value: function setHeight(Height) {
-        this.element.style.height = Height;
       }
       /**
        * performs a query inside the element
@@ -1436,7 +1433,6 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
    * Craft is Crafter.js's Core containing most functionality.
    */
   Craft = {
-
     /** Converts an Array to an Object
      * @param {Array} arr - array to be converted
      */
@@ -2194,22 +2190,22 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     }
   });
 
-  root.onresize = Craft.throttle(450, function (e) {
+  _On('resize', Craft.throttle(450, function (e) {
     return Craft.ResizeHandlers.runEach(e);
-  });
-  root.onmousemove = function (e) {
+  }));
+  _On('mousemove', function (e) {
     if (Craft.mouse.observe === true) {
       Craft.mouse.x = e.clientX;
       Craft.mouse.y = e.clientY;
       Craft.mouse.over = e.target;
     }
-  };
-  root.onblur = function (e) {
+  });
+  _On('blur', function (e) {
     return Craft.tabActive = false;
-  };
-  root.onfocus = function (e) {
+  });
+  _On('focus', function (e) {
     return Craft.tabActive = true;
-  };
+  });
 
   Craft.newComponent('fetch-webcomponent', {
     inserted: function inserted() {
