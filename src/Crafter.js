@@ -343,9 +343,9 @@
    * Converts any Query/QueryAll to an Array of Nodes even if there is only one Node
    * @param {Node|NodeList|Array|String} val - pass either a CSS Selector string , Node/NodeList or Array of Nodes
    */
-  var QueryOrNodetoNodeArray = (val,within) => {
-    if (is.String(val) && is.String(within) || is.Node(within)) val = queryAll(val,within);
-    else if(is.String(val)) val = queryAll(val);
+  var QueryOrNodetoNodeArray = (val, within) => {
+    if (is.String(val) && is.String(within) || is.Node(within)) val = queryAll(val, within);
+    else if (is.String(val)) val = queryAll(val);
     return ifelse(!is.Null(val) && is.Node(val), () => [val], () => is.NodeList(val) ? Array.from(val) : [])();
   }
 
@@ -505,9 +505,9 @@
    * @returns Interface On,Off,Once
    */
   class EventHandler {
-    constructor(EventType, Target,Func,Within, ...args) {
+    constructor(EventType, Target, Func, Within, ...args) {
         this.EventType = EventType;
-        this.Target = (Target !== root && Target !== doc) ? QueryOrNodetoNodeArray(Target,Within) : Target;
+        this.Target = (Target !== root && Target !== doc) ? QueryOrNodetoNodeArray(Target, Within) : Target;
         this.FuncWrapper = e => Func(e, e.srcElement, args || []);
       }
       /**
@@ -591,23 +591,23 @@
    * @returns Off - when On is defined as a variable "var x = On(...)" it allows you to access all the EventHandler interfaces Off,Once,On
    */
   function On(EventType, Target, element, func) {
-    if (is.Func(Target)) return new EventHandler(EventType,root,Target).On();
-    else if(arguments.length < 3 && !Array.from(arguments).some(i => is.Func(i))) {
-      let newEvent = (type,fn) => new EventHandler(type,EventType,fn,Target).On();
+    if (is.Func(Target)) return new EventHandler(EventType, root, Target).On();
+    else if (arguments.length < 3 && !Array.from(arguments).some(i => is.Func(i))) {
+      let newEvent = (type, fn) => new EventHandler(type, EventType, fn, Target).On();
       return {
-        Click : fn => newEvent('click',fn),
-        Input : fn => newEvent('input',fn),
-        DoubleClick : fn => newEvent('dblclick',fn),
-        Focus : fn => newEvent('focus',fn),
-        Blur : fn => newEvent('blur',fn),
-        Keydown : fn => newEvent('keydown',fn),
-        Mousedown : fn => newEvent('mousedown',fn),
-        Mouseup : fn => newEvent('mouseup',fn),
-        Mouseover : fn => newEvent('mouseover',fn),
-        Mouseout : fn => newEvent('mouseout',fn),
-        Mouseenter : fn => newEvent('mouseenter',fn),
-        Mouseleave : fn => newEvent('mouseleave',fn),
-        Scroll : fn => newEvent('scroll',fn),
+        Click: fn => newEvent('click', fn),
+        Input: fn => newEvent('input', fn),
+        DoubleClick: fn => newEvent('dblclick', fn),
+        Focus: fn => newEvent('focus', fn),
+        Blur: fn => newEvent('blur', fn),
+        Keydown: fn => newEvent('keydown', fn),
+        Mousedown: fn => newEvent('mousedown', fn),
+        Mouseup: fn => newEvent('mouseup', fn),
+        Mouseover: fn => newEvent('mouseover', fn),
+        Mouseout: fn => newEvent('mouseout', fn),
+        Mouseenter: fn => newEvent('mouseenter', fn),
+        Mouseleave: fn => newEvent('mouseleave', fn),
+        Scroll: fn => newEvent('scroll', fn),
       }
     }
     return is.Func(element) ? new EventHandler(EventType, Target, element).On() : new EventHandler(EventType, Target, func, element).On();
@@ -620,24 +620,24 @@
    * @param {function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
    * @returns On,Off,Once - when Once is defined as a variable "var x = Once(...)" it allows you to access all the EventHandler interfaces Off,Once,On
    */
-  function Once(EventType, Target,element, func) {
-    if (is.Func(Target)) return new EventHandler(EventType,root,Target).Once();
-    else if(arguments.length < 3 && !Array.from(arguments).some(i => is.Func(i))) {
-      let newEvent = (type,fn) => new EventHandler(type,EventType,fn,Target).Once();
+  function Once(EventType, Target, element, func) {
+    if (is.Func(Target)) return new EventHandler(EventType, root, Target).Once();
+    else if (arguments.length < 3 && !Array.from(arguments).some(i => is.Func(i))) {
+      let newEvent = (type, fn) => new EventHandler(type, EventType, fn, Target).Once();
       return {
-        Click : fn => newEvent('click',fn),
-        Input : fn => newEvent('input',fn),
-        DoubleClick : fn => newEvent('dblclick',fn),
-        Focus : fn => newEvent('focus',fn),
-        Blur : fn => newEvent('blur',fn),
-        Keydown : fn => newEvent('keydown',fn),
-        Mousedown : fn => newEvent('mousedown',fn),
-        Mouseup : fn => newEvent('mouseup',fn),
-        Mouseover : fn => newEvent('mouseover',fn),
-        Mouseout : fn => newEvent('mouseout',fn),
-        Mouseenter : fn => newEvent('mouseenter',fn),
-        Mouseleave : fn => newEvent('mouseleave',fn),
-        Scroll : fn => newEvent('scroll',fn),
+        Click: fn => newEvent('click', fn),
+        Input: fn => newEvent('input', fn),
+        DoubleClick: fn => newEvent('dblclick', fn),
+        Focus: fn => newEvent('focus', fn),
+        Blur: fn => newEvent('blur', fn),
+        Keydown: fn => newEvent('keydown', fn),
+        Mousedown: fn => newEvent('mousedown', fn),
+        Mouseup: fn => newEvent('mouseup', fn),
+        Mouseover: fn => newEvent('mouseover', fn),
+        Mouseout: fn => newEvent('mouseout', fn),
+        Mouseenter: fn => newEvent('mouseenter', fn),
+        Mouseleave: fn => newEvent('mouseleave', fn),
+        Scroll: fn => newEvent('scroll', fn),
       }
     }
     return is.Func(element) ? new EventHandler(EventType, Target, element).Once() : new EventHandler(EventType, Target, func, element).Once();
@@ -729,7 +729,8 @@
        * @param {Node} Node to replace with
        */
     replace(val) {
-        return this.element.parentNode.replaceChild(el, this.element);
+        this.element.parentNode.replaceChild(el, this.element);
+        return this;
       }
       /**
        * append the Element to another node using either a CSS selector or a Node
@@ -740,6 +741,7 @@
         let el;
         is.Node(val) ? el = val : el = query(val);
         if (el !== null) el.appendChild(this.element);
+        return this;
       }
       /**
        * append text or a Node to the element
@@ -747,7 +749,8 @@
        * @param {Node|string} String or Node to append to the this.element
        */
     append(val) {
-        return is.String(val) ? this.element.innerHTML += val : this.element.parentNode.appendChild(this.element);
+        is.String(val) ? this.element.innerHTML += val : this.element.parentNode.appendChild(this.element);
+        return this;
       }
       /**
        * prepend text or a Node to the element
@@ -755,7 +758,8 @@
        * @param {Node|string} String or Node to prepend to the this.element
        */
     prepend(val) {
-        return is.String(val) ? this.element.innerHTML = val + this.element.innerHTML : this.element.insertBefore(val, this.element.firstChild);
+        is.String(val) ? this.element.innerHTML = val + this.element.innerHTML : this.element.insertBefore(val, this.element.firstChild);
+        return this;
       }
       /**
        * Listen for Events on the element or on all the elements in the NodeList
@@ -773,7 +777,8 @@
        * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
        */
     css(styles) {
-        return is.Def(styles) ? forEach(styles, (prop, key) => this.element.style[key] = prop) : console.error('Styles Object undefined');
+        is.Def(styles) ? forEach(styles, (prop, key) => this.element.style[key] = prop) : console.error('Styles Object undefined');
+        return this;
       }
       /**
        * check if the element has got a specific CSS class
@@ -789,7 +794,8 @@
        * @param {string} name of the class to add
        */
     addClass(Class) {
-        return this.element.classList.add(Class);
+        this.element.classList.add(Class);
+        return this;
       }
       /**
        * removes a specific CSS class from the element
@@ -797,7 +803,8 @@
        * @param {string} name of the class to strip
        */
     stripClass(Class) {
-        return this.element.classList.remove(Class);
+        this.element.classList.remove(Class);
+        return this;
       }
       /**
        * removes a specific Attribute from the this.element
@@ -806,6 +813,7 @@
        */
     stripAttr(Attr) {
         this.element.removeAttribute(Attr);
+        return this;
       }
       /**
        * checks if the element has a specific Attribute
@@ -822,7 +830,8 @@
        * @param {string} Value of the Attribute to add/set
        */
     setAttr(Attr, val) {
-      return this.element.setAttribute(Attr, val);
+      this.element.setAttribute(Attr, val);
+      return this;
     }
     getAttr(Attr) {
         return this.element.getAttribute(Attr);
@@ -839,17 +848,27 @@
         return siblings;
       }
       /**
-       * gets all the element's pixel width
+       * sets or gets the element's pixel width
        * @memberof dom
+       * @param {string|number=} pixel value to set
        */
-    Width() {
+    Width(pixels) {
+        if (is.Def(pixels)) {
+          this.element.style.width = pixels;
+          return this;
+        }
         return this.element.getBoundingClientRect().width;
       }
       /**
-       * gets all the element's pixel height
+       * sets or gets the element's pixel height
        * @memberof dom
+       * @param {string|number=} pixel value to set
        */
-    Height() {
+    Height(pixels) {
+        if (is.Def(pixels)) {
+          this.element.style.height = pixels;
+          return this;
+        }
         return this.element.getBoundingClientRect().height;
       }
       /**
@@ -858,22 +877,6 @@
        */
     getRect() {
         return this.element.getBoundingClientRect();
-      }
-      /**
-       * sets all the this.element's pixel width
-       * @memberof dom
-       * @param {string} pixel value to set
-       */
-    setWidth(Width) {
-        this.element.style.width = Width;
-      }
-      /**
-       * sets all the this.element's pixel height
-       * @memberof dom
-       * @param {string} pixel value to set
-       */
-    setHeight(Height) {
-        this.element.style.height = Height;
       }
       /**
        * performs a query inside the element
@@ -916,7 +919,6 @@
    * Craft is Crafter.js's Core containing most functionality.
    */
   Craft = {
-
     /** Converts an Array to an Object
      * @param {Array} arr - array to be converted
      */
@@ -1283,14 +1285,14 @@
       WebComponents: [],
       tabActive: true,
       ResizeHandlers: new FunctionIterator,
-      make_element : make_element,
+      make_element: make_element,
       Binds: new Map,
       mouse: {
         x: 0,
         y: 0,
         over: null
       },
-      easing : {
+      easing: {
         inOutQuad(t, b, c, d) {
           t /= d / 2;
           if (t < 1) return c / 2 * t * t + b;
@@ -1450,28 +1452,28 @@
         settings['prototype'] = element;
         document.registerElement(tag, settings)
       },
-      applyBinds(key,bindScope) {
+      applyBinds(key, bindScope) {
         let bind = bindScope ? bindScope.get(key) : Craft.Binds.get(key),
           val = is.ReactiveVariable(bind) ? bind.val : bind;
         queryEach(`[input-bind="${key}"],[view-bind="${key}"]`, el => el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' ? el.value = val : el.innerHTML = val);
       },
       /** creates a new bound variable , part of Crafter.js's Data Binding System */
-      newBind(key, val, handle,bindScope) {
+      newBind(key, val, handle, bindScope) {
         is.Func(handle) ? Craft.Binds.set(key, new ReactiveVariable(val, handle)) : bindScope ? bindScope.set(key, val) : Craft.Binds.set(key, val);
-        Craft.applyBinds(key,bindScope);
+        Craft.applyBinds(key, bindScope);
       },
       /** sets the value of a bound variable */
-      setBind(key, val,bindScope) {
+      setBind(key, val, bindScope) {
         let bind = bindScope ? bindScope.get(key) : Craft.Binds.get(key);
         is.ReactiveVariable(bind) ? bind.set(val) : bindScope ? bindScope.set(key, val) : Craft.Binds.set(key, val);
         Craft.applyBinds(key);
       },
       /** gets the value of a bound variable */
-      getBind(key,bindScope) {
+      getBind(key, bindScope) {
         let bind = bindScope ? bindScope.get(key) : Craft.Binds.get(key);
         return is.ReactiveVariable(bind) ? bind.val : bind;
       },
-      BindExists: (key,bindScope) => bindScope ? bindScope.has(key) : Craft.Binds.has(key),
+      BindExists: (key, bindScope) => bindScope ? bindScope.has(key) : Craft.Binds.has(key),
   };
 
   Craft.loader.removeAll(true);
@@ -1509,7 +1511,7 @@
 
   On('resize', Craft.throttle(450, e => Craft.ResizeHandlers.runEach(e)));
   On('mousemove', e => {
-    if(Craft.mouse.observe === true) {
+    if (Craft.mouse.observe === true) {
       Craft.mouse.x = e.clientX;
       Craft.mouse.y = e.clientY;
       Craft.mouse.over = e.target;
