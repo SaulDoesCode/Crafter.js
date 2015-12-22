@@ -1507,16 +1507,16 @@
     }
   });
 
-  root.onresize = Craft.throttle(450, e => Craft.ResizeHandlers.runEach(e));
-  root.onmousemove = e => {
+  On('resize', Craft.throttle(450, e => Craft.ResizeHandlers.runEach(e)));
+  On('mousemove', e => {
     if(Craft.mouse.observe === true) {
       Craft.mouse.x = e.clientX;
       Craft.mouse.y = e.clientY;
       Craft.mouse.over = e.target;
     }
-  }
-  root.onblur = e => Craft.tabActive = false;
-  root.onfocus = e => Craft.tabActive = true;
+  });
+  On('blur', e => Craft.tabActive = false);
+  On('focus', e => Craft.tabActive = true);
 
   Craft.newComponent('fetch-webcomponent', {
     inserted() {
