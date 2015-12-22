@@ -17,18 +17,20 @@ side-bar {
   background: hsl(0, 0%, 99%);
   overflow: auto;
   color: hsl(0, 0%, 44%);
+  box-shadow: 0 0 3px hsla(0, 0%, 12%, 0.4);
   transition: all 160ms ease-out;
 }
-side-bar[hidden] {
+side-bar[hidden][sidebar-direction="left"] {
   transform: translateX(-100%);
+}
+side-bar[hidden][sidebar-direction="right"] {
+  transform: translateX(100%);
 }
 side-bar[sidebar-direction="left"] {
   left: 0;
-  box-shadow: 0 0 3px hsla(0, 0%, 12%, 0.5);
 }
 side-bar[sidebar-direction="right"] {
   right: 0;
-  box-shadow: 0 0 3px hsla(0, 0%, 12%, 0.5);
 }
 sidebar-mainheading {
   position: relative;

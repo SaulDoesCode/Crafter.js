@@ -580,8 +580,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
    * Converts any Query/QueryAll to an Array of Nodes even if there is only one Node
    * @param {Node|NodeList|Array|String} val - pass either a CSS Selector string , Node/NodeList or Array of Nodes
    */
-  var QueryOrNodetoNodeArray = function QueryOrNodetoNodeArray(val) {
-    if (is.String(val)) val = _queryAll(val);
+  var QueryOrNodetoNodeArray = function QueryOrNodetoNodeArray(val, within) {
+    if (is.String(val) && is.String(within) || is.Node(within)) val = _queryAll(val, within);else if (is.String(val)) val = _queryAll(val);
     return ifelse(!is.Null(val) && is.Node(val), function () {
       return [val];
     }, function () {
@@ -816,15 +816,15 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
    */
 
   var EventHandler = (function () {
-    function EventHandler(EventType, Target, Func) {
-      for (var _len17 = arguments.length, args = Array(_len17 > 3 ? _len17 - 3 : 0), _key17 = 3; _key17 < _len17; _key17++) {
-        args[_key17 - 3] = arguments[_key17];
+    function EventHandler(EventType, Target, Func, Within) {
+      for (var _len17 = arguments.length, args = Array(_len17 > 4 ? _len17 - 4 : 0), _key17 = 4; _key17 < _len17; _key17++) {
+        args[_key17 - 4] = arguments[_key17];
       }
 
       _classCallCheck(this, EventHandler);
 
       this.EventType = EventType;
-      this.Target = Target !== root && Target !== doc ? QueryOrNodetoNodeArray(Target) : Target;
+      this.Target = Target !== root && Target !== doc ? QueryOrNodetoNodeArray(Target, Within) : Target;
       this.FuncWrapper = function (e) {
         return Func(e, e.srcElement, args || []);
       };
@@ -841,6 +841,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         is.Arr(this.Target) ? this.Target.forEach(function (target) {
           return target.addEventListener(_this3.EventType, _this3.FuncWrapper);
         }) : this.Target.addEventListener(this.EventType, this.FuncWrapper);
+        return this;
       }
       /**
        * De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
@@ -855,6 +856,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         is.Arr(this.Target) ? this.Target.forEach(function (target) {
           return target.removeEventListener(_this4.EventType, _this4.FuncWrapper);
         }) : this.Target.removeEventListener(this.EventType, this.FuncWrapper);
+        return this;
       }
       /**
        * Once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
@@ -876,6 +878,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         is.Arr(target) ? target.forEach(function (t) {
           return t.addEventListener(etype, listenOnce);
         }) : target.addEventListener(etype, listenOnce);
+        return this;
       }
     }]);
 
@@ -937,16 +940,61 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
    * @returns Off - when On is defined as a variable "var x = On(...)" it allows you to access all the EventHandler interfaces Off,Once,On
    */
   function _On(EventType, Target, element, func) {
-    if (is.Func(Target)) {
-      func = Target;
-      Target = root;
-    } else if (is.String(Target) && (is.Node(element) || is.String(element))) {
-      Target = _query(Target, element);
-    } else if (is.Func(element)) func = element;
+    if (is.Func(Target)) return new EventHandler(EventType, root, Target).On();else if (arguments.length < 3 && !Array.from(arguments).some(function (i) {
+      return is.Func(i);
+    })) {
+      var _ret = (function () {
+        var newEvent = function newEvent(type, fn) {
+          return new EventHandler(type, EventType, fn, Target).On();
+        };
+        return {
+          v: {
+            Click: function Click(fn) {
+              return newEvent('click', fn);
+            },
+            Input: function Input(fn) {
+              return newEvent('input', fn);
+            },
+            DoubleClick: function DoubleClick(fn) {
+              return newEvent('dblclick', fn);
+            },
+            Focus: function Focus(fn) {
+              return newEvent('focus', fn);
+            },
+            Blur: function Blur(fn) {
+              return newEvent('blur', fn);
+            },
+            Keydown: function Keydown(fn) {
+              return newEvent('keydown', fn);
+            },
+            Mousedown: function Mousedown(fn) {
+              return newEvent('mousedown', fn);
+            },
+            Mouseup: function Mouseup(fn) {
+              return newEvent('mouseup', fn);
+            },
+            Mouseover: function Mouseover(fn) {
+              return newEvent('mouseover', fn);
+            },
+            Mouseout: function Mouseout(fn) {
+              return newEvent('mouseout', fn);
+            },
+            Mouseenter: function Mouseenter(fn) {
+              return newEvent('mouseenter', fn);
+            },
+            Mouseleave: function Mouseleave(fn) {
+              return newEvent('mouseleave', fn);
+            },
+            Scroll: function Scroll(fn) {
+              return newEvent('scroll', fn);
+            }
+          }
+        };
+      })();
 
-    var handle = new EventHandler(EventType, Target, func);
-    handle.On();
-    return handle;
+      if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
+    }
+    return is.Func(element) ? new EventHandler(EventType, Target, element).On() : new EventHandler(EventType, Target, func, element).On();
   }
 
   /**
@@ -956,17 +1004,62 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
    * @param {function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
    * @returns On,Off,Once - when Once is defined as a variable "var x = Once(...)" it allows you to access all the EventHandler interfaces Off,Once,On
    */
-  function Once(EventType, Target, func) {
-    if (is.Func(Target)) {
-      func = Target;
-      Target = root;
-    } else if (is.String(Target) && (is.Node(element) || is.String(element))) {
-      Target = _query(Target, element);
-    } else if (is.Func(element)) func = element;
+  function Once(EventType, Target, element, func) {
+    if (is.Func(Target)) return new EventHandler(EventType, root, Target).Once();else if (arguments.length < 3 && !Array.from(arguments).some(function (i) {
+      return is.Func(i);
+    })) {
+      var _ret2 = (function () {
+        var newEvent = function newEvent(type, fn) {
+          return new EventHandler(type, EventType, fn, Target).Once();
+        };
+        return {
+          v: {
+            Click: function Click(fn) {
+              return newEvent('click', fn);
+            },
+            Input: function Input(fn) {
+              return newEvent('input', fn);
+            },
+            DoubleClick: function DoubleClick(fn) {
+              return newEvent('dblclick', fn);
+            },
+            Focus: function Focus(fn) {
+              return newEvent('focus', fn);
+            },
+            Blur: function Blur(fn) {
+              return newEvent('blur', fn);
+            },
+            Keydown: function Keydown(fn) {
+              return newEvent('keydown', fn);
+            },
+            Mousedown: function Mousedown(fn) {
+              return newEvent('mousedown', fn);
+            },
+            Mouseup: function Mouseup(fn) {
+              return newEvent('mouseup', fn);
+            },
+            Mouseover: function Mouseover(fn) {
+              return newEvent('mouseover', fn);
+            },
+            Mouseout: function Mouseout(fn) {
+              return newEvent('mouseout', fn);
+            },
+            Mouseenter: function Mouseenter(fn) {
+              return newEvent('mouseenter', fn);
+            },
+            Mouseleave: function Mouseleave(fn) {
+              return newEvent('mouseleave', fn);
+            },
+            Scroll: function Scroll(fn) {
+              return newEvent('scroll', fn);
+            }
+          }
+        };
+      })();
 
-    var handle = new EventHandler(EventType, Target, func);
-    handle.Once();
-    return handle;
+      if ((typeof _ret2 === 'undefined' ? 'undefined' : _typeof(_ret2)) === "object") return _ret2.v;
+    }
+    return is.Func(element) ? new EventHandler(EventType, Target, element).Once() : new EventHandler(EventType, Target, func, element).Once();
   }
 
   function make_element(name, inner, attributes, NodeForm, extraAttr) {
@@ -984,7 +1077,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       NodeForm = true;
     }
     if (NodeForm === true) {
-      var _ret = (function () {
+      var _ret3 = (function () {
         var newEl = doc.createElement(name);
         newEl.innerHTML = inner;
         if (is.Object(attributes)) forEach(attributes, function (val, attr) {
@@ -1001,7 +1094,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         };
       })();
 
-      if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
+      if ((typeof _ret3 === 'undefined' ? 'undefined' : _typeof(_ret3)) === "object") return _ret3.v;
     }
     var attrString = '';
     if (is.String(attributes)) attributes.split('&').forEach(function (attr) {
@@ -1016,7 +1109,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     return '<' + name + ' ' + attrString + '>' + inner + '</' + name + '>';
   }
 
-  var domNodeList = function domNodeList(elements) {
+  function domNodeList(elements) {
     return {
       /**
        * Listen for Events on the NodeList
@@ -1051,7 +1144,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         }) : console.error('styles unefined');
       }
     };
-  };
+  }
 
   var domMethods = (function () {
     function domMethods(element, within) {
@@ -1550,7 +1643,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
               success(obj);
             });
           }).catch(function (err) {
-            return failed('Craft.loader: problem fetching import -> ' + err);
+            return failed('Craft.loader problem fetching import -> ' + err);
           });
         });
       },
@@ -1604,10 +1697,18 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
 
     router: {
       handle: function handle(RouteLink, func) {
-        if (location.hash === RouteLink || location === RouteLink) func();
-        Craft.router.handlers.push({
-          link: RouteLink,
-          func: func
+        if (is.String(RouteLink)) {
+          if (location.hash === RouteLink || location === RouteLink) func(location.hash);
+          Craft.router.handlers.push({
+            link: RouteLink,
+            func: func
+          });
+        } else if (is.Arr(RouteLink)) RouteLink.forEach(function (link) {
+          if (location.hash === link || location === link) func(location.hash);
+          Craft.router.handlers.push({
+            link: link,
+            func: func
+          });
         });
       },
 
@@ -1827,12 +1928,50 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     WebComponents: [],
     tabActive: true,
     ResizeHandlers: new FunctionIterator(),
+    make_element: make_element,
     Binds: new Map(),
     mouse: {
       x: 0,
       y: 0,
       over: null
     },
+    easing: {
+      inOutQuad: function inOutQuad(t, b, c, d) {
+        t /= d / 2;
+        if (t < 1) return c / 2 * t * t + b;
+        t--;
+        return -c / 2 * (t * (t - 2) - 1) + b;
+      }
+    },
+    JumpTo: function JumpTo(target, options) {
+      options = options || {};
+      options.duration = options.duration || 400;
+      options.offset = options.offset || 0;
+      options.callback = options.callback || undefined;
+
+      var startTime = undefined,
+          elapsedTime = undefined,
+          start = root.pageYOffset,
+          distance = is.String(target) ? options.offset + _query(target).getBoundingClientRect().top : target,
+          loopIteration = 0,
+          loop = function loop(time) {
+        if (loopIteration === 0) startTime = time;
+        loopIteration++;
+        elapsedTime = time - startTime;
+        root.scrollTo(0, Craft.easing.inOutQuad(elapsedTime, start, distance, options.duration));
+        elapsedTime < options.duration ? requestAnimationFrame(function (time) {
+          return loop(time);
+        }) : (function () {
+          root.scrollTo(0, start + distance);
+          if (is.Func(options.callback)) options.callback.call();
+          startTime = undefined;
+        })();
+      };
+      requestAnimationFrame(function (time) {
+        return loop(time);
+      });
+    },
+
     nodeExists: function nodeExists(selector, within) {
       return _queryAll(selector, is.Node(within) ? within = within : within = _query(within)) !== null;
     },
@@ -1882,7 +2021,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
                 resolve(Scope);
                 clearInterval(ReadyYet);
               }
-            }, 20);
+            }, 25);
             setTimeout(function () {
               clearInterval(ReadyYet);
               if (!Ready) reject("Things didn't load correctly/intime -> load failed");
@@ -1925,9 +2064,9 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         includeChars[_key24 - 5] = arguments[_key24];
       }
 
-      if (pass.length < length) return reasons ? 'Password too short' : false;
-      if (caps === true && Craft.hasCapitals(pass) === false) return reasons ? 'Password does not contain a Capital letter' : false;
-      if (number === true && /\d/g.test(pass) === false) return reasons ? 'Password does not contain a number' : false;
+      if (pass.length <= length) return reasons ? 'Password too short' : false;
+      if (caps === true && Craft.hasCapitals(pass) === false) return reasons ? 'Password should contain Capital letters' : false;
+      if (number === true && /\d/g.test(pass) === false) return reasons ? 'Password should contain a number' : false;
       if (includeChars.length !== 0) {
         var hasChars = true,
             reason = includeChars.join();
@@ -1983,8 +2122,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       settings['prototype'] = element;
       document.registerElement(tag, settings);
     },
-    applyBinds: function applyBinds(key) {
-      var bind = Craft.Binds.get(key),
+    applyBinds: function applyBinds(key, bindScope) {
+      var bind = bindScope ? bindScope.get(key) : Craft.Binds.get(key),
           val = is.ReactiveVariable(bind) ? bind.val : bind;
       queryEach('[input-bind="' + key + '"],[view-bind="' + key + '"]', function (el) {
         return el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' ? el.value = val : el.innerHTML = val;
@@ -1992,24 +2131,26 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     },
 
     /** creates a new bound variable , part of Crafter.js's Data Binding System */
-    newBind: function newBind(key, val, handle) {
-      is.Func(handle) ? Craft.Binds.set(key, new _ReactiveVariable(val, handle)) : Craft.Binds.set(key, val);
-      Craft.applyBinds(key);
+    newBind: function newBind(key, val, handle, bindScope) {
+      is.Func(handle) ? Craft.Binds.set(key, new _ReactiveVariable(val, handle)) : bindScope ? bindScope.set(key, val) : Craft.Binds.set(key, val);
+      Craft.applyBinds(key, bindScope);
     },
 
     /** sets the value of a bound variable */
-    setBind: function setBind(key, val) {
-      var bind = Craft.Binds.get(key);
-      is.ReactiveVariable(bind) ? bind.set(val) : Craft.Binds.set(key, val);
+    setBind: function setBind(key, val, bindScope) {
+      var bind = bindScope ? bindScope.get(key) : Craft.Binds.get(key);
+      is.ReactiveVariable(bind) ? bind.set(val) : bindScope ? bindScope.set(key, val) : Craft.Binds.set(key, val);
       Craft.applyBinds(key);
     },
-    getBind: function getBind(key) {
-      var bind = Craft.Binds.get(key);
+
+    /** gets the value of a bound variable */
+    getBind: function getBind(key, bindScope) {
+      var bind = bindScope ? bindScope.get(key) : Craft.Binds.get(key);
       return is.ReactiveVariable(bind) ? bind.val : bind;
     },
 
-    BindExists: function BindExists(key) {
-      return Craft.Binds.has(key);
+    BindExists: function BindExists(key, bindScope) {
+      return bindScope ? bindScope.has(key) : Craft.Binds.has(key);
     }
   };
 
@@ -2057,9 +2198,11 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     return Craft.ResizeHandlers.runEach(e);
   });
   root.onmousemove = function (e) {
-    Craft.mouse.x = e.clientX;
-    Craft.mouse.y = e.clientY;
-    Craft.mouse.over = e.target;
+    if (Craft.mouse.observe === true) {
+      Craft.mouse.x = e.clientX;
+      Craft.mouse.y = e.clientY;
+      Craft.mouse.over = e.target;
+    }
   };
   root.onblur = function (e) {
     return Craft.tabActive = false;
@@ -2073,7 +2216,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       var _this8 = this;
 
       if (this.hasAttribute('src')) {
-        var _ret5 = (function () {
+        var _ret7 = (function () {
           var wc = null,
               src = _this8.getAttribute('src');
           if (Craft.WebComponents.includes(src)) return {
@@ -2094,7 +2237,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
           });
         })();
 
-        if ((typeof _ret5 === 'undefined' ? 'undefined' : _typeof(_ret5)) === "object") return _ret5.v;
+        if ((typeof _ret7 === 'undefined' ? 'undefined' : _typeof(_ret7)) === "object") return _ret7.v;
       }
     }
   });
@@ -2115,19 +2258,17 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
 
   _On('hashchange', function (e) {
     return Craft.router.handlers.forEach(function (handler) {
-      return location.hash === handler.link || location === handler.link ? handler.func() : null;
+      return location.hash === handler.link || location === handler.link ? handler.func(location.hash) : null;
     });
   });
 
   root.is = is;
   root.dom = dom;
-  root.domNodeList = domNodeList;
   root.Craft = Craft;
   root.On = _On;
   root.Once = Once;
   root.forEach = forEach;
   root.QueryOrNodetoNodeArray = QueryOrNodetoNodeArray;
-  root.make_element = make_element;
   root.FunctionIterator = FunctionIterator;
   root.CraftSocket = CraftSocket;
   root.EventHandler = EventHandler;

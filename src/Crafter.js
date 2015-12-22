@@ -343,8 +343,9 @@
    * Converts any Query/QueryAll to an Array of Nodes even if there is only one Node
    * @param {Node|NodeList|Array|String} val - pass either a CSS Selector string , Node/NodeList or Array of Nodes
    */
-  var QueryOrNodetoNodeArray = val => {
-    if (is.String(val)) val = queryAll(val);
+  var QueryOrNodetoNodeArray = (val,within) => {
+    if (is.String(val) && is.String(within) || is.Node(within)) val = queryAll(val,within);
+    else if(is.String(val)) val = queryAll(val);
     return ifelse(!is.Null(val) && is.Node(val), () => [val], () => is.NodeList(val) ? Array.from(val) : [])();
   }
 
@@ -504,16 +505,17 @@
    * @returns Interface On,Off,Once
    */
   class EventHandler {
-    constructor(EventType, Target, Func, ...args) {
+    constructor(EventType, Target,Func,Within, ...args) {
         this.EventType = EventType;
-        this.Target = (Target !== root && Target !== doc) ? QueryOrNodetoNodeArray(Target) : Target;
+        this.Target = (Target !== root && Target !== doc) ? QueryOrNodetoNodeArray(Target,Within) : Target;
         this.FuncWrapper = e => Func(e, e.srcElement, args || []);
       }
       /**
        * Activates the EventHandler to start listening for the EventType on the Target/Targets
        */
     On() {
-        is.Arr(this.Target) ? this.Target.forEach(target => target.addEventListener(this.EventType, this.FuncWrapper)) : this.Target.addEventListener(this.EventType, this.FuncWrapper)
+        is.Arr(this.Target) ? this.Target.forEach(target => target.addEventListener(this.EventType, this.FuncWrapper)) : this.Target.addEventListener(this.EventType, this.FuncWrapper);
+        return this;
       }
       /**
        * De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
@@ -521,6 +523,7 @@
        */
     Off() {
         is.Arr(this.Target) ? this.Target.forEach(target => target.removeEventListener(this.EventType, this.FuncWrapper)) : this.Target.removeEventListener(this.EventType, this.FuncWrapper);
+        return this;
       }
       /**
        * Once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
@@ -535,6 +538,7 @@
           is.Arr(target) ? target.forEach(t => t.removeEventListener(etype, listenOnce)) : target.removeEventListener(etype, listenOnce);
         }
       is.Arr(target) ? target.forEach(t => t.addEventListener(etype, listenOnce)) : target.addEventListener(etype, listenOnce);
+      return this;
     }
   }
 
@@ -587,16 +591,26 @@
    * @returns Off - when On is defined as a variable "var x = On(...)" it allows you to access all the EventHandler interfaces Off,Once,On
    */
   function On(EventType, Target, element, func) {
-    if (is.Func(Target)) {
-      func = Target;
-      Target = root;
-    } else if (is.String(Target) && (is.Node(element) || is.String(element))) {
-      Target = query(Target, element);
-    } else if (is.Func(element)) func = element;
-
-    let handle = new EventHandler(EventType, Target, func);
-    handle.On();
-    return handle;
+    if (is.Func(Target)) return new EventHandler(EventType,root,Target).On();
+    else if(arguments.length < 3 && !Array.from(arguments).some(i => is.Func(i))) {
+      let newEvent = (type,fn) => new EventHandler(type,EventType,fn,Target).On();
+      return {
+        Click : fn => newEvent('click',fn),
+        Input : fn => newEvent('input',fn),
+        DoubleClick : fn => newEvent('dblclick',fn),
+        Focus : fn => newEvent('focus',fn),
+        Blur : fn => newEvent('blur',fn),
+        Keydown : fn => newEvent('keydown',fn),
+        Mousedown : fn => newEvent('mousedown',fn),
+        Mouseup : fn => newEvent('mouseup',fn),
+        Mouseover : fn => newEvent('mouseover',fn),
+        Mouseout : fn => newEvent('mouseout',fn),
+        Mouseenter : fn => newEvent('mouseenter',fn),
+        Mouseleave : fn => newEvent('mouseleave',fn),
+        Scroll : fn => newEvent('scroll',fn),
+      }
+    }
+    return is.Func(element) ? new EventHandler(EventType, Target, element).On() : new EventHandler(EventType, Target, func, element).On();
   }
 
   /**
@@ -606,17 +620,27 @@
    * @param {function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
    * @returns On,Off,Once - when Once is defined as a variable "var x = Once(...)" it allows you to access all the EventHandler interfaces Off,Once,On
    */
-  function Once(EventType, Target, func) {
-    if (is.Func(Target)) {
-      func = Target;
-      Target = root;
-    } else if (is.String(Target) && (is.Node(element) || is.String(element))) {
-      Target = query(Target, element);
-    } else if (is.Func(element)) func = element;
-
-    let handle = new EventHandler(EventType, Target, func);
-    handle.Once();
-    return handle;
+  function Once(EventType, Target,element, func) {
+    if (is.Func(Target)) return new EventHandler(EventType,root,Target).Once();
+    else if(arguments.length < 3 && !Array.from(arguments).some(i => is.Func(i))) {
+      let newEvent = (type,fn) => new EventHandler(type,EventType,fn,Target).Once();
+      return {
+        Click : fn => newEvent('click',fn),
+        Input : fn => newEvent('input',fn),
+        DoubleClick : fn => newEvent('dblclick',fn),
+        Focus : fn => newEvent('focus',fn),
+        Blur : fn => newEvent('blur',fn),
+        Keydown : fn => newEvent('keydown',fn),
+        Mousedown : fn => newEvent('mousedown',fn),
+        Mouseup : fn => newEvent('mouseup',fn),
+        Mouseover : fn => newEvent('mouseover',fn),
+        Mouseout : fn => newEvent('mouseout',fn),
+        Mouseenter : fn => newEvent('mouseenter',fn),
+        Mouseleave : fn => newEvent('mouseleave',fn),
+        Scroll : fn => newEvent('scroll',fn),
+      }
+    }
+    return is.Func(element) ? new EventHandler(EventType, Target, element).Once() : new EventHandler(EventType, Target, func, element).Once();
   }
 
   function make_element(name, inner, attributes, NodeForm, extraAttr) {
@@ -648,8 +672,7 @@
     return `<${name} ${attrString}>${inner}</${name}>`;
   }
 
-
-  let domNodeList = (elements) => {
+  function domNodeList(elements) {
     return {
       /**
        * Listen for Events on the NodeList
@@ -1062,7 +1085,7 @@
             obj.expire = now + ((obj.expire || 4000) * 60 * 60 * 1000);
             if (obj.cache) localStorage.setItem(Craft.loader.pre + key, JSON.stringify(obj));
             success(obj);
-          })).catch(err => failed(`Craft.loader: problem fetching import -> ${err}`)));
+          })).catch(err => failed(`Craft.loader problem fetching import -> ${err}`)));
         },
         setPrekey: str => Craft.loader.pre = str + ':',
         get: key => JSON.parse(localStorage.getItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key) || false),
@@ -1094,11 +1117,19 @@
       },
       router: {
         handle(RouteLink, func) {
-            if (location.hash === RouteLink || location === RouteLink) func();
-            Craft.router.handlers.push({
-              link: RouteLink,
-              func: func
-            })
+            if (is.String(RouteLink)) {
+              if (location.hash === RouteLink || location === RouteLink) func(location.hash);
+              Craft.router.handlers.push({
+                link: RouteLink,
+                func: func
+              });
+            } else if (is.Arr(RouteLink)) RouteLink.forEach(link => {
+              if (location.hash === link || location === link) func(location.hash);
+              Craft.router.handlers.push({
+                link: link,
+                func: func
+              });
+            });
           },
           handlers: [],
           links: [],
@@ -1252,11 +1283,42 @@
       WebComponents: [],
       tabActive: true,
       ResizeHandlers: new FunctionIterator,
+      make_element : make_element,
       Binds: new Map,
       mouse: {
         x: 0,
         y: 0,
         over: null
+      },
+      easing : {
+        inOutQuad(t, b, c, d) {
+          t /= d / 2;
+          if (t < 1) return c / 2 * t * t + b;
+          t--;
+          return -c / 2 * (t * (t - 2) - 1) + b;
+        },
+      },
+      JumpTo(target, options) {
+        options = options || {};
+        options.duration = options.duration || 400;
+        options.offset = options.offset || 0;
+        options.callback = options.callback || undefined;
+
+        let startTime, elapsedTime, start = root.pageYOffset,
+          distance = is.String(target) ? options.offset + query(target).getBoundingClientRect().top : target,
+          loopIteration = 0,
+          loop = time => {
+            if (loopIteration === 0) startTime = time;
+            loopIteration++;
+            elapsedTime = time - startTime;
+            root.scrollTo(0, Craft.easing.inOutQuad(elapsedTime, start, distance, options.duration));
+            elapsedTime < options.duration ? requestAnimationFrame(time => loop(time)) : (() => {
+              root.scrollTo(0, start + distance);
+              if (is.Func(options.callback)) options.callback.call();
+              startTime = undefined;
+            })();
+          };
+        requestAnimationFrame(time => loop(time))
       },
       nodeExists: (selector, within) => queryAll(selector, (is.Node(within) ? within = within : within = query(within))) !== null,
       ObjToFormData: obj => {
@@ -1293,7 +1355,7 @@
                 resolve(Scope);
                 clearInterval(ReadyYet);
               }
-            }, 20);
+            }, 25);
             setTimeout(() => {
               clearInterval(ReadyYet);
               if (!Ready) reject("Things didn't load correctly/intime -> load failed");
@@ -1330,9 +1392,9 @@
        * @param {...string} includeChars - every extra argument should be a string containing a character you want the password to include
        */
       strongPassword: (pass, length, caps, number, reasons, ...includeChars) => {
-        if (pass.length < length) return reasons ? 'Password too short' : false;
-        if (caps === true && Craft.hasCapitals(pass) === false) return reasons ? 'Password does not contain a Capital letter' : false;
-        if (number === true && /\d/g.test(pass) === false) return reasons ? 'Password does not contain a number' : false;
+        if (pass.length <= length) return reasons ? 'Password too short' : false;
+        if (caps === true && Craft.hasCapitals(pass) === false) return reasons ? 'Password should contain Capital letters' : false;
+        if (number === true && /\d/g.test(pass) === false) return reasons ? 'Password should contain a number' : false;
         if (includeChars.length !== 0) {
           let hasChars = true,
             reason = includeChars.join();
@@ -1376,7 +1438,7 @@
       newComponent(tag, config) {
         if (is.Undef(config)) throw new Error(`Craft.newComponent : ${tag} -> config is undefined`);
         let element = Object.create(HTMLElement.prototype),
-          settings = {}
+          settings = {};
         forEach(config, (prop, key) => {
           if (key === 'created') element.createdCallback = prop;
           else if (key === 'inserted') element.attachedCallback = prop;
@@ -1388,27 +1450,28 @@
         settings['prototype'] = element;
         document.registerElement(tag, settings)
       },
-      applyBinds(key) {
-        let bind = Craft.Binds.get(key),
+      applyBinds(key,bindScope) {
+        let bind = bindScope ? bindScope.get(key) : Craft.Binds.get(key),
           val = is.ReactiveVariable(bind) ? bind.val : bind;
         queryEach(`[input-bind="${key}"],[view-bind="${key}"]`, el => el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' ? el.value = val : el.innerHTML = val);
       },
       /** creates a new bound variable , part of Crafter.js's Data Binding System */
-      newBind(key, val, handle) {
-        is.Func(handle) ? Craft.Binds.set(key, new ReactiveVariable(val, handle)) : Craft.Binds.set(key, val);
-        Craft.applyBinds(key);
+      newBind(key, val, handle,bindScope) {
+        is.Func(handle) ? Craft.Binds.set(key, new ReactiveVariable(val, handle)) : bindScope ? bindScope.set(key, val) : Craft.Binds.set(key, val);
+        Craft.applyBinds(key,bindScope);
       },
       /** sets the value of a bound variable */
-      setBind(key, val) {
-        let bind = Craft.Binds.get(key);
-        is.ReactiveVariable(bind) ? bind.set(val) : Craft.Binds.set(key, val);
+      setBind(key, val,bindScope) {
+        let bind = bindScope ? bindScope.get(key) : Craft.Binds.get(key);
+        is.ReactiveVariable(bind) ? bind.set(val) : bindScope ? bindScope.set(key, val) : Craft.Binds.set(key, val);
         Craft.applyBinds(key);
       },
-      getBind(key) {
-        let bind = Craft.Binds.get(key);
+      /** gets the value of a bound variable */
+      getBind(key,bindScope) {
+        let bind = bindScope ? bindScope.get(key) : Craft.Binds.get(key);
         return is.ReactiveVariable(bind) ? bind.val : bind;
       },
-      BindExists: key => Craft.Binds.has(key),
+      BindExists: (key,bindScope) => bindScope ? bindScope.has(key) : Craft.Binds.has(key),
   };
 
   Craft.loader.removeAll(true);
@@ -1446,9 +1509,11 @@
 
   root.onresize = Craft.throttle(450, e => Craft.ResizeHandlers.runEach(e));
   root.onmousemove = e => {
-    Craft.mouse.x = e.clientX;
-    Craft.mouse.y = e.clientY;
-    Craft.mouse.over = e.target;
+    if(Craft.mouse.observe === true) {
+      Craft.mouse.x = e.clientX;
+      Craft.mouse.y = e.clientY;
+      Craft.mouse.over = e.target;
+    }
   }
   root.onblur = e => Craft.tabActive = false;
   root.onfocus = e => Craft.tabActive = true;
@@ -1481,17 +1546,15 @@
   });
 
 
-  On('hashchange', e => Craft.router.handlers.forEach(handler => (location.hash === handler.link || location === handler.link) ? handler.func() : null));
+  On('hashchange', e => Craft.router.handlers.forEach(handler => (location.hash === handler.link || location === handler.link) ? handler.func(location.hash) : null));
 
   root.is = is;
   root.dom = dom;
-  root.domNodeList = domNodeList;
   root.Craft = Craft;
   root.On = On;
   root.Once = Once;
   root.forEach = forEach;
   root.QueryOrNodetoNodeArray = QueryOrNodetoNodeArray;
-  root.make_element = make_element;
   root.FunctionIterator = FunctionIterator;
   root.CraftSocket = CraftSocket;
   root.EventHandler = EventHandler;

@@ -3,7 +3,7 @@
   Craft.newComponent('side-bar', {
     inserted() {
         let el = this;
-        if (el.hasAttribute('sidebar-direction')) el.setAttribute('sidebar-direction', 'left');
+        if (!el.hasAttribute('sidebar-direction')) el.setAttribute('sidebar-direction', 'left');
         if (el.hasAttribute('color-accent')) el.color = el.getAttribute('color-accent');
         if (el.hasAttribute('toggle-element')) el.setToggleElement(el.getAttribute('toggle-element'));
         el.onClick = On('click', el, e => {
@@ -17,7 +17,10 @@
       },
       setToggler(selector, func) {
         let s = this;
-        if (is.Def(func)) this.func = func;
+        if (is.Def(func)) {
+          this.func = func;
+          this.func(!this.hasAttribute('hidden'));
+        }
         s.onToggleClick = On('click', selector, e => s.toggle());
       },
       toggle(open) {

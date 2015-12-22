@@ -1,7 +1,7 @@
 "use strict";
 ((doc, root) => {
 
-  Craft.ripple = (SelectorOrNode, options) => queryEach(SelectorOrNode, element => element.onmousedown = e => element.appendChild(make_element('ripple-effect', '', options || {}, true, {
+  Craft.ripple = (SelectorOrNode, options) => queryEach(SelectorOrNode, element => element.onmousedown = e => element.appendChild(Craft.make_element('ripple-effect', '', options || {}, true, {
     x: e.clientX,
     y: e.clientY
   })));
@@ -12,7 +12,8 @@
         rect = this.parentNode.getBoundingClientRect(),
         diameter = Math.max(rect.width, rect.height);
       if (this.parentNode.hasAttribute("ripple")) color = this.parentNode.getAttribute("ripple");
-      if (this.hasAttribute("color-accent")) color = this.getAttribute("color-accent");
+      else if (this.hasAttribute("color-accent")) color = this.getAttribute("color-accent");
+      else if (this.hasAttribute("color")) color = this.getAttribute("color");
       dom(this).css({
         width: diameter + 'px',
         height: diameter + 'px',
@@ -25,45 +26,13 @@
     }
   });
 
-  Craft.easing = {
-    InOutQuad(t, b, c, d) {
-      t /= d / 2;
-      if (t < 1) return c / 2 * t * t + b;
-      t--;
-      return -c / 2 * (t * (t - 2) - 1) + b;
-    },
-  }
-
-  Craft.JumpTo = (target, options) => {
-    options = options || {};
-    options.duration = options.duration || 400;
-    options.offset = options.offset || 0;
-    options.callback = options.callback || undefined;
-
-    let startTime, elapsedTime, start = root.pageYOffset,
-      distance = is.String(target) ? options.offset + query(target).getBoundingClientRect().top : target,
-      loopIteration = 0,
-      loop = time => {
-        if (loopIteration === 0) startTime = time;
-        loopIteration++;
-        elapsedTime = time - startTime;
-        root.scrollTo(0, Craft.easing.InOutQuad(elapsedTime, start, distance, options.duration));
-        elapsedTime < options.duration ? requestAnimationFrame(time => loop(time)) : (() => {
-          root.scrollTo(0, start + distance);
-          if (is.Func(options.callback)) options.callback.call();
-          startTime = undefined;
-        })();
-      };
-    requestAnimationFrame(time => loop(time))
-  }
-
   Craft.notification = (msg, state, side, duration) => {
-    if(query('.notifications-top-left') === null) doc.body.insertBefore(dom().div('','class=notifications-top-left',true),doc.body.firstChild);
-    if(query('.notifications-top-right') === null) doc.body.insertBefore(dom().div('','class=notifications-top-right',true),doc.body.firstChild);
-    if(query('.notifications-top-middle') === null) doc.body.insertBefore(dom().div('','class=notifications-top-middle',true),doc.body.firstChild);
-    if(query('.notifications-bottom-middle') === null) doc.body.insertBefore(dom().div('','class=notifications-bottom-middle',true),doc.body.firstChild);
-    if(query('.notifications-bottom-right') === null) doc.body.insertBefore(dom().div('','class=notifications-bottom-right',true),doc.body.firstChild);
-    if(query('.notifications-bottom-left') === null) doc.body.insertBefore(dom().div('','class=notifications-bottom-left',true),doc.body.firstChild);
+    if (query('.notifications-top-left') === null) doc.body.insertBefore(dom().div('', 'class=notifications-top-left', true), doc.body.firstChild);
+    if (query('.notifications-top-right') === null) doc.body.insertBefore(dom().div('', 'class=notifications-top-right', true), doc.body.firstChild);
+    if (query('.notifications-top-middle') === null) doc.body.insertBefore(dom().div('', 'class=notifications-top-middle', true), doc.body.firstChild);
+    if (query('.notifications-bottom-middle') === null) doc.body.insertBefore(dom().div('', 'class=notifications-bottom-middle', true), doc.body.firstChild);
+    if (query('.notifications-bottom-right') === null) doc.body.insertBefore(dom().div('', 'class=notifications-bottom-right', true), doc.body.firstChild);
+    if (query('.notifications-bottom-left') === null) doc.body.insertBefore(dom().div('', 'class=notifications-bottom-left', true), doc.body.firstChild);
     if (is.Num(state)) {
       side = state;
       duration = side;
@@ -82,7 +51,7 @@
       }
     };
 
-    query(`.notifications-${side}`).appendChild(make_element('craft-notification', msg, {
+    query(`.notifications-${side}`).appendChild(Craft.make_element('craft-notification', msg, {
       duration: duration || 2000,
       side: side,
       state: state
@@ -91,10 +60,10 @@
 
   Craft.newComponent('craft-notification', {
     inserted() {
-        if (this.hasAttribute('duration')) setTimeout(() => this.remove(), parseInt(dom(this).getAttr('duration'), 10) || 2000);
-        if (this.hasAttribute('message')) this.innerHTML = dom(this).getAttribute('message');
-        dom(this).append(dom().div('X', 'class=notification-close'));
-        this.clickEvent = On('click', '.notification-close', this, e => this.remove());
+        if (this.hasAttribute('duration')) setTimeout(() => this.remove(), parseInt(this.getAttribute('duration'), 10) || 2000);
+        if (this.hasAttribute('message')) this.innerHTML = this.getAttribute('message');
+        this.appendChild(dom().div('X', 'class=notification-close',true));
+        this.clickEvent = On('.notification-close', this).Click(e => this.remove());
       },
       destroyed() {
         let side = this.getAttribute('side');
@@ -115,16 +84,17 @@
         this.contextmenuEvent.Off();
       },
       Show(Show, ev) {
+        let manip = dom(this);
         if (is.Def(ev)) ev.preventDefault();
         if (Show) {
-          dom(this).addClass('context-menu-active');
-          dom(this).css({
+          manip.addClass('context-menu-active');
+          manip.css({
             left: (ev.clientX + 5) + 'px',
             top: (ev.clientY + 5) + 'px'
           });
           this.show = true;
-        } else if (dom(this).gotClass('context-menu-active')) {
-          dom(this).stripClass('context-menu-active');
+        } else if (manip.gotClass('context-menu-active')) {
+          manip.stripClass('context-menu-active');
           this.show = false;
         }
       }
@@ -133,16 +103,16 @@
   Craft.newComponent('check-box', {
     created() {
         this.Check();
-        this.OnClick = On('click', this, e => {
+        this.OnClick = On(this).Click(e => {
           this.value = !this.value;
           this.Check();
         });
       },
       toggle(checked) {
-        checked === true || (is.Undef(this.value) && this.getAttribute('checked') === 'false') ? this.setAttribute('checked', 'true') : this.setAttribute('checked','false');
+        checked === true || (is.Undef(this.value) && this.getAttribute('checked') === 'false') ? this.setAttribute('checked', 'true') : this.setAttribute('checked', 'false');
       },
       OnCheck(func) {
-        if(is.Func(func)) this.func = func;
+        if (is.Func(func)) this.func = func;
       },
       setValue(val) {
         this.value = val;
@@ -153,7 +123,7 @@
           if (checked === "true") this.value = true;
           if (checked === "false") this.value = false;
         } else this.value ? this.setAttribute("checked", "true") : this.setAttribute("checked", "false");
-        if(is.Func(this.func)) this.func(this.value);
+        if (is.Func(this.func)) this.func(this.value);
       },
       attr(attrName, oldVal, newVal) {
         if (attrName === "checked") this.Check();
@@ -165,23 +135,23 @@
 
   Craft.newComponent('toggle-button', {
     created() {
-        this.open ? this.setAttribute('open', 'true') : this.setAttribute('open','false');
-        this.click = On('click', this, e => {
+        this.open ? this.setAttribute('open', 'true') : this.setAttribute('open', 'false');
+        this.click = On(this).Click(e => {
           this.open = !this.open;
-          this.open ? this.setAttribute('open', 'true') : this.setAttribute('open','false');
+          this.open ? this.setAttribute('open', 'true') : this.setAttribute('open', 'false');
         });
         this.appendChild(dom().span('', 'class=toggle', true));
       },
       onToggle(func) {
-        if(is.Func(func)) this.func = func;
+        if (is.Func(func)) this.func = func;
       },
       toggle(open) {
-        open === true || (is.Undef(open) && this.getAttribute('open') === 'false') ? this.setAttribute('open', 'true') : this.setAttribute('open','false');
+        open === true || (is.Undef(open) && this.getAttribute('open') === 'false') ? this.setAttribute('open', 'true') : this.setAttribute('open', 'false');
       },
       attr(attrName, oldVal, newVal) {
         if (attrName === 'open') {
           this.getAttribute('open') === 'true' ? this.open = true : this.open = false;
-          if(is.Func(this.func)) this.func(this.open);
+          if (is.Func(this.func)) this.func(this.open);
         }
       },
       destroyed() {
@@ -219,73 +189,74 @@
       }
   });
 
-  let InputAttributes = ["name", "pattern", "value", "max", "maxlength", "min", "minlength", "size", "autofocus", "disabled", "form_id", "required"];
+  let InputAttributes = ["name", "pattern", "value", "max", "maxlength", "min", "minlength", "size", "autofocus", "autocomplete", "disabled", "form_id", "required"];
 
   Craft.newComponent('material-input', {
-    created() {
+    inserted() {
         let clearText = dom().span(),
-          input = make_element("input", '', true);
+          manip = dom(this),
+          input = Craft.make_element("input", '', 'type=text', true);
         this.value = "";
         this.innerHTML = "";
 
-        if (this.hasAttribute("type")) {
-          if (this.getAttribute("type") !== "submit" && this.getAttribute("type") !== "button" && this.getAttribute("type") !== "range") {
-            input.setAttribute("type", this.getAttribute("type"));
+        if (manip.hasAttr("type")) {
+          if (manip.getAttr("type") !== "submit" && manip.getAttr("type") !== "button" && manip.getAttr("type") !== "range") {
+            input.setAttribute("type", manip.getAttr("type"));
           } else console.warn("<material-input> is only for text type inputs not buttons,ranges,submits it will default to text if wrong type is chosen");
         } else input.setAttribute("type", "text");
 
         for (let attr in InputAttributes) {
-          if (this.hasAttribute(InputAttributes[attr])) input.setAttribute(InputAttributes[attr], this.getAttribute(InputAttributes[attr]));
+          if (manip.hasAttr(InputAttributes[attr])) input.setAttribute(InputAttributes[attr], manip.getAttr(InputAttributes[attr]));
         }
 
         this.appendChild(input);
 
         this.labelEffects = () => {
-          if (query('input', this).value.length > 0) {
-            this.find('input').classList.add('inputhastext');
-            query('span', this).style.display = 'inline-block';
-          } else if (query('input', this).classList.contains('inputhastext')) {
-            query('input', this).classList.remove('inputhastext');
-            query('span', this).style.display = 'none';
+          if (manip.query('input').value.length > 0) {
+            manip.query('input').classList.add('inputhastext');
+            manip.query('span').style.display = 'inline-block';
+          } else if (manip.query('input').classList.contains('inputhastext')) {
+            manip.query('input').classList.remove('inputhastext');
+            manip.query('span').style.display = 'none';
           }
         }
 
         this.onblur = this.labelEffects();
 
-        if (this.hasAttribute("label") || this.hasAttribute("placeholder")) {
-          let label = document.createElement('label');
-          label.innerHTML = this.getAttribute("label") || this.getAttribute("placeholder");
+        if (manip.hasAttr("label") || manip.hasAttr("placeholder")) {
+          let label = dom().label();
+          label.innerHTML = manip.getAttr("label") || manip.getAttr("placeholder");
           this.appendChild(label);
           this.labelEffects();
         }
 
-        this.OnInput = On('input', 'input', this, Craft.throttle(100, () => {
-          this.value = this.querySelector('input').value;
-          if (this.hasAttribute("label")) this.labelEffects();
+        this.OnInput = On('input', this).Input(Craft.throttle(100, e => {
+          this.value = manip.query('input').value;
+          if (manip.hasAttr("label")) this.labelEffects();
         }));
 
-
-        this.OnClick = On('click', clearText, e => {
+        this.OnClick = On(clearText).Click(e => {
           input.value = '';
           this.labelEffects();
         });
 
-        this.appendChild(clearText);
-
+        manip.append(clearText);
+        this.mnp = manip;
       },
       attr(attrName, oldVal, newVal) {
+        let mnp = this.mnp;
         InputAttributes.some(el => {
           if (el === attrName) {
-            if (this.hasAttribute(el)) {
-              this.querySelector('input').setAttribute(el, newVal);
-            } else if (query('input', this).hasAttribute(el) && !this.hasAttribute(el)) query('input', this).removeAttribute(el, newVal);
+            if (mnp.hasAttr(el)) {
+              query('input', this).setAttribute(el, newVal);
+            } else if (query('input', this).hasAttribute(el) && !mnp.hasAttr(el)) query('input', this).removeAttribute(el, newVal);
           }
         });
       }
   });
 
   On('blur', e => queryEach('context-menu', el => el.Show()));
-  On('click', doc, e => {
+  On(doc).Click(e => {
     if (e.target.parentNode.tagName !== 'CONTEXT-MENU' && e.target.tagName !== 'SECTION') forEach(ContextMenus, el => el.Show());
   });
 
@@ -296,7 +267,7 @@
       if (element.hasAttribute('tooltip')) {
         queryEach(`[owner="${e.target.parentNode.tagName.toLowerCase()} ${e.target.tagName.toLowerCase()} ${e.target.className}"]`, el => el.remove());
         let show = false,
-          tooltip = dom().span(dom().label(''), {}, true);
+          tooltip = dom().span(dom().label(''), true);
         tooltip.innerHTML += element.getAttribute('tooltip');
         tooltip.setAttribute('owner', `owner="${e.target.parentNode.tagName} ${e.target.tagName} ${e.target.className}"`);
         if (element.hasAttribute('ripple')) tooltip.style.borderColor = element.getAttribute('ripple');
@@ -310,13 +281,16 @@
         } else tooltip.classList.add('craft-tooltip');
 
         let moveTooltip = () => {
-          let movecheck = setInterval(() => show ? dom(tooltip).css({
-            left: Craft.mouse.x + 'px',
-            top: Craft.mouse.y + 'px'
-          }) : clearInterval(movecheck), 5);
+          let movecheck = setInterval(() => {
+            Craft.mouse.observe = show;
+            show ? dom(tooltip).css({
+              left: Craft.mouse.x + 'px',
+              top: Craft.mouse.y + 'px'
+            }) : clearInterval(movecheck);
+          }, 5);
         }
 
-        element.onmouseenter = ev => {
+        On(element).Mouseenter(ev => {
           show = true;
           moveTooltip();
           if (ev.target !== element || ev.target.parentNode !== element) {
@@ -333,12 +307,12 @@
               setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
             }
           }
-        }
-        element.onmouseleave = e => {
+        });
+        On(element).Mouseleave(ev => {
           show = false;
           tooltip.style.display = show ? 'block' : 'none';
           setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
-        }
+        });
         doc.body.appendChild(tooltip);
       }
       if (element.hasAttribute('movable')) {
@@ -347,10 +321,11 @@
           movable = false,
           movehandle = query('[movehandle]', element);
 
-        On('mousedown', is.Null(movehandle) ? element : movehandle, e => {
+        On(is.Null(movehandle) ? element : movehandle).Mousedown(e => {
           movable = true;
           rect = element.getBoundingClientRect();
           move = setInterval(() => {
+            Craft.mouse.observe = movable;
             movable ? dom(element).css({
               left: Craft.mouse.x - e.clientX + rect.left + "px",
               top: Craft.mouse.y - e.clientY + rect.top + "px"
