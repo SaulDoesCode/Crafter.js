@@ -52,7 +52,7 @@
     };
 
     query(`.notifications-${side}`).appendChild(Craft.make_element('craft-notification', msg, {
-      duration: duration || 2000,
+      duration: duration || 0,
       side: side,
       state: state
     }, true));
@@ -60,9 +60,9 @@
 
   Craft.newComponent('craft-notification', {
     inserted() {
-        if (this.hasAttribute('duration')) setTimeout(() => this.remove(), parseInt(this.getAttribute('duration'), 10) || 2000);
+        if (this.hasAttribute('duration') && parseInt(this.getAttribute('duration'), 10) !== 0) setTimeout(() => this.remove(), parseInt(this.getAttribute('duration'), 10));
         if (this.hasAttribute('message')) this.innerHTML = this.getAttribute('message');
-        this.appendChild(dom().div('X', 'class=notification-close',true));
+        this.appendChild(dom().div('X', 'class=notification-close', true));
         this.clickEvent = On('.notification-close', this).Click(e => this.remove());
       },
       destroyed() {
@@ -257,7 +257,7 @@
 
   On('blur', e => queryEach('context-menu', el => el.Show()));
   On(doc).Click(e => {
-    if (e.target.parentNode.tagName !== 'CONTEXT-MENU' && e.target.tagName !== 'SECTION') forEach(ContextMenus, el => el.Show());
+    if (e.target.parentNode.tagName !== 'CONTEXT-MENU' && e.target.tagName !== 'SECTION') ContextMenus.forEach(el => el.Show());
   });
 
   On('animationstart', doc, e => {
@@ -265,24 +265,23 @@
       let element = e.target;
       if (element.hasAttribute('ripple')) Craft.ripple(element);
       if (element.hasAttribute('tooltip')) {
-        queryEach(`[owner="${e.target.parentNode.tagName.toLowerCase()} ${e.target.tagName.toLowerCase()} ${e.target.className}"]`, el => el.remove());
+        queryEach(`[owner="${e.target.parentNode.tagName}${e.target.tagName}${e.target.className}"]`, el => {
+          if (is.Def(el.TooltipOwnerObserver)) el.TooltipOwnerObserver.disconnect();
+          if (is.Def(el.EventListeners)) el.EventListeners.forEach(ev => ev.Off());
+          el.remove();
+        });
         let show = false,
-          tooltip = dom().span(dom().label(''), true);
-        tooltip.innerHTML += element.getAttribute('tooltip');
-        tooltip.setAttribute('owner', `owner="${e.target.parentNode.tagName} ${e.target.tagName} ${e.target.className}"`);
+          tooltip = dom().span('', element.hasAttribute('tooltip-direction') ? `direction=${element.getAttribute('tooltip-direction')}&class=craft-tooltip` : 'direction=right&class=craft-tooltip', true);
+
+        tooltip.EventListeners = [];
+        tooltip.innerHTML = element.getAttribute('tooltip');
+        tooltip.setAttribute('owner', `${e.target.parentNode.tagName}${e.target.tagName}${e.target.className}`);
         if (element.hasAttribute('ripple')) tooltip.style.borderColor = element.getAttribute('ripple');
         if (element.hasAttribute('color-accent')) tooltip.style.borderColor = element.getAttribute('color-accent');
 
-        if (element.hasAttribute('tooltip-direction')) {
-          let direction = element.getAttribute('tooltip-direction');
-          if (direction === 'left') tooltip.classList.add('craft-tooltip-left');
-          else if (direction === 'down') tooltip.classList.add('craft-tooltip-down');
-          else if (direction === 'up') tooltip.classList.add('craft-tooltip-up');
-        } else tooltip.classList.add('craft-tooltip');
-
         let moveTooltip = () => {
           let movecheck = setInterval(() => {
-            Craft.mouse.observe = show;
+            Craft.mouse.observe.set(show);
             show ? dom(tooltip).css({
               left: Craft.mouse.x + 'px',
               top: Craft.mouse.y + 'px'
@@ -290,7 +289,7 @@
           }, 5);
         }
 
-        On(element).Mouseenter(ev => {
+        tooltip.EventListeners.push(On(element).Mouseenter(ev => {
           show = true;
           moveTooltip();
           if (ev.target !== element || ev.target.parentNode !== element) {
@@ -307,12 +306,37 @@
               setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
             }
           }
-        });
-        On(element).Mouseleave(ev => {
+        }));
+        tooltip.EventListeners.push(On(element).Mouseleave(ev => {
           show = false;
           tooltip.style.display = show ? 'block' : 'none';
           setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
+        }));
+
+        tooltip.TooltipOwnerObserver = new MutationObserver(mutations => {
+          mutations.forEach(mut => {
+            if (mut.type === 'attributes') {
+              if (mut.attributeName === 'tooltip' && element.hasAttribute('tooltip')) {
+                tooltip.innerHTML = element.getAttribute('tooltip');
+              } else if (mut.attributeName === 'tooltip-delay' && element.hasAttribute('tooltip-delay')) {
+                setTimeout(() => {
+                  tooltip.style.display = show ? 'block' : 'none';
+                  setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
+                }, parseInt(element.getAttribute('tooltip-delay')));
+              } else if (mut.attributeName === 'tooltip-direction' && element.hasAttribute('tooltip-direction')) {
+                tooltip.setAttribute('direction', element.getAttribute('tooltip-direction'));
+              } else if (!element.hasAttribute('tooltip')) {
+                if (is.Def(tooltip.TooltipOwnerObserver)) tooltip.TooltipOwnerObserver.disconnect();
+                if (is.Def(tooltip.EventListeners)) tooltip.EventListeners.forEach(ev => ev.Off());
+                tooltip.remove();
+              }
+            }
+          });
         });
+        tooltip.TooltipOwnerObserver.observe(element, {
+          attributes: true
+        });
+
         doc.body.appendChild(tooltip);
       }
       if (element.hasAttribute('movable')) {
@@ -321,11 +345,11 @@
           movable = false,
           movehandle = query('[movehandle]', element);
 
-        On(is.Null(movehandle) ? element : movehandle).Mousedown(e => {
+        On(movehandle === null ? element : movehandle).Mousedown(e => {
           movable = true;
           rect = element.getBoundingClientRect();
           move = setInterval(() => {
-            Craft.mouse.observe = movable;
+            Craft.mouse.observe.set(movable);
             movable ? dom(element).css({
               left: Craft.mouse.x - e.clientX + rect.left + "px",
               top: Craft.mouse.y - e.clientY + rect.top + "px"

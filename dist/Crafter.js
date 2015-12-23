@@ -590,101 +590,6 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
   };
 
   /**
-   * associative collection of functions
-   * that can be added,removed or iterated through
-   */
-
-  var FunctionIterator = (function () {
-    function FunctionIterator() {
-      _classCallCheck(this, FunctionIterator);
-
-      this.functions = {};
-      this.length = Object.keys(this.functions).length;
-    }
-    /**
-     * Check if the FunctionIterator Collection contains a certain function
-     * @param {string} funcName - name to identify the function with
-     */
-
-    _createClass(FunctionIterator, [{
-      key: 'has',
-      value: function has(funcName) {
-        if (this.functions.has(funcName)) return true;
-        return false;
-      }
-      /**
-       * Add a function to the collection
-       * @param {string} funcName - name to identify the function with
-       * @param {Function} func - function to be stored in the FunctionIterator Collection
-       */
-
-    }, {
-      key: 'add',
-      value: function add(funcName, func) {
-        if (is.Func(func)) {
-          this.functions[funcName] = func;
-        } else if (is.Func(funcName)) {
-          this.functions[Craft.randomString()] = funcName;
-        } else console.error("Invalid function parameter in FunctionIterator.add(funcName , _function_ )");
-        this.length = Object.keys(this.functions).length;
-      }
-      /**
-       * Remove a function from the collection
-       * @param {string} funcName - name to identify the function with
-       */
-
-    }, {
-      key: 'remove',
-      value: function remove(funcName) {
-        if (this.functions.has(funcName)) {
-          this.functions[funcName] = null;
-          delete this.functions[funcName];
-        } else console.warn("No Such Function Entry in FunctionIterator");
-        this.length = Object.keys(this.functions).length;
-      }
-      /**
-       * Remove all functions from the collection
-       * @param {string} funcName - name to identify the function with
-       */
-
-    }, {
-      key: 'removeAll',
-      value: function removeAll() {
-        delete this.functions;
-        this.functions = null;
-        this.functions = {};
-        this.length = Object.keys(this.functions).length;
-      }
-      /**
-       * Execute each function in the Collection
-       * all arguments passed will be applied to each function in the collection
-       * usefull for centralizing an Event Listener such as a Window Resize event
-       */
-
-    }, {
-      key: 'runEach',
-      value: function runEach() {
-        for (var i in this.functions) {
-          this.functions[i].apply(this, arguments);
-        }
-      }
-      /**
-       * Execute a single function in the collection
-       * @param {string} funcName - name to identify the function with
-       * @param {...*=} args - arguments/parameters to pass to the function
-       */
-
-    }, {
-      key: 'runOne',
-      value: function runOne(funcName) {
-        this.functions.hasOwnProperty(funcName) ? this.functions[funcName].apply(this, args) : console.warn("No Such Function Entry in FunctionIterator");
-      }
-    }]);
-
-    return FunctionIterator;
-  })();
-
-  /**
    * Handles WebSockets in a contained manner with send and recieve methods
    * @param {string} wsAddress - the WebSocket address example "ws://localhost:3000/"
    * @param {Array=} protocols - the protocols to pass to the WebSocket Connection
@@ -916,7 +821,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
    * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
    */
   var _queryAll = function _queryAll(selector, element) {
-    return is.Def(element) ? is.Node(element) ? element.querySelectorAll(selector) : _query(element).querySelectorAll(selector) : doc.querySelectorAll(selector);
+    return is.Def(element) ? is.Node(element) || element === doc ? element.querySelectorAll(selector) : _query(element).querySelectorAll(selector) : doc.querySelectorAll(selector);
   };
   /**
    * Easy way to loop through Nodes in the DOM using a CSS Selector or a NodeList
@@ -1923,13 +1828,15 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     Scope: {},
     WebComponents: [],
     tabActive: true,
-    ResizeHandlers: new FunctionIterator(),
     make_element: make_element,
     Binds: new Map(),
     mouse: {
       x: 0,
       y: 0,
-      over: null
+      over: null,
+      observe: new _ReactiveVariable(false, function (o, n) {
+        n ? Craft.mouse.eventhandler.On() : Craft.mouse.eventhandler.Off();
+      })
     },
     easing: {
       inOutQuad: function inOutQuad(t, b, c, d) {
@@ -2190,11 +2097,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     }
   });
 
-  _On('resize', Craft.throttle(450, function (e) {
-    return Craft.ResizeHandlers.runEach(e);
-  }));
-  _On('mousemove', function (e) {
-    if (Craft.mouse.observe === true) {
+  Craft.mouse.eventhandler = _On('mousemove', function (e) {
+    if (Craft.mouse.observe.val === true) {
       Craft.mouse.x = e.clientX;
       Craft.mouse.y = e.clientY;
       Craft.mouse.over = e.target;
@@ -2265,7 +2169,6 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
   root.Once = Once;
   root.forEach = forEach;
   root.QueryOrNodetoNodeArray = QueryOrNodetoNodeArray;
-  root.FunctionIterator = FunctionIterator;
   root.CraftSocket = CraftSocket;
   root.EventHandler = EventHandler;
   root.ReactiveVariable = _ReactiveVariable;

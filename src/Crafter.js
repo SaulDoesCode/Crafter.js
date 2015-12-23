@@ -350,75 +350,6 @@
   }
 
   /**
-   * associative collection of functions
-   * that can be added,removed or iterated through
-   */
-  class FunctionIterator {
-    constructor() {
-        this.functions = {};
-        this.length = Object.keys(this.functions).length;
-      }
-      /**
-       * Check if the FunctionIterator Collection contains a certain function
-       * @param {string} funcName - name to identify the function with
-       */
-    has(funcName) {
-        if (this.functions.has(funcName)) return true;
-        return false;
-      }
-      /**
-       * Add a function to the collection
-       * @param {string} funcName - name to identify the function with
-       * @param {Function} func - function to be stored in the FunctionIterator Collection
-       */
-    add(funcName, func) {
-        if (is.Func(func)) {
-          this.functions[funcName] = func;
-        } else if (is.Func(funcName)) {
-          this.functions[Craft.randomString()] = funcName;
-        } else console.error("Invalid function parameter in FunctionIterator.add(funcName , _function_ )");
-        this.length = Object.keys(this.functions).length;
-      }
-      /**
-       * Remove a function from the collection
-       * @param {string} funcName - name to identify the function with
-       */
-    remove(funcName) {
-        if (this.functions.has(funcName)) {
-          this.functions[funcName] = null;
-          delete this.functions[funcName];
-        } else console.warn("No Such Function Entry in FunctionIterator");
-        this.length = Object.keys(this.functions).length;
-      }
-      /**
-       * Remove all functions from the collection
-       * @param {string} funcName - name to identify the function with
-       */
-    removeAll() {
-        delete this.functions;
-        this.functions = null;
-        this.functions = {};
-        this.length = Object.keys(this.functions).length;
-      }
-      /**
-       * Execute each function in the Collection
-       * all arguments passed will be applied to each function in the collection
-       * usefull for centralizing an Event Listener such as a Window Resize event
-       */
-    runEach() {
-        for (let i in this.functions) this.functions[i].apply(this, arguments);
-      }
-      /**
-       * Execute a single function in the collection
-       * @param {string} funcName - name to identify the function with
-       * @param {...*=} args - arguments/parameters to pass to the function
-       */
-    runOne(funcName, ...arg) {
-      this.functions.hasOwnProperty(funcName) ? this.functions[funcName].apply(this, args) : console.warn("No Such Function Entry in FunctionIterator");
-    }
-  }
-
-  /**
    * Handles WebSockets in a contained manner with send and recieve methods
    * @param {string} wsAddress - the WebSocket address example "ws://localhost:3000/"
    * @param {Array=} protocols - the protocols to pass to the WebSocket Connection
@@ -569,7 +500,7 @@
    * @param {string} selector - CSS selector to query the DOM Nodes with
    * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
    */
-  var queryAll = (selector, element) => is.Def(element) ? is.Node(element) ? element.querySelectorAll(selector) : query(element).querySelectorAll(selector) : doc.querySelectorAll(selector);
+  var queryAll = (selector, element) => is.Def(element) ? is.Node(element) || element === doc ? element.querySelectorAll(selector) : query(element).querySelectorAll(selector) : doc.querySelectorAll(selector);
   /**
    * Easy way to loop through Nodes in the DOM using a CSS Selector or a NodeList
    * @param {string|NodeList} selector - CSS selector to query the DOM Nodes with or NodeList to iterate through
@@ -1284,13 +1215,15 @@
       Scope: {},
       WebComponents: [],
       tabActive: true,
-      ResizeHandlers: new FunctionIterator,
       make_element: make_element,
       Binds: new Map,
       mouse: {
         x: 0,
         y: 0,
-        over: null
+        over: null,
+        observe : new ReactiveVariable(false,(o,n) => {
+          n ? Craft.mouse.eventhandler.On() : Craft.mouse.eventhandler.Off();
+        })
       },
       easing: {
         inOutQuad(t, b, c, d) {
@@ -1509,9 +1442,8 @@
     }
   });
 
-  On('resize', Craft.throttle(450, e => Craft.ResizeHandlers.runEach(e)));
-  On('mousemove', e => {
-    if (Craft.mouse.observe === true) {
+  Craft.mouse.eventhandler = On('mousemove', e => {
+    if (Craft.mouse.observe.val === true) {
       Craft.mouse.x = e.clientX;
       Craft.mouse.y = e.clientY;
       Craft.mouse.over = e.target;
@@ -1557,7 +1489,6 @@
   root.Once = Once;
   root.forEach = forEach;
   root.QueryOrNodetoNodeArray = QueryOrNodetoNodeArray;
-  root.FunctionIterator = FunctionIterator;
   root.CraftSocket = CraftSocket;
   root.EventHandler = EventHandler;
   root.ReactiveVariable = ReactiveVariable;
