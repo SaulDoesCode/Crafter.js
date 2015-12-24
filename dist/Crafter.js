@@ -51,6 +51,27 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
   },
       Ready = false,
       Craft = undefined,
+      processInvocation = function processInvocation(fn, argsArr, totalArity) {
+    argsArr = argsArr.length > totalArity ? argsArr.slice(0, totalArity) : argsArr;
+    if (argsArr.length === totalArity) return fn.apply(null, argsArr);
+    return createFn(fn, argsArr, totalArity);
+  },
+      createFn = function createFn(fn, Args, totalArity) {
+    var remainingArity = totalArity - Args.length;
+    if (is.Between(remainingArity, 10, 0)) return function () {
+      for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+        args[_key] = arguments[_key];
+      }
+
+      return processInvocation(fn, Args.concat(args), totalArity);
+    };
+    return (function (fn, args, arity) {
+      var a = [],
+          i = 0;
+      for (; i < arity; i++) a.push('a' + i.toString());
+      return eval('false||function(' + a.join(',') + '){ return processInvocation(fn, args.concat(Array.from(arguments)));}');
+    })(fn, args, remainingArity);
+  },
       head = doc.getElementsByTagName('head')[0],
       CrafterStyles = doc.createElement('style'),
       ua = navigator.userAgent,
@@ -78,8 +99,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
      * @param args - value/values to test
      */
     String: function String() {
-      for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-        args[_key] = arguments[_key];
+      for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+        args[_key2] = arguments[_key2];
       }
 
       return args.length && args.every(function (o) {
@@ -91,8 +112,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
      * @param args - value/values to test
      */
     Arr: function Arr() {
-      for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-        args[_key2] = arguments[_key2];
+      for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+        args[_key3] = arguments[_key3];
       }
 
       return args.length && args.every(function (o) {
@@ -104,8 +125,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
      * @param args - value/values to test
      */
     Arraylike: function Arraylike() {
-      for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-        args[_key3] = arguments[_key3];
+      for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+        args[_key4] = arguments[_key4];
       }
 
       return args.length && args.every(function (o) {
@@ -117,8 +138,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
      * @param args - value/values to test
      */
     Undef: function Undef() {
-      for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-        args[_key4] = arguments[_key4];
+      for (var _len5 = arguments.length, args = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+        args[_key5] = arguments[_key5];
       }
 
       return args.length && args.every(function (o) {
@@ -130,8 +151,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
      * @param args - value/values to test
      */
     Def: function Def() {
-      for (var _len5 = arguments.length, args = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-        args[_key5] = arguments[_key5];
+      for (var _len6 = arguments.length, args = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+        args[_key6] = arguments[_key6];
       }
 
       return args.length && args.every(function (o) {
@@ -143,8 +164,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
      * @param args - value/values to test
      */
     Null: function Null() {
-      for (var _len6 = arguments.length, args = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
-        args[_key6] = arguments[_key6];
+      for (var _len7 = arguments.length, args = Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
+        args[_key7] = arguments[_key7];
       }
 
       return args.length && args.every(function (o) {
@@ -166,8 +187,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
 
       return Node;
     })(function () {
-      for (var _len7 = arguments.length, args = Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
-        args[_key7] = arguments[_key7];
+      for (var _len8 = arguments.length, args = Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
+        args[_key8] = arguments[_key8];
       }
 
       return args.length && args.every(function (o) {
@@ -189,8 +210,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
 
       return NodeList;
     })(function () {
-      for (var _len8 = arguments.length, args = Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
-        args[_key8] = arguments[_key8];
+      for (var _len9 = arguments.length, args = Array(_len9), _key9 = 0; _key9 < _len9; _key9++) {
+        args[_key9] = arguments[_key9];
       }
 
       return args.length ? !is.Node(args[0]) && args.every(function (n) {
@@ -202,8 +223,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
      * @param {...*} args - value/values to test
      */
     Num: function Num() {
-      for (var _len9 = arguments.length, args = Array(_len9), _key9 = 0; _key9 < _len9; _key9++) {
-        args[_key9] = arguments[_key9];
+      for (var _len10 = arguments.length, args = Array(_len10), _key10 = 0; _key10 < _len10; _key10++) {
+        args[_key10] = arguments[_key10];
       }
 
       return args.length && args.every(function (o) {
@@ -215,8 +236,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
      * @param args - value/values to test
      */
     Object: function Object() {
-      for (var _len10 = arguments.length, args = Array(_len10), _key10 = 0; _key10 < _len10; _key10++) {
-        args[_key10] = arguments[_key10];
+      for (var _len11 = arguments.length, args = Array(_len11), _key11 = 0; _key11 < _len11; _key11++) {
+        args[_key11] = arguments[_key11];
       }
 
       return args.length && args.every(function (o) {
@@ -228,8 +249,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
      * @param args - value/values to test
      */
     Element: function Element() {
-      for (var _len11 = arguments.length, args = Array(_len11), _key11 = 0; _key11 < _len11; _key11++) {
-        args[_key11] = arguments[_key11];
+      for (var _len12 = arguments.length, args = Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
+        args[_key12] = arguments[_key12];
       }
 
       return args.length && args.every(function (o) {
@@ -241,8 +262,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
      * @param args - value/values to test
      */
     File: function File() {
-      for (var _len12 = arguments.length, args = Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
-        args[_key12] = arguments[_key12];
+      for (var _len13 = arguments.length, args = Array(_len13), _key13 = 0; _key13 < _len13; _key13++) {
+        args[_key13] = arguments[_key13];
       }
 
       return args.length && args.every(function (o) {
@@ -254,8 +275,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
      * @param args - value/values to test
      */
     FormData: function FormData() {
-      for (var _len13 = arguments.length, args = Array(_len13), _key13 = 0; _key13 < _len13; _key13++) {
-        args[_key13] = arguments[_key13];
+      for (var _len14 = arguments.length, args = Array(_len14), _key14 = 0; _key14 < _len14; _key14++) {
+        args[_key14] = arguments[_key14];
       }
 
       return args.length && args.every(function (o) {
@@ -267,8 +288,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
      * @param args - value/values to test
      */
     Map: function Map() {
-      for (var _len14 = arguments.length, args = Array(_len14), _key14 = 0; _key14 < _len14; _key14++) {
-        args[_key14] = arguments[_key14];
+      for (var _len15 = arguments.length, args = Array(_len15), _key15 = 0; _key15 < _len15; _key15++) {
+        args[_key15] = arguments[_key15];
       }
 
       return args.length && args.every(function (o) {
@@ -280,8 +301,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
      * @param args - value/values to test
      */
     Func: function Func() {
-      for (var _len15 = arguments.length, args = Array(_len15), _key15 = 0; _key15 < _len15; _key15++) {
-        args[_key15] = arguments[_key15];
+      for (var _len16 = arguments.length, args = Array(_len16), _key16 = 0; _key16 < _len16; _key16++) {
+        args[_key16] = arguments[_key16];
       }
 
       return args.length && args.every(function (o) {
@@ -557,8 +578,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
      * @param args - value/values to test
      */
     ReactiveVariable: function ReactiveVariable() {
-      for (var _len16 = arguments.length, args = Array(_len16), _key16 = 0; _key16 < _len16; _key16++) {
-        args[_key16] = arguments[_key16];
+      for (var _len17 = arguments.length, args = Array(_len17), _key17 = 0; _key17 < _len17; _key17++) {
+        args[_key17] = arguments[_key17];
       }
 
       return args.length && args.every(function (o) {
@@ -722,8 +743,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
 
   var EventHandler = (function () {
     function EventHandler(EventType, Target, Func, Within) {
-      for (var _len17 = arguments.length, args = Array(_len17 > 4 ? _len17 - 4 : 0), _key17 = 4; _key17 < _len17; _key17++) {
-        args[_key17 - 4] = arguments[_key17];
+      for (var _len18 = arguments.length, args = Array(_len18 > 4 ? _len18 - 4 : 0), _key18 = 4; _key18 < _len18; _key18++) {
+        args[_key18 - 4] = arguments[_key18];
       }
 
       _classCallCheck(this, EventHandler);
@@ -1293,13 +1314,13 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         return this.element.getBoundingClientRect();
       }
       /**
-      * move the element using either css transforms or plain css possitioning
-      * @param {string|num} x - x-axis position in pixels
-      * @param {string|num} y - y-axis position in pixels
-      * @param {boolean=} transform - should move set the position using css transforms or not
-      * @param {string=} position - set the position style of the element absolute/fixed...
-      * @param {boolean=} chainable - should this method be chainable defaults to false for performance reasons
-      */
+       * move the element using either css transforms or plain css possitioning
+       * @param {string|num} x - x-axis position in pixels
+       * @param {string|num} y - y-axis position in pixels
+       * @param {boolean=} transform - should move set the position using css transforms or not
+       * @param {string=} position - set the position style of the element absolute/fixed...
+       * @param {boolean=} chainable - should this method be chainable defaults to false for performance reasons
+       */
 
     }, {
       key: 'move',
@@ -1404,8 +1425,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       return true;
     },
     concatObjects: function concatObjects(hostobj) {
-      for (var _len18 = arguments.length, Objs = Array(_len18 > 1 ? _len18 - 1 : 0), _key18 = 1; _key18 < _len18; _key18++) {
-        Objs[_key18 - 1] = arguments[_key18];
+      for (var _len19 = arguments.length, Objs = Array(_len19 > 1 ? _len19 - 1 : 0), _key19 = 1; _key19 < _len19; _key19++) {
+        Objs[_key19 - 1] = arguments[_key19];
       }
 
       forEach(hostobj, function () {
@@ -1423,8 +1444,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     },
 
     mergeObjects: function mergeObjects(hostobj) {
-      for (var _len19 = arguments.length, Objs = Array(_len19 > 1 ? _len19 - 1 : 0), _key19 = 1; _key19 < _len19; _key19++) {
-        Objs[_key19 - 1] = arguments[_key19];
+      for (var _len20 = arguments.length, Objs = Array(_len20 > 1 ? _len20 - 1 : 0), _key20 = 1; _key20 < _len20; _key20++) {
+        Objs[_key20 - 1] = arguments[_key20];
       }
 
       return Object.assign(hostobj, Objs);
@@ -1598,8 +1619,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     Import: function Import() {
       var promises = [];
 
-      for (var _len20 = arguments.length, args = Array(_len20), _key20 = 0; _key20 < _len20; _key20++) {
-        args[_key20] = arguments[_key20];
+      for (var _len21 = arguments.length, args = Array(_len21), _key21 = 0; _key21 < _len21; _key21++) {
+        args[_key21] = arguments[_key21];
       }
 
       args.forEach(function (arg) {
@@ -1726,8 +1747,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       if (!is.Func(func) && is.Func(n)) func = n;else throw new Error("Craft.after -> func is not a function");
       n = Number.isFinite(n = +n) ? n : 0;
       if (--n < 1) return function () {
-        for (var _len21 = arguments.length, args = Array(_len21), _key21 = 0; _key21 < _len21; _key21++) {
-          args[_key21] = arguments[_key21];
+        for (var _len22 = arguments.length, args = Array(_len22), _key22 = 0; _key22 < _len22; _key22++) {
+          args[_key22] = arguments[_key22];
         }
 
         return func.apply(_this6, args);
@@ -1825,8 +1846,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     type: function type() {
       var types = [];
 
-      for (var _len22 = arguments.length, args = Array(_len22), _key22 = 0; _key22 < _len22; _key22++) {
-        args[_key22] = arguments[_key22];
+      for (var _len23 = arguments.length, args = Array(_len23), _key23 = 0; _key23 < _len23; _key23++) {
+        args[_key23] = arguments[_key23];
       }
 
       args.forEach(function (arg) {
@@ -1839,8 +1860,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       if (!is.Func(func) || resolver && !is.Func(resolver)) throw new TypeError("arg provided is not a function");
       var cache = new WeakMap();
       var memoized = function memoized() {
-        for (var _len23 = arguments.length, args = Array(_len23), _key23 = 0; _key23 < _len23; _key23++) {
-          args[_key23] = arguments[_key23];
+        for (var _len24 = arguments.length, args = Array(_len24), _key24 = 0; _key24 < _len24; _key24++) {
+          args[_key24] = arguments[_key24];
         }
 
         var key = resolver ? resolver.apply(this, args) : args[0];
@@ -1993,8 +2014,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       if (caps === true && Craft.hasCapitals(pass) === false) return reasons ? 'Password should contain Capital letters' : false;
       if (number === true && /\d/g.test(pass) === false) return reasons ? 'Password should contain a number' : false;
 
-      for (var _len24 = arguments.length, includeChars = Array(_len24 > 5 ? _len24 - 5 : 0), _key24 = 5; _key24 < _len24; _key24++) {
-        includeChars[_key24 - 5] = arguments[_key24];
+      for (var _len25 = arguments.length, includeChars = Array(_len25 > 5 ? _len25 - 5 : 0), _key25 = 5; _key25 < _len25; _key25++) {
+        includeChars[_key25 - 5] = arguments[_key25];
       }
 
       if (includeChars.length !== 0) {
@@ -2083,6 +2104,21 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     BindExists: function BindExists(key, bindScope) {
       return bindScope ? bindScope.has(key) : Craft.Binds.has(key);
     }
+  };
+
+  Craft.curry = function (fn) {
+    return createFn(fn, [], fn.length);
+  };
+  Craft.curry.to = Craft.curry(function (arity, fn) {
+    return createFn(fn, [], arity);
+  });
+  Craft.curry.adaptTo = Craft.curry(function (num, fn) {
+    return Craft.curry.to(num, function (context) {
+      return fn.apply(this, Array.prototype.slice.call(arguments, 1).concat(context));
+    });
+  });
+  Craft.curry.adapt = function (fn) {
+    return Craft.curry.adaptTo(fn.length, fn);
   };
 
   Craft.loader.removeAll(true);
