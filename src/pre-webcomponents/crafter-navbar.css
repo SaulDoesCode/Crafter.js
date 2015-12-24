@@ -1,0 +1,112 @@
+crafter-navbar > *, crafter-navbar {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+crafter-navbar {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-content: center;
+  height: auto;
+  width: calc(14mm + 6px);
+  text-align: center;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  transition: all 350ms ease-in;
+  z-index: 10;
+}
+crafter-navbar[direction='left'] {
+  top: 25%;
+  bottom: 25%;
+  left: 0;
+}
+crafter-navbar[direction='right'] {
+  top: 25%;
+  bottom: 25%;
+  right: 3px;
+}
+crafter-navbar[direction='top'] {
+  flex-direction: row;
+  justify-content: center;
+  align-content: center;
+  top: 0;
+  left: 25%;
+  right: 25%;
+  height: 15mm;
+  width: auto;
+}
+crafter-navbar[direction='bottom'] {
+  flex-direction: row;
+  bottom: 1mm;
+  left: 25%;
+  right: 25%;
+  height: 15mm;
+  width: auto;
+}
+crafter-navbar > navbar-item {
+  position: relative;
+  overflow: hidden;
+  flex: 0 1 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: bottom;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  cursor: pointer;
+  height: 14mm;
+  width: 14mm;
+  margin: 1mm 0 1mm 5px;
+  border-radius: 2px;
+  letter-spacing: 1px;
+  font-size: 1.4em;
+  cursor: pointer;
+  color: hsl(0, 0%, 65%);
+  background: hsl(0, 0%, 30%);
+  border-left: 2px solid dimgrey;
+  box-shadow: 0 0 3px hsla(0, 0%, 10%, .25);
+  transition: all 180ms ease, backgroundColor 50ms ease, transform 120ms ease;
+}
+crafter-navbar[direction='right'] > navbar-item {
+  border: none;
+  border-right: 2px solid dimgrey;
+}
+crafter-navbar[direction='top'] > navbar-item {
+  margin: 0 2mm 0 2mm 0;
+  border: none;
+  border-top: 2px solid dimgrey;
+}
+crafter-navbar[direction='bottom'] > navbar-item {
+  margin: 0 2mm 0 2mm 0;
+  border: none;
+  border-bottom: 2px solid dimgrey;
+}
+crafter-navbar > navbar-item:hover {
+  background: hsl(0, 0%, 45%);
+  color: hsl(0, 0%, 85%);
+}
+crafter-navbar[direction='left'] > navbar-item:hover {
+  transform: translateX(5px);
+}
+crafter-navbar[direction*='right'] > navbar-item:hover {
+  transform: translateX(-5px);
+}
+crafter-navbar[direction='bottom'] > navbar-item:hover {
+  transform: translateY(-5px);
+}
+crafter-navbar[direction*='top'] > navbar-item:hover {
+  transform: translateY(5px);
+}
+crafter-navbar > navbar-item[selected] {
+  color: hsl(0, 0%, 35%);
+  background: hsl(0, 0%, 100%);
+}
+crafter-navbar > navbar-item[selected]:hover {
+  color: hsl(0, 0%, 40%);
+  background: hsl(0, 0%, 95%);
+}

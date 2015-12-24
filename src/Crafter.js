@@ -859,7 +859,7 @@
        * @param {string} CSS selector
        * @returns {NodeList|Null}
        */
-    queryAll(selctor) {
+    queryAll(selector) {
       return queryAll(selector, this.element);
     }
   }
