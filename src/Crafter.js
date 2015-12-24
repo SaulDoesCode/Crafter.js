@@ -644,7 +644,9 @@
        * @param {string=} sets the innerHTML value or when undefined gets the innerHTML value
        */
     html(val) {
-        return is.Def(val) ? this.element.innerHTML = val : this.element.innerHTML;
+        if (is.Def(val)) return this.element.innerHTML;
+        this.element.innerHTML = val;
+        return this;
       }
       /**
        * changes or returns the textContent value of a Node
@@ -652,7 +654,9 @@
        * @param {string=} sets the textContent value or when undefined gets the textContent value
        */
     text(val) {
-        return is.Def(val) ? this.element.textContent = val : this.element.textContent;
+        if (is.Def(val)) return this.element.textContent;
+        this.element.textContent = val;
+        return this;
       }
       /**
        * replaces a Node with another node provided as a parameter/argument
@@ -669,9 +673,8 @@
        * @param {Node|string} CSS selector or Node to append the this.element to
        */
     appendTo(val) {
-        let el;
-        is.Node(val) ? el = val : el = query(val);
-        if (el !== null) el.appendChild(this.element);
+        if (is.String(val)) val = query(val);
+        if (val !== null) val.appendChild(this.element);
         return this;
       }
       /**
@@ -809,6 +812,24 @@
     getRect() {
         return this.element.getBoundingClientRect();
       }
+    /**
+    * move the element using either css transforms or plain css possitioning
+    * @param {string|num} x - x-axis position in pixels
+    * @param {string|num} y - y-axis position in pixels
+    * @param {boolean=} transform - should move set the position using css transforms or not
+    * @param {string=} position - set the position style of the element absolute/fixed...
+    * @param {boolean=} chainable - should this method be chainable defaults to false for performance reasons
+    */
+    move(x,y,transform,position,chainable) {
+      if(is.Bool(position)) chainable = position;
+      if(is.String(transform)) position = transfrom;
+      transform === true ? this.element.style.transform = `translateX(${x}px) translateY(${y}px)` : this.css({
+          position : is.String(position) ? position : '',
+          left : `${x}px`,
+          top : `${y}px`
+      });
+      if(chainable === true) return this;
+    }
       /**
        * performs a query inside the element
        * @memberof dom
@@ -837,6 +858,7 @@
    */
   let dom = (element, within) => {
     if (is.Node(element)) return new domMethods(element);
+    else if(is.NodeList(element)) return new domNodeList(element);
     else if (is.String(element)) {
       let elements = is.String(within) || is.Node(within) ? queryAll(element, within) : queryAll(element);
       if (!elements.length) return console.warn(`dom('${element}') -> null CSS selector`);
@@ -1029,7 +1051,7 @@
         }
       },
       /**
-       * Crafter.js module loader,
+       * Crafter.js resource loader for Scripts and Style sheets,
        * each import option is an object with properties like 'script/css/wc : "location" ' for resource url
        * other options include 'cache' - determines wether to cache the resource or not , 'test' : usefull for conditional imports if test is false the resource won't load or execute ,
        * 'key' custom name to cache the resource in localStorage with instead of the resource location, 'defer' optionally load the script when the dom is loaded or load when it's ready,
@@ -1110,10 +1132,14 @@
           return all;
         }
       },
+      delay(func,ms) {
+        return setTimeout(func,ms);
+      },
       after(n, func) {
-        if (!is.Func(func)) is.Func(n) ? func = n : console.error("after : func is not a function");
+        if (!is.Func(func) && is.Func(n)) func = n;
+        else throw new Error("Craft.after -> func is not a function");
         n = Number.isFinite(n = +n) ? n : 0;
-        return (...args) => --n < 1 ? func.apply(this, args) : () => null;
+        if(--n < 1) return (...args) => func.apply(this, args);
       },
       debounce(wait, func, immediate) {
         let timeout;
@@ -1189,18 +1215,18 @@
           console.error('could not find length of value');
         }
       },
-      indexOfDate: (Collection, date) => {
+      indexOfDate(Collection, date) {
         for (let i = 0; i < Collection.length; i++)
           if (+Collection[i] === +date) return i;
         return -1;
       },
-      type: (...args) => {
+      type(...args) {
         let types = [];
         args.forEach(arg => types.push(typeof arg));
         if (types.length < 2) return types[0];
         return types;
       },
-      memoize: function (func, resolver) {
+      memoize(func, resolver) {
         if (!is.Func(func) || (resolver && !is.Func(resolver))) throw new TypeError("arg provided is not a function");
         let cache = new WeakMap;
         let memoized = function (...args) {
@@ -1221,7 +1247,7 @@
         x: 0,
         y: 0,
         over: null,
-        observe : new ReactiveVariable(false,(o,n) => {
+        observe: new ReactiveVariable(false, (o, n) => {
           n ? Craft.mouse.eventhandler.On() : Craft.mouse.eventhandler.Off();
         })
       },
@@ -1280,43 +1306,39 @@
        * function that returns a promise when the DOM and WebComponents are finished loading
        * @param {Object=} Scope - Optional overide to the default Craft.Scope passed to the promise
        */
-      WhenReady(Scope) {
-        return new Promise((resolve, reject) => {
-          Scope = Scope || Craft.Scope;
-          if (Ready) resolve(Scope);
-          else {
-            let ReadyYet = setInterval(() => {
-              if (Ready) {
-                resolve(Scope);
-                clearInterval(ReadyYet);
-              }
-            }, 25);
-            setTimeout(() => {
+      WhenReady: Scope => new Promise((resolve, reject) => {
+        Scope = Scope || Craft.Scope;
+        if (Ready) resolve(Scope);
+        else {
+          let ReadyYet = setInterval(() => {
+            if (Ready) {
+              resolve(Scope);
               clearInterval(ReadyYet);
-              if (!Ready) reject("Things didn't load correctly/intime -> load failed");
-            }, 4500)
-          }
-        });
-      },
-      poll(test, interval, timeout, success, fail) {
-        return (() => {
-          if (is.Func(timeout)) {
-            if (is.Func(success)) fail = success;
-            success = timeout;
-            timeout = undefined;
-          }
-          let Interval = setInterval(() => {
-            if ((is.Bool(test) && test === true) || (is.Func(test) && test() === true)) {
-              success();
-              clearInterval(Interval);
             }
-          }, interval || 20);
-          if (is.Num(timeout)) setTimeout(() => {
+          }, 25);
+          setTimeout(() => {
+            clearInterval(ReadyYet);
+            if (!Ready) reject("Things didn't load correctly/intime -> load failed");
+          }, 4500)
+        }
+      }),
+      poll: (test, interval, timeout, success, fail) => (() => {
+        if (is.Func(timeout)) {
+          if (is.Func(success)) fail = success;
+          success = timeout;
+          timeout = undefined;
+        }
+        let Interval = setInterval(() => {
+          if ((is.Bool(test) && test === true) || (is.Func(test) && test() === true)) {
+            success();
             clearInterval(Interval);
-            if ((is.Bool(test) && test === false) || (is.Func(test) && test() === false)) fail();
-          }, timeout);
-        })()
-      },
+          }
+        }, interval || 20);
+        if (is.Num(timeout)) setTimeout(() => {
+          clearInterval(Interval);
+          if ((is.Bool(test) && test === false) || (is.Func(test) && test() === false)) fail();
+        }, timeout);
+      })(),
       /**
        * Usefull method for validating passwords , example Craft.strongPassword('#MyFancyPassword18',8,true,true,"#") -> true requirements met
        * @param {string} pass - string containing the password
@@ -1326,7 +1348,7 @@
        * @param {Boolean} reasons - should the function return a short string explaining the reason exept when it's a pass then it gives a bool;
        * @param {...string} includeChars - every extra argument should be a string containing a character you want the password to include
        */
-      strongPassword: (pass, length, caps, number, reasons, ...includeChars) => {
+      strongPassword(pass, length, caps, number, reasons, ...includeChars) {
         if (pass.length <= length) return reasons ? 'Password too short' : false;
         if (caps === true && Craft.hasCapitals(pass) === false) return reasons ? 'Password should contain Capital letters' : false;
         if (number === true && /\d/g.test(pass) === false) return reasons ? 'Password should contain a number' : false;

@@ -14,13 +14,13 @@
       if (this.parentNode.hasAttribute("ripple")) color = this.parentNode.getAttribute("ripple");
       else if (this.hasAttribute("color-accent")) color = this.getAttribute("color-accent");
       else if (this.hasAttribute("color")) color = this.getAttribute("color");
+
       dom(this).css({
         width: diameter + 'px',
         height: diameter + 'px',
-        left: parseInt(this.getAttribute('x')) - rect.left - (diameter / 2) + 'px',
-        top: parseInt(this.getAttribute('y')) - rect.top - (diameter / 2) + 'px',
         animation: `ripple ${timing}ms ease`
-      });
+      }).move(parseInt(this.getAttribute('x')) - rect.left - (diameter / 2), parseInt(this.getAttribute('y')) - rect.top - (diameter / 2));
+
       if (is.Def(color)) this.style.backgroundColor = color;
       setTimeout(() => this.remove(), timing);
     }
@@ -88,10 +88,7 @@
         if (is.Def(ev)) ev.preventDefault();
         if (Show) {
           manip.addClass('context-menu-active');
-          manip.css({
-            left: (ev.clientX + 5) + 'px',
-            top: (ev.clientY + 5) + 'px'
-          });
+          manip.move((ev.clientX + 5), (ev.clientY + 5));
           this.show = true;
         } else if (manip.gotClass('context-menu-active')) {
           manip.stripClass('context-menu-active');
@@ -282,10 +279,7 @@
         let moveTooltip = () => {
           let movecheck = setInterval(() => {
             Craft.mouse.observe.set(show);
-            show ? dom(tooltip).css({
-              left: Craft.mouse.x + 'px',
-              top: Craft.mouse.y + 'px'
-            }) : clearInterval(movecheck);
+            show ? dom(tooltip).move(Craft.mouse.x, Craft.mouse.y) : clearInterval(movecheck);
           }, 5);
         }
 
@@ -350,11 +344,8 @@
           rect = element.getBoundingClientRect();
           move = setInterval(() => {
             Craft.mouse.observe.set(movable);
-            movable ? dom(element).css({
-              left: Craft.mouse.x - e.clientX + rect.left + "px",
-              top: Craft.mouse.y - e.clientY + rect.top + "px"
-            }) : clearInterval(move);
-          }, 4);
+            movable ? dom(element).move(Craft.mouse.x - e.clientX + rect.left, Craft.mouse.y - e.clientY + rect.top) : clearInterval(move);
+          },5);
         });
 
         On('mouseup', doc, e => movable = false);

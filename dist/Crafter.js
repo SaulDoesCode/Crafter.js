@@ -1067,7 +1067,9 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     _createClass(domMethods, [{
       key: 'html',
       value: function html(val) {
-        return is.Def(val) ? this.element.innerHTML = val : this.element.innerHTML;
+        if (is.Def(val)) return this.element.innerHTML;
+        this.element.innerHTML = val;
+        return this;
       }
       /**
        * changes or returns the textContent value of a Node
@@ -1078,7 +1080,9 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     }, {
       key: 'text',
       value: function text(val) {
-        return is.Def(val) ? this.element.textContent = val : this.element.textContent;
+        if (is.Def(val)) return this.element.textContent;
+        this.element.textContent = val;
+        return this;
       }
       /**
        * replaces a Node with another node provided as a parameter/argument
@@ -1101,9 +1105,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     }, {
       key: 'appendTo',
       value: function appendTo(val) {
-        var el = undefined;
-        is.Node(val) ? el = val : el = _query(val);
-        if (el !== null) el.appendChild(this.element);
+        if (is.String(val)) val = _query(val);
+        if (val !== null) val.appendChild(this.element);
         return this;
       }
       /**
@@ -1290,6 +1293,27 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         return this.element.getBoundingClientRect();
       }
       /**
+      * move the element using either css transforms or plain css possitioning
+      * @param {string|num} x - x-axis position in pixels
+      * @param {string|num} y - y-axis position in pixels
+      * @param {boolean=} transform - should move set the position using css transforms or not
+      * @param {string=} position - set the position style of the element absolute/fixed...
+      * @param {boolean=} chainable - should this method be chainable defaults to false for performance reasons
+      */
+
+    }, {
+      key: 'move',
+      value: function move(x, y, transform, position, chainable) {
+        if (is.Bool(position)) chainable = position;
+        if (is.String(transform)) position = transfrom;
+        transform === true ? this.element.style.transform = 'translateX(' + x + 'px) translateY(' + y + 'px)' : this.css({
+          position: is.String(position) ? position : '',
+          left: x + 'px',
+          top: y + 'px'
+        });
+        if (chainable === true) return this;
+      }
+      /**
        * performs a query inside the element
        * @memberof dom
        * @param {string} CSS selector
@@ -1326,7 +1350,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
    */
 
   var dom = function dom(element, within) {
-    if (is.Node(element)) return new domMethods(element);else if (is.String(element)) {
+    if (is.Node(element)) return new domMethods(element);else if (is.NodeList(element)) return new domNodeList(element);else if (is.String(element)) {
       var elements = is.String(within) || is.Node(within) ? _queryAll(element, within) : _queryAll(element);
       if (!elements.length) return console.warn('dom(\'' + element + '\') -> null CSS selector');
       return elements.length === 1 ? new domMethods(elements[0]) : domNodeList(elements);
@@ -1565,7 +1589,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       }
     },
     /**
-     * Crafter.js module loader,
+     * Crafter.js resource loader for Scripts and Style sheets,
      * each import option is an object with properties like 'script/css/wc : "location" ' for resource url
      * other options include 'cache' - determines wether to cache the resource or not , 'test' : usefull for conditional imports if test is false the resource won't load or execute ,
      * 'key' custom name to cache the resource in localStorage with instead of the resource location, 'defer' optionally load the script when the dom is loaded or load when it's ready,
@@ -1693,19 +1717,20 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         return all;
       }
     },
+    delay: function delay(func, ms) {
+      return setTimeout(func, ms);
+    },
     after: function after(n, func) {
       var _this6 = this;
 
-      if (!is.Func(func)) is.Func(n) ? func = n : console.error("after : func is not a function");
+      if (!is.Func(func) && is.Func(n)) func = n;else throw new Error("Craft.after -> func is not a function");
       n = Number.isFinite(n = +n) ? n : 0;
-      return function () {
+      if (--n < 1) return function () {
         for (var _len21 = arguments.length, args = Array(_len21), _key21 = 0; _key21 < _len21; _key21++) {
           args[_key21] = arguments[_key21];
         }
 
-        return --n < 1 ? func.apply(_this6, args) : function () {
-          return null;
-        };
+        return func.apply(_this6, args);
       };
     },
     debounce: function debounce(wait, func, immediate) {
@@ -1798,11 +1823,12 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       }return -1;
     },
     type: function type() {
+      var types = [];
+
       for (var _len22 = arguments.length, args = Array(_len22), _key22 = 0; _key22 < _len22; _key22++) {
         args[_key22] = arguments[_key22];
       }
 
-      var types = [];
       args.forEach(function (arg) {
         return types.push(typeof arg === 'undefined' ? 'undefined' : _typeof(arg));
       });
@@ -1825,6 +1851,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       };
       return memoized;
     },
+
     Scope: {},
     WebComponents: [],
     tabActive: true,
@@ -1952,7 +1979,6 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         }, timeout);
       })();
     },
-
     /**
      * Usefull method for validating passwords , example Craft.strongPassword('#MyFancyPassword18',8,true,true,"#") -> true requirements met
      * @param {string} pass - string containing the password
@@ -1963,13 +1989,14 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
      * @param {...string} includeChars - every extra argument should be a string containing a character you want the password to include
      */
     strongPassword: function strongPassword(pass, length, caps, number, reasons) {
+      if (pass.length <= length) return reasons ? 'Password too short' : false;
+      if (caps === true && Craft.hasCapitals(pass) === false) return reasons ? 'Password should contain Capital letters' : false;
+      if (number === true && /\d/g.test(pass) === false) return reasons ? 'Password should contain a number' : false;
+
       for (var _len24 = arguments.length, includeChars = Array(_len24 > 5 ? _len24 - 5 : 0), _key24 = 5; _key24 < _len24; _key24++) {
         includeChars[_key24 - 5] = arguments[_key24];
       }
 
-      if (pass.length <= length) return reasons ? 'Password too short' : false;
-      if (caps === true && Craft.hasCapitals(pass) === false) return reasons ? 'Password should contain Capital letters' : false;
-      if (number === true && /\d/g.test(pass) === false) return reasons ? 'Password should contain a number' : false;
       if (includeChars.length !== 0) {
         var hasChars = true,
             reason = includeChars.join();
@@ -1980,6 +2007,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       }
       return true;
     },
+
     /** method for generating random alphanumeric strings*/
     randomString: function randomString() {
       return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
