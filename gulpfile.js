@@ -10,7 +10,7 @@ var gulp = require('gulp'),
   babel = require("gulp-babel"),
   docs = './documentation';
 
-gulp.task('document', function () {
+gulp.task('document', () => {
 
   gulp.src('./src/Crafter.js')
     .pipe(documentation({
@@ -20,12 +20,12 @@ gulp.task('document', function () {
 
   gulp.src('./src/Crafter.js')
     .pipe(documentation({
-      format: 'html'
+      format: 'md'
     }))
     .pipe(gulp.dest(docs));
 });
 
-gulp.task('babel', function () {
+gulp.task('babel',() => {
   gulp.src('./src/*.js')
     .pipe(babel({
       presets: ['es2015']
