@@ -563,6 +563,11 @@
                 includes
               </a>
               <a
+                href='#move'
+                class='block bold'>
+                move
+              </a>
+              <a
                 href='#On'
                 class='block bold'>
                 On
@@ -3473,7 +3478,7 @@ example 0ebf-c7d2-ef81-2667-08ef-4cde</p>
               .Import<span class='gray'>(args)</span>
             </code>
             <div class='force-inline'>
-              <p>Crafter.js module loader,
+              <p>Crafter.js resource loader for Scripts and Style sheets,
 each import option is an object with properties like &apos;script/css/wc : &quot;location&quot; &apos; for resource url
 other options include &apos;cache&apos; - determines wether to cache the resource or not , &apos;test&apos; : usefull for conditional imports if test is false the resource won&apos;t load or execute ,
 &apos;key&apos; custom name to cache the resource in localStorage with instead of the resource location, &apos;defer&apos; optionally load the script when the dom is loaded or load when it&apos;s ready,
@@ -3486,7 +3491,7 @@ other options include &apos;cache&apos; - determines wether to cache the resourc
               <h2 id='Craft.Import' class='mt0'>
                 Import<span class='gray'>(args)</span>
               </h2>
-              <p>Crafter.js module loader,
+              <p>Crafter.js resource loader for Scripts and Style sheets,
             each import option is an object with properties like &apos;script/css/wc : &quot;location&quot; &apos; for resource url
             other options include &apos;cache&apos; - determines wether to cache the resource or not , &apos;test&apos; : usefull for conditional imports if test is false the resource won&apos;t load or execute ,
             &apos;key&apos; custom name to cache the resource in localStorage with instead of the resource location, &apos;defer&apos; optionally load the script when the dom is loaded or load when it&apos;s ready,
@@ -4205,6 +4210,88 @@ the Handler function will be called only Once</p>
     </ul>
 </section>
 </div><div class='py1'><section class='py2 clearfix'>
+  <h2 id='move' class='mt0'>
+    move<span class='gray'>(x, y, [transform], [position], [chainable])</span>
+  </h2>
+  <p>move the element using either css transforms or plain css possitioning</p>
+
+    <h4>Parameters</h4>
+    <ul class='suppress-p-margin'>
+        <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code> or <code>num</code> <strong>x</strong>
+          :
+          <div class='force-inline'>
+            <p>x-axis position in pixels</p>
+
+          </div>
+        </li>
+        <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code> or <code>num</code> <strong>y</strong>
+          :
+          <div class='force-inline'>
+            <p>y-axis position in pixels</p>
+
+          </div>
+        </li>
+        <li><code>[<code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></code>]</code> <strong>transform</strong>
+          :
+          <div class='force-inline'>
+            <p>should move set the position using css transforms or not</p>
+
+          </div>
+        </li>
+        <li><code>[<code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code>]</code> <strong>position</strong>
+          :
+          <div class='force-inline'>
+            <p>set the position style of the element absolute/fixed...</p>
+
+          </div>
+        </li>
+        <li><code>[<code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></code>]</code> <strong>chainable</strong>
+          :
+          <div class='force-inline'>
+            <p>should this method be chainable defaults to false for performance reasons</p>
+
+          </div>
+        </li>
+    </ul>
+</section>
+</div><div class='py1'><section class='py2 clearfix'>
+  <h2 id='On' class='mt0'>
+    On<span class='gray'>(string, eventType, func)</span>
+  </h2>
+  <p>Listen for Events on the NodeList</p>
+
+    <h4>Parameters</h4>
+    <ul class='suppress-p-margin'>
+        <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code> <strong>string</strong>
+          :
+          <div class='force-inline'>
+            <p>indicating the type of event to listen for</p>
+
+          </div>
+        </li>
+        <li> <strong>eventType</strong>
+          :
+          <div class='force-inline'>
+            
+          </div>
+        </li>
+        <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function">function</a></code> <strong>func</strong>
+          :
+          <div class='force-inline'>
+            <p>handler function for the event</p>
+
+          </div>
+        </li>
+    </ul>
+      <h4>Returns</h4>
+      <code></code>
+      :
+      <div class='force-inline'>
+        <p>handler (Off,Once,On)</p>
+
+      </div>
+</section>
+</div><div class='py1'><section class='py2 clearfix'>
   <h2 id='On' class='mt0'>
     On<span class='gray'>(EventType, Target, Func, element, func)</span>
   </h2>
@@ -4251,43 +4338,6 @@ the Handler function will be called only Once</p>
       :
       <div class='force-inline'>
         <p>Off - when On is defined as a variable &quot;var x = On(...)&quot; it allows you to access all the EventHandler interfaces Off,Once,On</p>
-
-      </div>
-</section>
-</div><div class='py1'><section class='py2 clearfix'>
-  <h2 id='On' class='mt0'>
-    On<span class='gray'>(string, eventType, func)</span>
-  </h2>
-  <p>Listen for Events on the NodeList</p>
-
-    <h4>Parameters</h4>
-    <ul class='suppress-p-margin'>
-        <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">string</a></code> <strong>string</strong>
-          :
-          <div class='force-inline'>
-            <p>indicating the type of event to listen for</p>
-
-          </div>
-        </li>
-        <li> <strong>eventType</strong>
-          :
-          <div class='force-inline'>
-            
-          </div>
-        </li>
-        <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function">function</a></code> <strong>func</strong>
-          :
-          <div class='force-inline'>
-            <p>handler function for the event</p>
-
-          </div>
-        </li>
-    </ul>
-      <h4>Returns</h4>
-      <code></code>
-      :
-      <div class='force-inline'>
-        <p>handler (Off,Once,On)</p>
 
       </div>
 </section>

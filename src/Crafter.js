@@ -36,6 +36,20 @@
     },
     Ready = false,
     Craft,
+    processInvocation = (fn, argsArr, totalArity) => {
+        argsArr = argsArr.length > totalArity ? argsArr.slice(0, totalArity) : argsArr;
+        if ( argsArr.length === totalArity ) return fn.apply(null, argsArr);
+        return createFn(fn, argsArr, totalArity);
+    },
+    createFn = (fn, Args, totalArity) => {
+        let remainingArity = totalArity - Args.length;
+        if(is.Between(remainingArity,10,0)) return (...args) => processInvocation(fn, Args.concat(args), totalArity);
+        return ((fn, args, arity) => {
+          let a = [] ,i = 0;
+          for (; i < arity; i++) a.push('a' + i.toString());
+          return eval(`false||function(${a.join(',')}){ return processInvocation(fn, args.concat(Array.from(arguments)));}`);
+        })(fn, args, remainingArity);
+    },
     head = doc.getElementsByTagName('head')[0],
     CrafterStyles = doc.createElement('style'),
     ua = navigator.userAgent,
@@ -812,24 +826,24 @@
     getRect() {
         return this.element.getBoundingClientRect();
       }
-    /**
-    * move the element using either css transforms or plain css possitioning
-    * @param {string|num} x - x-axis position in pixels
-    * @param {string|num} y - y-axis position in pixels
-    * @param {boolean=} transform - should move set the position using css transforms or not
-    * @param {string=} position - set the position style of the element absolute/fixed...
-    * @param {boolean=} chainable - should this method be chainable defaults to false for performance reasons
-    */
-    move(x,y,transform,position,chainable) {
-      if(is.Bool(position)) chainable = position;
-      if(is.String(transform)) position = transfrom;
-      transform === true ? this.element.style.transform = `translateX(${x}px) translateY(${y}px)` : this.css({
-          position : is.String(position) ? position : '',
-          left : `${x}px`,
-          top : `${y}px`
-      });
-      if(chainable === true) return this;
-    }
+      /**
+       * move the element using either css transforms or plain css possitioning
+       * @param {string|num} x - x-axis position in pixels
+       * @param {string|num} y - y-axis position in pixels
+       * @param {boolean=} transform - should move set the position using css transforms or not
+       * @param {string=} position - set the position style of the element absolute/fixed...
+       * @param {boolean=} chainable - should this method be chainable defaults to false for performance reasons
+       */
+    move(x, y, transform, position, chainable) {
+        if (is.Bool(position)) chainable = position;
+        if (is.String(transform)) position = transfrom;
+        transform === true ? this.element.style.transform = `translateX(${x}px) translateY(${y}px)` : this.css({
+          position: is.String(position) ? position : '',
+          left: `${x}px`,
+          top: `${y}px`
+        });
+        if (chainable === true) return this;
+      }
       /**
        * performs a query inside the element
        * @memberof dom
@@ -858,7 +872,7 @@
    */
   let dom = (element, within) => {
     if (is.Node(element)) return new domMethods(element);
-    else if(is.NodeList(element)) return new domNodeList(element);
+    else if (is.NodeList(element)) return new domNodeList(element);
     else if (is.String(element)) {
       let elements = is.String(within) || is.Node(within) ? queryAll(element, within) : queryAll(element);
       if (!elements.length) return console.warn(`dom('${element}') -> null CSS selector`);
@@ -1132,14 +1146,14 @@
           return all;
         }
       },
-      delay(func,ms) {
-        return setTimeout(func,ms);
+      delay(func, ms) {
+        return setTimeout(func, ms);
       },
       after(n, func) {
         if (!is.Func(func) && is.Func(n)) func = n;
         else throw new Error("Craft.after -> func is not a function");
         n = Number.isFinite(n = +n) ? n : 0;
-        if(--n < 1) return (...args) => func.apply(this, args);
+        if (--n < 1) return (...args) => func.apply(this, args);
       },
       debounce(wait, func, immediate) {
         let timeout;
@@ -1430,6 +1444,13 @@
       },
       BindExists: (key, bindScope) => bindScope ? bindScope.has(key) : Craft.Binds.has(key),
   };
+
+  Craft.curry = fn => createFn(fn, [], fn.length);
+  Craft.curry.to = Craft.curry((arity, fn) => createFn(fn, [], arity));
+  Craft.curry.adaptTo = Craft.curry((num, fn) => Craft.curry.to(num, function(context){
+    return fn.apply(this, Array.prototype.slice.call(arguments, 1).concat(context));
+  }));
+  Craft.curry.adapt = fn => Craft.curry.adaptTo(fn.length, fn);
 
   Craft.loader.removeAll(true);
 
