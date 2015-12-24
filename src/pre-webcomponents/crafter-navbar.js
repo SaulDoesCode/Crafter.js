@@ -26,6 +26,7 @@ Craft.newComponent('crafter-navbar', {
       this.Wheel = el.On('wheel', e => {
         tempVal = selected;
         (e.deltaY < 1) ? tempVal-- : tempVal++;
+        e.preventDefault();
         if (tempVal >= this.navItems.length) tempVal = 0;
         else if (tempVal < 0) tempVal = this.navItems.length - 1;
         selected = tempVal;
