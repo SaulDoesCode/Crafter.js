@@ -37,18 +37,19 @@
     Ready = false,
     Craft,
     processInvocation = (fn, argsArr, totalArity) => {
-        argsArr = argsArr.length > totalArity ? argsArr.slice(0, totalArity) : argsArr;
-        if ( argsArr.length === totalArity ) return fn.apply(null, argsArr);
-        return createFn(fn, argsArr, totalArity);
+      argsArr = argsArr.length > totalArity ? argsArr.slice(0, totalArity) : argsArr;
+      if (argsArr.length === totalArity) return fn.apply(null, argsArr);
+      return createFn(fn, argsArr, totalArity);
     },
     createFn = (fn, Args, totalArity) => {
-        let remainingArity = totalArity - Args.length;
-        if(is.Between(remainingArity,10,0)) return (...args) => processInvocation(fn, Args.concat(args), totalArity);
-        return ((fn, args, arity) => {
-          let a = [] ,i = 0;
-          for (; i < arity; i++) a.push('a' + i.toString());
-          return eval(`false||function(${a.join(',')}){ return processInvocation(fn, args.concat(Array.from(arguments)));}`);
-        })(fn, args, remainingArity);
+      let remainingArity = totalArity - Args.length;
+      if (is.Between(remainingArity, 10, 0)) return (...args) => processInvocation(fn, Args.concat(args), totalArity);
+      return ((fn, args, arity) => {
+        let a = [],
+          i = 0;
+        for (; i < arity; i++) a.push('a' + i.toString());
+        return eval(`false||function(${a.join(',')}){ return processInvocation(fn, args.concat(Array.from(arguments)));}`);
+      })(fn, args, remainingArity);
     },
     head = doc.getElementsByTagName('head')[0],
     CrafterStyles = doc.createElement('style'),
@@ -113,7 +114,7 @@
      * Determine if a variable is a Number
      * @param {...*} args - value/values to test
      */
-    Num: (...args) => args.length && args.every(o => type(o, '[object Number]')),
+    Num: (...args) => args.length && args.every(o => !isNaN(Number(o))),
     /**
      * Determine if a variable is an Object
      * @param args - value/values to test
@@ -176,7 +177,7 @@
      * Determine if a String is UPPERCASE
      * @param {string} char - variable to test
      */
-    Uppercase: str => is.String(str) && str === str.toUpperCase(),
+    Uppercase: str => is.String(str) && !is.Num(str) && str === str.toUpperCase(),
     /**
      * Determine if a String is LOWERCASE
      * @param {string} char - variable to test
@@ -866,8 +867,9 @@
 
   /**
    * Function that returns many useful methods for interacting with and manipulating the DOM or creating elements
+   * in the absence of parameters the function will return methods for created elements
    * @name dom
-   * @param {Node|string=} element - optional Node, NodeList or CSS Selector that will be affected by the methods returned
+   * @param {Node|NodeList|string=} element - optional Node, NodeList or CSS Selector that will be affected by the methods returned
    * @param {Node|string=} within - optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
    */
   let dom = (element, within) => {
@@ -1085,40 +1087,44 @@
         return Promise.all(promises).then(src => src.map(obj => obj.exec ? obj.type === 'css' ? CrafterStyles.innerHTML += '\n' + obj.data : head.appendChild(dom().script(obj.data, obj.defer, true)) : undefined));
       },
       router: {
-        handle(RouteLink, func) {
-            if (is.String(RouteLink)) {
-              if (location.hash === RouteLink || location === RouteLink) func(location.hash);
-              Craft.router.handlers.push({
-                link: RouteLink,
-                func: func
-              });
-            } else if (is.Arr(RouteLink)) RouteLink.forEach(link => {
-              if (location.hash === link || location === link) func(location.hash);
-              Craft.router.handlers.push({
-                link: link,
-                func: func
-              });
+        addHandle(link, func) {
+            Craft.router.handlers.push({
+              link: link,
+              func: func
+            })
+          },
+          handle(route, func) {
+            if (is.String(route)) {
+              if (location.href.includes(route)) func(route);
+              Craft.router.addHandle(route, func);
+            } else if (is.Arr(route)) route.forEach(link => {
+              if (location.href.includes(link)) func(link);
+              Craft.router.addHandle(link, func);
             });
           },
           handlers: [],
           links: [],
-          link: (Selector, link, newtab, eventType) => Craft.router.links.push(() => On(is.Def(eventType) ? eventType : 'click', query(Selector), e => newtab ? open(link) : location = link)),
+          link: (Selector, link, newtab, eventType) => Craft.router.links.push(() => On(is.String(eventType) ? eventType : 'click', Selector, e => newtab ? open(link) : location = link)),
           open: (link, newtab) => newtab ? open(link) : location = link,
           setTitle: title => doc.title = title,
-          setView: (viewHostSelector, view) => query(viewHostSelector).innerHTML = view,
-          fetchView(viewHostSelector, viewURL, append, cache, id) {
-            let element = query(viewHostSelector),
-              view = is.Def(id) ? localStorage.getItem("RT_" + id) : null;
-            if (element !== null) {
-              is.Null(view) ? fetch(viewURL).then(res => res.text().then(txt => {
-                if (cache === true && is.String(id) && is.Null(view)) localStorage.setItem(("RT_" + id), txt);
-                !append ? element.innerHTML = txt : element.innerHTML += txt;
-              })).catch(err => console.warn(`Could not fetch view -> ${err}`)) : cache === true && !append ? element.innerHTML = view : element.innerHTML += view;
-            }
+          setView(selector, view, position) {
+            let vh = is.String(selector) ? query(selector) : selector;
+            vh.insertAdjacentHTML(is.String(position) ? position : 'beforeend', view);
+          },
+          fetchView(selector, src, cache, position) {
+            let vh = is.String(selector) ? query(selector) : selector,
+              prefixedSRC = (`Cr:${src}`),
+              view = localStorage.getItem(prefixedSRC);
+            position = is.String(position) ? position : 'beforeend';
+            if (vh !== null && view === null) fetch(src).then(res => res.text().then(txt => {
+              if (cache === true && is.Null(view)) localStorage.setItem(prefixedSRC, txt);
+              vh.insertAdjacentHTML(position, txt);
+            })).catch(err => console.error(`Couldn't fetch view -> ${err}`));
+            else vh.insertAdjacentHTML(position, view);
           },
           clearCache() {
             for (let i in localStorage)
-              if (localStorage.key(i).includes("RT_")) localStorage.removeItem(localStorage.key(i));
+              if (localStorage.key(i).includes("Cr:")) localStorage.removeItem(localStorage.key(i));
           },
       },
       Cookies: {
@@ -1146,9 +1152,8 @@
           return all;
         }
       },
-      delay(func, ms) {
-        return setTimeout(func, ms);
-      },
+      curry: fn => createFn(fn, [], fn.length),
+      delay: (func, ms) => setTimeout(func, ms),
       after(n, func) {
         if (!is.Func(func) && is.Func(n)) func = n;
         else throw new Error("Craft.after -> func is not a function");
@@ -1157,9 +1162,8 @@
       },
       debounce(wait, func, immediate) {
         let timeout;
-        return function () {
-          let args = arguments,
-            later = () => {
+        return function (...args) {
+          let later = () => {
               timeout = null;
               if (!immediate) func.apply(this, args);
             },
@@ -1208,12 +1212,8 @@
           return res;
         }
       },
-      css: (el, styles) => (is.Def(styles, el) && is.Node(el)) ? forEach(styles, (prop, key) => el.style[key] = prop) : console.error('invalid args'),
-      hasCapitals: string => {
-        for (let i = 0; i < string.length; i++)
-          if (is.Uppercase(string[i])) return true;
-        return false;
-      },
+      css: (el, styles) => is.Def(styles, el) && is.Node(el) ? forEach(styles, (prop, key) => el.style[key] = prop) : console.error('invalid args'),
+      hasCapitals: string => Array.from(string).some(c => is.Uppercase(c)),
       OverrideFunction: (funcName, Func, ContextObject) => {
         let namespaces = funcName.split("."),
           func = namespaces.pop();
@@ -1226,7 +1226,7 @@
         try {
           return val.length;
         } catch (e) {
-          console.error('could not find length of value');
+          console.error('could not find length of value')
         }
       },
       indexOfDate(Collection, date) {
@@ -1261,9 +1261,7 @@
         x: 0,
         y: 0,
         over: null,
-        observe: new ReactiveVariable(false, (o, n) => {
-          n ? Craft.mouse.eventhandler.On() : Craft.mouse.eventhandler.Off();
-        })
+        observe: new ReactiveVariable(false, (o, n) => n ? Craft.mouse.eventhandler.On() : Craft.mouse.eventhandler.Off())
       },
       easing: {
         inOutQuad(t, b, c, d) {
@@ -1296,7 +1294,7 @@
         requestAnimationFrame(time => loop(time))
       },
       nodeExists: (selector, within) => queryAll(selector, (is.Node(within) ? within = within : within = query(within))) !== null,
-      ObjToFormData: obj => {
+      ObjToFormData(obj) {
         let key, formData = new FormData();
         for (key in obj) formData.append(key, obj[key]);
         return formData;
@@ -1407,7 +1405,7 @@
        * @param {object} config - Object containing all the element's lifecycle methods / extends and attached methods or properties
        */
       newComponent(tag, config) {
-        if (is.Undef(config)) throw new Error(`Craft.newComponent : ${tag} -> config is undefined`);
+        if (is.Undef(config)) throw new Error(`newComponent: ${tag} -> config is undefined`);
         let element = Object.create(HTMLElement.prototype),
           settings = {};
         forEach(config, (prop, key) => {
@@ -1445,11 +1443,8 @@
       BindExists: (key, bindScope) => bindScope ? bindScope.has(key) : Craft.Binds.has(key),
   };
 
-  Craft.curry = fn => createFn(fn, [], fn.length);
   Craft.curry.to = Craft.curry((arity, fn) => createFn(fn, [], arity));
-  Craft.curry.adaptTo = Craft.curry((num, fn) => Craft.curry.to(num, function(context){
-    return fn.apply(this, Array.prototype.slice.call(arguments, 1).concat(context));
-  }));
+  Craft.curry.adaptTo = Craft.curry((num, fn) => Craft.curry.to(num, (context, ...args) => fn.apply(null, args.slice(1).concat(context))));
   Craft.curry.adapt = fn => Craft.curry.adaptTo(fn.length, fn);
 
   Craft.loader.removeAll(true);
@@ -1497,18 +1492,20 @@
 
   Craft.newComponent('fetch-webcomponent', {
     inserted() {
-      if (this.hasAttribute('src')) {
+      let src = this.getAttribute('src');
+      if (src !== null) {
         let wc = null,
-          src = this.getAttribute('src');
+          el = dom(this),
+          cc = 'cache-component';
         if (Craft.WebComponents.includes(src)) return false;
-        if (this.hasAttribute('cache-component')) {
+        if (el.hasAttr(cc)) {
           wc = localStorage.getItem(src);
           if (wc !== null) Craft.createWebComponent(wc, src);
         }
         if (wc === null) fetch(src).then(res => res.json().then(webcomponent => {
           CrafterStyles.innerHTML += webcomponent.css;
           head.appendChild(dom().script(webcomponent.js + `\nCraft.WebComponents.push('${src}')`, `webcomponent=${webcomponent.name}`, true));
-          if (this.getAttribute('cache-component') === 'true') localStorage.setItem(src, JSON.stringify(webcomponent));
+          if (el.getAttr(cc) == 'true') localStorage.setItem(src, JSON.stringify(webcomponent));
         })).catch(err => console.error(err + ': could not load webcomponent'))
       }
     }

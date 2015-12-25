@@ -34,12 +34,12 @@
           this.tabs[0].view.setAttribute('active', '');
         }
 
-        this.scrollHandle = On('wheel', query('tab-handles', this), e => {
+        this.scrollHandle = On('wheel','tab-handles', this, e => {
           forEach(queryAll('[active]', element), el => el.removeAttribute('active'));
           (e.deltaY < 1) ? activeTab-- : activeTab++;
+          e.preventDefault();
           if (activeTab >= this.tabs.length) activeTab = 0;
           else if (activeTab < 0) activeTab = this.tabs.length - 1;
-
           this.tabs[activeTab].handle.setAttribute('active', '');
           this.tabs[activeTab].view.setAttribute('active', '');
         });

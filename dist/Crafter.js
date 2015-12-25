@@ -1355,7 +1355,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
 
     }, {
       key: 'queryAll',
-      value: function queryAll(selctor) {
+      value: function queryAll(selector) {
         return _queryAll(selector, this.element);
       }
     }]);
@@ -1365,8 +1365,9 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
 
   /**
    * Function that returns many useful methods for interacting with and manipulating the DOM or creating elements
+   * in the absence of parameters the function will return methods for created elements
    * @name dom
-   * @param {Node|string=} element - optional Node, NodeList or CSS Selector that will be affected by the methods returned
+   * @param {Node|NodeList|string=} element - optional Node, NodeList or CSS Selector that will be affected by the methods returned
    * @param {Node|string=} within - optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
    */
 
@@ -1738,6 +1739,9 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         return all;
       }
     },
+    curry: function curry(fn) {
+      return createFn(fn, [], fn.length);
+    },
     delay: function delay(func, ms) {
       return setTimeout(func, ms);
     },
@@ -1883,7 +1887,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       y: 0,
       over: null,
       observe: new _ReactiveVariable(false, function (o, n) {
-        n ? Craft.mouse.eventhandler.On() : Craft.mouse.eventhandler.Off();
+        return n ? Craft.mouse.eventhandler.On() : Craft.mouse.eventhandler.Off();
       })
     },
     easing: {
@@ -1932,6 +1936,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       for (key in obj) formData.append(key, obj[key]);
       return formData;
     },
+
     URLfrom: function URLfrom(text) {
       return URL.createObjectURL(new Blob([text]));
     },
@@ -2106,15 +2111,16 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     }
   };
 
-  Craft.curry = function (fn) {
-    return createFn(fn, [], fn.length);
-  };
   Craft.curry.to = Craft.curry(function (arity, fn) {
     return createFn(fn, [], arity);
   });
   Craft.curry.adaptTo = Craft.curry(function (num, fn) {
     return Craft.curry.to(num, function (context) {
-      return fn.apply(this, Array.prototype.slice.call(arguments, 1).concat(context));
+      for (var _len26 = arguments.length, args = Array(_len26 > 1 ? _len26 - 1 : 0), _key26 = 1; _key26 < _len26; _key26++) {
+        args[_key26 - 1] = arguments[_key26];
+      }
+
+      return fn.apply(null, args.slice(1).concat(context));
     });
   });
   Craft.curry.adapt = function (fn) {
@@ -2179,14 +2185,16 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     inserted: function inserted() {
       var _this8 = this;
 
-      if (this.hasAttribute('src')) {
+      var src = this.getAttribute('src');
+      if (src !== null) {
         var _ret7 = (function () {
           var wc = null,
-              src = _this8.getAttribute('src');
+              el = dom(_this8),
+              cc = 'cache-component';
           if (Craft.WebComponents.includes(src)) return {
               v: false
             };
-          if (_this8.hasAttribute('cache-component')) {
+          if (el.hasAttr(cc)) {
             wc = localStorage.getItem(src);
             if (wc !== null) Craft.createWebComponent(wc, src);
           }
@@ -2194,7 +2202,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
             return res.json().then(function (webcomponent) {
               CrafterStyles.innerHTML += webcomponent.css;
               head.appendChild(dom().script(webcomponent.js + ('\nCraft.WebComponents.push(\'' + src + '\')'), 'webcomponent=' + webcomponent.name, true));
-              if (_this8.getAttribute('cache-component') === 'true') localStorage.setItem(src, JSON.stringify(webcomponent));
+              if (el.getAttr(cc) == 'true') localStorage.setItem(src, JSON.stringify(webcomponent));
             });
           }).catch(function (err) {
             return console.error(err + ': could not load webcomponent');
