@@ -547,6 +547,7 @@
         Focus: fn => newEvent('focus', fn),
         Blur: fn => newEvent('blur', fn),
         Keydown: fn => newEvent('keydown', fn),
+        Mousemove: fn => newEvent('mousemove', fn),
         Mousedown: fn => newEvent('mousedown', fn),
         Mouseup: fn => newEvent('mouseup', fn),
         Mouseover: fn => newEvent('mouseover', fn),
@@ -577,6 +578,7 @@
         Focus: fn => newEvent('focus', fn),
         Blur: fn => newEvent('blur', fn),
         Keydown: fn => newEvent('keydown', fn),
+        Mousemove: fn => newEvent('mousemove', fn),
         Mousedown: fn => newEvent('mousedown', fn),
         Mouseup: fn => newEvent('mouseup', fn),
         Mouseover: fn => newEvent('mouseover', fn),
@@ -1017,9 +1019,11 @@
         a: (link, inner, attr, node) => make_element('a', inner, attr, node, {
           href: link
         }),
-        script: (code, attr, node) => make_element('script', code, attr, node, {
-          type: 'text/javascript'
-        }),
+        script(code, attr, defer) {
+          let script = make_element('script', code, attr, true, {type: 'text/javascript'});
+          script.defer = defer !== false;
+          return script;
+        },
         table(rows, attr, node) {
           if (!is.Arr(rows)) return is.String(rows) ? make_element('table', rows, attr, node) : make_element('table', '', attr, node);
           if (!rows.every(o => is.Object(o))) throw new TypeError('dom.table -> rows : all entries need to be objects');
@@ -1046,15 +1050,14 @@
       loader: {
         pre: 'craft:',
         fetchImport(obj) {
-          let now = +new Date(),
-            key = obj.key || obj.url,
-            src = Craft.loader.get(key);
+          obj.key = obj.key || obj.url;
+          let now = +new Date(), src = Craft.loader.get(obj.key);
           if (src || src.expire - now > 0) return new Promise(resolve => resolve(src));
           return new Promise((success, failed) => fetch(obj.url).then(res => res.text().then(data => {
             obj.data = data;
             obj.stamp = now;
             obj.expire = now + ((obj.expire || 4000) * 60 * 60 * 1000);
-            if (obj.cache) localStorage.setItem(Craft.loader.pre + key, JSON.stringify(obj));
+            if (obj.cache) localStorage.setItem(Craft.loader.pre + obj.key, JSON.stringify(obj));
             success(obj);
           })).catch(err => failed(`Craft.loader problem fetching import -> ${err}`)));
         },
@@ -1084,7 +1087,7 @@
           key: arg.key || undefined,
           expire: arg.expire || undefined
         })));
-        return Promise.all(promises).then(src => src.map(obj => obj.exec ? obj.type === 'css' ? CrafterStyles.innerHTML += '\n' + obj.data : head.appendChild(dom().script(obj.data, obj.defer, true)) : undefined));
+        return Promise.all(promises).then(src => src.map(obj => obj.exec ? obj.type === 'css' ? CrafterStyles.innerHTML += '\n' + obj.data : head.appendChild(dom().script(obj.data,'key='+obj.key, obj.defer)) : undefined));
       },
       router: {
         addHandle(link, func) {
@@ -1361,7 +1364,7 @@
        * @param {...string} includeChars - every extra argument should be a string containing a character you want the password to include
        */
       strongPassword(pass, length, caps, number, reasons, ...includeChars) {
-        if (pass.length <= length) return reasons ? 'Password too short' : false;
+        if (pass.length <= length - 1) return reasons ? 'Password too short' : false;
         if (caps === true && Craft.hasCapitals(pass) === false) return reasons ? 'Password should contain Capital letters' : false;
         if (number === true && /\d/g.test(pass) === false) return reasons ? 'Password should contain a number' : false;
         if (includeChars.length !== 0) {
@@ -1456,16 +1459,14 @@
         let bindAttr = element.getAttribute('input-bind'),
           isInput = element.tagName === 'INPUT' || element.tagName === 'TEXTAREA',
           OnInput = On('input', element, () => Craft.setBind(bindAttr, isInput ? element.value : element.innerHTML)),
-          observer = new MutationObserver(mutations => {
-            mutations.forEach(mut => {
+          observer = new MutationObserver(mutations => mutations.forEach(mut => {
               if (mut.type === 'attributes') {
-                if (mut.attributeName === 'input-bind' && element.hasAttribute('input-bind') === false) {
+                if (mut.attributeName === 'input-bind' && !element.hasAttribute('input-bind')) {
                   OnInput.Off();
                   observer.disconnect();
                 }
               }
-            });
-          });
+          }));
         observer.observe(element, {
           attributes: true
         });

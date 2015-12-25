@@ -893,6 +893,9 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
             Keydown: function Keydown(fn) {
               return newEvent('keydown', fn);
             },
+            Mousemove: function Mousemove(fn) {
+              return newEvent('mousemove', fn);
+            },
             Mousedown: function Mousedown(fn) {
               return newEvent('mousedown', fn);
             },
@@ -957,6 +960,9 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
             },
             Keydown: function Keydown(fn) {
               return newEvent('keydown', fn);
+            },
+            Mousemove: function Mousemove(fn) {
+              return newEvent('mousemove', fn);
             },
             Mousedown: function Mousedown(fn) {
               return newEvent('mousedown', fn);
@@ -1539,10 +1545,10 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
           href: link
         });
       },
-      script: function script(code, attr, node) {
-        return make_element('script', code, attr, node, {
-          type: 'text/javascript'
-        });
+      script: function script(code, attr, defer) {
+        var script = make_element('script', code, attr, true, { type: 'text/javascript' });
+        script.defer = defer !== false;
+        return script;
       },
       table: function table(rows, attr, node) {
         if (!is.Arr(rows)) return is.String(rows) ? make_element('table', rows, attr, node) : make_element('table', '', attr, node);
@@ -1574,9 +1580,9 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     loader: {
       pre: 'craft:',
       fetchImport: function fetchImport(obj) {
+        obj.key = obj.key || obj.url;
         var now = +new Date(),
-            key = obj.key || obj.url,
-            src = Craft.loader.get(key);
+            src = Craft.loader.get(obj.key);
         if (src || src.expire - now > 0) return new Promise(function (resolve) {
           return resolve(src);
         });
@@ -1586,7 +1592,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
               obj.data = data;
               obj.stamp = now;
               obj.expire = now + (obj.expire || 4000) * 60 * 60 * 1000;
-              if (obj.cache) localStorage.setItem(Craft.loader.pre + key, JSON.stringify(obj));
+              if (obj.cache) localStorage.setItem(Craft.loader.pre + obj.key, JSON.stringify(obj));
               success(obj);
             });
           }).catch(function (err) {
@@ -1637,7 +1643,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       });
       return Promise.all(promises).then(function (src) {
         return src.map(function (obj) {
-          return obj.exec ? obj.type === 'css' ? CrafterStyles.innerHTML += '\n' + obj.data : head.appendChild(dom().script(obj.data, obj.defer, true)) : undefined;
+          return obj.exec ? obj.type === 'css' ? CrafterStyles.innerHTML += '\n' + obj.data : head.appendChild(dom().script(obj.data, 'key=' + obj.key, obj.defer)) : undefined;
         });
       });
     },
@@ -2019,7 +2025,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
      * @param {...string} includeChars - every extra argument should be a string containing a character you want the password to include
      */
     strongPassword: function strongPassword(pass, length, caps, number, reasons) {
-      if (pass.length <= length) return reasons ? 'Password too short' : false;
+      if (pass.length <= length - 1) return reasons ? 'Password too short' : false;
       if (caps === true && Craft.hasCapitals(pass) === false) return reasons ? 'Password should contain Capital letters' : false;
       if (number === true && /\d/g.test(pass) === false) return reasons ? 'Password should contain a number' : false;
 
@@ -2145,9 +2151,9 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
               return Craft.setBind(bindAttr, isInput ? element.value : element.innerHTML);
             }),
                 observer = new MutationObserver(function (mutations) {
-              mutations.forEach(function (mut) {
+              return mutations.forEach(function (mut) {
                 if (mut.type === 'attributes') {
-                  if (mut.attributeName === 'input-bind' && element.hasAttribute('input-bind') === false) {
+                  if (mut.attributeName === 'input-bind' && !element.hasAttribute('input-bind')) {
                     OnInput.Off();
                     observer.disconnect();
                   }
