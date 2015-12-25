@@ -228,7 +228,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       }
 
       return args.length && args.every(function (o) {
-        return type(o, '[object Number]');
+        return !isNaN(Number(o));
       });
     },
     /**
@@ -358,7 +358,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
      * @param {string} char - variable to test
      */
     Uppercase: function Uppercase(str) {
-      return is.String(str) && str === str.toUpperCase();
+      return is.String(str) && !is.Num(str) && str === str.toUpperCase();
     },
     /**
      * Determine if a String is LOWERCASE
@@ -1643,19 +1643,19 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     },
 
     router: {
-      handle: function handle(RouteLink, func) {
-        if (is.String(RouteLink)) {
-          if (location.hash === RouteLink || location === RouteLink) func(location.hash);
-          Craft.router.handlers.push({
-            link: RouteLink,
-            func: func
-          });
-        } else if (is.Arr(RouteLink)) RouteLink.forEach(function (link) {
-          if (location.hash === link || location === link) func(location.hash);
-          Craft.router.handlers.push({
-            link: link,
-            func: func
-          });
+      addHandle: function addHandle(link, func) {
+        Craft.router.handlers.push({
+          link: link,
+          func: func
+        });
+      },
+      handle: function handle(route, func) {
+        if (is.String(route)) {
+          if (location.href.includes(route)) func(route);
+          Craft.router.addHandle(route, func);
+        } else if (is.Arr(route)) route.forEach(function (link) {
+          if (location.href.includes(link)) func(link);
+          Craft.router.addHandle(link, func);
         });
       },
 
@@ -1663,7 +1663,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       links: [],
       link: function link(Selector, _link, newtab, eventType) {
         return Craft.router.links.push(function () {
-          return _On(is.Def(eventType) ? eventType : 'click', _query(Selector), function (e) {
+          return _On(is.String(eventType) ? eventType : 'click', Selector, function (e) {
             return newtab ? open(_link) : location = _link;
           });
         });
@@ -1684,26 +1684,27 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       setTitle: function setTitle(title) {
         return doc.title = title;
       },
-      setView: function setView(viewHostSelector, view) {
-        return _query(viewHostSelector).innerHTML = view;
+      setView: function setView(selector, view, position) {
+        var vh = is.String(selector) ? _query(selector) : selector;
+        vh.insertAdjacentHTML(is.String(position) ? position : 'beforeend', view);
       },
-      fetchView: function fetchView(viewHostSelector, viewURL, append, cache, id) {
-        var element = _query(viewHostSelector),
-            view = is.Def(id) ? localStorage.getItem("RT_" + id) : null;
-        if (element !== null) {
-          is.Null(view) ? fetch(viewURL).then(function (res) {
-            return res.text().then(function (txt) {
-              if (cache === true && is.String(id) && is.Null(view)) localStorage.setItem("RT_" + id, txt);
-              !append ? element.innerHTML = txt : element.innerHTML += txt;
-            });
-          }).catch(function (err) {
-            return console.warn('Could not fetch view -> ' + err);
-          }) : cache === true && !append ? element.innerHTML = view : element.innerHTML += view;
-        }
+      fetchView: function fetchView(selector, src, cache, position) {
+        var vh = is.String(selector) ? _query(selector) : selector,
+            prefixedSRC = 'Cr:' + src,
+            view = localStorage.getItem(prefixedSRC);
+        position = is.String(position) ? position : 'beforeend';
+        if (vh !== null && view === null) fetch(src).then(function (res) {
+          return res.text().then(function (txt) {
+            if (cache === true && is.Null(view)) localStorage.setItem(prefixedSRC, txt);
+            vh.insertAdjacentHTML(position, txt);
+          });
+        }).catch(function (err) {
+          return console.error('Couldn\'t fetch view -> ' + err);
+        });else vh.insertAdjacentHTML(position, view);
       },
       clearCache: function clearCache() {
         for (var i in localStorage) {
-          if (localStorage.key(i).includes("RT_")) localStorage.removeItem(localStorage.key(i));
+          if (localStorage.key(i).includes("Cr:")) localStorage.removeItem(localStorage.key(i));
         }
       }
     },
@@ -1763,8 +1764,11 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       return function () {
         var _this7 = this;
 
-        var args = arguments,
-            later = function later() {
+        for (var _len23 = arguments.length, args = Array(_len23), _key23 = 0; _key23 < _len23; _key23++) {
+          args[_key23] = arguments[_key23];
+        }
+
+        var later = function later() {
           timeout = null;
           if (!immediate) func.apply(_this7, args);
         },
@@ -1822,9 +1826,9 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       }) : console.error('invalid args');
     },
     hasCapitals: function hasCapitals(string) {
-      for (var i = 0; i < string.length; i++) {
-        if (is.Uppercase(string[i])) return true;
-      }return false;
+      return Array.from(string).some(function (c) {
+        return is.Uppercase(c);
+      });
     },
     OverrideFunction: function OverrideFunction(funcName, Func, ContextObject) {
       var namespaces = funcName.split("."),
@@ -1850,8 +1854,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     type: function type() {
       var types = [];
 
-      for (var _len23 = arguments.length, args = Array(_len23), _key23 = 0; _key23 < _len23; _key23++) {
-        args[_key23] = arguments[_key23];
+      for (var _len24 = arguments.length, args = Array(_len24), _key24 = 0; _key24 < _len24; _key24++) {
+        args[_key24] = arguments[_key24];
       }
 
       args.forEach(function (arg) {
@@ -1864,8 +1868,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       if (!is.Func(func) || resolver && !is.Func(resolver)) throw new TypeError("arg provided is not a function");
       var cache = new WeakMap();
       var memoized = function memoized() {
-        for (var _len24 = arguments.length, args = Array(_len24), _key24 = 0; _key24 < _len24; _key24++) {
-          args[_key24] = arguments[_key24];
+        for (var _len25 = arguments.length, args = Array(_len25), _key25 = 0; _key25 < _len25; _key25++) {
+          args[_key25] = arguments[_key25];
         }
 
         var key = resolver ? resolver.apply(this, args) : args[0];
@@ -2019,8 +2023,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       if (caps === true && Craft.hasCapitals(pass) === false) return reasons ? 'Password should contain Capital letters' : false;
       if (number === true && /\d/g.test(pass) === false) return reasons ? 'Password should contain a number' : false;
 
-      for (var _len25 = arguments.length, includeChars = Array(_len25 > 5 ? _len25 - 5 : 0), _key25 = 5; _key25 < _len25; _key25++) {
-        includeChars[_key25 - 5] = arguments[_key25];
+      for (var _len26 = arguments.length, includeChars = Array(_len26 > 5 ? _len26 - 5 : 0), _key26 = 5; _key26 < _len26; _key26++) {
+        includeChars[_key26 - 5] = arguments[_key26];
       }
 
       if (includeChars.length !== 0) {
@@ -2070,7 +2074,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
      * @param {object} config - Object containing all the element's lifecycle methods / extends and attached methods or properties
      */
     newComponent: function newComponent(tag, config) {
-      if (is.Undef(config)) throw new Error('Craft.newComponent : ' + tag + ' -> config is undefined');
+      if (is.Undef(config)) throw new Error('newComponent: ' + tag + ' -> config is undefined');
       var element = Object.create(HTMLElement.prototype),
           settings = {};
       forEach(config, function (prop, key) {
@@ -2116,8 +2120,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
   });
   Craft.curry.adaptTo = Craft.curry(function (num, fn) {
     return Craft.curry.to(num, function (context) {
-      for (var _len26 = arguments.length, args = Array(_len26 > 1 ? _len26 - 1 : 0), _key26 = 1; _key26 < _len26; _key26++) {
-        args[_key26 - 1] = arguments[_key26];
+      for (var _len27 = arguments.length, args = Array(_len27 > 1 ? _len27 - 1 : 0), _key27 = 1; _key27 < _len27; _key27++) {
+        args[_key27 - 1] = arguments[_key27];
       }
 
       return fn.apply(null, args.slice(1).concat(context));

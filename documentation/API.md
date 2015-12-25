@@ -3,10 +3,11 @@
 # dom
 
 Function that returns many useful methods for interacting with and manipulating the DOM or creating elements
+in the absence of parameters the function will return methods for created elements
 
 **Parameters**
 
--   `element` **[Node or string]** optional Node, NodeList or CSS Selector that will be affected by the methods returned
+-   `element` **[Node or NodeList or string]** optional Node, NodeList or CSS Selector that will be affected by the methods returned
 -   `within` **[Node or string]** optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
 
 ## addClass
