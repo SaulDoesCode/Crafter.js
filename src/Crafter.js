@@ -698,7 +698,7 @@
        * @param {Node|string} String or Node to append to the this.element
        */
     append(val) {
-        is.String(val) ? this.element.innerHTML += val : this.element.parentNode.appendChild(this.element);
+        is.String(val) ? this.element.innerHTML += val : this.element.appendChild(val);
         return this;
       }
       /**

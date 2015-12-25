@@ -1139,7 +1139,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     }, {
       key: 'append',
       value: function append(val) {
-        is.String(val) ? this.element.innerHTML += val : this.element.parentNode.appendChild(this.element);
+        is.String(val) ? this.element.innerHTML += val : this.element.appendChild(val);
         return this;
       }
       /**
