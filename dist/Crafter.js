@@ -651,6 +651,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         this.Socket.onopen = function (e) {
           return _this2.messageCalls[_this2.messageCalls.length - 1]();
         };
+        return this;
       }
       /**
        * Recieves messages from the WebSocket Server
@@ -662,7 +663,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       value: function recieve(func) {
         is.Func(func) ? this.RecieveCalls.push(function (e) {
           return func(e.data, e);
-        }) : console.error("callback is not a function or is not defined");
+        }) : console.error("func is not a function or is not defined");
+        return this;
       }
       /** Closes the WebSocket Connection */
 
@@ -1407,8 +1409,8 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       while (++i < arr.length) if (func(arr[i], i, arr)) result[++x] = arr[i];
       return result;
     },
-    removeFromArr: function removeFromArr(Arr, val) {
-      var index = Arr.IndexOf(val),
+    omitFromIterable: function omitFromIterable(Arr, val) {
+      var index = Arr.indexOf(val),
           temp = [],
           string = false,
           i = 0;
@@ -1416,8 +1418,9 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         Arr = Array.from(Arr);
         string = true;
       }
+      if (is.NodeList(Arr)) Arr = Array.from(Arr);
       for (; i < Arr.length; i++) if (i !== index) temp.push(Arr[i]);
-      return string ? temp : temp;
+      return string ? temp.join('') : temp;
     },
 
     /**
@@ -1430,6 +1433,36 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       if (i !== arr2.length) return false;
       while (i--) if (arr1[i] !== arr2[i]) return false;
       return true;
+    },
+    getDeep: function getDeep(obj, propString) {
+      if (is.Undef(propString)) return obj;
+
+      var prop = undefined,
+          props = propString.split('.'),
+          candidate = undefined,
+          i = 0,
+          iLen = props.length - 1;
+
+      for (; i < iLen; i++) {
+        prop = props[i];
+        candidate = obj[prop];
+        if (is.Def(candidate)) obj = candidate;else break;
+      }
+      var val = undefined;
+      try {
+        val = obj[props[i]];
+      } catch (e) {
+        val = undefined;
+      }
+      return val;
+    },
+    setDeep: function setDeep(obj, prop, value, returnObj) {
+      if (is.String(prop)) prop = prop.split(".");
+      if (prop.length > 1) {
+        var e = prop.shift();
+        Craft.setDeep(obj[e] = is.Object(obj[e]) ? obj[e] : {}, prop, value);
+      } else obj[prop[0]] = value;
+      if (returnObj === true) return obj;
     },
     concatObjects: function concatObjects(hostobj) {
       for (var _len19 = arguments.length, Objs = Array(_len19 > 1 ? _len19 - 1 : 0), _key19 = 1; _key19 < _len19; _key19++) {
@@ -1461,9 +1494,9 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       if (is.Object(obj) && obj !== val) forEach(obj, function (prop, key) {
         if (val === key || val === prop) delete obj[key];
       });else if (is.Arr(obj) || is.String(obj)) obj.forEach(function (i) {
-        if (val === i) obj = Craft.removeArrItem(obj, i);
+        if (val === i) obj = Craft.omitFromIterable(obj, i);
       });
-      if (is.Object(obj) && obj.hasOwnProperty(val)) throw new Error('couldn\'t omit ' + val + ' from Object');else if (obj.includes(val)) throw new Error('couldn\'t omit ' + val + ' from Array/String');
+      if (is.Object(obj) && obj.hasOwnProperty(val)) throw new Error('couldn\'t omit ' + val + ' from Object');else if (obj.includes(val)) throw new Error('couldn\'t omit ' + val + ' from Array/String/NodeList');
       return obj;
     },
 
@@ -1546,7 +1579,9 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         });
       },
       script: function script(code, attr, defer) {
-        var script = make_element('script', code, attr, true, { type: 'text/javascript' });
+        var script = make_element('script', code, attr, true, {
+          type: 'text/javascript'
+        });
         script.defer = defer !== false;
         return script;
       },
@@ -1912,7 +1947,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
       options = options || {};
       options.duration = options.duration || 400;
       options.offset = options.offset || 0;
-      options.callback = options.callback || undefined;
+      options.func = options.func || undefined;
 
       var startTime = undefined,
           elapsedTime = undefined,
@@ -1928,7 +1963,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
           return loop(time);
         }) : (function () {
           root.scrollTo(0, start + distance);
-          if (is.Func(options.callback)) options.callback.call();
+          if (is.Func(options.func)) options.func.call();
           startTime = undefined;
         })();
       };
@@ -2087,37 +2122,71 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
         if (key === 'created') element.createdCallback = prop;else if (key === 'inserted') element.attachedCallback = prop;else if (key === 'destroyed') element.detachedCallback = prop;else if (key === 'attr') element.attributeChangedCallback = prop;else if (key === 'extends') settings.extends = prop;else element[key] = prop;
       });
       settings['prototype'] = element;
-      document.registerElement(tag, settings);
+      doc.registerElement(tag, settings);
     },
-    applyBinds: function applyBinds(key, bindScope) {
-      var bind = bindScope ? bindScope.get(key) : Craft.Binds.get(key),
-          val = is.ReactiveVariable(bind) ? bind.val : bind;
-      queryEach('[input-bind="' + key + '"],[view-bind="' + key + '"]', function (el) {
-        return el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' ? el.value = val : el.innerHTML = val;
-      });
+    applyBinds: function applyBinds(key, bindScope, element) {
+      var val = undefined,
+          bind = undefined;
+      if (Craft.BindExists(key, bindScope)) {
+        if (!key.includes('.')) {
+          var _bind = bindScope ? bindScope.get(key) : Craft.Binds.get(key);
+          val = is.ReactiveVariable(_bind) ? _bind.val : _bind;
+        } else {
+          var okey = key.split('.');
+          bind = Craft.getBind(okey[0], bindScope);
+          val = Craft.getDeep(bind, Craft.omitFromIterable(okey, okey[0]).join('.'));
+          if (is.Undef(val)) val = '';
+        }
+        queryEach('[input-bind="' + key + '"],[view-bind="' + key + '"]', function (el) {
+          return el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' ? el.value = val : el.innerHTML = val;
+        });
+      }
     },
 
     /** creates a new bound variable , part of Crafter.js's Data Binding System */
     newBind: function newBind(key, val, handle, bindScope) {
-      is.Func(handle) ? Craft.Binds.set(key, new _ReactiveVariable(val, handle)) : bindScope ? bindScope.set(key, val) : Craft.Binds.set(key, val);
+      if (key.includes('.')) is.Def(handle) ? Craft.setBind(key, new _ReactiveVariable(val, handle), bindScope) : Craft.setBind(key, val, bindScope);else is.Func(handle) ? Craft.Binds.set(key, new _ReactiveVariable(val, handle)) : bindScope ? bindScope.set(key, val) : Craft.Binds.set(key, val);
       Craft.applyBinds(key, bindScope);
+    },
+    setBoundObjectProperty: function setBoundObjectProperty(key, property, val, bindScope) {
+      var bind = Craft.getBind(key, bindScope);
+      if (is.Object(bind)) bind[property] = val;else throw new TypeError('Bind has to be an Object type');
+      Craft.setBind(key, bind, bindScope);
     },
 
     /** sets the value of a bound variable */
     setBind: function setBind(key, val, bindScope) {
-      var bind = bindScope ? bindScope.get(key) : Craft.Binds.get(key);
-      is.ReactiveVariable(bind) ? bind.set(val) : bindScope ? bindScope.set(key, val) : Craft.Binds.set(key, val);
-      Craft.applyBinds(key);
+      if (!key.includes('.')) {
+        var bind = bindScope ? bindScope.get(key) : Craft.Binds.get(key);
+        is.ReactiveVariable(bind) ? bind.set(val) : bindScope ? bindScope.set(key, val) : Craft.Binds.set(key, val);
+        Craft.applyBinds(key);
+      } else {
+        var okey = key.split('.'),
+            bind = is.Def(bindScope) ? bindScope.get(okey[0]) : Craft.Binds.get(okey[0]) || {};
+        val = Craft.setDeep(bind, Craft.omitFromIterable(okey, okey[0]).join('.'), val, true);
+        is.ReactiveVariable(bind) ? bind.set(val) : bindScope ? bindScope.set(okey[0], val) : Craft.Binds.set(okey[0], val);
+        Craft.applyBinds(key);
+      }
     },
 
     /** gets the value of a bound variable */
     getBind: function getBind(key, bindScope) {
-      var bind = bindScope ? bindScope.get(key) : Craft.Binds.get(key);
-      return is.ReactiveVariable(bind) ? bind.val : bind;
+      var val = undefined;
+      if (!key.includes('.')) {
+        var bind = is.Def(bindScope) ? bindScope.get(key) : Craft.Binds.get(key);
+        val = is.ReactiveVariable(bind) ? bind.val : bind;
+      } else {
+        var okey = key.split('.'),
+            bind = is.Def(bindScope) ? bindScope.get(okey[0]) : Craft.Binds.get(okey[0]);
+        val = Craft.getDeep(bind, Craft.omitFromIterable(okey, okey[0]).join('.'));
+      }
+      return val;
     },
-
     BindExists: function BindExists(key, bindScope) {
-      return bindScope ? bindScope.has(key) : Craft.Binds.has(key);
+      if (!key.includes('.')) return bindScope ? bindScope.has(key) : Craft.Binds.has(key);
+      var splitkey = key.split('.'),
+          bind = Craft.getBind(splitkey[0], bindScope);
+      return is.Def(Craft.getDeep(bind, Craft.omitFromIterable(splitkey, splitkey[0]).join('.')));
     }
   };
 
@@ -2142,13 +2211,13 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
   _On('animationstart', doc, function (e) {
     if (e.animationName === 'NodeInserted' && is.Node(e.target)) {
       (function () {
-        var element = e.target;
+        var element = e.target,
+            isInput = element.tagName === 'INPUT' || element.tagName === 'TEXTAREA';
         if (element.hasAttribute('input-bind')) {
           (function () {
-            var bindAttr = element.getAttribute('input-bind'),
-                isInput = element.tagName === 'INPUT' || element.tagName === 'TEXTAREA',
+            var key = element.getAttribute('input-bind'),
                 OnInput = _On('input', element, function () {
-              return Craft.setBind(bindAttr, isInput ? element.value : element.innerHTML);
+              return Craft.setBind(key, isInput ? element.value : element.innerHTML);
             }),
                 observer = new MutationObserver(function (mutations) {
               return mutations.forEach(function (mut) {
@@ -2163,12 +2232,12 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
             observer.observe(element, {
               attributes: true
             });
-            Craft.BindExists(bindAttr) ? Craft.applyBinds(bindAttr) : Craft.newBind(bindAttr, isInput ? element.value : element.innerHTML);
+            if (Craft.BindExists(key)) Craft.applyBinds(key);else if (!key.includes('.')) Craft.newBind(key, isInput ? element.value : element.innerHTML);
           })();
         }
         if (element.hasAttribute('view-bind')) {
-          var bindAttr = element.getAttribute('view-bind');
-          if (Craft.BindExists(bindAttr)) Craft.applyBinds(bindAttr);else Craft.newBind(bindAttr, element.tagName === 'INPUT' || element.tagName === 'TEXTAREA' ? element.value : element.innerHTML);
+          var key = element.getAttribute('view-bind');
+          if (Craft.BindExists(key)) Craft.applyBinds(key);else if (!key.includes('.')) Craft.newBind(key, isInput ? element.value : element.innerHTML);
         }
         if (element.hasAttribute('link')) _On('click', element, function (e) {
           return element.hasAttribute('newtab') ? open(element.getAttribute('link')) : Craft.router.open(element.getAttribute('link'));
