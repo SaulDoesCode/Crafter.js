@@ -387,13 +387,15 @@
           if (is.Def(func) && is.Func(func)) this.recieve((data, e) => func(data, e));
         });
         this.Socket.onopen = e => this.messageCalls[this.messageCalls.length - 1]();
+        return this;
       }
       /**
        * Recieves messages from the WebSocket Server
        * @param {function} func - function to recieve the response and event with -> "function ( response , event ) { ... } or response => ..."
        */
     recieve(func) {
-        is.Func(func) ? this.RecieveCalls.push(e => func(e.data, e)) : console.error("callback is not a function or is not defined")
+        is.Func(func) ? this.RecieveCalls.push(e => func(e.data, e)) : console.error("func is not a function or is not defined");
+        return this;
       }
       /** Closes the WebSocket Connection */
     close() {
@@ -661,7 +663,7 @@
        * @param {string=} sets the innerHTML value or when undefined gets the innerHTML value
        */
     html(val) {
-        if (is.Def(val)) return this.element.innerHTML;
+        if (!is.Def(val)) return this.element.innerHTML;
         this.element.innerHTML = val;
         return this;
       }
@@ -907,8 +909,8 @@
           if (func(arr[i], i, arr)) result[++x] = arr[i];
         return result;
       },
-      removeFromArr(Arr, val) {
-        let index = Arr.IndexOf(val),
+      omitFromIterable(Arr, val) {
+        let index = Arr.indexOf(val),
           temp = [],
           string = false,
           i = 0;
@@ -916,9 +918,10 @@
           Arr = Array.from(Arr);
           string = true;
         }
+        if (is.NodeList(Arr)) Arr = Array.from(Arr);
         for (; i < Arr.length; i++)
           if (i !== index) temp.push(Arr[i]);
-        return string ? temp : temp;
+        return string ? temp.join('') : temp;
       },
       /**
        * Compares two arrays and determines if they are the same array
@@ -931,6 +934,35 @@
         while (i--)
           if (arr1[i] !== arr2[i]) return false;
         return true;
+      },
+      getDeep(obj, propString) {
+        if (is.Undef(propString)) return obj;
+
+        let prop, props = propString.split('.'),
+          candidate, i = 0,
+          iLen = props.length - 1;
+
+        for (; i < iLen; i++) {
+          prop = props[i];
+          candidate = obj[prop];
+          if (is.Def(candidate)) obj = candidate;
+          else break;
+        }
+        let val;
+        try {
+          val = obj[props[i]];
+        } catch (e) {
+          val = undefined;
+        }
+        return val;
+      },
+      setDeep(obj, prop, value, returnObj) {
+        if (is.String(prop)) prop = prop.split(".");
+        if (prop.length > 1) {
+          let e = prop.shift();
+          Craft.setDeep(obj[e] = is.Object(obj[e]) ? obj[e] : {}, prop, value);
+        } else obj[prop[0]] = value;
+        if (returnObj === true) return obj;
       },
       concatObjects(hostobj, ...Objs) {
         forEach(hostobj, () => Objs.forEach(obj => forEach(obj, (prop, key) => {
@@ -948,10 +980,10 @@
           if (val === key || val === prop) delete obj[key];
         });
         else if (is.Arr(obj) || is.String(obj)) obj.forEach(i => {
-          if (val === i) obj = Craft.removeArrItem(obj, i);
+          if (val === i) obj = Craft.omitFromIterable(obj, i);
         });
         if (is.Object(obj) && obj.hasOwnProperty(val)) throw new Error(`couldn't omit ${val} from Object`);
-        else if (obj.includes(val)) throw new Error(`couldn't omit ${val} from Array/String`);
+        else if (obj.includes(val)) throw new Error(`couldn't omit ${val} from Array/String/NodeList`);
         return obj;
       },
       dom: {
@@ -1020,7 +1052,9 @@
           href: link
         }),
         script(code, attr, defer) {
-          let script = make_element('script', code, attr, true, {type: 'text/javascript'});
+          let script = make_element('script', code, attr, true, {
+            type: 'text/javascript'
+          });
           script.defer = defer !== false;
           return script;
         },
@@ -1051,7 +1085,8 @@
         pre: 'craft:',
         fetchImport(obj) {
           obj.key = obj.key || obj.url;
-          let now = +new Date(), src = Craft.loader.get(obj.key);
+          let now = +new Date(),
+            src = Craft.loader.get(obj.key);
           if (src || src.expire - now > 0) return new Promise(resolve => resolve(src));
           return new Promise((success, failed) => fetch(obj.url).then(res => res.text().then(data => {
             obj.data = data;
@@ -1087,7 +1122,7 @@
           key: arg.key || undefined,
           expire: arg.expire || undefined
         })));
-        return Promise.all(promises).then(src => src.map(obj => obj.exec ? obj.type === 'css' ? CrafterStyles.innerHTML += '\n' + obj.data : head.appendChild(dom().script(obj.data,'key='+obj.key, obj.defer)) : undefined));
+        return Promise.all(promises).then(src => src.map(obj => obj.exec ? obj.type === 'css' ? CrafterStyles.innerHTML += '\n' + obj.data : head.appendChild(dom().script(obj.data, 'key=' + obj.key, obj.defer)) : undefined));
       },
       router: {
         addHandle(link, func) {
@@ -1272,13 +1307,13 @@
           if (t < 1) return c / 2 * t * t + b;
           t--;
           return -c / 2 * (t * (t - 2) - 1) + b;
-        },
+        }
       },
       JumpTo(target, options) {
         options = options || {};
         options.duration = options.duration || 400;
         options.offset = options.offset || 0;
-        options.callback = options.callback || undefined;
+        options.func = options.func || undefined;
 
         let startTime, elapsedTime, start = root.pageYOffset,
           distance = is.String(target) ? options.offset + query(target).getBoundingClientRect().top : target,
@@ -1290,7 +1325,7 @@
             root.scrollTo(0, Craft.easing.inOutQuad(elapsedTime, start, distance, options.duration));
             elapsedTime < options.duration ? requestAnimationFrame(time => loop(time)) : (() => {
               root.scrollTo(0, start + distance);
-              if (is.Func(options.callback)) options.callback.call();
+              if (is.Func(options.func)) options.func.call();
               startTime = undefined;
             })();
           };
@@ -1420,30 +1455,68 @@
           else element[key] = prop;
         });
         settings['prototype'] = element;
-        document.registerElement(tag, settings)
+        doc.registerElement(tag, settings)
       },
-      applyBinds(key, bindScope) {
-        let bind = bindScope ? bindScope.get(key) : Craft.Binds.get(key),
-          val = is.ReactiveVariable(bind) ? bind.val : bind;
-        queryEach(`[input-bind="${key}"],[view-bind="${key}"]`, el => el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' ? el.value = val : el.innerHTML = val);
+      applyBinds(key, bindScope, element) {
+        let val, bind;
+        if (Craft.BindExists(key, bindScope)) {
+          if (!key.includes('.')) {
+            let bind = bindScope ? bindScope.get(key) : Craft.Binds.get(key);
+            val = is.ReactiveVariable(bind) ? bind.val : bind;
+          } else {
+            let okey = key.split('.');
+            bind = Craft.getBind(okey[0], bindScope);
+            val = Craft.getDeep(bind, Craft.omitFromIterable(okey, okey[0]).join('.'));
+            if (is.Undef(val)) val = '';
+          }
+          queryEach(`[input-bind="${key}"],[view-bind="${key}"]`, el => el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' ? el.value = val : el.innerHTML = val);
+        }
       },
       /** creates a new bound variable , part of Crafter.js's Data Binding System */
       newBind(key, val, handle, bindScope) {
-        is.Func(handle) ? Craft.Binds.set(key, new ReactiveVariable(val, handle)) : bindScope ? bindScope.set(key, val) : Craft.Binds.set(key, val);
+        if (key.includes('.')) is.Def(handle) ? Craft.setBind(key, new ReactiveVariable(val, handle), bindScope) : Craft.setBind(key, val, bindScope);
+        else is.Func(handle) ? Craft.Binds.set(key, new ReactiveVariable(val, handle)) : bindScope ? bindScope.set(key, val) : Craft.Binds.set(key, val);
         Craft.applyBinds(key, bindScope);
+      },
+      setBoundObjectProperty(key, property, val, bindScope) {
+        let bind = Craft.getBind(key, bindScope);
+        if (is.Object(bind)) bind[property] = val;
+        else throw new TypeError('Bind has to be an Object type');
+        Craft.setBind(key, bind, bindScope);
       },
       /** sets the value of a bound variable */
       setBind(key, val, bindScope) {
-        let bind = bindScope ? bindScope.get(key) : Craft.Binds.get(key);
-        is.ReactiveVariable(bind) ? bind.set(val) : bindScope ? bindScope.set(key, val) : Craft.Binds.set(key, val);
-        Craft.applyBinds(key);
+        if (!key.includes('.')) {
+          let bind = bindScope ? bindScope.get(key) : Craft.Binds.get(key);
+          is.ReactiveVariable(bind) ? bind.set(val) : bindScope ? bindScope.set(key, val) : Craft.Binds.set(key, val);
+          Craft.applyBinds(key);
+        } else {
+          let okey = key.split('.'),
+            bind = is.Def(bindScope) ? bindScope.get(okey[0]) : Craft.Binds.get(okey[0]) || {};
+          val = Craft.setDeep(bind, Craft.omitFromIterable(okey, okey[0]).join('.'), val, true);
+          is.ReactiveVariable(bind) ? bind.set(val) : bindScope ? bindScope.set(okey[0], val) : Craft.Binds.set(okey[0], val);
+          Craft.applyBinds(key);
+        }
       },
       /** gets the value of a bound variable */
       getBind(key, bindScope) {
-        let bind = bindScope ? bindScope.get(key) : Craft.Binds.get(key);
-        return is.ReactiveVariable(bind) ? bind.val : bind;
+        let val;
+        if (!key.includes('.')) {
+          let bind = is.Def(bindScope) ? bindScope.get(key) : Craft.Binds.get(key);
+          val = is.ReactiveVariable(bind) ? bind.val : bind;
+        } else {
+          let okey = key.split('.'),
+            bind = is.Def(bindScope) ? bindScope.get(okey[0]) : Craft.Binds.get(okey[0]);
+          val = Craft.getDeep(bind, Craft.omitFromIterable(okey, okey[0]).join('.'));
+        }
+        return val;
       },
-      BindExists: (key, bindScope) => bindScope ? bindScope.has(key) : Craft.Binds.has(key),
+      BindExists(key, bindScope) {
+        if (!key.includes('.')) return bindScope ? bindScope.has(key) : Craft.Binds.has(key);
+        let splitkey = key.split('.'),
+          bind = Craft.getBind(splitkey[0], bindScope);
+        return is.Def(Craft.getDeep(bind, Craft.omitFromIterable(splitkey, splitkey[0]).join('.')));
+      },
   };
 
   Craft.curry.to = Craft.curry((arity, fn) => createFn(fn, [], arity));
@@ -1454,28 +1527,29 @@
 
   On('animationstart', doc, e => {
     if (e.animationName === 'NodeInserted' && is.Node(e.target)) {
-      let element = e.target;
+      let element = e.target,
+        isInput = element.tagName === 'INPUT' || element.tagName === 'TEXTAREA';
       if (element.hasAttribute('input-bind')) {
-        let bindAttr = element.getAttribute('input-bind'),
-          isInput = element.tagName === 'INPUT' || element.tagName === 'TEXTAREA',
-          OnInput = On('input', element, () => Craft.setBind(bindAttr, isInput ? element.value : element.innerHTML)),
+        let key = element.getAttribute('input-bind'),
+          OnInput = On('input', element, () => Craft.setBind(key, isInput ? element.value : element.innerHTML)),
           observer = new MutationObserver(mutations => mutations.forEach(mut => {
-              if (mut.type === 'attributes') {
-                if (mut.attributeName === 'input-bind' && !element.hasAttribute('input-bind')) {
-                  OnInput.Off();
-                  observer.disconnect();
-                }
+            if (mut.type === 'attributes') {
+              if (mut.attributeName === 'input-bind' && !element.hasAttribute('input-bind')) {
+                OnInput.Off();
+                observer.disconnect();
               }
+            }
           }));
         observer.observe(element, {
           attributes: true
         });
-        Craft.BindExists(bindAttr) ? Craft.applyBinds(bindAttr) : Craft.newBind(bindAttr, isInput ? element.value : element.innerHTML);
+        if (Craft.BindExists(key)) Craft.applyBinds(key);
+        else if (!key.includes('.')) Craft.newBind(key, isInput ? element.value : element.innerHTML);
       }
       if (element.hasAttribute('view-bind')) {
-        let bindAttr = element.getAttribute('view-bind');
-        if (Craft.BindExists(bindAttr)) Craft.applyBinds(bindAttr);
-        else Craft.newBind(bindAttr, element.tagName === 'INPUT' || element.tagName === 'TEXTAREA' ? element.value : element.innerHTML);
+        let key = element.getAttribute('view-bind');
+        if (Craft.BindExists(key)) Craft.applyBinds(key);
+        else if (!key.includes('.')) Craft.newBind(key, isInput ? element.value : element.innerHTML);
       }
       if (element.hasAttribute('link')) On('click', element, e => element.hasAttribute('newtab') ? open(element.getAttribute('link')) : Craft.router.open(element.getAttribute('link')));
     }

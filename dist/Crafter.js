@@ -1094,7 +1094,7 @@ function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.const
     _createClass(domMethods, [{
       key: 'html',
       value: function html(val) {
-        if (is.Def(val)) return this.element.innerHTML;
+        if (!is.Def(val)) return this.element.innerHTML;
         this.element.innerHTML = val;
         return this;
       }
