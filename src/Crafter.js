@@ -961,7 +961,8 @@
         if (prop.length > 1) {
           let e = prop.shift();
           Craft.setDeep(obj[e] = is.Object(obj[e]) ? obj[e] : {}, prop, value);
-        } else obj[prop[0]] = value;
+        } else if(!is.ReactiveVariable(obj[prop[0]])) obj[prop[0]] = value;
+        else obj[prop[0]].set(value);
         if (returnObj === true) return obj;
       },
       concatObjects(hostobj, ...Objs) {
@@ -1464,9 +1465,8 @@
             let bind = bindScope ? bindScope.get(key) : Craft.Binds.get(key);
             val = is.ReactiveVariable(bind) ? bind.val : bind;
           } else {
-            let okey = key.split('.');
-            bind = Craft.getBind(okey[0], bindScope);
-            val = Craft.getDeep(bind, Craft.omitFromIterable(okey, okey[0]).join('.'));
+            val = Craft.getBind(key, bindScope);
+            if(is.ReactiveVariable(val)) val = val.val;
             if (is.Undef(val)) val = '';
           }
           queryEach(`[input-bind="${key}"],[view-bind="${key}"]`, el => el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' ? el.value = val : el.innerHTML = val);
@@ -1486,33 +1486,35 @@
       },
       /** sets the value of a bound variable */
       setBind(key, val, bindScope) {
+        let bind;
         if (!key.includes('.')) {
-          let bind = bindScope ? bindScope.get(key) : Craft.Binds.get(key);
-          is.ReactiveVariable(bind) ? bind.set(val) : bindScope ? bindScope.set(key, val) : Craft.Binds.set(key, val);
+          bind = bindScope ? bindScope.get(key) : Craft.Binds.get(key);
+          is.ReactiveVariable(bind) ? bind.set(val) : is.Map(bindScope) ? bindScope.set(key, val) : Craft.Binds.set(key, val);
           Craft.applyBinds(key);
         } else {
-          let okey = key.split('.'),
-            bind = is.Def(bindScope) ? bindScope.get(okey[0]) : Craft.Binds.get(okey[0]) || {};
-          val = Craft.setDeep(bind, Craft.omitFromIterable(okey, okey[0]).join('.'), val, true);
-          is.ReactiveVariable(bind) ? bind.set(val) : bindScope ? bindScope.set(okey[0], val) : Craft.Binds.set(okey[0], val);
+          let okey = key.split('.');
+          bind = Craft.getBind(okey[0],bindScope) || {};
+          val = Craft.setDeep(is.ReactiveVariable(bind) ? bind.val : bind, Craft.omitFromIterable(okey, okey[0]).join('.'), val, true);
+          if(is.ReactiveVariable(bind)) bind.set(val);
+          is.Map(bindScope) ? bindScope.set(okey[0], val) : Craft.Binds.set(okey[0], val);
           Craft.applyBinds(key);
         }
       },
       /** gets the value of a bound variable */
       getBind(key, bindScope) {
-        let val;
+        if(!Craft.BindExists(key,bindScope)) return undefined;
         if (!key.includes('.')) {
-          let bind = is.Def(bindScope) ? bindScope.get(key) : Craft.Binds.get(key);
-          val = is.ReactiveVariable(bind) ? bind.val : bind;
+          let bind = is.Map(bindScope) ? bindScope.get(key) : Craft.Binds.get(key);
+          return is.ReactiveVariable(bind) ? bind.val : bind;
         } else {
-          let okey = key.split('.'),
-            bind = is.Def(bindScope) ? bindScope.get(okey[0]) : Craft.Binds.get(okey[0]);
+          let okey = key.split('.'),val,
+          bind = is.Map(bindScope) ? bindScope.get(okey[0]) : Craft.Binds.get(okey[0]);
           val = Craft.getDeep(bind, Craft.omitFromIterable(okey, okey[0]).join('.'));
+          return is.ReactiveVariable(val) ? val.val : val;
         }
-        return val;
       },
       BindExists(key, bindScope) {
-        if (!key.includes('.')) return bindScope ? bindScope.has(key) : Craft.Binds.has(key);
+        if (!key.includes('.')) return is.Map(bindScope) ? bindScope.has(key) : Craft.Binds.has(key);
         let splitkey = key.split('.'),
           bind = Craft.getBind(splitkey[0], bindScope);
         return is.Def(Craft.getDeep(bind, Craft.omitFromIterable(splitkey, splitkey[0]).join('.')));
@@ -1531,7 +1533,7 @@
         isInput = element.tagName === 'INPUT' || element.tagName === 'TEXTAREA';
       if (element.hasAttribute('input-bind')) {
         let key = element.getAttribute('input-bind'),
-          OnInput = On('input', element, () => Craft.setBind(key, isInput ? element.value : element.innerHTML)),
+          OnInput = On('input', element,e => Craft.setBind(key, isInput ? element.value : element.innerHTML)),
           observer = new MutationObserver(mutations => mutations.forEach(mut => {
             if (mut.type === 'attributes') {
               if (mut.attributeName === 'input-bind' && !element.hasAttribute('input-bind')) {
@@ -1544,12 +1546,12 @@
           attributes: true
         });
         if (Craft.BindExists(key)) Craft.applyBinds(key);
-        else if (!key.includes('.')) Craft.newBind(key, isInput ? element.value : element.innerHTML);
+        else Craft.newBind(key, isInput ? element.value : element.innerHTML);
       }
       if (element.hasAttribute('view-bind')) {
         let key = element.getAttribute('view-bind');
         if (Craft.BindExists(key)) Craft.applyBinds(key);
-        else if (!key.includes('.')) Craft.newBind(key, isInput ? element.value : element.innerHTML);
+        else Craft.newBind(key, isInput ? element.value : element.innerHTML);
       }
       if (element.hasAttribute('link')) On('click', element, e => element.hasAttribute('newtab') ? open(element.getAttribute('link')) : Craft.router.open(element.getAttribute('link')));
     }
