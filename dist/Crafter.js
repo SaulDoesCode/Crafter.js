@@ -2269,9 +2269,7 @@ function _typeof(obj) {
                 var splitkey = key.split('.'),
                     bind = Craft.getBind(splitkey[0], bindScope);
                 return is.Def(Craft.getDeep(bind, Craft.omitFromIterable(splitkey, splitkey[0]).join('.')));
-            } catch (e) {
-                console.error(e);
-            }
+            } catch (e) {}
             return false;
         }
     };
