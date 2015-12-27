@@ -961,9 +961,21 @@
         if (prop.length > 1) {
           let e = prop.shift();
           Craft.setDeep(obj[e] = is.Object(obj[e]) ? obj[e] : {}, prop, value);
-        } else if(!is.ReactiveVariable(obj[prop[0]])) obj[prop[0]] = value;
+        } else if (!is.ReactiveVariable(obj[prop[0]])) obj[prop[0]] = value;
         else obj[prop[0]].set(value);
         if (returnObj === true) return obj;
+      },
+      forEachDeep(object, fn, path) {
+        path = path || '';
+        let currentPath = path,
+          nestable;
+        forEach(object, (val, key) => {
+          currentPath = path;
+          nestable = false;
+          is.Arr(object) ? currentPath += `[${key}]` : !currentPath ? currentPath = key : currentPath += `.${key}`;
+          nestable = fn(val, key, object, currentPath) !== false;
+          if (nestable && (is.Arr(val) || is.Object(val))) Craft.forEachDeep(val, fn, currentPath);
+        });
       },
       concatObjects(hostobj, ...Objs) {
         forEach(hostobj, () => Objs.forEach(obj => forEach(obj, (prop, key) => {
@@ -1458,19 +1470,16 @@
         settings['prototype'] = element;
         doc.registerElement(tag, settings)
       },
-      applyBinds(key, bindScope, element) {
-        let val, bind;
-        if (Craft.BindExists(key, bindScope)) {
-          if (!key.includes('.')) {
-            let bind = bindScope ? bindScope.get(key) : Craft.Binds.get(key);
-            val = is.ReactiveVariable(bind) ? bind.val : bind;
-          } else {
-            val = Craft.getBind(key, bindScope);
-            if(is.ReactiveVariable(val)) val = val.val;
-            if (is.Undef(val)) val = '';
-          }
-          queryEach(`[input-bind="${key}"],[view-bind="${key}"]`, el => el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' ? el.value = val : el.innerHTML = val);
-        }
+      applyBinds(key, bindScope) {
+        let bind, val = Craft.getBind(key, bindScope);
+        if (is.Undef(val)) val = '';
+        is.Object(val) ? Craft.applyObjectProps(key, val) : queryEach(`[input-bind="${key}"],[view-bind="${key}"]`, el => el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' ? el.value = val : el.innerHTML = val);
+      },
+      applyObjectProps(okey, oval) {
+        if (!okey.includes('.') && is.Object(oval) && !is.ReactiveVariable(oval)) Craft.forEachDeep(oval, (prop, key, obj, path) => {
+          if (is.ReactiveVariable(prop)) prop = prop.val;
+          queryEach(`[input-bind="${okey}.${path}"],[view-bind="${okey}.${path}"]`, el => el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' ? el.value = prop : el.innerHTML = prop);
+        });
       },
       /** creates a new bound variable , part of Crafter.js's Data Binding System */
       newBind(key, val, handle, bindScope) {
@@ -1478,46 +1487,51 @@
         else is.Func(handle) ? Craft.Binds.set(key, new ReactiveVariable(val, handle)) : bindScope ? bindScope.set(key, val) : Craft.Binds.set(key, val);
         Craft.applyBinds(key, bindScope);
       },
-      setBoundObjectProperty(key, property, val, bindScope) {
-        let bind = Craft.getBind(key, bindScope);
-        if (is.Object(bind)) bind[property] = val;
-        else throw new TypeError('Bind has to be an Object type');
-        Craft.setBind(key, bind, bindScope);
-      },
       /** sets the value of a bound variable */
       setBind(key, val, bindScope) {
         let bind;
         if (!key.includes('.')) {
-          bind = bindScope ? bindScope.get(key) : Craft.Binds.get(key);
+          bind = is.Map(bindScope) ? bindScope.get(key) : Craft.Binds.get(key);
           is.ReactiveVariable(bind) ? bind.set(val) : is.Map(bindScope) ? bindScope.set(key, val) : Craft.Binds.set(key, val);
-          Craft.applyBinds(key);
         } else {
-          let okey = key.split('.');
-          bind = Craft.getBind(okey[0],bindScope) || {};
+          let obj, okey = key.split('.');
+          bind = Craft.getBind(okey[0], bindScope, true) || {};
           val = Craft.setDeep(is.ReactiveVariable(bind) ? bind.val : bind, Craft.omitFromIterable(okey, okey[0]).join('.'), val, true);
-          if(is.ReactiveVariable(bind)) bind.set(val);
+          if (is.ReactiveVariable(bind)) {
+            bind.set(val);
+            val = bind;
+          }
           is.Map(bindScope) ? bindScope.set(okey[0], val) : Craft.Binds.set(okey[0], val);
-          Craft.applyBinds(key);
         }
+        Craft.applyBinds(key);
       },
       /** gets the value of a bound variable */
-      getBind(key, bindScope) {
-        if(!Craft.BindExists(key,bindScope)) return undefined;
+      getBind(key, bindScope, returnReactiveVars) {
+        if (!Craft.BindExists(key, bindScope)) return undefined;
+        if (is.Bool(bindScope)) returnReactiveVars = bindScope;
         if (!key.includes('.')) {
           let bind = is.Map(bindScope) ? bindScope.get(key) : Craft.Binds.get(key);
+          if (returnReactiveVars === true) return bind;
           return is.ReactiveVariable(bind) ? bind.val : bind;
         } else {
-          let okey = key.split('.'),val,
-          bind = is.Map(bindScope) ? bindScope.get(okey[0]) : Craft.Binds.get(okey[0]);
+          let okey = key.split('.'),
+            val,
+            bind = is.Map(bindScope) ? bindScope.get(okey[0]) : Craft.Binds.get(okey[0]);
           val = Craft.getDeep(bind, Craft.omitFromIterable(okey, okey[0]).join('.'));
+          if (returnReactiveVars === true) return val;
           return is.ReactiveVariable(val) ? val.val : val;
         }
       },
       BindExists(key, bindScope) {
         if (!key.includes('.')) return is.Map(bindScope) ? bindScope.has(key) : Craft.Binds.has(key);
-        let splitkey = key.split('.'),
-          bind = Craft.getBind(splitkey[0], bindScope);
-        return is.Def(Craft.getDeep(bind, Craft.omitFromIterable(splitkey, splitkey[0]).join('.')));
+        try {
+          let splitkey = key.split('.'),
+            bind = Craft.getBind(splitkey[0], bindScope);
+          return is.Def(Craft.getDeep(bind, Craft.omitFromIterable(splitkey, splitkey[0]).join('.')));
+        } catch (e) {
+          console.error(e);
+        }
+        return false;
       },
   };
 
@@ -1533,7 +1547,7 @@
         isInput = element.tagName === 'INPUT' || element.tagName === 'TEXTAREA';
       if (element.hasAttribute('input-bind')) {
         let key = element.getAttribute('input-bind'),
-          OnInput = On('input', element,e => Craft.setBind(key, isInput ? element.value : element.innerHTML)),
+          OnInput = On('input', element, e => Craft.setBind(key, isInput ? element.value : element.innerHTML)),
           observer = new MutationObserver(mutations => mutations.forEach(mut => {
             if (mut.type === 'attributes') {
               if (mut.attributeName === 'input-bind' && !element.hasAttribute('input-bind')) {
@@ -1545,13 +1559,14 @@
         observer.observe(element, {
           attributes: true
         });
-        if (Craft.BindExists(key)) Craft.applyBinds(key);
-        else Craft.newBind(key, isInput ? element.value : element.innerHTML);
+        if(Craft.BindExists(key)) {
+          let val = Craft.getBind(key);
+          isInput ? element.value = val : element.innerHTML = val;
+        } else Craft.newBind(key, isInput ? element.value : element.innerHTML);
       }
       if (element.hasAttribute('view-bind')) {
         let key = element.getAttribute('view-bind');
-        if (Craft.BindExists(key)) Craft.applyBinds(key);
-        else Craft.newBind(key, isInput ? element.value : element.innerHTML);
+        Craft.BindExists(key) ? Craft.applyBinds(key) : Craft.newBind(key, isInput ? element.value : element.innerHTML);
       }
       if (element.hasAttribute('link')) On('click', element, e => element.hasAttribute('newtab') ? open(element.getAttribute('link')) : Craft.router.open(element.getAttribute('link')));
     }
