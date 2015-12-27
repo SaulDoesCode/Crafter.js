@@ -1511,6 +1511,18 @@ function _typeof(obj) {
             else obj[prop[0]].set(value);
             if (returnObj === true) return obj;
         },
+        forEachDeep: function forEachDeep(object, fn, path) {
+            path = path || '';
+            var currentPath = path,
+                nestable = undefined;
+            forEach(object, function(val, key) {
+                currentPath = path;
+                nestable = false;
+                is.Arr(object) ? currentPath += '[' + key + ']' : !currentPath ? currentPath = key : currentPath += '.' + key;
+                nestable = fn(val, key, object, currentPath) !== false;
+                if (nestable && (is.Arr(val) || is.Object(val))) Craft.forEachDeep(val, fn, currentPath);
+            });
+        },
         concatObjects: function concatObjects(hostobj) {
             for (var _len19 = arguments.length, Objs = Array(_len19 > 1 ? _len19 - 1 : 0), _key19 = 1; _key19 < _len19; _key19++) {
                 Objs[_key19 - 1] = arguments[_key19];
@@ -2190,22 +2202,21 @@ function _typeof(obj) {
             settings['prototype'] = element;
             doc.registerElement(tag, settings);
         },
-        applyBinds: function applyBinds(key, bindScope, element) {
-            var val = undefined,
-                bind = undefined;
-            if (Craft.BindExists(key, bindScope)) {
-                if (!key.includes('.')) {
-                    var _bind = bindScope ? bindScope.get(key) : Craft.Binds.get(key);
-                    val = is.ReactiveVariable(_bind) ? _bind.val : _bind;
-                } else {
-                    val = Craft.getBind(key, bindScope);
-                    if (is.ReactiveVariable(val)) val = val.val;
-                    if (is.Undef(val)) val = '';
-                }
-                queryEach('[input-bind="' + key + '"],[view-bind="' + key + '"]', function(el) {
-                    return el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' ? el.value = val : el.innerHTML = val;
+        applyBinds: function applyBinds(key, bindScope) {
+            var bind = undefined,
+                val = Craft.getBind(key, bindScope);
+            if (is.Undef(val)) val = '';
+            is.Object(val) ? Craft.applyObjectProps(key, val) : queryEach('[input-bind="' + key + '"],[view-bind="' + key + '"]', function(el) {
+                return el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' ? el.value = val : el.innerHTML = val;
+            });
+        },
+        applyObjectProps: function applyObjectProps(okey, oval) {
+            if (!okey.includes('.') && is.Object(oval) && !is.ReactiveVariable(oval)) Craft.forEachDeep(oval, function(prop, key, obj, path) {
+                if (is.ReactiveVariable(prop)) prop = prop.val;
+                queryEach('[input-bind="' + okey + '.' + path + '"],[view-bind="' + okey + '.' + path + '"]', function(el) {
+                    return el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' ? el.value = prop : el.innerHTML = prop;
                 });
-            }
+            });
         },
 
         /** creates a new bound variable , part of Crafter.js's Data Binding System */
@@ -2214,49 +2225,54 @@ function _typeof(obj) {
             else is.Func(handle) ? Craft.Binds.set(key, new _ReactiveVariable(val, handle)) : bindScope ? bindScope.set(key, val) : Craft.Binds.set(key, val);
             Craft.applyBinds(key, bindScope);
         },
-        setBoundObjectProperty: function setBoundObjectProperty(key, property, val, bindScope) {
-            var bind = Craft.getBind(key, bindScope);
-            if (is.Object(bind)) bind[property] = val;
-            else throw new TypeError('Bind has to be an Object type');
-            Craft.setBind(key, bind, bindScope);
-        },
 
         /** sets the value of a bound variable */
         setBind: function setBind(key, val, bindScope) {
             var bind = undefined;
             if (!key.includes('.')) {
-                bind = bindScope ? bindScope.get(key) : Craft.Binds.get(key);
+                bind = is.Map(bindScope) ? bindScope.get(key) : Craft.Binds.get(key);
                 is.ReactiveVariable(bind) ? bind.set(val) : is.Map(bindScope) ? bindScope.set(key, val) : Craft.Binds.set(key, val);
-                Craft.applyBinds(key);
             } else {
-                var okey = key.split('.');
-                bind = Craft.getBind(okey[0], bindScope) || {};
+                var obj = undefined,
+                    okey = key.split('.');
+                bind = Craft.getBind(okey[0], bindScope, true) || {};
                 val = Craft.setDeep(is.ReactiveVariable(bind) ? bind.val : bind, Craft.omitFromIterable(okey, okey[0]).join('.'), val, true);
-                if (is.ReactiveVariable(bind)) bind.set(val);
+                if (is.ReactiveVariable(bind)) {
+                    bind.set(val);
+                    val = bind;
+                }
                 is.Map(bindScope) ? bindScope.set(okey[0], val) : Craft.Binds.set(okey[0], val);
-                Craft.applyBinds(key);
             }
+            Craft.applyBinds(key);
         },
 
         /** gets the value of a bound variable */
-        getBind: function getBind(key, bindScope) {
+        getBind: function getBind(key, bindScope, returnReactiveVars) {
             if (!Craft.BindExists(key, bindScope)) return undefined;
+            if (is.Bool(bindScope)) returnReactiveVars = bindScope;
             if (!key.includes('.')) {
                 var bind = is.Map(bindScope) ? bindScope.get(key) : Craft.Binds.get(key);
+                if (returnReactiveVars === true) return bind;
                 return is.ReactiveVariable(bind) ? bind.val : bind;
             } else {
                 var okey = key.split('.'),
                     val = undefined,
                     bind = is.Map(bindScope) ? bindScope.get(okey[0]) : Craft.Binds.get(okey[0]);
                 val = Craft.getDeep(bind, Craft.omitFromIterable(okey, okey[0]).join('.'));
+                if (returnReactiveVars === true) return val;
                 return is.ReactiveVariable(val) ? val.val : val;
             }
         },
         BindExists: function BindExists(key, bindScope) {
             if (!key.includes('.')) return is.Map(bindScope) ? bindScope.has(key) : Craft.Binds.has(key);
-            var splitkey = key.split('.'),
-                bind = Craft.getBind(splitkey[0], bindScope);
-            return is.Def(Craft.getDeep(bind, Craft.omitFromIterable(splitkey, splitkey[0]).join('.')));
+            try {
+                var splitkey = key.split('.'),
+                    bind = Craft.getBind(splitkey[0], bindScope);
+                return is.Def(Craft.getDeep(bind, Craft.omitFromIterable(splitkey, splitkey[0]).join('.')));
+            } catch (e) {
+                console.error(e);
+            }
+            return false;
         }
     };
 
@@ -2302,14 +2318,15 @@ function _typeof(obj) {
                         observer.observe(element, {
                             attributes: true
                         });
-                        if (Craft.BindExists(key)) Craft.applyBinds(key);
-                        else Craft.newBind(key, isInput ? element.value : element.innerHTML);
+                        if (Craft.BindExists(key)) {
+                            var val = Craft.getBind(key);
+                            isInput ? element.value = val : element.innerHTML = val;
+                        } else Craft.newBind(key, isInput ? element.value : element.innerHTML);
                     })();
                 }
                 if (element.hasAttribute('view-bind')) {
                     var key = element.getAttribute('view-bind');
-                    if (Craft.BindExists(key)) Craft.applyBinds(key);
-                    else Craft.newBind(key, isInput ? element.value : element.innerHTML);
+                    Craft.BindExists(key) ? Craft.applyBinds(key) : Craft.newBind(key, isInput ? element.value : element.innerHTML);
                 }
                 if (element.hasAttribute('link')) _On('click', element, function(e) {
                     return element.hasAttribute('newtab') ? open(element.getAttribute('link')) : Craft.router.open(element.getAttribute('link'));
