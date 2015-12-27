@@ -4,6 +4,7 @@ var gulp = require('gulp'),
   fs = require('fs'),
   concat = require('gulp-concat'),
   uglify = require('gulp-uglify'),
+  prettify = require('gulp-jsbeautifier'),
   minCss = require('gulp-minify-css'),
   documentation = require('gulp-documentation'),
   rename = require('gulp-rename'),
@@ -25,11 +26,11 @@ gulp.task('document', () => {
     .pipe(gulp.dest(docs));
 });
 
-gulp.task('babel',() => {
+gulp.task('babel', () => {
   gulp.src('./src/*.js')
     .pipe(babel({
       presets: ['es2015']
-    }))
+    })).pipe(prettify({}))
     .pipe(gulp.dest('./dist/'));
   console.log('\t babel be done!');
 });
@@ -41,16 +42,21 @@ gulp.task('BabelUgly', () => gulp.src('./src/*.js').pipe(babel({
     compress: true,
     compressor: {
       if_return: true,
+      evaluate: true,
       loops: true,
       conditionals: true,
+      booleans: true,
+      hoist_funs: true,
       comparisons: true,
+      side_effects: true,
+      unsafe: true,
       sequences: true
     },
     output: {
-      comments: false
+      comments: false,
+      bracketize: false,
     }
-  }))
-  .pipe(gulp.dest('./dist/min/')));
+  })).pipe(gulp.dest('./dist/min/')));
 
 gulp.task('babelize_webcomponents', () => gulp.src(['./src/pre-webcomponents/*.js', '!./src/pre-webcomponents/*-extra.js'])
   .pipe(babel({
@@ -60,13 +66,19 @@ gulp.task('babelize_webcomponents', () => gulp.src(['./src/pre-webcomponents/*.j
     compress: true,
     compressor: {
       if_return: true,
+      evaluate: true,
       loops: true,
       conditionals: true,
+      booleans: true,
+      hoist_funs: true,
       comparisons: true,
+      side_effects: true,
+      unsafe: true,
       sequences: true
     },
     output: {
-      comments: false
+      comments: false,
+      bracketize: false,
     }
   })).pipe(rename({
     extname: ".bs"
@@ -77,13 +89,19 @@ gulp.task('min-extrab-bs', () => gulp.src('./src/pre-webcomponents/*-extra.js').
   compress: true,
   compressor: {
     if_return: true,
+    evaluate: true,
     loops: true,
     conditionals: true,
+    booleans: true,
+    hoist_funs: true,
     comparisons: true,
+    side_effects: true,
+    unsafe: true,
     sequences: true
   },
   output: {
-    comments: false
+    comments: false,
+    bracketize: false,
   }
 })).pipe(rename({
   extname: ".bs"
@@ -97,7 +115,7 @@ gulp.task('mincss', () => gulp.src('./src/pre-webcomponents/*.css').pipe(minCss(
 })).pipe(gulp.dest('./src/pre-webcomponents/')));
 
 
-gulp.task('build_webcomponents', ['mincss','min-extrab-bs', 'babelize_webcomponents'], () => {
+gulp.task('build_webcomponents', ['mincss', 'min-extrab-bs', 'babelize_webcomponents'], () => {
   var FileNames = [],
     Path = './src/pre-webcomponents/',
     files = fs.readdirSync(Path);
@@ -149,9 +167,14 @@ gulp.task('polyfills', function () {
       compress: true,
       compressor: {
         if_return: true,
+        evaluate: true,
         loops: true,
         conditionals: true,
+        booleans: true,
+        hoist_funs: true,
         comparisons: true,
+        side_effects: true,
+        unsafe: true,
         sequences: true
       },
       output: {
