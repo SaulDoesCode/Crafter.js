@@ -5,60 +5,44 @@
  */
 "use strict";
 
-var _createClass = (function() {
-    function defineProperties(target, props) {
-        for (var i = 0; i < props.length; i++) {
-            var descriptor = props[i];
-            descriptor.enumerable = descriptor.enumerable || false;
-            descriptor.configurable = true;
-            if ("value" in descriptor) descriptor.writable = true;
-            Object.defineProperty(target, descriptor.key, descriptor);
-        }
-    }
-    return function(Constructor, protoProps, staticProps) {
-        if (protoProps) defineProperties(Constructor.prototype, protoProps);
-        if (staticProps) defineProperties(Constructor, staticProps);
-        return Constructor;
-    };
-})();
-
-function _classCallCheck(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-        throw new TypeError("Cannot call a class as a function");
-    }
-}
-
 function _typeof(obj) {
     return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj;
 }
 
 (function(doc, root) {
 
-    var type = function type(obj, str) {
-            return toString.call(obj) === str;
-        },
-        isT = function isT(val, str) {
-            return (typeof val === 'undefined' ? 'undefined' : _typeof(val)) === str;
-        },
-        nT = function nT(val, str) {
-            return !isT(val, str);
-        },
-        eachisInstanceof = function eachisInstanceof(test, collection) {
-            if (isT(collection, 'string') || collection === undefined || collection === null) return false;
-            var i = 0,
-                allgood = true;
-            for (; i < collection.length; i++) {
-                if (collection[i] instanceof test) {
-                    allgood = false;
-                    break;
-                }
-            }
-            return allgood;
-        },
-        ifelse = function ifelse(bool, func, elsefunc) {
-            return bool ? func : elsefunc;
-        },
-        regexps = {
+    function type(obj, str) {
+        return toString.call(obj) === str;
+    }
+
+    function isT(val, str) {
+        return (typeof val === 'undefined' ? 'undefined' : _typeof(val)) === str;
+    }
+
+    function manageInvoke(fn, argsArr, totalArity) {
+        argsArr = argsArr.length > totalArity ? argsArr.slice(0, totalArity) : argsArr;
+        return argsArr.length === totalArity ? fn.apply(null, argsArr) : createFn(fn, argsArr, totalArity);
+    }
+
+    function toArr(val) {
+        return Array.from(val);
+    }
+
+    function createFn(fn, Args, totalArity) {
+        var remainingArity = totalArity - Args.length;
+        return is.Between(remainingArity, 10, 0) ? function() {
+            var args = Array.from(arguments);
+            return manageInvoke(fn, Args.concat(args), totalArity);
+        } : (function(fn, args, arity) {
+            var a = [];
+            forEach(arity, function(v, i) {
+                return a.push('a' + i.toString());
+            });
+            return eval('false||function(' + a.join(',') + '){ return manageInvoke(fn, args.concat(Array.from(arguments)));}');
+        })(fn, args, remainingArity);
+    }
+
+    var regexps = {
             // Thanks to github.com/arasatasaygin for these RegExps
             url: /^(?:(?:https?|ftp):\/\/)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:\/\S*)?$/i,
             email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
@@ -71,33 +55,10 @@ function _typeof(obj) {
             ip: /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/
         },
         Ready = false,
-        processInvocation = function processInvocation(fn, argsArr, totalArity) {
-            argsArr = argsArr.length > totalArity ? argsArr.slice(0, totalArity) : argsArr;
-            if (argsArr.length === totalArity) return fn.apply(null, argsArr);
-            return createFn(fn, argsArr, totalArity);
-        },
-        createFn = function createFn(fn, Args, totalArity) {
-            var remainingArity = totalArity - Args.length;
-            if (is.Between(remainingArity, 10, 0)) return function() {
-                for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-                    args[_key] = arguments[_key];
-                }
-
-                return processInvocation(fn, Args.concat(args), totalArity);
-            };
-            return (function(fn, args, arity) {
-                var a = [],
-                    i = 0;
-                for (; i < arity; i++) {
-                    a.push('a' + i.toString());
-                }
-                return eval('false||function(' + a.join(',') + '){ return processInvocation(fn, args.concat(Array.from(arguments)));}');
-            })(fn, args, remainingArity);
-        },
         i = 'input',
         b = '-bind',
         ib = i + b,
-        vb = 'view-' + b,
+        vb = 'view' + b,
         head = doc.getElementsByTagName('head')[0],
         CrafterStyles = doc.createElement('style'),
         ua = navigator.userAgent,
@@ -109,7 +70,6 @@ function _typeof(obj) {
     CrafterStyles.setAttribute('crafterstyles', '');
     CrafterStyles.innerHTML = '\n@keyframes NodeInserted {from {opacity:.99;}to {opacity: 1;}} [view-bind],[input-bind] {animation-duration: 0.001s;animation-name: NodeInserted;}';
     head.appendChild(CrafterStyles);
-    CrafterStyles = doc.querySelector('[crafterstyles]', head);
 
     /** is - Type Testing / Assertion */
     root.is = {
@@ -125,101 +85,69 @@ function _typeof(obj) {
          * @param args - value/values to test
          */
         String: function String() {
-            for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-                args[_key2] = arguments[_key2];
-            }
-
+            var args = toArr(arguments);
             return args.length && args.every(function(o) {
                 return isT(o, 'string');
             });
         },
+
         /**
          * Test if something is an Array
          * @param args - value/values to test
          */
         Arr: function Arr() {
-            for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-                args[_key3] = arguments[_key3];
-            }
-
+            var args = toArr(arguments);
             return args.length && args.every(function(o) {
                 return Array.isArray(o);
             });
         },
-        /**
-         * See is.Arr , is.Array is a synonym
-         */
-        Array: (function(_Array) {
-            function Array() {
-                return _Array.apply(this, arguments);
-            }
 
-            Array.toString = function() {
-                return _Array.toString();
-            };
-
-            return Array;
-        })(function() {
-            for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-                args[_key4] = arguments[_key4];
-            }
-
-            return args.length && args.every(function(o) {
-                return Array.isArray(o);
-            });
-        }),
         /**
          * Test if something is an Array-Like
          * @param args - value/values to test
          */
         Arraylike: function Arraylike() {
-            for (var _len5 = arguments.length, args = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-                args[_key5] = arguments[_key5];
-            }
-
+            var args = toArr(arguments);
             return args.length && args.every(function(o) {
-                return is.Def(o['length']) ? true : false;
+                try {
+                    return is.Def(o['length']);
+                } catch (e) {}
             });
         },
+
         /**
          * Determine whether a variable is undefined
          * @param args - value/values to test
          */
         Undef: function Undef() {
-            for (var _len6 = arguments.length, args = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
-                args[_key6] = arguments[_key6];
-            }
-
+            var args = toArr(arguments);
             return args.length && args.every(function(o) {
                 return isT(o, 'undefined');
             });
         },
+
         /**
          * Determine whether a variable is in fact defined
          * @param args - value/values to test
          */
         Def: function Def() {
-            for (var _len7 = arguments.length, args = Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
-                args[_key7] = arguments[_key7];
-            }
-
+            var args = toArr(arguments);
             return args.length && args.every(function(o) {
-                return nT(o, 'undefined');
+                return !isT(o, 'undefined');
             });
         },
+
         /**
          * Determine whether a variable is null
          * @param args - value/values to test
          */
         Null: function Null() {
-            for (var _len8 = arguments.length, args = Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
-                args[_key8] = arguments[_key8];
-            }
-
+            var args = toArr(arguments);
             return args.length && args.every(function(o) {
                 return o === null;
             });
         },
+
         /**
          * Determine whether a variable is a DOM Node
          * @param args - value/values to test
@@ -235,44 +163,32 @@ function _typeof(obj) {
 
             return Node;
         })(function() {
-            for (var _len9 = arguments.length, args = Array(_len9), _key9 = 0; _key9 < _len9; _key9++) {
-                args[_key9] = arguments[_key9];
-            }
-
+            var args = toArr(arguments);
             return args.length && args.every(function(o) {
                 return o instanceof Node;
             });
         }),
+
         /**
          * Determine whether a variable is a DOM NodeList or Collection of Nodes
          * @param args - value/values to test
          */
-        NodeList: (function(_NodeList) {
-            function NodeList() {
-                return _NodeList.apply(this, arguments);
-            }
+        NodeList: function NodeList() {
+            var args = toArr(arguments);
+            return args.length && args.every(function(n) {
+                return n instanceof Node ? true : is.Arraylike(n) ? Array.from(n).every(function(o) {
+                    return is.Node(o);
+                }) : false;
+            }) ? true : false;
+        },
 
-            NodeList.toString = function() {
-                return _NodeList.toString();
-            };
-
-            return NodeList;
-        })(function() {
-            for (var _len10 = arguments.length, args = Array(_len10), _key10 = 0; _key10 < _len10; _key10++) {
-                args[_key10] = arguments[_key10];
-            }
-
-            return args.length ? !is.Node(args[0]) && args.every(function(n) {
-                return n === null ? false : n instanceof NodeList || eachisInstanceof(Node, n);
-            }) : false;
-        }),
         /**
          * Determine if a variable is a Number
          * @param {...*} args - value/values to test
          */
         Num: function Num() {
-            for (var _len11 = arguments.length, args = Array(_len11), _key11 = 0; _key11 < _len11; _key11++) {
-                args[_key11] = arguments[_key11];
+            for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+                args[_key] = arguments[_key];
             }
 
             return args.length && args.every(function(o) {
@@ -284,8 +200,8 @@ function _typeof(obj) {
          * @param args - value/values to test
          */
         Object: function Object() {
-            for (var _len12 = arguments.length, args = Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
-                args[_key12] = arguments[_key12];
+            for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+                args[_key2] = arguments[_key2];
             }
 
             return args.length && args.every(function(o) {
@@ -297,8 +213,8 @@ function _typeof(obj) {
          * @param args - value/values to test
          */
         Element: function Element() {
-            for (var _len13 = arguments.length, args = Array(_len13), _key13 = 0; _key13 < _len13; _key13++) {
-                args[_key13] = arguments[_key13];
+            for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+                args[_key3] = arguments[_key3];
             }
 
             return args.length && args.every(function(o) {
@@ -310,8 +226,8 @@ function _typeof(obj) {
          * @param args - value/values to test
          */
         File: function File() {
-            for (var _len14 = arguments.length, args = Array(_len14), _key14 = 0; _key14 < _len14; _key14++) {
-                args[_key14] = arguments[_key14];
+            for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+                args[_key4] = arguments[_key4];
             }
 
             return args.length && args.every(function(o) {
@@ -323,8 +239,8 @@ function _typeof(obj) {
          * @param args - value/values to test
          */
         FormData: function FormData() {
-            for (var _len15 = arguments.length, args = Array(_len15), _key15 = 0; _key15 < _len15; _key15++) {
-                args[_key15] = arguments[_key15];
+            for (var _len5 = arguments.length, args = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+                args[_key5] = arguments[_key5];
             }
 
             return args.length && args.every(function(o) {
@@ -336,8 +252,8 @@ function _typeof(obj) {
          * @param args - value/values to test
          */
         Map: function Map() {
-            for (var _len16 = arguments.length, args = Array(_len16), _key16 = 0; _key16 < _len16; _key16++) {
-                args[_key16] = arguments[_key16];
+            for (var _len6 = arguments.length, args = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+                args[_key6] = arguments[_key6];
             }
 
             return args.length && args.every(function(o) {
@@ -349,8 +265,8 @@ function _typeof(obj) {
          * @param args - value/values to test
          */
         Func: function Func() {
-            for (var _len17 = arguments.length, args = Array(_len17), _key17 = 0; _key17 < _len17; _key17++) {
-                args[_key17] = arguments[_key17];
+            for (var _len7 = arguments.length, args = Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
+                args[_key7] = arguments[_key7];
             }
 
             return args.length && args.every(function(o) {
@@ -392,14 +308,14 @@ function _typeof(obj) {
          * Determine if a variable is a Symbol
          * @param obj - variable to test
          */
-        Symbol: function Symbol(obj) {
+        symbol: function symbol(obj) {
             return type(obj, '[object Symbol]');
         },
         char: function char(val) {
             return is.String(val) && val.length === 1;
         },
         space: function space(val) {
-            return is.char(val) ? val.charCodeAt(0) > 8 && val.charCodeAt(0) < 14 || val.charCodeAt(0) === 32 : false;
+            return is.char(val) && val.charCodeAt(0) > 8 && val.charCodeAt(0) < 14 || val.charCodeAt(0) === 32;
         },
         /**
          * Determine if a String is UPPERCASE
@@ -625,12 +541,9 @@ function _typeof(obj) {
          * @param args - value/values to test
          */
         ReactiveVariable: function ReactiveVariable() {
-            for (var _len18 = arguments.length, args = Array(_len18), _key18 = 0; _key18 < _len18; _key18++) {
-                args[_key18] = arguments[_key18];
-            }
-
+            var args = Array.from(arguments);
             return args.length && args.every(function(o) {
-                return o instanceof _ReactiveVariable ? true : false;
+                return o instanceof _ReactiveVariable;
             });
         },
 
@@ -656,11 +569,7 @@ function _typeof(obj) {
     root.QueryOrNodetoNodeArray = function(val, within) {
         if (is.String(val) && is.String(within) || is.Node(within)) val = queryAll(val, within);
         else if (is.String(val)) val = queryAll(val);
-        return ifelse(!is.Null(val) && is.Node(val), function() {
-            return [val];
-        }, function() {
-            return is.NodeList(val) ? Array.from(val) : [];
-        })();
+        return !is.Null(val) && is.Node(val) ? [val] : is.NodeList(val) ? Array.from(val) : [];
     };
 
     /**
@@ -668,68 +577,51 @@ function _typeof(obj) {
      * @param {string} wsAddress - the WebSocket address example "ws://localhost:3000/"
      * @param {Array=} protocols - the protocols to pass to the WebSocket Connection
      */
+    function CraftSocket(wsAddress, protocols) {
+        var _this = this;
 
-    var CraftSocket = (function() {
-        function CraftSocket(wsAddress, protocols) {
-            var _this = this;
+        is.Arr(protocols) ? this.Socket = new WebSocket(wsAddress, protocols) : this.Socket = new WebSocket(wsAddress);
+        this.messageCalls = [];
+        this.RecieveCalls = [];
+        this.Socket.onmessage = function(e) {
+            return _this.RecieveCalls.forEach(function(call) {
+                return call(e);
+            });
+        };
+    }
+    /**
+     * Sends a message along the WebSocket Connection
+     * @param {string} message - the WebSocket address example "ws://localhost:3000/"
+     * @param {function=} func - optional function to recieve the response with -> "function ( response , event ) { ... } or response => ..."
+     */
+    CraftSocket.prototype.send = function(message, func) {
+        var _this2 = this;
 
-            _classCallCheck(this, CraftSocket);
-
-            is.Arr(protocols) ? this.Socket = new WebSocket(wsAddress, protocols) : this.Socket = new WebSocket(wsAddress);
-            this.messageCalls = [];
-            this.RecieveCalls = [];
-            this.Socket.onmessage = function(e) {
-                return _this.RecieveCalls.forEach(function(call) {
-                    return call(e);
-                });
-            };
-        }
-        /**
-         * Sends a message along the WebSocket Connection
-         * @param {string} message - the WebSocket address example "ws://localhost:3000/"
-         * @param {function=} func - optional function to recieve the response with -> "function ( response , event ) { ... } or response => ..."
-         */
-
-        _createClass(CraftSocket, [{
-            key: 'send',
-            value: function send(message, func) {
-                    var _this2 = this;
-
-                    this.messageCalls.push(function() {
-                        _this2.Socket.send(message);
-                        if (is.Def(func) && is.Func(func)) _this2.recieve(function(data, e) {
-                            return func(data, e);
-                        });
-                    });
-                    this.Socket.onopen = function(e) {
-                        return _this2.messageCalls[_this2.messageCalls.length - 1]();
-                    };
-                    return this;
-                }
-                /**
-                 * Recieves messages from the WebSocket Server
-                 * @param {function} func - function to recieve the response and event with -> "function ( response , event ) { ... } or response => ..."
-                 */
-
-        }, {
-            key: 'recieve',
-            value: function recieve(func) {
-                    is.Func(func) ? this.RecieveCalls.push(function(e) {
-                        return func(e.data, e);
-                    }) : console.error("func is not a function or is not defined");
-                    return this;
-                }
-                /** Closes the WebSocket Connection */
-
-        }, {
-            key: 'close',
-            value: function close() {
-                this.Socket.close();
-            }
-        }]);
-
-        return CraftSocket;
-    })();
+        this.messageCalls.push(function() {
+            _this2.Socket.send(message);
+            if (is.Def(func) && is.Func(func)) _this2.recieve(function(data, e) {
+                return func(data, e);
+            });
+        });
+        this.Socket.onopen = function(e) {
+            return _this2.messageCalls[_this2.messageCalls.length - 1]();
+        };
+        return this;
+    };
+    /**
+     * Recieves messages from the WebSocket Server
+     * @param {function} func - function to recieve the response and event with -> "function ( response , event ) { ... } or response => ..."
+     */
+    CraftSocket.prototype.recieve = function(func) {
+        is.Func(func) ? this.RecieveCalls.push(function(e) {
+            return func(e.data, e);
+        }) : console.error("func is not a function or is not defined");
+        return this;
+    };
+    /** Closes the WebSocket Connection */
+    CraftSocket.prototype.close = function() {
+        this.Socket.close();
+    };
 
     /**
      * Variable that is used for Data Binding and other reactive processes
@@ -737,54 +629,37 @@ function _typeof(obj) {
      * @param {function} handle - function that gets called whenever the ReactiveVariable changes -> "function( OldValue , newValue ) {...}"
      * @returns {*} Returns the value assigned to the ReactiveVariable
      */
-
-    var _ReactiveVariable = (function() {
-        function _ReactiveVariable(val, handle) {
-            _classCallCheck(this, _ReactiveVariable);
-
-            if (is.Func(handle)) {
-                this.val = val;
-                this.Handle = handle;
-            } else console.error('ReactiveVariable needs a handler function after the value');
+    function _ReactiveVariable(val, handle) {
+        if (is.Func(handle)) {
+            this.val = val;
+            this.Handle = handle;
+        } else console.error('ReactiveVariable needs a handler function after the value');
+    }
+    /**
+     * Sets the new value of the ReactiveVariable , this will also call the handle function
+     * @param {*} val - new value to assign the ReactiveVariable
+     */
+    _ReactiveVariable.prototype.set = function(val) {
+        if (this.val !== val) {
+            this.Oldval = this.val;
+            this.val = val;
+            this.Handle(this.Oldval, val);
         }
-        /**
-         * Sets the new value of the ReactiveVariable , this will also call the handle function
-         * @param {*} val - new value to assign the ReactiveVariable
-         */
-
-        _createClass(_ReactiveVariable, [{
-            key: 'set',
-            value: function set(val) {
-                    if (this.val !== val) {
-                        this.Oldval = this.val;
-                        this.val = val;
-                        this.Handle(this.Oldval, val);
-                    }
-                    return this.val;
-                }
-                /**
-                 * Gets the value of the ReactiveVariable , ReactiveVariable.val also does this
-                 */
-
-        }, {
-            key: 'get',
-            value: function get() {
-                    return this.val;
-                }
-                /**
-                 * Redefine the handle function of the ReactiveVariable
-                 * @param {function} handle - function that gets called whenever the ReactiveVariable changes -> "function( OldValue , newValue ) {...}"
-                 */
-
-        }, {
-            key: 'reset',
-            value: function reset(handle) {
-                is.Func(handle) ? this.Handle = handle : console.error('ReactiveVariable.Reset only takes a function');
-            }
-        }]);
-
-        return _ReactiveVariable;
-    })();
+        return this.val;
+    };
+    /**
+     * Gets the value of the ReactiveVariable , ReactiveVariable.val also does this
+     */
+    _ReactiveVariable.prototype.get = function() {
+        return this.val;
+    };
+    /**
+     * Redefine the handle function of the ReactiveVariable
+     * @param {function} handle - function that gets called whenever the ReactiveVariable changes -> "function( OldValue , newValue ) {...}"
+     */
+    _ReactiveVariable.prototype.reset = function(handle) {
+        is.Func(handle) ? this.Handle = handle : console.error('ReactiveVariable.Reset only takes a function');
+    };
 
     /**
      * Event Handling Class
@@ -794,83 +669,65 @@ function _typeof(obj) {
      * @param {...*} args - extra optional arguments/parameters to pass to the handler function
      * @returns Interface On,Off,Once
      */
-
-    var EventHandler = (function() {
-        function EventHandler(EventType, Target, Func, Within) {
-            for (var _len19 = arguments.length, args = Array(_len19 > 4 ? _len19 - 4 : 0), _key19 = 4; _key19 < _len19; _key19++) {
-                args[_key19 - 4] = arguments[_key19];
-            }
-
-            _classCallCheck(this, EventHandler);
-
-            this.EventType = EventType;
-            this.Target = Target !== root && Target !== doc ? QueryOrNodetoNodeArray(Target, Within) : Target;
-            this.FuncWrapper = function(e) {
-                return Func(e, e.srcElement, args || []);
-            };
+    function EventHandler(EventType, Target, Func, Within) {
+        for (var _len8 = arguments.length, args = Array(_len8 > 4 ? _len8 - 4 : 0), _key8 = 4; _key8 < _len8; _key8++) {
+            args[_key8 - 4] = arguments[_key8];
         }
-        /**
-         * Activates the EventHandler to start listening for the EventType on the Target/Targets
-         */
 
-        _createClass(EventHandler, [{
-            key: 'On',
-            value: function On() {
-                    var _this3 = this;
+        this.EventType = EventType;
+        this.Target = Target !== root && Target !== doc ? QueryOrNodetoNodeArray(Target, Within) : Target;
+        this.FuncWrapper = function(e) {
+            return Func(e, e.srcElement, args || []);
+        };
+    }
+    /**
+     * Activates the EventHandler to start listening for the EventType on the Target/Targets
+     */
+    EventHandler.prototype.On = function() {
+        var _this3 = this;
 
-                    is.Arr(this.Target) ? this.Target.forEach(function(target) {
-                        return target.addEventListener(_this3.EventType, _this3.FuncWrapper);
-                    }) : this.Target.addEventListener(this.EventType, this.FuncWrapper);
-                    return this;
-                }
-                /**
-                 * De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
-                 * can still optionally be re-activated with On again
-                 */
+        is.Arr(this.Target) ? this.Target.forEach(function(target) {
+            return target.addEventListener(_this3.EventType, _this3.FuncWrapper);
+        }) : this.Target.addEventListener(this.EventType, this.FuncWrapper);
+        return this;
+    };
+    /**
+     * De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
+     * can still optionally be re-activated with On again
+     */
+    EventHandler.prototype.Off = function() {
+        var _this4 = this;
 
-        }, {
-            key: 'Off',
-            value: function Off() {
-                    var _this4 = this;
-
-                    is.Arr(this.Target) ? this.Target.forEach(function(target) {
-                        return target.removeEventListener(_this4.EventType, _this4.FuncWrapper);
-                    }) : this.Target.removeEventListener(this.EventType, this.FuncWrapper);
-                    return this;
-                }
-                /**
-                 * Once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
-                 * the Handler function will be called only Once
-                 */
-
-        }, {
-            key: 'Once',
-            value: function Once() {
-                var func = this.FuncWrapper,
-                    target = this.Target,
-                    etype = this.EventType,
-                    listenOnce = function listenOnce(e) {
-                        func(e);
-                        is.Arr(target) ? target.forEach(function(t) {
-                            return t.removeEventListener(etype, listenOnce);
-                        }) : target.removeEventListener(etype, listenOnce);
-                    };
+        is.Arr(this.Target) ? this.Target.forEach(function(target) {
+            return target.removeEventListener(_this4.EventType, _this4.FuncWrapper);
+        }) : this.Target.removeEventListener(this.EventType, this.FuncWrapper);
+        return this;
+    };
+    /**
+     * Once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
+     * the Handler function will be called only Once
+     */
+    EventHandler.prototype.Once = function() {
+        var func = this.FuncWrapper,
+            target = this.Target,
+            etype = this.EventType,
+            listenOnce = function listenOnce(e) {
+                func(e);
                 is.Arr(target) ? target.forEach(function(t) {
-                    return t.addEventListener(etype, listenOnce);
-                }) : target.addEventListener(etype, listenOnce);
-                return this;
-            }
-        }]);
-
-        return EventHandler;
-    })();
+                    return t.removeEventListener(etype, listenOnce);
+                }) : target.removeEventListener(etype, listenOnce);
+            };
+        is.Arr(target) ? target.forEach(function(t) {
+            return t.addEventListener(etype, listenOnce);
+        }) : target.addEventListener(etype, listenOnce);
+        return this;
+    };
 
     /**
      * Easy way to loop through Collections and Objects
      * @param {Array|Object|NodeList} iterable - any collection that is either an Object or has a .length value
      * @param {function} func - function called on each iteration -> "function( value , indexOrKey ) {...}"
      */
-
     root.forEach = function(iterable, func) {
         if (is.Undef(iterable)) throw new Error("forEach -> cannot iterate through undefined");
         if (!is.Func(func)) throw new Error("forEach -> invalid or undefined function provided");
@@ -890,12 +747,9 @@ function _typeof(obj) {
      * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
      */
     root.query = function(selector, element) {
-        return is.Def(element) ? ifelse(is.String(element), function() {
-            return doc.querySelector(element).querySelector(selector);
-        }, function() {
-            return element.querySelector(selector);
-        })() : doc.querySelector(selector);
+        return is.Def(element) ? is.String(element) ? doc.querySelector(element).querySelector(selector) : element.querySelector(selector) : doc.querySelector(selector);
     };
+
     /**
      * Easy way to get a DOM NodeList or NodeList within another DOM Node using CSS selectors
      * @param {string} selector - CSS selector to query the DOM Nodes with
@@ -997,8 +851,9 @@ function _typeof(obj) {
      * @returns On,Off,Once - when Once is defined as a variable "var x = Once(...)" it allows you to access all the EventHandler interfaces Off,Once,On
      */
     root.Once = function(EventType, Target, element, func) {
+        var args = Array.from(arguments);
         if (is.Func(Target)) return new EventHandler(EventType, root, Target).Once();
-        else if (arguments.length < 3 && !Array.from(arguments).some(function(i) {
+        else if (args.length < 3 && !args.some(function(i) {
                 return is.Func(i);
             })) {
             var _ret2 = (function() {
@@ -1062,12 +917,9 @@ function _typeof(obj) {
         if (is.Bool(inner) && inner === true) {
             NodeForm = inner;
             inner = '';
-            attributes = undefined;
         }
-        if (is.Bool(attributes)) {
-            NodeForm = attributes;
-            attributes = undefined;
-        }
+        if (is.Bool(attributes)) NodeForm = attributes;
+
         if (is.Undef(inner, attributes, NodeForm)) {
             inner = '';
             NodeForm = true;
@@ -1153,327 +1005,225 @@ function _typeof(obj) {
         };
     }
 
-    var domMethods = (function() {
-        function domMethods(element, within) {
-            _classCallCheck(this, domMethods);
+    function domManip(element, within) {
+        if (is.String(element)) is.Def(within) ? element = query(element, within) : element = query(element);
+        this.element = element;
+    }
+    /**
+     * changes or returns the innerHTML value of a Node
+     * @memberof dom
+     * @param {string=} sets the innerHTML value or when undefined gets the innerHTML value
+     */
+    domManip.prototype.html = function(val) {
+        if (!is.Def(val)) return this.element.innerHTML;
+        this.element.innerHTML = val;
+        return this;
+    };
+    /**
+     * changes or returns the textContent value of a Node
+     * @memberof dom
+     * @param {string=} sets the textContent value or when undefined gets the textContent value
+     */
+    domManip.prototype.text = function(val) {
+        if (is.Def(val)) return this.element.textContent;
+        this.element.textContent = val;
+        return this;
+    };
+    /**
+     * replaces a Node with another node provided as a parameter/argument
+     * @memberof dom
+     * @param {Node} Node to replace with
+     */
+    domManip.prototype.replace = function(val) {
+        this.element.parentNode.replaceChild(el, this.element);
+        return this;
+    };
+    /**
+     * append the Element to another node using either a CSS selector or a Node
+     * @memberof dom
+     * @param {Node|string} CSS selector or Node to append the this.element to
+     */
+    domManip.prototype.appendTo = function(val) {
+        if (is.String(val)) val = query(val);
+        if (val !== null) val.appendChild(this.element);
+        return this;
+    };
+    /**
+     * append text or a Node to the element
+     * @memberof dom
+     * @param {Node|string} String or Node to append to the this.element
+     */
+    domManip.prototype.append = function(val) {
+        is.String(val) ? this.element.innerHTML += val : this.element.appendChild(val);
+        return this;
+    };
+    /**
+     * prepend text or a Node to the element
+     * @memberof dom
+     * @param {Node|string} String or Node to prepend to the this.element
+     */
+    domManip.prototype.prepend = function(val) {
+        is.String(val) ? this.element.innerHTML = val + this.element.innerHTML : this.element.insertBefore(val, this.element.firstChild);
+        return this;
+    };
+    /**
+     * Listen for Events on the element or on all the elements in the NodeList
+     * @memberof dom
+     * @param {string} string indicating the type of event to listen for
+     * @param {function} func - handler function for the event
+     * @returns handler (Off,Once,On)
+     */
+    domManip.prototype.On = function(eventType, func) {
+        return On(eventType, this.element, func);
+    };
+    /**
+     * add CSS style rules to the Element or NodeList
+     * @memberof dom
+     * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
+     */
+    domManip.prototype.css = function(styles) {
+        var _this5 = this;
 
-            if (is.String(element)) is.Def(within) ? element = query(element, within) : element = query(element);
-            this.element = element;
+        is.Def(styles) ? forEach(styles, function(prop, key) {
+            return _this5.element.style[key] = prop;
+        }) : console.error('Styles Object undefined');
+        return this;
+    };
+    /**
+     * check if the element has got a specific CSS class
+     * @memberof dom
+     * @param {string} name of the class to check for
+     */
+    domManip.prototype.gotClass = function(Class) {
+        return this.element.classList.contains(Class);
+    };
+    /**
+     * Add a CSS class to the element
+     * @memberof dom
+     * @param {string} name of the class to add
+     */
+    domManip.prototype.addClass = function(Class) {
+        this.element.classList.add(Class);
+        return this;
+    };
+    /**
+     * removes a specific CSS class from the element
+     * @memberof dom
+     * @param {string} name of the class to strip
+     */
+    domManip.prototype.stripClass = function(Class) {
+        this.element.classList.remove(Class);
+        return this;
+    };
+    /**
+     * removes a specific Attribute from the this.element
+     * @memberof dom
+     * @param {string} name of the Attribute to strip
+     */
+    domManip.prototype.stripAttr = function(Attr) {
+        this.element.removeAttribute(Attr);
+        return this;
+    };
+    /**
+     * checks if the element has a specific Attribute
+     * @memberof dom
+     * @param {string} name of the Attribute to check for
+     */
+    domManip.prototype.hasAttr = function(Attr) {
+        return this.element.hasAttribute(Attr);
+    };
+    /**
+     * Sets or adds an Attribute on the element
+     * @memberof dom
+     * @param {string} Name of the Attribute to add/set
+     * @param {string} Value of the Attribute to add/set
+     */
+    domManip.prototype.setAttr = function(Attr, val) {
+        this.element.setAttribute(Attr, val);
+        return this;
+    };
+    domManip.prototype.getAttr = function(Attr) {
+        return this.element.getAttribute(Attr);
+    };
+    /**
+     * gets all the elements siblings within it's parentNode
+     * @memberof dom
+     */
+    domManip.prototype.getSiblings = function() {
+        var siblings = [],
+            AllChildren = this.element.parentNode.childNodes;
+        for (var _i = 0; _i < AllChildren.length; _i++) {
+            if (AllChildren[_i] !== this.element) siblings.push(AllChildren[_i]);
         }
-        /**
-         * changes or returns the innerHTML value of a Node
-         * @memberof dom
-         * @param {string=} sets the innerHTML value or when undefined gets the innerHTML value
-         */
-
-        _createClass(domMethods, [{
-            key: 'html',
-            value: function html(val) {
-                    if (!is.Def(val)) return this.element.innerHTML;
-                    this.element.innerHTML = val;
-                    return this;
-                }
-                /**
-                 * changes or returns the textContent value of a Node
-                 * @memberof dom
-                 * @param {string=} sets the textContent value or when undefined gets the textContent value
-                 */
-
-        }, {
-            key: 'text',
-            value: function text(val) {
-                    if (is.Def(val)) return this.element.textContent;
-                    this.element.textContent = val;
-                    return this;
-                }
-                /**
-                 * replaces a Node with another node provided as a parameter/argument
-                 * @memberof dom
-                 * @param {Node} Node to replace with
-                 */
-
-        }, {
-            key: 'replace',
-            value: function replace(val) {
-                    this.element.parentNode.replaceChild(el, this.element);
-                    return this;
-                }
-                /**
-                 * append the Element to another node using either a CSS selector or a Node
-                 * @memberof dom
-                 * @param {Node|string} CSS selector or Node to append the this.element to
-                 */
-
-        }, {
-            key: 'appendTo',
-            value: function appendTo(val) {
-                    if (is.String(val)) val = query(val);
-                    if (val !== null) val.appendChild(this.element);
-                    return this;
-                }
-                /**
-                 * append text or a Node to the element
-                 * @memberof dom
-                 * @param {Node|string} String or Node to append to the this.element
-                 */
-
-        }, {
-            key: 'append',
-            value: function append(val) {
-                    is.String(val) ? this.element.innerHTML += val : this.element.appendChild(val);
-                    return this;
-                }
-                /**
-                 * prepend text or a Node to the element
-                 * @memberof dom
-                 * @param {Node|string} String or Node to prepend to the this.element
-                 */
-
-        }, {
-            key: 'prepend',
-            value: function prepend(val) {
-                    is.String(val) ? this.element.innerHTML = val + this.element.innerHTML : this.element.insertBefore(val, this.element.firstChild);
-                    return this;
-                }
-                /**
-                 * Listen for Events on the element or on all the elements in the NodeList
-                 * @memberof dom
-                 * @param {string} string indicating the type of event to listen for
-                 * @param {function} func - handler function for the event
-                 * @returns handler (Off,Once,On)
-                 */
-
-        }, {
-            key: 'On',
-            value: (function(_On2) {
-                    function On(_x3, _x4) {
-                        return _On2.apply(this, arguments);
-                    }
-
-                    On.toString = function() {
-                        return _On2.toString();
-                    };
-
-                    return On;
-                })(function(eventType, func) {
-                    return On(eventType, this.element, func);
-                })
-                /**
-                 * add CSS style rules to the Element or NodeList
-                 * @memberof dom
-                 * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
-                 */
-
-        }, {
-            key: 'css',
-            value: function css(styles) {
-                    var _this5 = this;
-
-                    is.Def(styles) ? forEach(styles, function(prop, key) {
-                        return _this5.element.style[key] = prop;
-                    }) : console.error('Styles Object undefined');
-                    return this;
-                }
-                /**
-                 * check if the element has got a specific CSS class
-                 * @memberof dom
-                 * @param {string} name of the class to check for
-                 */
-
-        }, {
-            key: 'gotClass',
-            value: function gotClass(Class) {
-                    return this.element.classList.contains(Class);
-                }
-                /**
-                 * Add a CSS class to the element
-                 * @memberof dom
-                 * @param {string} name of the class to add
-                 */
-
-        }, {
-            key: 'addClass',
-            value: function addClass(Class) {
-                    this.element.classList.add(Class);
-                    return this;
-                }
-                /**
-                 * removes a specific CSS class from the element
-                 * @memberof dom
-                 * @param {string} name of the class to strip
-                 */
-
-        }, {
-            key: 'stripClass',
-            value: function stripClass(Class) {
-                    this.element.classList.remove(Class);
-                    return this;
-                }
-                /**
-                 * removes a specific Attribute from the this.element
-                 * @memberof dom
-                 * @param {string} name of the Attribute to strip
-                 */
-
-        }, {
-            key: 'stripAttr',
-            value: function stripAttr(Attr) {
-                    this.element.removeAttribute(Attr);
-                    return this;
-                }
-                /**
-                 * checks if the element has a specific Attribute
-                 * @memberof dom
-                 * @param {string} name of the Attribute to check for
-                 */
-
-        }, {
-            key: 'hasAttr',
-            value: function hasAttr(Attr) {
-                    return this.element.hasAttribute(Attr);
-                }
-                /**
-                 * Sets or adds an Attribute on the element
-                 * @memberof dom
-                 * @param {string} Name of the Attribute to add/set
-                 * @param {string} Value of the Attribute to add/set
-                 */
-
-        }, {
-            key: 'setAttr',
-            value: function setAttr(Attr, val) {
-                this.element.setAttribute(Attr, val);
-                return this;
-            }
-        }, {
-            key: 'getAttr',
-            value: function getAttr(Attr) {
-                    return this.element.getAttribute(Attr);
-                }
-                /**
-                 * gets all the elements siblings within it's parentNode
-                 * @memberof dom
-                 */
-
-        }, {
-            key: 'getSiblings',
-            value: function getSiblings() {
-                    var siblings = [],
-                        AllChildren = this.element.parentNode.childNodes;
-                    for (var _i = 0; _i < AllChildren.length; _i++) {
-                        if (AllChildren[_i] !== this.element) siblings.push(AllChildren[_i]);
-                    }
-                    return siblings;
-                }
-                /**
-                 * sets or gets the element's pixel width
-                 * @memberof dom
-                 * @param {string|number=} pixel value to set
-                 */
-
-        }, {
-            key: 'Width',
-            value: function Width(pixels) {
-                    if (is.Def(pixels)) {
-                        this.element.style.width = pixels;
-                        return this;
-                    }
-                    return this.element.getBoundingClientRect().width;
-                }
-                /**
-                 * sets or gets the element's pixel height
-                 * @memberof dom
-                 * @param {string|number=} pixel value to set
-                 */
-
-        }, {
-            key: 'Height',
-            value: function Height(pixels) {
-                    if (is.Def(pixels)) {
-                        this.element.style.height = pixels;
-                        return this;
-                    }
-                    return this.element.getBoundingClientRect().height;
-                }
-                /**
-                 * gets all the element's dimentions (width,height,left,top,bottom,right)
-                 * @memberof dom
-                 */
-
-        }, {
-            key: 'getRect',
-            value: function getRect() {
-                    return this.element.getBoundingClientRect();
-                }
-                /**
-                 * move the element using either css transforms or plain css possitioning
-                 * @param {string|num} x - x-axis position in pixels
-                 * @param {string|num} y - y-axis position in pixels
-                 * @param {boolean=} transform - should move set the position using css transforms or not
-                 * @param {string=} position - set the position style of the element absolute/fixed...
-                 * @param {boolean=} chainable - should this method be chainable defaults to false for performance reasons
-                 */
-
-        }, {
-            key: 'move',
-            value: function move(x, y, transform, position, chainable) {
-                    if (is.Bool(position)) chainable = position;
-                    if (is.String(transform)) position = transfrom;
-                    transform === true ? this.element.style.transform = 'translateX(' + x + 'px) translateY(' + y + 'px)' : this.css({
-                        position: is.String(position) ? position : '',
-                        left: x + 'px',
-                        top: y + 'px'
-                    });
-                    if (chainable) return this;
-                }
-                /**
-                 * performs a query inside the element
-                 * @memberof dom
-                 * @param {string} CSS selector
-                 * @returns {Node|Null}
-                 */
-
-        }, {
-            key: 'query',
-            value: (function(_query) {
-                    function query(_x5) {
-                        return _query.apply(this, arguments);
-                    }
-
-                    query.toString = function() {
-                        return _query.toString();
-                    };
-
-                    return query;
-                })(function(selector) {
-                    return query(selector, this.element);
-                })
-                /**
-                 * performs a queryAll inside the element
-                 * @memberof dom
-                 * @param {string} CSS selector
-                 * @returns {NodeList|Null}
-                 */
-
-        }, {
-            key: 'queryAll',
-            value: (function(_queryAll) {
-                function queryAll(_x6) {
-                    return _queryAll.apply(this, arguments);
-                }
-
-                queryAll.toString = function() {
-                    return _queryAll.toString();
-                };
-
-                return queryAll;
-            })(function(selector) {
-                return queryAll(selector, this.element);
-            })
-        }]);
-
-        return domMethods;
-    })();
+        return siblings;
+    };
+    /**
+     * sets or gets the element's pixel width
+     * @memberof dom
+     * @param {string|number=} pixel value to set
+     */
+    domManip.prototype.Width = function(pixels) {
+        if (is.Def(pixels)) {
+            this.element.style.width = pixels;
+            return this;
+        }
+        return this.element.getBoundingClientRect().width;
+    };
+    /**
+     * sets or gets the element's pixel height
+     * @memberof dom
+     * @param {string|number=} pixel value to set
+     */
+    domManip.prototype.Height = function(pixels) {
+        if (is.Def(pixels)) {
+            this.element.style.height = pixels;
+            return this;
+        }
+        return this.element.getBoundingClientRect().height;
+    };
+    /**
+     * gets all the element's dimentions (width,height,left,top,bottom,right)
+     * @memberof dom
+     */
+    domManip.prototype.getRect = function() {
+        return this.element.getBoundingClientRect();
+    };
+    /**
+     * move the element using either css transforms or plain css possitioning
+     * @param {string|num} x - x-axis position in pixels
+     * @param {string|num} y - y-axis position in pixels
+     * @param {boolean=} transform - should move set the position using css transforms or not
+     * @param {string=} position - set the position style of the element absolute/fixed...
+     * @param {boolean=} chainable - should this method be chainable defaults to false for performance reasons
+     */
+    domManip.prototype.move = function(x, y, transform, position, chainable) {
+        if (is.Bool(position)) chainable = position;
+        if (is.String(transform)) position = transfrom;
+        transform === true ? this.element.style.transform = 'translateX(' + x + 'px) translateY(' + y + 'px)' : this.css({
+            position: is.String(position) ? position : '',
+            left: x + 'px',
+            top: y + 'px'
+        });
+        if (chainable) return this;
+    };
+    /**
+     * performs a query inside the element
+     * @memberof dom
+     * @param {string} CSS selector
+     * @returns {Node|Null}
+     */
+    domManip.prototype.query = function(selector) {
+        return query(selector, this.element);
+    };
+    /**
+     * performs a queryAll inside the element
+     * @memberof dom
+     * @param {string} CSS selector
+     * @returns {NodeList|Null}
+     */
+    domManip.prototype.queryAll = function(selector) {
+        return queryAll(selector, this.element);
+    };
 
     /**
      * Function that returns many useful methods for interacting with and manipulating the DOM or creating elements
@@ -1482,15 +1232,16 @@ function _typeof(obj) {
      * @param {Node|NodeList|string=} element - optional Node, NodeList or CSS Selector that will be affected by the methods returned
      * @param {Node|string=} within - optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
      */
-
     root.dom = function(element, within) {
-        if (is.Node(element) || is.NodeList(element)) return is.Node(element) ? new domMethods(element) : domNodeList(element);
+        if (is.Node(element) || is.NodeList(element)) return is.Node(element) ? new domManip(element) : domNodeList(element);
         else if (is.String(element)) {
             var elements = is.String(within) || is.Node(within) ? queryAll(element, within) : queryAll(element);
-            return elements.length === 1 ? new domMethods(elements[0]) : domNodeList(elements);
+            return elements.length === 1 ? new domManip(elements[0]) : domNodeList(elements);
         }
         return Craft.dom;
     };
+
+    CrafterStyles = query('[crafterstyles]', head);
 
     /**
      * Craft is Crafter.js's Core containing most functionality.
@@ -1590,8 +1341,8 @@ function _typeof(obj) {
             });
         },
         concatObjects: function concatObjects(hostobj) {
-            for (var _len20 = arguments.length, Objs = Array(_len20 > 1 ? _len20 - 1 : 0), _key20 = 1; _key20 < _len20; _key20++) {
-                Objs[_key20 - 1] = arguments[_key20];
+            for (var _len9 = arguments.length, Objs = Array(_len9 > 1 ? _len9 - 1 : 0), _key9 = 1; _key9 < _len9; _key9++) {
+                Objs[_key9 - 1] = arguments[_key9];
             }
 
             forEach(hostobj, function(o) {
@@ -1609,17 +1360,39 @@ function _typeof(obj) {
         },
 
         mergeObjects: function mergeObjects(hostobj) {
-            for (var _len21 = arguments.length, Objs = Array(_len21 > 1 ? _len21 - 1 : 0), _key21 = 1; _key21 < _len21; _key21++) {
-                Objs[_key21 - 1] = arguments[_key21];
+            for (var _len10 = arguments.length, Objs = Array(_len10 > 1 ? _len10 - 1 : 0), _key10 = 1; _key10 < _len10; _key10++) {
+                Objs[_key10 - 1] = arguments[_key10];
             }
 
             return Object.assign(hostobj, Objs);
         },
+        clone: (function(_clone) {
+            function clone(_x3) {
+                return _clone.apply(this, arguments);
+            }
+
+            clone.toString = function() {
+                return _clone.toString();
+            };
+
+            return clone;
+        })(function(obj) {
+            if (obj === null || (typeof obj === 'undefined' ? 'undefined' : _typeof(obj)) !== 'object' || 'isActiveClone' in obj) return obj;
+            var temp = obj.constructor();
+            forEach(obj, function(val, key) {
+                if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                    obj['isActiveClone'] = null;
+                    temp[key] = clone(obj[key]);
+                    delete obj['isActiveClone'];
+                }
+            });
+            return temp;
+        }),
         omit: function omit(obj, val) {
             if (is.Object(obj) && obj !== val) forEach(obj, function(prop, key) {
                 if (val === key || val === prop) delete obj[key];
             });
-            else if (is.Arr(obj) || is.String(obj)) obj.forEach(function(i) {
+            else if (is.ArrayLike(obj)) obj.forEach(function(i) {
                 if (val === i) obj = Craft.omitFrom(obj, i);
             });
             if (is.Object(obj) && obj.hasOwnProperty(val) || obj.includes(val)) throw new Error('couldn\'t omit ' + val + ' from Collection');
@@ -1789,12 +1562,8 @@ function _typeof(obj) {
          * {...object} args - Objects containing options for Script/CSS/WebComponent import
          */
         Import: function Import() {
-            var promises = [];
-
-            for (var _len22 = arguments.length, args = Array(_len22), _key22 = 0; _key22 < _len22; _key22++) {
-                args[_key22] = arguments[_key22];
-            }
-
+            var promises = [],
+                args = Array.from(arguments);
             args.forEach(function(arg) {
                 return arg.test === false ? Craft.loader.remove(arg.css || arg.script) : promises.push(Craft.loader.fetchImport({
                     url: arg.css || arg.script,
@@ -1840,7 +1609,7 @@ function _typeof(obj) {
                 });
             },
             open: (function(_open) {
-                function open(_x7, _x8) {
+                function open(_x4, _x5) {
                     return _open.apply(this, arguments);
                 }
 
@@ -1870,7 +1639,7 @@ function _typeof(obj) {
                         vh.insertAdjacentHTML(position, txt);
                     });
                 }).catch(function(err) {
-                    return console.error('Couldn\'t fetch view -> ' + err);
+                    return console.error("Couldn't get view ->" + err);
                 });
                 else vh.insertAdjacentHTML(position, view);
             },
@@ -1919,31 +1688,22 @@ function _typeof(obj) {
             return setTimeout(func, ms);
         },
         after: function after(n, func) {
-            var _this6 = this;
-
             if (!is.Func(func) && is.Func(n)) func = n;
-            else throw new Error("Craft.after -> func is not a function");
+            else throw new Error("after -> func is not a function");
             n = Number.isFinite(n = +n) ? n : 0;
             if (--n < 1) return function() {
-                for (var _len23 = arguments.length, args = Array(_len23), _key23 = 0; _key23 < _len23; _key23++) {
-                    args[_key23] = arguments[_key23];
-                }
-
-                return func.apply(_this6, args);
+                return func.apply(this, arguments);
             };
         },
         debounce: function debounce(wait, func, immediate) {
             var timeout = undefined;
             return function() {
-                var _this7 = this;
+                var _this6 = this;
 
-                for (var _len24 = arguments.length, args = Array(_len24), _key24 = 0; _key24 < _len24; _key24++) {
-                    args[_key24] = arguments[_key24];
-                }
-
-                var later = function later() {
+                var args = arguments,
+                    later = function later() {
                         timeout = null;
-                        if (!immediate) func.apply(_this7, args);
+                        if (!immediate) func.apply(_this6, args);
                     },
                     callNow = immediate && !timeout;
                 clearTimeout(timeout);
@@ -2017,7 +1777,7 @@ function _typeof(obj) {
             try {
                 return val.length;
             } catch (e) {
-                console.error('could not find length of value' + e);
+                console.warn("Couldn't find length " + e);
             }
         },
         indexOfDate: function indexOfDate(Collection, date) {
@@ -2027,8 +1787,9 @@ function _typeof(obj) {
             return -1;
         },
         type: function type() {
-            var types = [];
-            Array.from(arguments).forEach(function(arg) {
+            var types = [],
+                args = arguments;
+            forEach(function(args) {
                 return types.push(typeof arg === 'undefined' ? 'undefined' : _typeof(arg));
             });
             return types.length < 2 ? types[0] : types;
@@ -2037,11 +1798,8 @@ function _typeof(obj) {
             if (!is.Func(func) || resolver && !is.Func(resolver)) throw new TypeError("arg provided is not a function");
             var cache = new WeakMap();
             var memoized = function memoized() {
-                for (var _len25 = arguments.length, args = Array(_len25), _key25 = 0; _key25 < _len25; _key25++) {
-                    args[_key25] = arguments[_key25];
-                }
-
-                var key = resolver ? resolver.apply(this, args) : args[0];
+                var args = Array.from(arguments),
+                    key = resolver ? resolver.apply(this, args) : args[0];
                 if (cache.has(key)) return cache.get(key);
                 var result = func.apply(this, args);
                 memoized.cache = cache.set(key, result);
@@ -2216,8 +1974,8 @@ function _typeof(obj) {
             if (caps === true && Craft.hasCapitals(pass) === false) return reasons ? 'Password should contain Capital letters' : false;
             if (number === true && /\d/g.test(pass) === false) return reasons ? 'Password should contain a number' : false;
 
-            for (var _len26 = arguments.length, includeChars = Array(_len26 > 5 ? _len26 - 5 : 0), _key26 = 5; _key26 < _len26; _key26++) {
-                includeChars[_key26 - 5] = arguments[_key26];
+            for (var _len11 = arguments.length, includeChars = Array(_len11 > 5 ? _len11 - 5 : 0), _key11 = 5; _key11 < _len11; _key11++) {
+                includeChars[_key11 - 5] = arguments[_key11];
             }
 
             if (includeChars.length !== 0) {
@@ -2292,7 +2050,8 @@ function _typeof(obj) {
         applyObjectProps: function applyObjectProps(okey, oval) {
             if (!okey.includes('.') && is.Object(oval) && !rv(oval)) Craft.forEachDeep(oval, function(prop, key, obj, path) {
                 if (rv(prop)) prop = prop.val;
-                queryEach('[' + ib + '="' + okey + '.' + path + '"],[' + vb + '="' + okey + '.' + path + '"]', function(el) {
+                var p = okey + '.' + path;
+                queryEach('[' + ib + '="' + p + '"],[' + vb + '="' + p + '"]', function(el) {
                     return is.Input(el) ? el.value = prop : el.innerHTML = prop;
                 });
             });
@@ -2311,22 +2070,22 @@ function _typeof(obj) {
         setBind: function setBind(key, val, Scope, parentignore) {
             var bind = undefined;
             if (is.Bool(Scope)) parentignore = Scope;
-            else if (!is.Map(Scope) || Scope === Craft.Binds) Scope = Craft.Binds;
+            if (!is.Map(Scope) || Scope === Craft.Binds) Scope = Craft.Binds;
             if (!key.includes('.')) {
                 bind = Scope.get(key);
                 rv(bind) ? bind.set(val) : Scope.set(key, val);
             } else {
                 var obj = undefined,
                     okey = key.split('.'),
-                    oldval = Craft.getBind(key, Scope, true);
-                bind = Scope.get(okey[0]);
-                if (rv(bind) && !parentignore) bind.Handle(rv(oldval) ? oldval.val : oldval, val);
+                    oldval = Craft.getBind(key, Scope, true),
+                    _bind = Scope.get(okey[0]);
+                if (rv(_bind) && !parentignore) _bind.Handle(rv(oldval) ? oldval.val : oldval, val, rv(_bind) ? _bind.val : _bind);
                 if (rv(oldval)) {
                     oldval.set(val);
                     val = oldval.val;
                 }
-                obj = Craft.setDeep(rv(bind) ? bind.val : bind || {}, Craft.omitFrom(okey, okey[0]).join('.'), val, true);
-                rv(bind) ? bind.set(obj) : Scope.set(okey[0], obj);
+                obj = Craft.setDeep(rv(_bind) ? _bind.val : _bind || {}, Craft.omitFrom(okey, okey[0]).join('.'), val, true);
+                rv(_bind) ? _bind.set(obj) : Scope.set(okey[0], obj);
             }
             queryEach('[' + ib + '="' + key + '"],[' + vb + '="' + key + '"]', function(el) {
                 return is.Input(el) ? el.value = val : el.innerHTML = val;
@@ -2377,9 +2136,9 @@ function _typeof(obj) {
             if (!is.Map(Scope)) Scope = Craft.Binds;
             if (!key.includes('.')) return Scope.has(key);
             try {
-                var splitkey = key.split('.'),
-                    bind = Craft.getBind(splitkey[0], Scope);
-                return is.Def(Craft.getDeep(bind, Craft.omitFrom(splitkey, splitkey[0]).join('.')));
+                var okey = key.split('.'),
+                    bind = Craft.getBind(okey[0], Scope);
+                return is.Def(Craft.getDeep(bind, Craft.omitFrom(okey, okey[0]).join('.')));
             } catch (e) {}
             return false;
         }
@@ -2431,8 +2190,8 @@ function _typeof(obj) {
     });
     Craft.curry.adaptTo = Craft.curry(function(num, fn) {
         return Craft.curry.to(num, function(context) {
-            for (var _len27 = arguments.length, args = Array(_len27 > 1 ? _len27 - 1 : 0), _key27 = 1; _key27 < _len27; _key27++) {
-                args[_key27 - 1] = arguments[_key27];
+            for (var _len12 = arguments.length, args = Array(_len12 > 1 ? _len12 - 1 : 0), _key12 = 1; _key12 < _len12; _key12++) {
+                args[_key12 - 1] = arguments[_key12];
             }
 
             return fn.apply(null, args.slice(1).concat(context));
@@ -2458,13 +2217,13 @@ function _typeof(obj) {
 
     Craft.newComponent('fetch-webcomponent', {
         inserted: function inserted() {
-            var _this8 = this;
+            var _this7 = this;
 
             var src = this.getAttribute('src');
             if (src !== null) {
                 var _ret7 = (function() {
                     var wc = null,
-                        el = dom(_this8),
+                        el = dom(_this7),
                         cc = 'cache-component';
                     if (Craft.WebComponents.includes(src)) return {
                         v: false
