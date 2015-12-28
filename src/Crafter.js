@@ -35,7 +35,6 @@
       ip: /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/
     },
     Ready = false,
-    Craft,
     processInvocation = (fn, argsArr, totalArity) => {
       argsArr = argsArr.length > totalArity ? argsArr.slice(0, totalArity) : argsArr;
       if (argsArr.length === totalArity) return fn.apply(null, argsArr);
@@ -51,6 +50,10 @@
         return eval(`false||function(${a.join(',')}){ return processInvocation(fn, args.concat(Array.from(arguments)));}`);
       })(fn, args, remainingArity);
     },
+    i = 'input',
+    b = '-bind',
+    ib = i + b,
+    vb = 'view-' + b,
     head = doc.getElementsByTagName('head')[0],
     CrafterStyles = doc.createElement('style'),
     ua = navigator.userAgent,
@@ -64,7 +67,7 @@
   CrafterStyles = doc.querySelector('[crafterstyles]', head);
 
   /** is - Type Testing / Assertion */
-  var is = {
+  root.is = {
     /**
      * Test if something is a boolean type
      * @param val - value to test
@@ -81,10 +84,14 @@
      */
     Arr: (...args) => args.length && args.every(o => Array.isArray(o)),
     /**
+     * See is.Arr , is.Array is a synonym
+     */
+    Array: (...args) => args.length && args.every(o => Array.isArray(o)),
+    /**
      * Test if something is an Array-Like
      * @param args - value/values to test
      */
-    Arraylike: (...args) => args.length && args.every(o => is.Def(o.length) ? true : false),
+    Arraylike: (...args) => args.length && args.every(o => is.Def(o['length']) ? true : false),
     /**
      * Determine whether a variable is undefined
      * @param args - value/values to test
@@ -352,13 +359,15 @@
       let type = typeof val;
       return type === 'function' ? RegExp('^' + String(Object.prototype.toString).replace(/[.*+?^${}()|[\]\/\\]/g, '\\$&').replace(/toString|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$').test(Function.prototype.toString.call(val)) : (val && type == 'object' && /^\[object .+?Constructor\]$/.test(val.toString)) || false;
     },
+    Input: element => element.tagName === 'INPUT' || element.tagName === 'TEXTAREA',
   };
 
+  let rv = is.ReactiveVariable;
   /**
    * Converts any Query/QueryAll to an Array of Nodes even if there is only one Node
    * @param {Node|NodeList|Array|String} val - pass either a CSS Selector string , Node/NodeList or Array of Nodes
    */
-  var QueryOrNodetoNodeArray = (val, within) => {
+  root.QueryOrNodetoNodeArray = (val, within) => {
     if (is.String(val) && is.String(within) || is.Node(within)) val = queryAll(val, within);
     else if (is.String(val)) val = queryAll(val);
     return ifelse(!is.Null(val) && is.Node(val), () => [val], () => is.NodeList(val) ? Array.from(val) : [])();
@@ -415,7 +424,6 @@
           this.val = val;
           this.Handle = handle;
         } else console.error('ReactiveVariable needs a handler function after the value');
-        return this.val
       }
       /**
        * Sets the new value of the ReactiveVariable , this will also call the handle function
@@ -495,7 +503,7 @@
    * @param {Array|Object|NodeList} iterable - any collection that is either an Object or has a .length value
    * @param {function} func - function called on each iteration -> "function( value , indexOrKey ) {...}"
    */
-  function forEach(iterable, func) {
+  root.forEach = function (iterable, func) {
     if (is.Undef(iterable)) throw new Error("forEach -> cannot iterate through undefined");
     if (!is.Func(func)) throw new Error("forEach -> invalid or undefined function provided");
     let i = 0;
@@ -511,20 +519,20 @@
    * @param {string} selector - CSS selector to query the DOM Node with
    * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
    */
-  var query = (selector, element) => is.Def(element) ? ifelse(is.String(element), () => doc.querySelector(element).querySelector(selector), () => element.querySelector(selector))() : doc.querySelector(selector);
+  root.query = (selector, element) => is.Def(element) ? ifelse(is.String(element), () => doc.querySelector(element).querySelector(selector), () => element.querySelector(selector))() : doc.querySelector(selector);
   /**
    * Easy way to get a DOM NodeList or NodeList within another DOM Node using CSS selectors
    * @param {string} selector - CSS selector to query the DOM Nodes with
    * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
    */
-  var queryAll = (selector, element) => is.Def(element) ? is.Node(element) || element === doc ? element.querySelectorAll(selector) : query(element).querySelectorAll(selector) : doc.querySelectorAll(selector);
+  root.queryAll = (selector, element) => is.Def(element) ? is.Node(element) || element === doc ? element.querySelectorAll(selector) : query(element).querySelectorAll(selector) : doc.querySelectorAll(selector);
   /**
    * Easy way to loop through Nodes in the DOM using a CSS Selector or a NodeList
    * @param {string|NodeList} selector - CSS selector to query the DOM Nodes with or NodeList to iterate through
    * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
    * @param {function} func - function called on each iteration -> "function( Element , index ) {...}"
    */
-  function queryEach(selector, element, func) {
+  root.queryEach = function (selector, element, func) {
     if (is.Func(element)) func = element;
     let elements, i = 0;
     is.Node(selector) ? elements = [selector] : elements = is.Func(element) ? queryAll(selector) : queryAll(selector, element);
@@ -538,7 +546,7 @@
    * @param {function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
    * @returns Off - when On is defined as a variable "var x = On(...)" it allows you to access all the EventHandler interfaces Off,Once,On
    */
-  function On(EventType, Target, element, func) {
+  root.On = function (EventType, Target, element, func) {
     if (is.Func(Target)) return new EventHandler(EventType, root, Target).On();
     else if (arguments.length < 3 && !Array.from(arguments).some(i => is.Func(i))) {
       let newEvent = (type, fn) => new EventHandler(type, EventType, fn, Target).On();
@@ -569,7 +577,7 @@
    * @param {function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
    * @returns On,Off,Once - when Once is defined as a variable "var x = Once(...)" it allows you to access all the EventHandler interfaces Off,Once,On
    */
-  function Once(EventType, Target, element, func) {
+  root.Once = function (EventType, Target, element, func) {
     if (is.Func(Target)) return new EventHandler(EventType, root, Target).Once();
     else if (arguments.length < 3 && !Array.from(arguments).some(i => is.Func(i))) {
       let newEvent = (type, fn) => new EventHandler(type, EventType, fn, Target).Once();
@@ -847,7 +855,7 @@
           left: `${x}px`,
           top: `${y}px`
         });
-        if (chainable === true) return this;
+        if (chainable) return this;
       }
       /**
        * performs a query inside the element
@@ -876,12 +884,10 @@
    * @param {Node|NodeList|string=} element - optional Node, NodeList or CSS Selector that will be affected by the methods returned
    * @param {Node|string=} within - optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
    */
-  let dom = (element, within) => {
-    if (is.Node(element)) return new domMethods(element);
-    else if (is.NodeList(element)) return new domNodeList(element);
+  root.dom = (element, within) => {
+    if (is.Node(element) || is.NodeList(element)) return is.Node(element) ? new domMethods(element) : domNodeList(element);
     else if (is.String(element)) {
       let elements = is.String(within) || is.Node(within) ? queryAll(element, within) : queryAll(element);
-      if (!elements.length) return console.warn(`dom('${element}') -> null CSS selector`);
       return elements.length === 1 ? new domMethods(elements[0]) : domNodeList(elements);
     }
     return Craft.dom;
@@ -891,7 +897,7 @@
   /**
    * Craft is Crafter.js's Core containing most functionality.
    */
-  Craft = {
+  root.Craft = {
     /** Converts an Array to an Object
      * @param {Array} arr - array to be converted
      */
@@ -909,7 +915,7 @@
           if (func(arr[i], i, arr)) result[++x] = arr[i];
         return result;
       },
-      omitFromIterable(Arr, val) {
+      omitFrom(Arr, val) {
         let index = Arr.indexOf(val),
           temp = [],
           string = false,
@@ -938,7 +944,7 @@
       getDeep(obj, propString) {
         if (is.Undef(propString)) return obj;
 
-        let prop, props = propString.split('.'),
+        let prop,val, props = propString.split('.'),
           candidate, i = 0,
           iLen = props.length - 1;
 
@@ -948,12 +954,9 @@
           if (is.Def(candidate)) obj = candidate;
           else break;
         }
-        let val;
         try {
           val = obj[props[i]];
-        } catch (e) {
-          val = undefined;
-        }
+        } catch (e) {}
         return val;
       },
       setDeep(obj, prop, value, returnObj) {
@@ -961,7 +964,8 @@
         if (prop.length > 1) {
           let e = prop.shift();
           Craft.setDeep(obj[e] = is.Object(obj[e]) ? obj[e] : {}, prop, value);
-        } else if (!is.ReactiveVariable(obj[prop[0]])) obj[prop[0]] = value;
+        } else if (!rv(obj[prop[0]]) && value !== undefined) obj[prop[0]] = value;
+        else if (value === undefined) delete obj[prop[0]];
         else obj[prop[0]].set(value);
         if (returnObj === true) return obj;
       },
@@ -978,7 +982,7 @@
         });
       },
       concatObjects(hostobj, ...Objs) {
-        forEach(hostobj, () => Objs.forEach(obj => forEach(obj, (prop, key) => {
+        forEach(hostobj,o => Objs.forEach(obj => forEach(obj, (prop, key) => {
           if (key in hostobj) {
             if (is.Arr(hostobj[key])) {
               if (!hostobj[key].includes(prop)) hostobj[key].push(prop);
@@ -993,10 +997,9 @@
           if (val === key || val === prop) delete obj[key];
         });
         else if (is.Arr(obj) || is.String(obj)) obj.forEach(i => {
-          if (val === i) obj = Craft.omitFromIterable(obj, i);
+          if (val === i) obj = Craft.omitFrom(obj, i);
         });
-        if (is.Object(obj) && obj.hasOwnProperty(val)) throw new Error(`couldn't omit ${val} from Object`);
-        else if (obj.includes(val)) throw new Error(`couldn't omit ${val} from Array/String/NodeList`);
+        if ((is.Object(obj) && obj.hasOwnProperty(val)) || obj.includes(val)) throw new Error(`couldn't omit ${val} from Collection`);
         return obj;
       },
       dom: {
@@ -1107,7 +1110,7 @@
             obj.expire = now + ((obj.expire || 4000) * 60 * 60 * 1000);
             if (obj.cache) localStorage.setItem(Craft.loader.pre + obj.key, JSON.stringify(obj));
             success(obj);
-          })).catch(err => failed(`Craft.loader problem fetching import -> ${err}`)));
+          })).catch(err => failed(`problem importing -> ${err}`)));
         },
         setPrekey: str => Craft.loader.pre = str + ':',
         get: key => JSON.parse(localStorage.getItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key) || false),
@@ -1132,8 +1135,8 @@
           exec: arg.execute !== false,
           cache: arg.cache !== false,
           defer: arg.defer ? 'defer' : null,
-          key: arg.key || undefined,
-          expire: arg.expire || undefined
+          key: arg.key,
+          expire: arg.expire
         })));
         return Promise.all(promises).then(src => src.map(obj => obj.exec ? obj.type === 'css' ? CrafterStyles.innerHTML += '\n' + obj.data : head.appendChild(dom().script(obj.data, 'key=' + obj.key, obj.defer)) : undefined));
       },
@@ -1166,8 +1169,8 @@
             let vh = is.String(selector) ? query(selector) : selector,
               prefixedSRC = (`Cr:${src}`),
               view = localStorage.getItem(prefixedSRC);
-            position = is.String(position) ? position : 'beforeend';
-            if (vh !== null && view === null) fetch(src).then(res => res.text().then(txt => {
+            if(!is.String(position)) position = 'beforeend';
+            if (!is.Null(vh) && is.Null(view)) fetch(src).then(res => res.text().then(txt => {
               if (cache === true && is.Null(view)) localStorage.setItem(prefixedSRC, txt);
               vh.insertAdjacentHTML(position, txt);
             })).catch(err => console.error(`Couldn't fetch view -> ${err}`));
@@ -1266,9 +1269,8 @@
       css: (el, styles) => is.Def(styles, el) && is.Node(el) ? forEach(styles, (prop, key) => el.style[key] = prop) : console.error('invalid args'),
       hasCapitals: string => Array.from(string).some(c => is.Uppercase(c)),
       OverrideFunction: (funcName, Func, ContextObject) => {
-        let namespaces = funcName.split("."),
-          func = namespaces.pop();
-        for (let i = 0; i < namespaces.length; i++) ContextObject = ContextObject[namespaces[i]];
+        let func = funcName.split(".").pop(), ns = funcName.split(".");
+        for (let i = 0; i < ns.length; i++) ContextObject = ContextObject[ns[i]];
         ContextObject[func] = Func;
       },
       len: val => {
@@ -1277,7 +1279,7 @@
         try {
           return val.length;
         } catch (e) {
-          console.error('could not find length of value')
+          console.error('could not find length of value'+e);
         }
       },
       indexOfDate(Collection, date) {
@@ -1285,11 +1287,10 @@
           if (+Collection[i] === +date) return i;
         return -1;
       },
-      type(...args) {
+      type() {
         let types = [];
-        args.forEach(arg => types.push(typeof arg));
-        if (types.length < 2) return types[0];
-        return types;
+        Array.from(arguments).forEach(arg => types.push(typeof arg));
+        return types.length < 2 ? types[0] : types;
       },
       memoize(func, resolver) {
         if (!is.Func(func) || (resolver && !is.Func(resolver))) throw new TypeError("arg provided is not a function");
@@ -1302,6 +1303,14 @@
           return result;
         };
         return memoized;
+      },
+      millis: {
+        seconds: n => (n || 1) * 1000,
+        minutes: n => (n || 1) * 60000,
+        hours: n => (n || 1) * 60000 * 60,
+        days: n => (n || 1) * 60000 * 60 * 24,
+        months: (n, daysInMonth) => n * Craft.millis.days((daysInMonth || 30)),
+        years: (n) => n * Craft.millis.days(365),
       },
       Scope: {},
       WebComponents: [],
@@ -1381,7 +1390,7 @@
           }, 25);
           setTimeout(() => {
             clearInterval(ReadyYet);
-            if (!Ready) reject("Things didn't load correctly/intime -> load failed");
+            if (!Ready) reject("Things didn't load correctly -> load failed");
           }, 4500)
         }
       }),
@@ -1456,7 +1465,7 @@
        * @param {object} config - Object containing all the element's lifecycle methods / extends and attached methods or properties
        */
       newComponent(tag, config) {
-        if (is.Undef(config)) throw new Error(`newComponent: ${tag} -> config is undefined`);
+        if (is.Undef(config)) throw new Error(`newComponent: ${tag} -> config undefined`);
         let element = Object.create(HTMLElement.prototype),
           settings = {};
         forEach(config, (prop, key) => {
@@ -1473,82 +1482,103 @@
       applyBinds(key, bindScope) {
         let bind, val = Craft.getBind(key, bindScope);
         if (is.Undef(val)) val = '';
-        is.Object(val) ? Craft.applyObjectProps(key, val) : queryEach(`[input-bind="${key}"],[view-bind="${key}"]`, el => el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' ? el.value = val : el.innerHTML = val);
+        is.Object(val) && !rv(val) ? Craft.applyObjectProps(key, val) : queryEach(`[${ib}="${key}"],[${vb}="${key}"]`, el => is.Input(el) ? el.value = val : el.innerHTML = val);
       },
       applyObjectProps(okey, oval) {
-        if (!okey.includes('.') && is.Object(oval) && !is.ReactiveVariable(oval)) Craft.forEachDeep(oval, (prop, key, obj, path) => {
-          if (is.ReactiveVariable(prop)) prop = prop.val;
-          queryEach(`[input-bind="${okey}.${path}"],[view-bind="${okey}.${path}"]`, el => el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' ? el.value = prop : el.innerHTML = prop);
+        if (!okey.includes('.') && is.Object(oval) && !rv(oval)) Craft.forEachDeep(oval, (prop, key, obj, path) => {
+          if (rv(prop)) prop = prop.val;
+          queryEach(`[${ib}="${okey}.${path}"],[${vb}="${okey}.${path}"]`, el => is.Input(el) ? el.value = prop : el.innerHTML = prop);
         });
       },
       /** creates a new bound variable , part of Crafter.js's Data Binding System */
-      newBind(key, val, handle, bindScope) {
-        if (key.includes('.')) is.Def(handle) ? Craft.setBind(key, new ReactiveVariable(val, handle), bindScope) : Craft.setBind(key, val, bindScope);
-        else is.Func(handle) ? Craft.Binds.set(key, new ReactiveVariable(val, handle)) : bindScope ? bindScope.set(key, val) : Craft.Binds.set(key, val);
-        Craft.applyBinds(key, bindScope);
+      newBind(key, val, handle, Scope) {
+        if (is.Map(handle)) Scope = handle;
+        if (!is.Map(Scope) || Scope === Craft.Binds) Scope = Craft.Binds;
+        if (is.Func(handle)) val = new ReactiveVariable(val, handle);
+        key.includes('.') ? Craft.setBind(key, val, Scope) : Scope.set(key, val);
+        Craft.applyBinds(key, Scope);
       },
       /** sets the value of a bound variable */
-      setBind(key, val, bindScope) {
+      setBind(key, val, Scope, parentignore) {
         let bind;
+        if (is.Bool(Scope)) parentignore = Scope;
+        else if (!is.Map(Scope) || Scope === Craft.Binds) Scope = Craft.Binds;
         if (!key.includes('.')) {
-          bind = is.Map(bindScope) ? bindScope.get(key) : Craft.Binds.get(key);
-          is.ReactiveVariable(bind) ? bind.set(val) : is.Map(bindScope) ? bindScope.set(key, val) : Craft.Binds.set(key, val);
+          bind = Scope.get(key);
+          rv(bind) ? bind.set(val) : Scope.set(key, val);
         } else {
+          let obj, okey = key.split('.'),
+            oldval = Craft.getBind(key, Scope, true);
+          bind = Scope.get(okey[0]);
+          if (rv(bind) && !parentignore) bind.Handle(rv(oldval) ? oldval.val : oldval, val);
+          if (rv(oldval)) {
+            oldval.set(val);
+            val = oldval.val;
+          }
+          obj = Craft.setDeep(rv(bind) ? bind.val : bind || {}, Craft.omitFrom(okey, okey[0]).join('.'), val, true);
+          rv(bind) ? bind.set(obj) : Scope.set(okey[0], obj);
+        }
+        queryEach(`[${ib}="${key}"],[${vb}="${key}"]`, el => is.Input(el) ? el.value = val : el.innerHTML = val);
+      },
+      /** gets the value of a bound variable */
+      getBind(key, Scope, returnReactiveVars) {
+        if (!is.Map(Scope) || Scope === Craft.Binds) Scope = Craft.Binds;
+        if (!Craft.BindExists(key, Scope)) return undefined;
+        if (is.Bool(Scope)) returnReactiveVars = Scope;
+        if (!key.includes('.')) {
+          let bind = Scope.get(key);
+          if (returnReactiveVars === true) return bind;
+          return rv(bind) ? bind.val : bind;
+        } else {
+          let okey = key.split('.'),
+            bind = Scope.get(okey[0]),
+            val = Craft.getDeep(rv(bind) ? bind.val : bind, Craft.omitFrom(okey, okey[0]).join('.'));
+          if (returnReactiveVars === true) return val;
+          return rv(val) ? val.val : val;
+        }
+      },
+      /**
+       *
+       */
+      deleteBind(key, Scope) {
+        let bind, val;
+        if (!is.Map(Scope) || Scope === Craft.Binds) Scope = Craft.Binds;
+        if (!key.includes('.')) Scope.delete(key);
+        else {
           let obj, okey = key.split('.');
-          bind = Craft.getBind(okey[0], bindScope, true) || {};
-          val = Craft.setDeep(is.ReactiveVariable(bind) ? bind.val : bind, Craft.omitFromIterable(okey, okey[0]).join('.'), val, true);
-          if (is.ReactiveVariable(bind)) {
+          bind = Craft.getBind(okey[0], Scope, true);
+          rv(bind) ? obj = bind.val : obj = bind;
+          val = Craft.setDeep(obj, Craft.omitFrom(okey, okey[0]).join('.'), undefined, true);
+          if (rv(bind)) {
             bind.set(val);
             val = bind;
           }
-          is.Map(bindScope) ? bindScope.set(okey[0], val) : Craft.Binds.set(okey[0], val);
+          Scope.set(okey[0], val);
         }
         Craft.applyBinds(key);
       },
-      /** gets the value of a bound variable */
-      getBind(key, bindScope, returnReactiveVars) {
-        if (!Craft.BindExists(key, bindScope)) return undefined;
-        if (is.Bool(bindScope)) returnReactiveVars = bindScope;
-        if (!key.includes('.')) {
-          let bind = is.Map(bindScope) ? bindScope.get(key) : Craft.Binds.get(key);
-          if (returnReactiveVars === true) return bind;
-          return is.ReactiveVariable(bind) ? bind.val : bind;
-        } else {
-          let okey = key.split('.'),
-            val,
-            bind = is.Map(bindScope) ? bindScope.get(okey[0]) : Craft.Binds.get(okey[0]);
-          val = Craft.getDeep(bind, Craft.omitFromIterable(okey, okey[0]).join('.'));
-          if (returnReactiveVars === true) return val;
-          return is.ReactiveVariable(val) ? val.val : val;
-        }
-      },
-      BindExists(key, bindScope) {
-        if (!key.includes('.')) return is.Map(bindScope) ? bindScope.has(key) : Craft.Binds.has(key);
+      BindExists(key, Scope) {
+        if (!is.Map(Scope)) Scope = Craft.Binds;
+        if (!key.includes('.')) return Scope.has(key);
         try {
           let splitkey = key.split('.'),
-            bind = Craft.getBind(splitkey[0], bindScope);
-          return is.Def(Craft.getDeep(bind, Craft.omitFromIterable(splitkey, splitkey[0]).join('.')));
+            bind = Craft.getBind(splitkey[0], Scope);
+          return is.Def(Craft.getDeep(bind, Craft.omitFrom(splitkey, splitkey[0]).join('.')));
         } catch (e) {}
         return false;
       },
   };
 
-  Craft.curry.to = Craft.curry((arity, fn) => createFn(fn, [], arity));
-  Craft.curry.adaptTo = Craft.curry((num, fn) => Craft.curry.to(num, (context, ...args) => fn.apply(null, args.slice(1).concat(context))));
-  Craft.curry.adapt = fn => Craft.curry.adaptTo(fn.length, fn);
-
-  Craft.loader.removeAll(true);
-
   On('animationstart', doc, e => {
     if (e.animationName === 'NodeInserted' && is.Node(e.target)) {
       let element = e.target,
-        isInput = element.tagName === 'INPUT' || element.tagName === 'TEXTAREA';
-      if (element.hasAttribute('input-bind')) {
-        let key = element.getAttribute('input-bind'),
-          OnInput = On('input', element, e => Craft.setBind(key, isInput ? element.value : element.innerHTML)),
+        isInput = is.Input(element);
+      if (element.hasAttribute(ib)) {
+        let key = element.getAttribute(ib),
+          OnInput = On(i, element, e => Craft.setBind(key, isInput ? element.value : element.innerHTML)),
           observer = new MutationObserver(mutations => mutations.forEach(mut => {
             if (mut.type === 'attributes') {
-              if (mut.attributeName === 'input-bind' && !element.hasAttribute('input-bind')) {
+              if (mut.attributeName === ib && !element.hasAttribute(ib)) {
                 OnInput.Off();
                 observer.disconnect();
               }
@@ -1557,19 +1587,23 @@
         observer.observe(element, {
           attributes: true
         });
-        if(Craft.BindExists(key)) {
+        if (Craft.BindExists(key)) {
           let val = Craft.getBind(key);
           isInput ? element.value = val : element.innerHTML = val;
         } else Craft.newBind(key, isInput ? element.value : element.innerHTML);
       }
-      if (element.hasAttribute('view-bind')) {
-        let key = element.getAttribute('view-bind');
+      if (element.hasAttribute(vb)) {
+        let key = element.getAttribute(vb);
         Craft.BindExists(key) ? Craft.applyBinds(key) : Craft.newBind(key, isInput ? element.value : element.innerHTML);
       }
       if (element.hasAttribute('link')) On('click', element, e => element.hasAttribute('newtab') ? open(element.getAttribute('link')) : Craft.router.open(element.getAttribute('link')));
     }
   });
 
+  Craft.curry.to = Craft.curry((arity, fn) => createFn(fn, [], arity));
+  Craft.curry.adaptTo = Craft.curry((num, fn) => Craft.curry.to(num, (context, ...args) => fn.apply(null, args.slice(1).concat(context))));
+  Craft.curry.adapt = fn => Craft.curry.adaptTo(fn.length, fn);
+  Craft.loader.removeAll(true);
   Craft.mouse.eventhandler = On('mousemove', e => {
     if (Craft.mouse.observe.val === true) {
       Craft.mouse.x = e.clientX;
@@ -1609,20 +1643,9 @@
     });
   });
 
-
   On('hashchange', e => Craft.router.handlers.forEach(handler => (location.hash === handler.link || location === handler.link) ? handler.func(location.hash) : null));
 
-  root.is = is;
-  root.dom = dom;
-  root.Craft = Craft;
-  root.On = On;
-  root.Once = Once;
-  root.forEach = forEach;
-  root.QueryOrNodetoNodeArray = QueryOrNodetoNodeArray;
   root.CraftSocket = CraftSocket;
   root.EventHandler = EventHandler;
   root.ReactiveVariable = ReactiveVariable;
-  root.query = query;
-  root.queryAll = queryAll;
-  root.queryEach = queryEach;
 })(document, self);
