@@ -23,7 +23,9 @@
     b = '-bind',
     ib = i + b,
     vb = 'view' + b,
-    head = doc.getElementsByTagName('head')[0],
+    w = 'webcomponent',
+    fw = 'fetch-' + w,
+    head = doc.head,
     CrafterStyles = doc.createElement('style'),
     ua = navigator.userAgent,
     tem, _br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
@@ -76,6 +78,14 @@
     return ta(arguments, o => o === null);
   }
 
+  function cutdot(str) {
+    return str.split('.');
+  }
+
+  function hasdot(str) {
+    return str.includes('.');
+  }
+
   /** is - Type Testing / Assertion */
   root.is = {
     /**
@@ -83,7 +93,7 @@
      * @param val - value to test
      */
     Bool() {
-        return ta(arguments, o => typeof val === 'boolean');
+        return ta(arguments, o => typeof o === 'boolean');
       },
       /**
        * Test if something is a String
@@ -400,18 +410,17 @@
        * @param {Object|Array|string} val - value to test if empty
        */
       empty(val) {
-        if (is.Object(val)) {
-          let num = Object.getOwnPropertyNames(val).length;
-          return (num === 0 || (num === 1 && is.Arr(val)) || (num === 2 && is.Args(val))) ? true : false
-        } else return is.Arr(val) ? val.length <= 0 : val === ''
+        let isO = is.Object(val),
+          isA = is.Arr(val),
+          num = isO ? Object.keys(val).length : null;
+        return isO ? num === 0 || (num === 1 && isA) || (num === 2 && is.Args(val)) : isA ? val.length <= 0 : val === ''
       },
       /**
        * Determines if a value is an instance of the ReactiveVariable class
        * @param args - value/values to test
        */
       ReactiveVariable() {
-        let args = toArr(arguments);
-        return args.length && args.every(o => o instanceof ReactiveVariable);
+        return ta(arguments, o => o instanceof ReactiveVariable);
       },
       /**
        * Test if something is a Native JavaScript feature
@@ -419,12 +428,17 @@
        */
       Native(val) {
         let type = typeof val;
-        return type === 'function' ? RegExp('^' + String(Object.prototype.toString).replace(/[.*+?^${}()|[\]\/\\]/g, '\\$&').replace(/toString|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$').test(Function.prototype.toString.call(val)) : (val && type == 'object' && /^\[object .+?Constructor\]$/.test(val.toString)) || false;
+        return is.Func(val) ? RegExp('^' + String(Object.prototype.toString).replace(/[.*+?^${}()|[\]\/\\]/g, '\\$&').replace(/toString|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$').test(Function.prototype.toString.call(val)) : (val && type == 'object' && /^\[object .+?Constructor\]$/.test(val.toString)) || false;
       },
       Input: element => element.tagName === 'INPUT' || element.tagName === 'TEXTAREA',
   };
 
   let rv = is.ReactiveVariable;
+
+  function rvVal(Var) {
+    return rv(Var) ? Var.val : Var;
+  }
+
   /**
    * Converts any Query/QueryAll to an Array of Nodes even if there is only one Node , this is error proof when no arguments are present it returns an empty array
    * @param {Node|NodeList|Array|String} val - pass either a CSS Selector string , Node/NodeList or Array of Nodes
@@ -573,20 +587,29 @@
     return this;
   }
 
+  function For(num, func) {
+    for (let i = 0; i < num; i++) func(i);
+  }
+
+  function forIn(obj, func) {
+    for (i in obj)
+      if (obj.hasOwnProperty(i)) func(obj[i], i);
+  }
+
   /**
    * Easy way to loop through Collections and Objects
    * @param {Array|Object|NodeList} iterable - any collection that is either an Object or has a .length value
    * @param {function} func - function called on each iteration -> "function( value , indexOrKey ) {...}"
    */
-  root.forEach = (iterable, func) => {
+  function forEach(iterable, func) {
     if (!def(iterable)) throw new Error("forEach -> iterable undefined");
     if (!is.Func(func)) throw new Error("forEach -> function invalid or undefined");
-    let i = 0;
-    if (def(iterable.length))
-      for (; i < iterable.length; i++) func(iterable[i], i);
+    let i = 0
+    if (is.Arraylike(iterable) && !localStorage)
+      for (; i < num; i++) func(iterable[i], i);
     else
       for (i in iterable)
-        if (iterable.hasOwnProperty(i)) func(iterable[i], i)
+        if (iterable.hasOwnProperty(i)) func(iterable[i], i);
   }
 
   /**
@@ -670,27 +693,24 @@
   }
 
   function make_element(name, inner, attributes, NodeForm, extraAttr) {
-    if (is.Bool(inner) && inner === true) {
-      NodeForm = inner;
-      inner = '';
-    }
+    let In = inner === true,
+      defIAN = !def(inner, attributes, NodeForm);
+    if (In) NodeForm = inner;
     if (is.Bool(attributes)) NodeForm = attributes;
-    if (!def(inner, attributes, NodeForm)) {
-      inner = '';
-      NodeForm = true;
-    }
+    if (defIAN) NodeForm = true;
+    if (In || defIAN) inner = '';
     if (NodeForm === true) {
       let newEl = doc.createElement(name);
       newEl.innerHTML = inner;
       if (is.Object(attributes)) forEach(attributes, (val, attr) => newEl.setAttribute(attr, val));
       if (is.String(attributes)) attributes.split('&').forEach(attr => def(attr.split('=')[1]) ? newEl.setAttribute(attr.split('=')[0], attr.split('=')[1]) : newEl.setAttribute(attr.split('=')[0], ''));
-      if (def(extraAttr) && is.Object(extraAttr)) forEach(extraAttr, (val, attr) => newEl.setAttribute(attr, val));
+      if (is.Object(extraAttr)) forEach(extraAttr, (val, attr) => newEl.setAttribute(attr, val));
       return newEl;
     }
     let attrString = ``;
     if (is.String(attributes)) attributes.split('&').forEach(attr => attrString += def(attr.split('=')[1]) ? `${attr.split('=')[0]}="${attr.split('=')[1]}" ` : `${attr.split('=')[0]} `);
     if (is.Object(attributes)) forEach(attributes, (val, attr) => attrString += ` ${attr}="${val}" `);
-    if (def(extraAttr) && is.Object(extraAttr)) forEach(extraAttr, (val, attr) => attrString += ` ${attr}="${val}" `);
+    if (is.Object(extraAttr)) forEach(extraAttr, (val, attr) => attrString += ` ${attr}="${val}" `);
     return `<${name} ${attrString}>${inner}</${name}>`;
   }
 
@@ -707,10 +727,9 @@
        * Checks wether a Node is in the NodeList with either a refference to the Node or a CSS selector
        * @param {Node|string} Node or CSS selector
        */
-      includes(SelectorNode) {
-        for (let i = 0; i < elements.length; i++)
-          if (elements[i] === SelectorNode) return true;
-        return false;
+      includes(selector) {
+        if (is.String(selector)) selector = query(selector);
+        return elements.length && toArr(elements).some(e => elements[i] === selector);
       },
       /**
        * add CSS style rules to NodeList
@@ -730,11 +749,12 @@
    * @memberof dom
    * @param {string=} sets the innerHTML value or when undefined gets the innerHTML value
    */
-  domManip.prototype.html = function (val) {
-      let el = this.element;
-      if (!def(val)) return is.Input(el) ? el.value : el.innerHTML;
-      is.Input(el) ? el.value = val : el.innerHTML = val;
-      return this;
+  domManip.prototype.html = function (val, position) {
+      let el = this.element,
+        input = is.Input(el),
+        hv = def(val);
+      if (hv) input ? el.value = val : el.innerHTML = val;
+      return hv ? this : input ? el.value : el.innerHTML;
     }
     /**
      * changes or returns the textContent value of a Node
@@ -744,9 +764,9 @@
   domManip.prototype.text = function (val) {
       let el = this.element,
         input = is.Input(el);
-      if (!def(val)) return input ? el.value : el.textContent;
-      input ? el.value = val : el.textContent = val;
-      return this;
+
+      if (def(val)) input ? el.value = val : el.textContent = val;
+      return def(val) ? this : input ? el.value : el.textContent;
     }
     /**
      * replaces a Node with another node provided as a parameter/argument
@@ -764,7 +784,7 @@
      */
   domManip.prototype.appendTo = function (val) {
       if (is.String(val)) val = query(val);
-      if (val !== null) val.appendChild(this.element);
+      if (!nil(val)) val.appendChild(this.element);
       return this;
     }
     /**
@@ -773,7 +793,8 @@
      * @param {Node|string} String or Node to append to the this.element
      */
   domManip.prototype.append = function (val) {
-      is.String(val) ? this.element.innerHTML += val : this.element.appendChild(val);
+      let el = this.element;
+      is.Node(val) ? el.appendChild(val) : el.insertAdjacentHTML('beforeend', val);
       return this;
     }
     /**
@@ -782,7 +803,8 @@
      * @param {Node|string} String or Node to prepend to the this.element
      */
   domManip.prototype.prepend = function (val) {
-      is.String(val) ? this.element.innerHTML = val + this.element.innerHTML : this.element.insertBefore(val, this.element.firstChild);
+      let el = this.element;
+      is.Node(val) ? el.insertBefore(val, el.firstChild) : el.insertAdjacentHTML('afterbegin', val);
       return this;
     }
     /**
@@ -1024,13 +1046,13 @@
         forEach(object, (val, key) => {
           currentPath = path;
           nestable = false;
-          is.Arr(object) ? currentPath += `[${key}]` : !currentPath ? currentPath = key : currentPath += `.${key}`;
+          is.Arr(object) ? currentPath += `[${key}]` : !currentPath ? currentPath = key : currentPath += '.' + key;
           nestable = fn(val, key, object, currentPath) !== false;
           if (nestable && (is.Arr(val) || is.Object(val))) Craft.forEachDeep(val, fn, currentPath);
         });
       },
-      concatObjects(hostobj, ...Objs) {
-        forEach(hostobj, o => Objs.forEach(obj => forEach(obj, (prop, key) => {
+      concatObjects(hostobj) {
+        forEach(hostobj, o => Craft.omitFrom(toArr(arguments), hostobj).forEach(obj => forEach(obj, (prop, key) => {
           if (key in hostobj) {
             if (is.Arr(hostobj[key])) {
               if (!hostobj[key].includes(prop)) hostobj[key].push(prop);
@@ -1040,10 +1062,10 @@
         return hostobj;
       },
       clone(obj) {
-        if (obj === null || typeof (obj) !== 'object' || 'isActiveClone' in obj) return obj;
+        if (nil(obj) || !is.Object(obj) || 'isActiveClone' in obj) return obj;
         var temp = obj.constructor();
         forEach(obj, (val, key) => {
-          if (Object.prototype.hasOwnProperty.call(obj, key)) {
+          if (obj.hasOwnPropert.call(key)) {
             obj['isActiveClone'] = null;
             temp[key] = clone(obj[key]);
             delete obj['isActiveClone'];
@@ -1058,7 +1080,6 @@
         else if (is.ArrayLike(obj)) obj.forEach(i => {
           if (val === i) obj = Craft.omitFrom(obj, i);
         });
-        if ((is.Object(obj) && obj.hasOwnProperty(val)) || obj.includes(val)) throw new Error(`couldn't omit ${val} from Collection`);
         return obj;
       },
       dom: {
@@ -1169,15 +1190,14 @@
             obj.expire = now + ((obj.expire || 4000) * 60 * 60 * 1000);
             if (obj.cache) localStorage.setItem(Craft.loader.pre + obj.key, JSON.stringify(obj));
             success(obj);
-          })).catch(err => failed(`problem importing -> ${err}`)));
+          })).catch(err => failed(`error importing -> ${err}`)));
         },
         setPrekey: str => Craft.loader.pre = str + ':',
         get: key => JSON.parse(localStorage.getItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key) || false),
         remove: key => localStorage.removeItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key),
-        removeAll(expired) {
-          for (let i in localStorage)
-            if (!expired || Craft.loader.get(i).expire <= +new Date()) Craft.loader.remove(i)
-        }
+        removeAll: expired => For(localStorage, i => {
+          if (!expired || Craft.loader.get(i).expire <= +new Date()) Craft.loader.remove(i);
+        }),
       },
       /**
        * Crafter.js resource loader for Scripts and Style sheets,
@@ -1218,27 +1238,24 @@
           handlers: [],
           links: [],
           link: (Selector, link, newtab, eventType) => Craft.router.links.push(() => On(is.String(eventType) ? eventType : 'click', Selector, e => newtab ? open(link) : location = link)),
-          open: (link, newtab) => newtab ? open(link) : location = link,
+          open(link, newtab) {
+            newtab ? open(link) : location = link
+          },
           setTitle: title => doc.title = title,
           setView(selector, view, position) {
-            let vh = is.String(selector) ? query(selector) : selector;
-            vh.insertAdjacentHTML(is.String(position) ? position : 'beforeend', view);
+            dom(selector).html(view, position)
           },
           fetchView(selector, src, cache, position) {
-            let vh = is.String(selector) ? query(selector) : selector,
-              prefixedSRC = (`Cr:${src}`),
-              view = localStorage.getItem(prefixedSRC);
-            if (!is.String(position)) position = 'beforeend';
-            if (!nil(vh) && nil(view)) fetch(src).then(res => res.text().then(txt => {
-              if (is.True(cache, nil(view))) localStorage.setItem(prefixedSRC, txt);
-              vh.insertAdjacentHTML(position, txt);
-            })).catch(err => console.error("Couldn't get view ->" + err));
-            else vh.insertAdjacentHTML(position, view);
+            let vh = dom(selector),
+              srcpre = (`Cr:${src}`),
+              view = localStorage.getItem(srcpre);
+            if (!def(vh.element)) return;
+            nil(view) ? fetch(src).then(res => res.text().then(txt => {
+              if (is.True(cache, nil(view))) localStorage.setItem(srcpre, txt);
+              vh.html(txt, position);
+            })).catch(err => console.error("fetchView: " + err)) : vh.html(view, position);
           },
-          clearCache() {
-            for (let i in localStorage)
-              if (localStorage.key(i).includes("Cr:")) localStorage.removeItem(localStorage.key(i));
-          },
+          clearViews: () => For(localStorage, i => localStorage.removeItem(localStorage.key(i).includes("Cr:"))),
       },
       Cookies: {
         get: (key) => key ? decodeURIComponent(doc.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1")) || null : null,
@@ -1313,7 +1330,7 @@
             previous = now;
             result = func.apply(context, args);
             if (!timeout) context = args = null;
-          } else if (!timeout && options.trailing !== false) timeout = setTimeout(later, remaining);
+          } else if (!timeout && options.trailing === true) timeout = setTimeout(later, remaining);
           return result;
         };
       },
@@ -1341,6 +1358,8 @@
         } catch (e) {}
         return -1;
       },
+      For: For,
+      forIn: forIn,
       indexOfDate(Collection, date) {
         for (let i = 0; i < Collection.length; i++)
           if (+Collection[i] === +date) return i;
@@ -1351,6 +1370,7 @@
         toArr(arguments).forEach(arg => types.push(typeof arg));
         return types.length < 2 ? types[0] : types;
       },
+      toggle: bool => !bool,
       memoize(func, resolver) {
         if (!is.Func(func) || (resolver && !is.Func(resolver))) throw new TypeError("no function");
         let cache = new WeakMap;
@@ -1395,7 +1415,6 @@
         options = options || {};
         options.duration = options.duration || 400;
         options.offset = options.offset || 0;
-        options.func = options.func || undefined;
 
         let startTime, elapsedTime, start = root.pageYOffset,
           distance = is.String(target) ? options.offset + query(target).getBoundingClientRect().top : target,
@@ -1414,16 +1433,27 @@
         requestAnimationFrame(time => loop(time))
       },
       nodeExists: (selector, within) => queryAll(selector, (is.Node(within) ? within = within : within = query(within))) !== null,
-      ObjToFormData(obj) {
-        let key, formData = new FormData();
-        for (key in obj) formData.append(key, obj[key]);
+      /**
+       * converts Objects or URL variable strings to a FormData object
+       * @param {object|string} val - values to convert
+       */
+      toFormData(val) {
+        let formData = new FormData();
+        if (is.String(val)) val = val.split('&');
+        forEach(val, v => {
+          if (is.String(v)) {
+            v = v.split('=');
+            if (v.length === 1) v[1] = '';
+            formData.append(v[0], v[1]);
+          } else formData.append(key, v);
+        });
         return formData;
       },
       URLfrom: text => URL.createObjectURL(new Blob([text])),
       OnScroll: (element, func) => is.Func(func) ? On('scroll', element, e => func(e.deltaY < 1 ? false : true, e)) : console.error('second param needs to be a function'),
       OnResize: func => is.Func(func) ? Craft.ResizeHandlers.add(func) : console.error("Craft.OnResize -> func is not a function"),
       OnScrolledTo: Scroll => new Promise((pass, fail) => {
-        let evl = On('scroll', e => pageYOffset >= Scroll ? pass(e, evl) : fail(e, evl));
+        let ev = On('scroll', e => pageYOffset >= Scroll ? pass(e, ev) : fail(e, ev));
       }),
       WhenScrolledTo: Scroll => new Promise((pass, fail) => Once('scroll', e => pageYOffset >= Scroll || pageYOffset <= Scroll ? pass(e) : fail(e))),
       /**
@@ -1446,23 +1476,20 @@
           }, 4500)
         }
       }),
-      poll: (test, interval, timeout, success, fail) => (() => {
-        if (is.Func(timeout)) {
-          if (is.Func(success)) fail = success;
-          success = timeout;
-          timeout = undefined;
-        }
+      poll: (test, interval, timeout) => new Promise((pass, fail) => {
+        if (!def(timeout)) interval = timeout;
+        let bool = is.Bool(test) && test === true;
         let Interval = setInterval(() => {
-          if ((is.Bool(test) && test === true) || (is.Func(test) && test() === true)) {
-            success();
+          if (bool || (is.Func(test) && test() === true)) {
+            pass();
             clearInterval(Interval);
           }
         }, interval || 20);
         if (is.Num(timeout)) setTimeout(() => {
+          if (bool || (is.Func(test) && test() === false)) fail();
           clearInterval(Interval);
-          if ((is.Bool(test) && test === false) || (is.Func(test) && test() === false)) fail();
         }, timeout);
-      })(),
+      }),
       /**
        * Usefull method for validating passwords , example Craft.strongPassword('#MyFancyPassword18',8,true,true,"#") -> true requirements met
        * @param {string} pass - string containing the password
@@ -1534,60 +1561,58 @@
       applyBinds(key, bindScope) {
         let bind, val = Craft.getBind(key, bindScope);
         if (!def(val)) val = '';
-        is.Object(val) && !rv(val) ? Craft.applyObjectProps(key, val) : queryEach(`[${ib}="${key}"],[${vb}="${key}"]`, el => is.Input(el) ? el.value = val : el.innerHTML = val);
+        is.Object(val) && !rv(val) ? Craft.applyObjectProps(key, val) : queryEach(`[${ib}="${key}"],[${vb}="${key}"]`, el => dom(el).html(val));
       },
       applyObjectProps(okey, oval) {
-        if (!okey.includes('.') && is.Object(oval) && !rv(oval)) Craft.forEachDeep(oval, (prop, key, obj, path) => {
+        if (!hasdot(okey) && is.Object(oval) && !rv(oval)) Craft.forEachDeep(oval, (prop, key, obj, path) => {
           if (rv(prop)) prop = prop.val;
           let p = `${okey}.${path}`;
-          queryEach(`[${ib}="${p}"],[${vb}="${p}"]`, el => is.Input(el) ? el.value = prop : el.innerHTML = prop);
+          queryEach(`[${ib}="${p}"],[${vb}="${p}"]`, el => dom(el).html(prop));
         });
       },
       /** creates a new bound variable , part of Crafter.js's Data Binding System */
       newBind(key, val, handle, Scope) {
         if (is.Map(handle)) Scope = handle;
-        if (!is.Map(Scope)) Scope = Craft.Binds;
+        else if (!is.Map(Scope)) Scope = Craft.Binds;
         if (is.Func(handle)) val = new ReactiveVariable(val, handle);
-        key.includes('.') ? Craft.setBind(key, val, Scope) : Scope.set(key, val);
+        cutdot(key) ? Craft.setBind(key, val, Scope) : Scope.set(key, val);
         Craft.applyBinds(key, Scope);
       },
       /** sets the value of a bound variable */
       setBind(key, val, Scope, parentignore) {
-        let bind;
         if (is.Bool(Scope)) parentignore = Scope;
         if (!is.Map(Scope)) Scope = Craft.Binds;
-        if (!key.includes('.')) {
-          bind = Scope.get(key);
+        if (!hasdot(key)) {
+          let bind = Scope.get(key);
           rv(bind) ? bind.set(val) : Scope.set(key, val);
         } else {
-          let obj, okey = key.split('.'),
+          let obj, okey = cutdot(key),
             oldval = Craft.getBind(key, Scope, true),
             bind = Scope.get(okey[0]);
-          if (rv(bind) && !parentignore) bind.Handle(rv(oldval) ? oldval.val : oldval, val, rv(bind) ? bind.val : bind);
+          if (rv(bind) && !parentignore) bind.Handle(rvVal(oldval), val, rvVal(bind));
           if (rv(oldval)) {
             oldval.set(val);
-            val = oldval.val;
+            val = rvVal(oldval);
           }
-          obj = Craft.setDeep(rv(bind) ? bind.val : bind || {}, Craft.omitFrom(okey, okey[0]).join('.'), val, true);
+          obj = Craft.setDeep(rvVal(bind) || {}, Craft.omitFrom(okey, okey[0]).join('.'), val, true);
           rv(bind) ? bind.set(obj) : Scope.set(okey[0], obj);
         }
-        queryEach(`[${ib}="${key}"],[${vb}="${key}"]`, el => is.Input(el) ? el.value = val : el.innerHTML = val);
+        queryEach(`[${ib}="${key}"],[${vb}="${key}"]`, el => dom(el).html(val));
       },
       /** gets the value of a bound variable */
-      getBind(key, Scope, returnReactiveVars) {
+      getBind(key, Scope, rrv) {
+        if (is.Bool(Scope)) rrv = Scope;
         if (!is.Map(Scope)) Scope = Craft.Binds;
-        if (is.Bool(Scope)) returnReactiveVars = Scope;
+        rrv = rrv === true;
         if (!Craft.BindExists(key, Scope)) return undefined;
-        if (!key.includes('.')) {
+        if (!hasdot(key)) {
           let bind = Scope.get(key);
-          if (returnReactiveVars === true) return bind;
-          return rv(bind) ? bind.val : bind;
+          return rrv ? bind : rvVal(bind);
         } else {
-          let okey = key.split('.'),
+          let okey = cutdot(key),
             bind = Scope.get(okey[0]),
-            val = Craft.getDeep(rv(bind) ? bind.val : bind, Craft.omitFrom(okey, okey[0]).join('.'));
-          if (returnReactiveVars === true) return val;
-          return rv(val) ? val.val : val;
+            val = Craft.getDeep(rvVal(bind), Craft.omitFrom(okey, okey[0]).join('.'));
+          return rrv ? val : rvVal(val);
         }
       },
       /**
@@ -1596,9 +1621,9 @@
       deleteBind(key, Scope) {
         let bind, val;
         if (!is.Map(Scope) || Scope === Craft.Binds) Scope = Craft.Binds;
-        if (!key.includes('.')) Scope.delete(key);
+        if (!hasdot(key)) Scope.delete(key);
         else {
-          let obj, okey = key.split('.');
+          let obj, okey = cutdot(key);
           bind = Craft.getBind(okey[0], Scope, true);
           rv(bind) ? obj = bind.val : obj = bind;
           val = Craft.setDeep(obj, Craft.omitFrom(okey, okey[0]).join('.'), undefined, true);
@@ -1612,11 +1637,10 @@
       },
       BindExists(key, Scope) {
         if (!is.Map(Scope)) Scope = Craft.Binds;
-        if (!key.includes('.')) return Scope.has(key);
+        if (!hasdot(key)) return Scope.has(key);
         try {
-          let okey = key.split('.'),
-            bind = Craft.getBind(okey[0], Scope);
-          return def(Craft.getDeep(bind, Craft.omitFrom(okey, okey[0]).join('.')));
+          let okey = cutdot(key);
+          return def(Craft.getDeep(Craft.getBind(okey[0], Scope), Craft.omitFrom(okey, okey[0]).join('.')));
         } catch (e) {}
         return false;
       },
@@ -1625,17 +1649,14 @@
   On('animationstart', doc, e => {
     if (e.animationName === 'NodeInserted' && is.Node(e.target)) {
       let element = e.target,
-        mnp = dom(element),
-        isInput = is.Input(element);
+        mnp = dom(element);
       if (mnp.hasAttr(ib)) {
         let key = mnp.getAttr(ib),
           OnInput = On(i, element, e => Craft.setBind(key, mnp.html())),
           observer = new MutationObserver(mutations => mutations.forEach(mut => {
-            if (mut.type === 'attributes') {
-              if (mut.attributeName === ib && !mnp.hasAttr(ib)) {
-                OnInput.Off();
-                observer.disconnect();
-              }
+            if (mut.type === 'attributes' && mut.attributeName === ib && !mnp.hasAttr(ib)) {
+              OnInput.Off();
+              observer.disconnect();
             }
           }));
         observer.observe(element, {
@@ -1647,7 +1668,10 @@
         let key = mnp.getAttr(vb);
         Craft.BindExists(key) ? Craft.applyBinds(key) : Craft.newBind(key, mnp.html());
       }
-      if (mnp.hasAttr('link')) On('click', element, e => mnp.hasAttr('newtab') ? open(mnp.getAttr('link')) : Craft.router.open(mnp.getAttr('link')));
+      if (mnp.hasAttr('link')) On(element).Click(e => {
+        let nt = mnp.getAttr('link');
+        nil(nt) ? open(nt) : Craft.router.open(nt);
+      });
     }
   });
 
@@ -1665,38 +1689,45 @@
   On('blur', e => Craft.tabActive = false);
   On('focus', e => Craft.tabActive = true);
 
-  Craft.newComponent('fetch-webcomponent', {
+  Craft.newComponent(fw, {
     inserted() {
       let src = this.getAttribute('src');
-      if (src !== null) {
+      if (!nil(src)) {
         let wc = null,
           el = dom(this),
           cc = 'cache-component';
-        if (Craft.WebComponents.includes(src)) return false;
-        if (el.hasAttr(cc)) {
-          wc = localStorage.getItem(src);
-          if (wc !== null) Craft.createWebComponent(wc, src);
+        if (!Craft.WebComponents.includes(src)) {
+          if (el.hasAttr(cc)) {
+            wc = localStorage.getItem(src);
+            if (!nil(wc)) Craft.createWebComponent(wc, src);
+          }
+          if (nil(wc)) fetch(src).then(res => res.json().then(webcomponent => {
+            CrafterStyles.innerHTML += webcomponent.css;
+            head.appendChild(dom().script(webcomponent.js + `\nCraft.WebComponents.push('${src}')`, {
+              webcomponent: webcomponent.name
+            }, true));
+            if (el.getAttr(cc) == 'true') localStorage.setItem(src, JSON.stringify(webcomponent));
+          })).catch(err => console.error(err + ': could not load ' + w))
         }
-        if (wc === null) fetch(src).then(res => res.json().then(webcomponent => {
-          CrafterStyles.innerHTML += webcomponent.css;
-          head.appendChild(dom().script(webcomponent.js + `\nCraft.WebComponents.push('${src}')`, `webcomponent=${webcomponent.name}`, true));
-          if (el.getAttr(cc) == 'true') localStorage.setItem(src, JSON.stringify(webcomponent));
-        })).catch(err => console.error(err + ': could not load webcomponent'))
       }
     }
   });
 
   Once('DOMContentLoaded', e => {
     Craft.router.links.forEach(link => link());
-    Craft.WebComponents.length === queryAll('fetch-webcomponent').length ? Ready = true : Craft.poll(() => Craft.WebComponents.length === queryAll('fetch-webcomponent').length, 35, 2000, () => Ready = true, () => {
-      console.warn('loading is taking longer than usual :(');
-      Ready = true
-    });
+    Craft.WebComponents.length === queryAll(fw).length ? Ready = true :
+      Craft.poll(() => Craft.WebComponents.length === queryAll(fw).length, 35, 2000)
+      .then(() => Ready = true)
+      .catch(err => {
+        console.warn('loaded with errors :( \t' + err);
+        Ready = true
+      });
   });
 
   On('hashchange', e => Craft.router.handlers.forEach(handler => (location.hash === handler.link || location === handler.link) ? handler.func(location.hash) : null));
 
   root.CraftSocket = CraftSocket;
+  root.forEach = forEach;
   root.EventHandler = EventHandler;
   root.ReactiveVariable = ReactiveVariable;
 })(document, self);
