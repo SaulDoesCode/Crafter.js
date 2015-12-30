@@ -238,10 +238,9 @@
         });
 
         manip.append(clearText);
-        this.mnp = manip;
       },
       attr(attrName, oldVal, newVal) {
-        let mnp = this.mnp;
+        let mnp = dom(this);
         InputAttributes.some(el => {
           if (el === attrName) {
             if (mnp.hasAttr(el)) {
@@ -348,7 +347,7 @@
           },5);
         });
 
-        On('mouseup', doc, e => movable = false);
+        On(doc).Mouseup(e => movable = false);
       }
     }
   });

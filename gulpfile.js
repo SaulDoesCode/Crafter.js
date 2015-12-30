@@ -29,14 +29,16 @@ gulp.task('document', () => {
 gulp.task('babel', () => {
   gulp.src('./src/*.js')
     .pipe(babel({
-      presets: ['es2015']
+      presets: ['es2015'],
+      plugins : ['transform-es2015-function-name','transform-merge-sibling-variables']
     })).pipe(prettify({}))
     .pipe(gulp.dest('./dist/'));
   console.log('\t babel be done!');
 });
 
 gulp.task('BabelUgly', () => gulp.src('./src/*.js').pipe(babel({
-    presets: ['es2015']
+    presets: ['es2015'],
+    plugins : ['transform-es2015-function-name','transform-merge-sibling-variables']
   })).pipe(uglify({
     mangle: true,
     compress: true,
@@ -60,7 +62,8 @@ gulp.task('BabelUgly', () => gulp.src('./src/*.js').pipe(babel({
 
 gulp.task('babelize_webcomponents', () => gulp.src(['./src/pre-webcomponents/*.js', '!./src/pre-webcomponents/*-extra.js'])
   .pipe(babel({
-    presets: ['es2015']
+    presets: ['es2015'],
+    plugins : ['transform-es2015-function-name','transform-merge-sibling-variables']
   })).pipe(uglify({
     mangle: true,
     compress: true,

@@ -11,37 +11,6 @@ function _typeof(obj) {
 
 (function(doc, root) {
 
-    function type(obj, str) {
-        return toString.call(obj) === str;
-    }
-
-    function isT(val, str) {
-        return (typeof val === 'undefined' ? 'undefined' : _typeof(val)) === str;
-    }
-
-    function manageInvoke(fn, argsArr, totalArity) {
-        argsArr = argsArr.length > totalArity ? argsArr.slice(0, totalArity) : argsArr;
-        return argsArr.length === totalArity ? fn.apply(null, argsArr) : createFn(fn, argsArr, totalArity);
-    }
-
-    function toArr(val) {
-        return Array.from(val);
-    }
-
-    function createFn(fn, Args, totalArity) {
-        var remainingArity = totalArity - Args.length;
-        return is.Between(remainingArity, 10, 0) ? function() {
-            var args = Array.from(arguments);
-            return manageInvoke(fn, Args.concat(args), totalArity);
-        } : (function(fn, args, arity) {
-            var a = [];
-            forEach(arity, function(v, i) {
-                return a.push('a' + i.toString());
-            });
-            return eval('false||function(' + a.join(',') + '){ return manageInvoke(fn, args.concat(Array.from(arguments)));}');
-        })(fn, args, remainingArity);
-    }
-
     var regexps = {
             // Thanks to github.com/arasatasaygin for these RegExps
             url: /^(?:(?:https?|ftp):\/\/)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:\/\S*)?$/i,
@@ -71,22 +40,72 @@ function _typeof(obj) {
     CrafterStyles.innerHTML = '\n@keyframes NodeInserted {from {opacity:.99;}to {opacity: 1;}} [view-bind],[input-bind] {animation-duration: 0.001s;animation-name: NodeInserted;}';
     head.appendChild(CrafterStyles);
 
+    function toArr(val) {
+        return Array.from(val);
+    }
+    // ta = TestArgs : convert arguments to array then tests it
+    function ta(args, test) {
+        return args.length === 0 ? false : Array.from(args).every(test);
+    }
+
+    function type(obj, str) {
+        return toString.call(obj) === str;
+    }
+
+    function isT(val, str) {
+        return (typeof val === 'undefined' ? 'undefined' : _typeof(val)) === str;
+    }
+
+    function manageInvoke(fn, argsArr, totalArity) {
+        argsArr = argsArr.length > totalArity ? argsArr.slice(0, totalArity) : argsArr;
+        return argsArr.length === totalArity ? fn.apply(null, argsArr) : createFn(fn, argsArr, totalArity);
+    }
+
+    function createFn(fn, Args, totalArity) {
+        var remainingArity = totalArity - Args.length;
+        return is.Between(remainingArity, 10, 0) ? function() {
+            var args = toArr(arguments);
+            return manageInvoke(fn, Args.concat(args), totalArity);
+        } : (function(fn, args, arity) {
+            var a = [];
+            forEach(arity, function(v, i) {
+                return a.push('a' + i.toString());
+            });
+            return eval('false||function(' + a.join(',') + '){ return manageInvoke(fn, args.concat(toArr(arguments)));}');
+        })(fn, args, remainingArity);
+    }
+
+    function def() {
+        return ta(arguments, function(o) {
+            return !isT(o, 'undefined');
+        });
+    }
+
+    function nil() {
+        return ta(arguments, function(o) {
+            return o === null;
+        });
+    }
+
     /** is - Type Testing / Assertion */
     root.is = {
         /**
          * Test if something is a boolean type
          * @param val - value to test
          */
-        Bool: function Bool(val) {
-            return typeof val === 'boolean';
+
+        Bool: function Bool() {
+            return ta(arguments, function(o) {
+                return typeof val === 'boolean';
+            });
         },
+
         /**
          * Test if something is a String
          * @param args - value/values to test
          */
         String: function String() {
-            var args = toArr(arguments);
-            return args.length && args.every(function(o) {
+            return ta(arguments, function(o) {
                 return isT(o, 'string');
             });
         },
@@ -96,8 +115,7 @@ function _typeof(obj) {
          * @param args - value/values to test
          */
         Arr: function Arr() {
-            var args = toArr(arguments);
-            return args.length && args.every(function(o) {
+            return ta(arguments, function(o) {
                 return Array.isArray(o);
             });
         },
@@ -107,12 +125,12 @@ function _typeof(obj) {
          * @param args - value/values to test
          */
         Arraylike: function Arraylike() {
-            var args = toArr(arguments);
-            return args.length && args.every(function(o) {
-                try {
-                    return is.Def(o['length']);
-                } catch (e) {}
-            });
+            try {
+                return ta(arguments, function(o) {
+                    return def(o.length);
+                });
+            } catch (e) {}
+            return false;
         },
 
         /**
@@ -120,30 +138,20 @@ function _typeof(obj) {
          * @param args - value/values to test
          */
         Undef: function Undef() {
-            var args = toArr(arguments);
-            return args.length && args.every(function(o) {
-                return isT(o, 'undefined');
-            });
+            return !def.apply(this, arguments);
         },
 
         /**
          * Determine whether a variable is in fact defined
          * @param args - value/values to test
          */
-        Def: function Def() {
-            var args = toArr(arguments);
-            return args.length && args.every(function(o) {
-                return !isT(o, 'undefined');
-            });
-        },
-
+        Def: def,
         /**
          * Determine whether a variable is null
          * @param args - value/values to test
          */
         Null: function Null() {
-            var args = toArr(arguments);
-            return args.length && args.every(function(o) {
+            return ta(arguments, function(o) {
                 return o === null;
             });
         },
@@ -163,8 +171,7 @@ function _typeof(obj) {
 
             return Node;
         })(function() {
-            var args = toArr(arguments);
-            return args.length && args.every(function(o) {
+            return ta(arguments, function(o) {
                 return o instanceof Node;
             });
         }),
@@ -174,12 +181,11 @@ function _typeof(obj) {
          * @param args - value/values to test
          */
         NodeList: function NodeList() {
-            var args = toArr(arguments);
-            return args.length && args.every(function(n) {
-                return n instanceof Node ? true : is.Arraylike(n) ? Array.from(n).every(function(o) {
-                    return is.Node(o);
+            return ta(arguments, function(nl) {
+                return is.Arraylike(nl) ? ta(nl, function(n) {
+                    return n instanceof Node;
                 }) : false;
-            }) ? true : false;
+            });
         },
 
         /**
@@ -187,122 +193,133 @@ function _typeof(obj) {
          * @param {...*} args - value/values to test
          */
         Num: function Num() {
-            for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-                args[_key] = arguments[_key];
-            }
-
-            return args.length && args.every(function(o) {
+            return ta(arguments, function(o) {
                 return !isNaN(Number(o));
             });
         },
+
         /**
          * Determine if a variable is an Object
          * @param args - value/values to test
          */
         Object: function Object() {
-            for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-                args[_key2] = arguments[_key2];
-            }
-
-            return args.length && args.every(function(o) {
+            return ta(arguments, function(o) {
                 return type(o, '[object Object]');
             });
         },
+
         /**
          * Determine if a variable is a HTMLElement
          * @param args - value/values to test
          */
         Element: function Element() {
-            for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-                args[_key3] = arguments[_key3];
-            }
-
-            return args.length && args.every(function(o) {
+            return ta(arguments, function(o) {
                 return type(o, '[object HTMLElement]');
             });
         },
+
         /**
          * Determine if a variable is a File Object
          * @param args - value/values to test
          */
         File: function File() {
-            for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-                args[_key4] = arguments[_key4];
-            }
-
-            return args.length && args.every(function(o) {
+            return ta(arguments, function(o) {
                 return type(o, '[object File]');
             });
         },
+
         /**
          * Determine if a variable is of a FormData type
          * @param args - value/values to test
          */
         FormData: function FormData() {
-            for (var _len5 = arguments.length, args = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-                args[_key5] = arguments[_key5];
-            }
-
-            return args.length && args.every(function(o) {
+            return ta(arguments, function(o) {
                 return type(o, '[object FormData]');
             });
         },
+
         /**
          * Determine if a variable is a Map
          * @param args - value/values to test
          */
         Map: function Map() {
-            for (var _len6 = arguments.length, args = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
-                args[_key6] = arguments[_key6];
-            }
-
-            return args.length && args.every(function(o) {
+            return ta(arguments, function(o) {
                 return type(o, '[object Map]');
             });
         },
+
         /**
          * Determine if a variable is a function
          * @param args - value/values to test
          */
         Func: function Func() {
-            for (var _len7 = arguments.length, args = Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
-                args[_key7] = arguments[_key7];
-            }
-
-            return args.length && args.every(function(o) {
+            return ta(arguments, function(o) {
                 return typeof o === 'function';
             });
         },
+
+        /**
+         * Determine if a variable/s are true
+         * @param args - value/values to test
+         */
+        True: function True() {
+            return ta(arguments, function(o) {
+                return o === true;
+            });
+        },
+
+        /**
+         * Determine if a variable/s are false
+         * @param args - value/values to test
+         */
+        False: function False() {
+            return ta(arguments, function(o) {
+                return o !== true;
+            });
+        },
+
         /**
          * Determine if a variable is of Blob type
          * @param obj - variable to test
          */
-        Blob: function Blob(obj) {
-            return type(obj, '[object Blob]');
+        Blob: function Blob() {
+            return ta(arguments, function(o) {
+                return type(o, '[object Blob]');
+            });
         },
+
         /**
          * Determine if a variable is a Regular Expression
          * @param obj - variable to test
          */
-        RegExp: function RegExp(obj) {
-            return type(obj, '[object RegExp]');
+        RegExp: function RegExp() {
+            return ta(arguments, function(o) {
+                return type(o, '[object RegExp]');
+            });
         },
+
         /**
          * Determine if a variable is a Date type
-         * @param obj - variable to test
+         * @param {...*} variable to test
          */
-        Date: function Date(obj) {
-            return type(obj, '[object Date]');
+        Date: function Date() {
+            return ta(arguments, function(o) {
+                return type(o, '[object Date]');
+            });
         },
+
         /**
          * Determine if a variable is a Set
          * @param obj - variable to test
          */
-        Set: function Set(obj) {
-            return type(obj, '[object Set]');
+        Set: function Set() {
+            return ta(arguments, function(o) {
+                return type(o, '[object Set]');
+            });
         },
+
         Args: function Args(val) {
-            return !is.Null(val) && (type(val, '[object Arguments]') || (typeof val === 'undefined' ? 'undefined' : _typeof(val)) === 'object' && 'callee' in val);
+            return !nill(val) && (type(val, '[object Arguments]') || (typeof val === 'undefined' ? 'undefined' : _typeof(val)) === 'object' && 'callee' in val);
         },
         /**
          * Determine if a variable is a Symbol
@@ -541,7 +558,7 @@ function _typeof(obj) {
          * @param args - value/values to test
          */
         ReactiveVariable: function ReactiveVariable() {
-            var args = Array.from(arguments);
+            var args = toArr(arguments);
             return args.length && args.every(function(o) {
                 return o instanceof _ReactiveVariable;
             });
@@ -563,13 +580,14 @@ function _typeof(obj) {
 
     var rv = is.ReactiveVariable;
     /**
-     * Converts any Query/QueryAll to an Array of Nodes even if there is only one Node
+     * Converts any Query/QueryAll to an Array of Nodes even if there is only one Node , this is error proof when no arguments are present it returns an empty array
      * @param {Node|NodeList|Array|String} val - pass either a CSS Selector string , Node/NodeList or Array of Nodes
+     * @param {Node|NodeList|Array|String} within - pass either a CSS Selector string , Node/NodeList or Array of Nodes to search for val in
      */
     root.QueryOrNodetoNodeArray = function(val, within) {
-        if (is.String(val) && is.String(within) || is.Node(within)) val = queryAll(val, within);
+        if (is.String(val) && (is.String(within) || is.Node(within))) val = queryAll(val, within);
         else if (is.String(val)) val = queryAll(val);
-        return !is.Null(val) && is.Node(val) ? [val] : is.NodeList(val) ? Array.from(val) : [];
+        return is.Node(val) ? [val] : is.NodeList(val) ? toArr(val) : [];
     };
 
     /**
@@ -577,17 +595,30 @@ function _typeof(obj) {
      * @param {string} wsAddress - the WebSocket address example "ws://localhost:3000/"
      * @param {Array=} protocols - the protocols to pass to the WebSocket Connection
      */
-    function CraftSocket(wsAddress, protocols) {
+    function CraftSocket(address, protocols) {
         var _this = this;
 
-        is.Arr(protocols) ? this.Socket = new WebSocket(wsAddress, protocols) : this.Socket = new WebSocket(wsAddress);
-        this.messageCalls = [];
-        this.RecieveCalls = [];
-        this.Socket.onmessage = function(e) {
-            return _this.RecieveCalls.forEach(function(call) {
-                return call(e);
-            });
-        };
+        try {
+            (function() {
+                is.Arr(protocols) ? _this.Socket = new WebSocket(address, protocols) : _this.Socket = new WebSocket(address);
+                var Self = _this;
+                _this.open = true;
+                _this.address = address;
+                if (def(protocols)) _this.protocols = protocols;
+                _this.messageCalls = [];
+                _this.RecieveCalls = [];
+                _this.Socket.onmessage = function(e) {
+                    return Self.RecieveCalls.forEach(function(call) {
+                        return call(e);
+                    });
+                };
+                _this.Socket.onclose = function(e) {
+                    return _this.open = false;
+                };
+            })();
+        } catch (e) {
+            throw new Error(err);
+        }
     }
     /**
      * Sends a message along the WebSocket Connection
@@ -595,16 +626,15 @@ function _typeof(obj) {
      * @param {function=} func - optional function to recieve the response with -> "function ( response , event ) { ... } or response => ..."
      */
     CraftSocket.prototype.send = function(message, func) {
-        var _this2 = this;
-
-        this.messageCalls.push(function() {
-            _this2.Socket.send(message);
-            if (is.Def(func) && is.Func(func)) _this2.recieve(function(data, e) {
+        var Self = this;
+        Self.messageCalls.push(function() {
+            Self.Socket.send(message);
+            if (is.Func(func) && Self.open) Self.recieve(function(data, e) {
                 return func(data, e);
             });
         });
-        this.Socket.onopen = function(e) {
-            return _this2.messageCalls[_this2.messageCalls.length - 1]();
+        Self.Socket.onopen = function(e) {
+            return Self.messageCalls[Self.messageCalls.length - 1]();
         };
         return this;
     };
@@ -613,9 +643,9 @@ function _typeof(obj) {
      * @param {function} func - function to recieve the response and event with -> "function ( response , event ) { ... } or response => ..."
      */
     CraftSocket.prototype.recieve = function(func) {
-        is.Func(func) ? this.RecieveCalls.push(function(e) {
+        is.Func(func) && this.open ? this.RecieveCalls.push(function(e) {
             return func(e.data, e);
-        }) : console.error("func is not a function or is not defined");
+        }) : console.error("no function or connection closed");
         return this;
     };
     /** Closes the WebSocket Connection */
@@ -633,7 +663,7 @@ function _typeof(obj) {
         if (is.Func(handle)) {
             this.val = val;
             this.Handle = handle;
-        } else console.error('ReactiveVariable needs a handler function after the value');
+        } else console.error('ReactiveVariable needs function');
     }
     /**
      * Sets the new value of the ReactiveVariable , this will also call the handle function
@@ -644,8 +674,8 @@ function _typeof(obj) {
             this.Oldval = this.val;
             this.val = val;
             this.Handle(this.Oldval, val);
+            return this.val;
         }
-        return this.val;
     };
     /**
      * Gets the value of the ReactiveVariable , ReactiveVariable.val also does this
@@ -659,6 +689,7 @@ function _typeof(obj) {
      */
     _ReactiveVariable.prototype.reset = function(handle) {
         is.Func(handle) ? this.Handle = handle : console.error('ReactiveVariable.Reset only takes a function');
+        return this;
     };
 
     /**
@@ -670,25 +701,32 @@ function _typeof(obj) {
      * @returns Interface On,Off,Once
      */
     function EventHandler(EventType, Target, Func, Within) {
-        for (var _len8 = arguments.length, args = Array(_len8 > 4 ? _len8 - 4 : 0), _key8 = 4; _key8 < _len8; _key8++) {
-            args[_key8 - 4] = arguments[_key8];
+        for (var _len = arguments.length, args = Array(_len > 4 ? _len - 4 : 0), _key = 4; _key < _len; _key++) {
+            args[_key - 4] = arguments[_key];
         }
 
-        this.EventType = EventType;
+        this.EventType = EventType || 'click';
         this.Target = Target !== root && Target !== doc ? QueryOrNodetoNodeArray(Target, Within) : Target;
         this.FuncWrapper = function(e) {
-            return Func(e, e.srcElement, args || []);
+            return Func(e, e.srcElement, args);
         };
     }
     /**
      * Activates the EventHandler to start listening for the EventType on the Target/Targets
      */
     EventHandler.prototype.On = function() {
-        var _this3 = this;
+        var _this2 = this;
 
         is.Arr(this.Target) ? this.Target.forEach(function(target) {
-            return target.addEventListener(_this3.EventType, _this3.FuncWrapper);
+            return target.addEventListener(_this2.EventType, _this2.FuncWrapper);
         }) : this.Target.addEventListener(this.EventType, this.FuncWrapper);
+        return this;
+    };
+
+    EventHandler.prototype.ChangeType = function(type) {
+        this.Off();
+        this.EventType = type;
+        this.On();
         return this;
     };
     /**
@@ -696,10 +734,10 @@ function _typeof(obj) {
      * can still optionally be re-activated with On again
      */
     EventHandler.prototype.Off = function() {
-        var _this4 = this;
+        var _this3 = this;
 
         is.Arr(this.Target) ? this.Target.forEach(function(target) {
-            return target.removeEventListener(_this4.EventType, _this4.FuncWrapper);
+            return target.removeEventListener(_this3.EventType, _this3.FuncWrapper);
         }) : this.Target.removeEventListener(this.EventType, this.FuncWrapper);
         return this;
     };
@@ -729,10 +767,10 @@ function _typeof(obj) {
      * @param {function} func - function called on each iteration -> "function( value , indexOrKey ) {...}"
      */
     root.forEach = function(iterable, func) {
-        if (is.Undef(iterable)) throw new Error("forEach -> cannot iterate through undefined");
-        if (!is.Func(func)) throw new Error("forEach -> invalid or undefined function provided");
+        if (!def(iterable)) throw new Error("forEach -> iterable undefined");
+        if (!is.Func(func)) throw new Error("forEach -> function invalid or undefined");
         var i = 0;
-        if (is.Def(iterable.length))
+        if (def(iterable.length))
             for (; i < iterable.length; i++) {
                 func(iterable[i], i);
             } else
@@ -747,7 +785,7 @@ function _typeof(obj) {
      * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
      */
     root.query = function(selector, element) {
-        return is.Def(element) ? is.String(element) ? doc.querySelector(element).querySelector(selector) : element.querySelector(selector) : doc.querySelector(selector);
+        return def(element) ? is.String(element) ? doc.querySelector(element).querySelector(selector) : element.querySelector(selector) : doc.querySelector(selector);
     };
 
     /**
@@ -756,7 +794,7 @@ function _typeof(obj) {
      * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
      */
     root.queryAll = function(selector, element) {
-        return is.Def(element) ? is.Node(element) || element === doc ? element.querySelectorAll(selector) : query(element).querySelectorAll(selector) : doc.querySelectorAll(selector);
+        return def(element) ? is.Node(element) || element === doc ? element.querySelectorAll(selector) : query(element).querySelectorAll(selector) : doc.querySelectorAll(selector);
     };
     /**
      * Easy way to loop through Nodes in the DOM using a CSS Selector or a NodeList
@@ -774,6 +812,56 @@ function _typeof(obj) {
         }
     };
 
+    function EventTypes(Target, within, listen) {
+        var etype = function etype(type, fn) {
+            return new EventHandler(type, Target, fn, within)[listen || 'On']();
+        };
+        return {
+            Click: function Click(fn) {
+                return etype('click', fn);
+            },
+            Input: function Input(fn) {
+                return etype('input', fn);
+            },
+            DoubleClick: function DoubleClick(fn) {
+                return etype('dblclick', fn);
+            },
+            Focus: function Focus(fn) {
+                return etype('focus', fn);
+            },
+            Blur: function Blur(fn) {
+                return etype('blur', fn);
+            },
+            Keydown: function Keydown(fn) {
+                return etype('keydown', fn);
+            },
+            Mousemove: function Mousemove(fn) {
+                return etype('mousemove', fn);
+            },
+            Mousedown: function Mousedown(fn) {
+                return etype('mousedown', fn);
+            },
+            Mouseup: function Mouseup(fn) {
+                return etype('mouseup', fn);
+            },
+            Mouseover: function Mouseover(fn) {
+                return etype('mouseover', fn);
+            },
+            Mouseout: function Mouseout(fn) {
+                return etype('mouseout', fn);
+            },
+            Mouseenter: function Mouseenter(fn) {
+                return etype('mouseenter', fn);
+            },
+            Mouseleave: function Mouseleave(fn) {
+                return etype('mouseleave', fn);
+            },
+            Scroll: function Scroll(fn) {
+                return etype('scroll', fn);
+            }
+        };
+    }
+
     /**
      * Starts listening for an EventType on the Target/Targets
      * @param {string} EventType - set the type of event to listen for example "click" or "scroll"
@@ -782,65 +870,12 @@ function _typeof(obj) {
      * @returns Off - when On is defined as a variable "var x = On(...)" it allows you to access all the EventHandler interfaces Off,Once,On
      */
     root.On = function(EventType, Target, element, func) {
-        if (is.Func(Target)) return new EventHandler(EventType, root, Target).On();
-        else if (arguments.length < 3 && !Array.from(arguments).some(function(i) {
+        var args = toArr(arguments),
+            types = args.length < 3 && !args.some(function(i) {
                 return is.Func(i);
-            })) {
-            var _ret = (function() {
-                var newEvent = function newEvent(type, fn) {
-                    return new EventHandler(type, EventType, fn, Target).On();
-                };
-                return {
-                    v: {
-                        Click: function Click(fn) {
-                            return newEvent('click', fn);
-                        },
-                        Input: function Input(fn) {
-                            return newEvent('input', fn);
-                        },
-                        DoubleClick: function DoubleClick(fn) {
-                            return newEvent('dblclick', fn);
-                        },
-                        Focus: function Focus(fn) {
-                            return newEvent('focus', fn);
-                        },
-                        Blur: function Blur(fn) {
-                            return newEvent('blur', fn);
-                        },
-                        Keydown: function Keydown(fn) {
-                            return newEvent('keydown', fn);
-                        },
-                        Mousemove: function Mousemove(fn) {
-                            return newEvent('mousemove', fn);
-                        },
-                        Mousedown: function Mousedown(fn) {
-                            return newEvent('mousedown', fn);
-                        },
-                        Mouseup: function Mouseup(fn) {
-                            return newEvent('mouseup', fn);
-                        },
-                        Mouseover: function Mouseover(fn) {
-                            return newEvent('mouseover', fn);
-                        },
-                        Mouseout: function Mouseout(fn) {
-                            return newEvent('mouseout', fn);
-                        },
-                        Mouseenter: function Mouseenter(fn) {
-                            return newEvent('mouseenter', fn);
-                        },
-                        Mouseleave: function Mouseleave(fn) {
-                            return newEvent('mouseleave', fn);
-                        },
-                        Scroll: function Scroll(fn) {
-                            return newEvent('scroll', fn);
-                        }
-                    }
-                };
-            })();
+            });
 
-            if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
-        }
-        return is.Func(element) ? new EventHandler(EventType, Target, element).On() : new EventHandler(EventType, Target, func, element).On();
+        return is.Func(Target) ? new EventHandler(EventType, root, Target).On() : types ? EventTypes(EventType, Target) : is.Func(element) ? new EventHandler(EventType, Target, element).On() : new EventHandler(EventType, Target, func, element).On();
     };
 
     /**
@@ -851,66 +886,12 @@ function _typeof(obj) {
      * @returns On,Off,Once - when Once is defined as a variable "var x = Once(...)" it allows you to access all the EventHandler interfaces Off,Once,On
      */
     root.Once = function(EventType, Target, element, func) {
-        var args = Array.from(arguments);
-        if (is.Func(Target)) return new EventHandler(EventType, root, Target).Once();
-        else if (args.length < 3 && !args.some(function(i) {
+        var args = toArr(arguments),
+            types = args.length < 3 && !args.some(function(i) {
                 return is.Func(i);
-            })) {
-            var _ret2 = (function() {
-                var newEvent = function newEvent(type, fn) {
-                    return new EventHandler(type, EventType, fn, Target).Once();
-                };
-                return {
-                    v: {
-                        Click: function Click(fn) {
-                            return newEvent('click', fn);
-                        },
-                        Input: function Input(fn) {
-                            return newEvent('input', fn);
-                        },
-                        DoubleClick: function DoubleClick(fn) {
-                            return newEvent('dblclick', fn);
-                        },
-                        Focus: function Focus(fn) {
-                            return newEvent('focus', fn);
-                        },
-                        Blur: function Blur(fn) {
-                            return newEvent('blur', fn);
-                        },
-                        Keydown: function Keydown(fn) {
-                            return newEvent('keydown', fn);
-                        },
-                        Mousemove: function Mousemove(fn) {
-                            return newEvent('mousemove', fn);
-                        },
-                        Mousedown: function Mousedown(fn) {
-                            return newEvent('mousedown', fn);
-                        },
-                        Mouseup: function Mouseup(fn) {
-                            return newEvent('mouseup', fn);
-                        },
-                        Mouseover: function Mouseover(fn) {
-                            return newEvent('mouseover', fn);
-                        },
-                        Mouseout: function Mouseout(fn) {
-                            return newEvent('mouseout', fn);
-                        },
-                        Mouseenter: function Mouseenter(fn) {
-                            return newEvent('mouseenter', fn);
-                        },
-                        Mouseleave: function Mouseleave(fn) {
-                            return newEvent('mouseleave', fn);
-                        },
-                        Scroll: function Scroll(fn) {
-                            return newEvent('scroll', fn);
-                        }
-                    }
-                };
-            })();
+            });
 
-            if ((typeof _ret2 === 'undefined' ? 'undefined' : _typeof(_ret2)) === "object") return _ret2.v;
-        }
-        return is.Func(element) ? new EventHandler(EventType, Target, element).Once() : new EventHandler(EventType, Target, func, element).Once();
+        return is.Func(Target) ? new EventHandler(EventType, root, Target).Once() : types ? EventTypes(EventType, Target, 'Once') : is.Func(element) ? new EventHandler(EventType, Target, element).Once() : new EventHandler(EventType, Target, func, element).Once();
     };
 
     function make_element(name, inner, attributes, NodeForm, extraAttr) {
@@ -919,22 +900,21 @@ function _typeof(obj) {
             inner = '';
         }
         if (is.Bool(attributes)) NodeForm = attributes;
-
-        if (is.Undef(inner, attributes, NodeForm)) {
+        if (!def(inner, attributes, NodeForm)) {
             inner = '';
             NodeForm = true;
         }
         if (NodeForm === true) {
-            var _ret3 = (function() {
+            var _ret2 = (function() {
                 var newEl = doc.createElement(name);
                 newEl.innerHTML = inner;
                 if (is.Object(attributes)) forEach(attributes, function(val, attr) {
                     return newEl.setAttribute(attr, val);
                 });
                 if (is.String(attributes)) attributes.split('&').forEach(function(attr) {
-                    return is.Def(attr.split('=')[1]) ? newEl.setAttribute(attr.split('=')[0], attr.split('=')[1]) : newEl.setAttribute(attr.split('=')[0], '');
+                    return def(attr.split('=')[1]) ? newEl.setAttribute(attr.split('=')[0], attr.split('=')[1]) : newEl.setAttribute(attr.split('=')[0], '');
                 });
-                if (is.Def(extraAttr) && is.Object(extraAttr)) forEach(extraAttr, function(val, attr) {
+                if (def(extraAttr) && is.Object(extraAttr)) forEach(extraAttr, function(val, attr) {
                     return newEl.setAttribute(attr, val);
                 });
                 return {
@@ -942,16 +922,16 @@ function _typeof(obj) {
                 };
             })();
 
-            if ((typeof _ret3 === 'undefined' ? 'undefined' : _typeof(_ret3)) === "object") return _ret3.v;
+            if ((typeof _ret2 === 'undefined' ? 'undefined' : _typeof(_ret2)) === "object") return _ret2.v;
         }
         var attrString = '';
         if (is.String(attributes)) attributes.split('&').forEach(function(attr) {
-            return attrString += is.Def(attr.split('=')[1]) ? attr.split('=')[0] + '="' + attr.split('=')[1] + '" ' : attr.split('=')[0] + ' ';
+            return attrString += def(attr.split('=')[1]) ? attr.split('=')[0] + '="' + attr.split('=')[1] + '" ' : attr.split('=')[0] + ' ';
         });
         if (is.Object(attributes)) forEach(attributes, function(val, attr) {
             return attrString += ' ' + attr + '="' + val + '" ';
         });
-        if (is.Def(extraAttr) && is.Object(extraAttr)) forEach(extraAttr, function(val, attr) {
+        if (def(extraAttr) && is.Object(extraAttr)) forEach(extraAttr, function(val, attr) {
             return attrString += ' ' + attr + '="' + val + '" ';
         });
         return '<' + name + ' ' + attrString + '>' + inner + '</' + name + '>';
@@ -965,7 +945,6 @@ function _typeof(obj) {
              * @param {function} func - handler function for the event
              * @returns handler (Off,Once,On)
              */
-
             On: (function(_On) {
                 function On(_x, _x2) {
                     return _On.apply(this, arguments);
@@ -979,14 +958,13 @@ function _typeof(obj) {
             })(function(eventType, func) {
                 return On(eventType, elements, func);
             }),
-
             /**
              * Checks wether a Node is in the NodeList with either a refference to the Node or a CSS selector
              * @param {Node|string} Node or CSS selector
              */
             includes: function includes(SelectorNode) {
-                for (var index = 0; index < elements.length; index++) {
-                    if (elements[index] === SelectorNode) return true;
+                for (var _i = 0; _i < elements.length; _i++) {
+                    if (elements[_i] === SelectorNode) return true;
                 }
                 return false;
             },
@@ -996,17 +974,18 @@ function _typeof(obj) {
              * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
              */
             css: function css(styles) {
-                return is.Def(styles) ? forEach(this.element, function(el) {
+                return def(styles) ? forEach(elements, function(el) {
                     return forEach(styles, function(prop, key) {
                         return el.style[key] = prop;
                     });
                 }) : console.error('styles unefined');
             }
+
         };
     }
 
     function domManip(element, within) {
-        if (is.String(element)) is.Def(within) ? element = query(element, within) : element = query(element);
+        if (is.String(element)) def(within) ? element = query(element, within) : element = query(element);
         this.element = element;
     }
     /**
@@ -1015,8 +994,9 @@ function _typeof(obj) {
      * @param {string=} sets the innerHTML value or when undefined gets the innerHTML value
      */
     domManip.prototype.html = function(val) {
-        if (!is.Def(val)) return this.element.innerHTML;
-        this.element.innerHTML = val;
+        var el = this.element;
+        if (!def(val)) return is.Input(el) ? el.value : el.innerHTML;
+        is.Input(el) ? el.value = val : el.innerHTML = val;
         return this;
     };
     /**
@@ -1025,8 +1005,10 @@ function _typeof(obj) {
      * @param {string=} sets the textContent value or when undefined gets the textContent value
      */
     domManip.prototype.text = function(val) {
-        if (is.Def(val)) return this.element.textContent;
-        this.element.textContent = val;
+        var el = this.element,
+            input = is.Input(el);
+        if (!def(val)) return input ? el.value : el.textContent;
+        input ? el.value = val : el.textContent = val;
         return this;
     };
     /**
@@ -1082,10 +1064,10 @@ function _typeof(obj) {
      * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
      */
     domManip.prototype.css = function(styles) {
-        var _this5 = this;
+        var _this4 = this;
 
-        is.Def(styles) ? forEach(styles, function(prop, key) {
-            return _this5.element.style[key] = prop;
+        def(styles) ? forEach(styles, function(prop, key) {
+            return _this4.element.style[key] = prop;
         }) : console.error('Styles Object undefined');
         return this;
     };
@@ -1152,8 +1134,8 @@ function _typeof(obj) {
     domManip.prototype.getSiblings = function() {
         var siblings = [],
             AllChildren = this.element.parentNode.childNodes;
-        for (var _i = 0; _i < AllChildren.length; _i++) {
-            if (AllChildren[_i] !== this.element) siblings.push(AllChildren[_i]);
+        for (var _i2 = 0; _i2 < AllChildren.length; _i2++) {
+            if (AllChildren[_i2] !== this.element) siblings.push(AllChildren[_i2]);
         }
         return siblings;
     };
@@ -1163,11 +1145,9 @@ function _typeof(obj) {
      * @param {string|number=} pixel value to set
      */
     domManip.prototype.Width = function(pixels) {
-        if (is.Def(pixels)) {
-            this.element.style.width = pixels;
-            return this;
-        }
-        return this.element.getBoundingClientRect().width;
+        var haspixels = def(pixels);
+        if (haspixels) this.element.style.width = pixels;
+        return haspixels ? this : this.element.getBoundingClientRect().width;
     };
     /**
      * sets or gets the element's pixel height
@@ -1175,11 +1155,9 @@ function _typeof(obj) {
      * @param {string|number=} pixel value to set
      */
     domManip.prototype.Height = function(pixels) {
-        if (is.Def(pixels)) {
-            this.element.style.height = pixels;
-            return this;
-        }
-        return this.element.getBoundingClientRect().height;
+        var haspixels = def(pixels);
+        if (haspixels) this.element.style.height = pixels;
+        return haspixels ? this : this.element.getBoundingClientRect().height;
     };
     /**
      * gets all the element's dimentions (width,height,left,top,bottom,right)
@@ -1233,12 +1211,8 @@ function _typeof(obj) {
      * @param {Node|string=} within - optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
      */
     root.dom = function(element, within) {
-        if (is.Node(element) || is.NodeList(element)) return is.Node(element) ? new domManip(element) : domNodeList(element);
-        else if (is.String(element)) {
-            var elements = is.String(within) || is.Node(within) ? queryAll(element, within) : queryAll(element);
-            return elements.length === 1 ? new domManip(elements[0]) : domNodeList(elements);
-        }
-        return Craft.dom;
+        var elements = QueryOrNodetoNodeArray(element, within);
+        return is.NodeList(elements) ? elements.length === 1 ? new domManip(elements[0]) : domNodeList(elements) : Craft.dom;
     };
 
     CrafterStyles = query('[crafterstyles]', head);
@@ -1251,33 +1225,26 @@ function _typeof(obj) {
          * @param {Array} arr - array to be converted
          */
 
-        ArraytoObject: function ArraytoObject(arr) {
+        ArrtoObj: function ArrtoObj(arr) {
             var i = undefined,
                 NewObject = {};
             for (i in arr) {
-                if (is.Def(arr[i])) NewObject[i] = arr[i];
+                if (def(arr[i])) NewObject[i] = arr[i];
             }
             return NewObject;
         },
-        filterArr: function filterArr(arr, func) {
-            var i = -1,
-                x = -1,
-                result = [];
-            while (++i < arr.length) {
-                if (func(arr[i], i, arr)) result[++x] = arr[i];
-            }
-            return result;
-        },
+
+        toArr: toArr,
         omitFrom: function omitFrom(Arr, val) {
             var index = Arr.indexOf(val),
                 temp = [],
                 string = false,
                 i = 0;
             if (is.String(Arr)) {
-                Arr = Array.from(Arr);
+                Arr = toArr(Arr);
                 string = true;
             }
-            if (is.NodeList(Arr)) Arr = Array.from(Arr);
+            if (is.NodeList(Arr)) Arr = toArr(Arr);
             for (; i < Arr.length; i++) {
                 if (i !== index) temp.push(Arr[i]);
             }
@@ -1298,7 +1265,7 @@ function _typeof(obj) {
             return true;
         },
         getDeep: function getDeep(obj, propString) {
-            if (is.Undef(propString)) return obj;
+            if (!def(propString)) return obj;
 
             var prop = undefined,
                 val = undefined,
@@ -1310,7 +1277,7 @@ function _typeof(obj) {
             for (; i < iLen; i++) {
                 prop = props[i];
                 candidate = obj[prop];
-                if (is.Def(candidate)) obj = candidate;
+                if (def(candidate)) obj = candidate;
                 else break;
             }
             try {
@@ -1323,7 +1290,7 @@ function _typeof(obj) {
             if (prop.length > 1) {
                 var e = prop.shift();
                 Craft.setDeep(obj[e] = is.Object(obj[e]) ? obj[e] : {}, prop, value);
-            } else if (!rv(obj[prop[0]]) && value !== undefined) obj[prop[0]] = value;
+            } else if (!rv(obj[prop[0]]) && def(value)) obj[prop[0]] = value;
             else if (value === undefined) delete obj[prop[0]];
             else obj[prop[0]].set(value);
             if (returnObj === true) return obj;
@@ -1341,8 +1308,8 @@ function _typeof(obj) {
             });
         },
         concatObjects: function concatObjects(hostobj) {
-            for (var _len9 = arguments.length, Objs = Array(_len9 > 1 ? _len9 - 1 : 0), _key9 = 1; _key9 < _len9; _key9++) {
-                Objs[_key9 - 1] = arguments[_key9];
+            for (var _len2 = arguments.length, Objs = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+                Objs[_key2 - 1] = arguments[_key2];
             }
 
             forEach(hostobj, function(o) {
@@ -1357,14 +1324,6 @@ function _typeof(obj) {
                 });
             });
             return hostobj;
-        },
-
-        mergeObjects: function mergeObjects(hostobj) {
-            for (var _len10 = arguments.length, Objs = Array(_len10 > 1 ? _len10 - 1 : 0), _key10 = 1; _key10 < _len10; _key10++) {
-                Objs[_key10 - 1] = arguments[_key10];
-            }
-
-            return Object.assign(hostobj, Objs);
         },
         clone: (function(_clone) {
             function clone(_x3) {
@@ -1466,7 +1425,7 @@ function _typeof(obj) {
                 var list = '';
                 if (is.Arr(items)) items.forEach(function(item) {
                     if (is.String(item)) list += make_element('li', item);
-                    else if (is.Object(items)) list += make_element('li', item.inner, item.attr);
+                    if (is.Object(items)) list += make_element('li', item.inner, item.attr);
                 });
                 return make_element('ol', list, attr, node);
             },
@@ -1497,10 +1456,10 @@ function _typeof(obj) {
                         var row = '<tr>';
                         if (key === 'cell' || key === 'td' || key === 'data') {
                             if (is.String(val)) row += '<td>' + val + '</td>';
-                            else if (is.Object(val)) row += make_element('tr', val.inner, val.attr);
+                            if (is.Object(val)) row += make_element('tr', val.inner, val.attr);
                         } else if (key === 'head' || key === 'th') {
                             if (is.String(val)) row += '<th>' + val + '</th>';
-                            else if (is.Object(val)) row += make_element('th', val.inner, val.attr);
+                            if (is.Object(val)) row += make_element('th', val.inner, val.attr);
                         }
                         row += '</tr>';
                         tableInner += row;
@@ -1511,7 +1470,7 @@ function _typeof(obj) {
         },
         CurrentBrowser: {
             is: function is(browser) {
-                return _br.join(' ').toLowerCase().includes(browser.toLowerCase()) ? true : false;
+                return _br.join(' ').toLowerCase().includes(browser.toLowerCase());
             },
             browser: _br.join(' ')
         },
@@ -1549,8 +1508,8 @@ function _typeof(obj) {
                 return localStorage.removeItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key);
             },
             removeAll: function removeAll(expired) {
-                for (var _i2 in localStorage) {
-                    if (!expired || Craft.loader.get(_i2).expire <= +new Date()) Craft.loader.remove(_i2);
+                for (var _i3 in localStorage) {
+                    if (!expired || Craft.loader.get(_i3).expire <= +new Date()) Craft.loader.remove(_i3);
                 }
             }
         },
@@ -1562,9 +1521,8 @@ function _typeof(obj) {
          * {...object} args - Objects containing options for Script/CSS/WebComponent import
          */
         Import: function Import() {
-            var promises = [],
-                args = Array.from(arguments);
-            args.forEach(function(arg) {
+            var promises = [];
+            toArr(arguments).forEach(function(arg) {
                 return arg.test === false ? Craft.loader.remove(arg.css || arg.script) : promises.push(Craft.loader.fetchImport({
                     url: arg.css || arg.script,
                     type: arg.css ? 'css' : 'script',
@@ -1633,9 +1591,9 @@ function _typeof(obj) {
                     prefixedSRC = 'Cr:' + src,
                     view = localStorage.getItem(prefixedSRC);
                 if (!is.String(position)) position = 'beforeend';
-                if (!is.Null(vh) && is.Null(view)) fetch(src).then(function(res) {
+                if (!nil(vh) && nil(view)) fetch(src).then(function(res) {
                     return res.text().then(function(txt) {
-                        if (cache === true && is.Null(view)) localStorage.setItem(prefixedSRC, txt);
+                        if (is.True(cache, nil(view))) localStorage.setItem(prefixedSRC, txt);
                         vh.insertAdjacentHTML(position, txt);
                     });
                 }).catch(function(err) {
@@ -1644,8 +1602,8 @@ function _typeof(obj) {
                 else vh.insertAdjacentHTML(position, view);
             },
             clearCache: function clearCache() {
-                for (var _i3 in localStorage) {
-                    if (localStorage.key(_i3).includes("Cr:")) localStorage.removeItem(localStorage.key(_i3));
+                for (var _i4 in localStorage) {
+                    if (localStorage.key(_i4).includes("Cr:")) localStorage.removeItem(localStorage.key(_i4));
                 }
             }
         },
@@ -1688,8 +1646,7 @@ function _typeof(obj) {
             return setTimeout(func, ms);
         },
         after: function after(n, func) {
-            if (!is.Func(func) && is.Func(n)) func = n;
-            else throw new Error("after -> func is not a function");
+            !is.Func(func) && is.Func(n) ? func = n : console.error("after: no function");
             n = Number.isFinite(n = +n) ? n : 0;
             if (--n < 1) return function() {
                 return func.apply(this, arguments);
@@ -1698,14 +1655,14 @@ function _typeof(obj) {
         debounce: function debounce(wait, func, immediate) {
             var timeout = undefined;
             return function() {
-                var _this6 = this;
-
-                var args = arguments,
+                var _this5 = this,
+                    args = arguments,
                     later = function later() {
                         timeout = null;
-                        if (!immediate) func.apply(_this6, args);
+                        if (!immediate) func.apply(_this5, args);
                     },
                     callNow = immediate && !timeout;
+
                 clearTimeout(timeout);
                 timeout = setTimeout(later, wait);
                 if (callNow) func.apply(this, args);
@@ -1754,57 +1711,54 @@ function _typeof(obj) {
         },
 
         css: function css(el, styles) {
-            return is.Def(styles, el) && is.Node(el) ? forEach(styles, function(prop, key) {
+            return def(styles, el) && is.Node(el) ? forEach(styles, function(prop, key) {
                 return el.style[key] = prop;
             }) : console.error('invalid args');
         },
         hasCapitals: function hasCapitals(string) {
-            return Array.from(string).some(function(c) {
+            return toArr(string).some(function(c) {
                 return is.Uppercase(c);
             });
         },
         OverrideFunction: function OverrideFunction(funcName, Func, ContextObject) {
             var func = funcName.split(".").pop(),
                 ns = funcName.split(".");
-            for (var _i4 = 0; _i4 < ns.length; _i4++) {
-                ContextObject = ContextObject[ns[_i4]];
+            for (var _i5 = 0; _i5 < ns.length; _i5++) {
+                ContextObject = ContextObject[ns[_i5]];
             }
             ContextObject[func] = Func;
         },
         len: function len(val) {
-            if (is.Object(val)) return Object.keys(val).length;
-            if (is.Map(val) || is.Set(val)) return val.size;
             try {
-                return val.length;
-            } catch (e) {
-                console.warn("Couldn't find length " + e);
-            }
+                return is.Object(val) ? Object.keys(val).length : is.Map(val) || is.Set(val) ? val.size : val.length;
+            } catch (e) {}
+            return -1;
         },
         indexOfDate: function indexOfDate(Collection, date) {
-            for (var _i5 = 0; _i5 < Collection.length; _i5++) {
-                if (+Collection[_i5] === +date) return _i5;
+            for (var _i6 = 0; _i6 < Collection.length; _i6++) {
+                if (+Collection[_i6] === +date) return _i6;
             }
             return -1;
         },
         type: function type() {
-            var types = [],
-                args = arguments;
-            forEach(function(args) {
+            var types = [];
+            toArr(arguments).forEach(function(arg) {
                 return types.push(typeof arg === 'undefined' ? 'undefined' : _typeof(arg));
             });
             return types.length < 2 ? types[0] : types;
         },
         memoize: function memoize(func, resolver) {
-            if (!is.Func(func) || resolver && !is.Func(resolver)) throw new TypeError("arg provided is not a function");
-            var cache = new WeakMap();
-            var memoized = function memoized() {
-                var args = Array.from(arguments),
-                    key = resolver ? resolver.apply(this, args) : args[0];
-                if (cache.has(key)) return cache.get(key);
-                var result = func.apply(this, args);
-                memoized.cache = cache.set(key, result);
-                return result;
-            };
+            if (!is.Func(func) || resolver && !is.Func(resolver)) throw new TypeError("no function");
+            var cache = new WeakMap(),
+                memoized = function memoized() {
+                    var args = arguments,
+                        key = resolver ? resolver.apply(this, args) : args[0];
+                    if (cache.has(key)) return cache.get(key);
+                    var result = func.apply(this, args);
+                    memoized.cache = cache.set(key, result);
+                    return result;
+                };
+
             return memoized;
         },
 
@@ -1901,19 +1855,17 @@ function _typeof(obj) {
         OnResize: function OnResize(func) {
             return is.Func(func) ? Craft.ResizeHandlers.add(func) : console.error("Craft.OnResize -> func is not a function");
         },
-        OnScrolledTo: function OnScrolledTo(Scroll, ifFunc, elseFunc) {
-            return On('scroll', function(e) {
-                if (pageYOffset >= Scroll) ifFunc(e);
-                else if (is.Def(elseFunc)) elseFunc(e);
+        OnScrolledTo: function OnScrolledTo(Scroll) {
+            return new Promise(function(pass, fail) {
+                var evl = On('scroll', function(e) {
+                    return pageYOffset >= Scroll ? pass(e, evl) : fail(e, evl);
+                });
             });
         },
         WhenScrolledTo: function WhenScrolledTo(Scroll) {
-            return new Promise(function(resolve, reject) {
-                var scrollEvent = On('scroll', function(e) {
-                    if (pageYOffset >= Scroll || pageYOffset <= Scroll) {
-                        scrollEvent.Off();
-                        resolve(e);
-                    }
+            return new Promise(function(pass, fail) {
+                return Once('scroll', function(e) {
+                    return pageYOffset >= Scroll || pageYOffset <= Scroll ? pass(e) : fail(e);
                 });
             });
         },
@@ -1974,8 +1926,8 @@ function _typeof(obj) {
             if (caps === true && Craft.hasCapitals(pass) === false) return reasons ? 'Password should contain Capital letters' : false;
             if (number === true && /\d/g.test(pass) === false) return reasons ? 'Password should contain a number' : false;
 
-            for (var _len11 = arguments.length, includeChars = Array(_len11 > 5 ? _len11 - 5 : 0), _key11 = 5; _key11 < _len11; _key11++) {
-                includeChars[_key11 - 5] = arguments[_key11];
+            for (var _len3 = arguments.length, includeChars = Array(_len3 > 5 ? _len3 - 5 : 0), _key3 = 5; _key3 < _len3; _key3++) {
+                includeChars[_key3 - 5] = arguments[_key3];
             }
 
             if (includeChars.length !== 0) {
@@ -2005,7 +1957,7 @@ function _typeof(obj) {
          * @param {string} webcomponent - JSON string from Crafter.js's (.wc) WebComponent format
          */
         createWebComponent: function createWebComponent(webcomponent, src) {
-            if (is.String) webcomponent = JSON.parse(webcomponent);
+            webcomponent = JSON.parse(webcomponent);
             CrafterStyles.innerHTML += webcomponent.css;
             head.appendChild(dom().script(webcomponent.js + ('\nCraft.WebComponents.push(\'' + src + '\')'), 'webcomponent=' + webcomponent.name, true));
         },
@@ -2025,7 +1977,7 @@ function _typeof(obj) {
          * @param {object} config - Object containing all the element's lifecycle methods / extends and attached methods or properties
          */
         newComponent: function newComponent(tag, config) {
-            if (is.Undef(config)) throw new Error('newComponent: ' + tag + ' -> config undefined');
+            if (!def(config)) throw new Error(tag + ': config undefined');
             var element = Object.create(HTMLElement.prototype),
                 settings = {};
             forEach(config, function(prop, key) {
@@ -2042,7 +1994,7 @@ function _typeof(obj) {
         applyBinds: function applyBinds(key, bindScope) {
             var bind = undefined,
                 val = Craft.getBind(key, bindScope);
-            if (is.Undef(val)) val = '';
+            if (!def(val)) val = '';
             is.Object(val) && !rv(val) ? Craft.applyObjectProps(key, val) : queryEach('[' + ib + '="' + key + '"],[' + vb + '="' + key + '"]', function(el) {
                 return is.Input(el) ? el.value = val : el.innerHTML = val;
             });
@@ -2060,7 +2012,7 @@ function _typeof(obj) {
         /** creates a new bound variable , part of Crafter.js's Data Binding System */
         newBind: function newBind(key, val, handle, Scope) {
             if (is.Map(handle)) Scope = handle;
-            if (!is.Map(Scope) || Scope === Craft.Binds) Scope = Craft.Binds;
+            if (!is.Map(Scope)) Scope = Craft.Binds;
             if (is.Func(handle)) val = new _ReactiveVariable(val, handle);
             key.includes('.') ? Craft.setBind(key, val, Scope) : Scope.set(key, val);
             Craft.applyBinds(key, Scope);
@@ -2070,7 +2022,7 @@ function _typeof(obj) {
         setBind: function setBind(key, val, Scope, parentignore) {
             var bind = undefined;
             if (is.Bool(Scope)) parentignore = Scope;
-            if (!is.Map(Scope) || Scope === Craft.Binds) Scope = Craft.Binds;
+            if (!is.Map(Scope)) Scope = Craft.Binds;
             if (!key.includes('.')) {
                 bind = Scope.get(key);
                 rv(bind) ? bind.set(val) : Scope.set(key, val);
@@ -2094,9 +2046,9 @@ function _typeof(obj) {
 
         /** gets the value of a bound variable */
         getBind: function getBind(key, Scope, returnReactiveVars) {
-            if (!is.Map(Scope) || Scope === Craft.Binds) Scope = Craft.Binds;
-            if (!Craft.BindExists(key, Scope)) return undefined;
+            if (!is.Map(Scope)) Scope = Craft.Binds;
             if (is.Bool(Scope)) returnReactiveVars = Scope;
+            if (!Craft.BindExists(key, Scope)) return undefined;
             if (!key.includes('.')) {
                 var bind = Scope.get(key);
                 if (returnReactiveVars === true) return bind;
@@ -2104,9 +2056,9 @@ function _typeof(obj) {
             } else {
                 var okey = key.split('.'),
                     bind = Scope.get(okey[0]),
-                    val = Craft.getDeep(rv(bind) ? bind.val : bind, Craft.omitFrom(okey, okey[0]).join('.'));
-                if (returnReactiveVars === true) return val;
-                return rv(val) ? val.val : val;
+                    _val = Craft.getDeep(rv(bind) ? bind.val : bind, Craft.omitFrom(okey, okey[0]).join('.'));
+                if (returnReactiveVars === true) return _val;
+                return rv(_val) ? _val.val : _val;
             }
         },
 
@@ -2138,7 +2090,7 @@ function _typeof(obj) {
             try {
                 var okey = key.split('.'),
                     bind = Craft.getBind(okey[0], Scope);
-                return is.Def(Craft.getDeep(bind, Craft.omitFrom(okey, okey[0]).join('.')));
+                return def(Craft.getDeep(bind, Craft.omitFrom(okey, okey[0]).join('.')));
             } catch (e) {}
             return false;
         }
@@ -2148,17 +2100,18 @@ function _typeof(obj) {
         if (e.animationName === 'NodeInserted' && is.Node(e.target)) {
             (function() {
                 var element = e.target,
+                    mnp = dom(element),
                     isInput = is.Input(element);
-                if (element.hasAttribute(ib)) {
+                if (mnp.hasAttr(ib)) {
                     (function() {
-                        var key = element.getAttribute(ib),
+                        var key = mnp.getAttr(ib),
                             OnInput = On(i, element, function(e) {
-                                return Craft.setBind(key, isInput ? element.value : element.innerHTML);
+                                return Craft.setBind(key, mnp.html());
                             }),
                             observer = new MutationObserver(function(mutations) {
                                 return mutations.forEach(function(mut) {
                                     if (mut.type === 'attributes') {
-                                        if (mut.attributeName === ib && !element.hasAttribute(ib)) {
+                                        if (mut.attributeName === ib && !mnp.hasAttr(ib)) {
                                             OnInput.Off();
                                             observer.disconnect();
                                         }
@@ -2168,18 +2121,15 @@ function _typeof(obj) {
                         observer.observe(element, {
                             attributes: true
                         });
-                        if (Craft.BindExists(key)) {
-                            var val = Craft.getBind(key);
-                            isInput ? element.value = val : element.innerHTML = val;
-                        } else Craft.newBind(key, isInput ? element.value : element.innerHTML);
+                        Craft.BindExists(key) ? mnp.html(Craft.getBind(key)) : Craft.newBind(key, mnp.html());
                     })();
                 }
-                if (element.hasAttribute(vb)) {
-                    var key = element.getAttribute(vb);
-                    Craft.BindExists(key) ? Craft.applyBinds(key) : Craft.newBind(key, isInput ? element.value : element.innerHTML);
+                if (mnp.hasAttr(vb)) {
+                    var key = mnp.getAttr(vb);
+                    Craft.BindExists(key) ? Craft.applyBinds(key) : Craft.newBind(key, mnp.html());
                 }
-                if (element.hasAttribute('link')) On('click', element, function(e) {
-                    return element.hasAttribute('newtab') ? open(element.getAttribute('link')) : Craft.router.open(element.getAttribute('link'));
+                if (mnp.hasAttr('link')) On('click', element, function(e) {
+                    return mnp.hasAttr('newtab') ? open(mnp.hasAttr('link')) : Craft.router.open(mnp.hasAttr('link'));
                 });
             })();
         }
@@ -2190,8 +2140,8 @@ function _typeof(obj) {
     });
     Craft.curry.adaptTo = Craft.curry(function(num, fn) {
         return Craft.curry.to(num, function(context) {
-            for (var _len12 = arguments.length, args = Array(_len12 > 1 ? _len12 - 1 : 0), _key12 = 1; _key12 < _len12; _key12++) {
-                args[_key12 - 1] = arguments[_key12];
+            for (var _len4 = arguments.length, args = Array(_len4 > 1 ? _len4 - 1 : 0), _key4 = 1; _key4 < _len4; _key4++) {
+                args[_key4 - 1] = arguments[_key4];
             }
 
             return fn.apply(null, args.slice(1).concat(context));
@@ -2217,13 +2167,13 @@ function _typeof(obj) {
 
     Craft.newComponent('fetch-webcomponent', {
         inserted: function inserted() {
-            var _this7 = this;
+            var _this6 = this,
+                src = this.getAttribute('src');
 
-            var src = this.getAttribute('src');
             if (src !== null) {
-                var _ret7 = (function() {
+                var _ret6 = (function() {
                     var wc = null,
-                        el = dom(_this7),
+                        el = dom(_this6),
                         cc = 'cache-component';
                     if (Craft.WebComponents.includes(src)) return {
                         v: false
@@ -2243,7 +2193,7 @@ function _typeof(obj) {
                     });
                 })();
 
-                if ((typeof _ret7 === 'undefined' ? 'undefined' : _typeof(_ret7)) === "object") return _ret7.v;
+                if ((typeof _ret6 === 'undefined' ? 'undefined' : _typeof(_ret6)) === "object") return _ret6.v;
             }
         }
     });

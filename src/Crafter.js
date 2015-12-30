@@ -6,35 +6,6 @@
 "use strict";
 ((doc, root) => {
 
-  function type(obj, str) {
-    return toString.call(obj) === str;
-  }
-
-  function isT(val, str) {
-    return typeof val === str;
-  }
-
-  function manageInvoke(fn, argsArr, totalArity) {
-    argsArr = argsArr.length > totalArity ? argsArr.slice(0, totalArity) : argsArr;
-    return argsArr.length === totalArity ? fn.apply(null, argsArr) : createFn(fn, argsArr, totalArity);
-  }
-
-  function toArr(val) {
-    return Array.from(val);
-  }
-
-  function createFn(fn, Args, totalArity) {
-    let remainingArity = totalArity - Args.length;
-    return is.Between(remainingArity, 10, 0) ? function () {
-      let args = Array.from(arguments);
-      return manageInvoke(fn, Args.concat(args), totalArity);
-    } : (function (fn, args, arity) {
-      let a = [];
-      forEach(arity, (v, i) => a.push('a' + i.toString()));
-      return eval(`false||function(${a.join(',')}){ return manageInvoke(fn, args.concat(Array.from(arguments)));}`);
-    })(fn, args, remainingArity);
-  }
-
   let regexps = {
       // Thanks to github.com/arasatasaygin for these RegExps
       url: /^(?:(?:https?|ftp):\/\/)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:\/\S*)?$/i,
@@ -63,336 +34,406 @@
   CrafterStyles.innerHTML = `\n@keyframes NodeInserted {from {opacity:.99;}to {opacity: 1;}} [view-bind],[input-bind] {animation-duration: 0.001s;animation-name: NodeInserted;}`;
   head.appendChild(CrafterStyles);
 
+  function toArr(val) {
+    return Array.from(val);
+  }
+  // ta = TestArgs : convert arguments to array then tests it
+  function ta(args, test) {
+    return args.length === 0 ? false : Array.from(args).every(test);
+  }
+
+  function type(obj, str) {
+    return toString.call(obj) === str;
+  }
+
+  function isT(val, str) {
+    return typeof val === str;
+  }
+
+  function manageInvoke(fn, argsArr, totalArity) {
+    argsArr = argsArr.length > totalArity ? argsArr.slice(0, totalArity) : argsArr;
+    return argsArr.length === totalArity ? fn.apply(null, argsArr) : createFn(fn, argsArr, totalArity);
+  }
+
+
+  function createFn(fn, Args, totalArity) {
+    let remainingArity = totalArity - Args.length;
+    return is.Between(remainingArity, 10, 0) ? function () {
+      let args = toArr(arguments);
+      return manageInvoke(fn, Args.concat(args), totalArity);
+    } : (function (fn, args, arity) {
+      let a = [];
+      forEach(arity, (v, i) => a.push('a' + i.toString()));
+      return eval(`false||function(${a.join(',')}){ return manageInvoke(fn, args.concat(toArr(arguments)));}`);
+    })(fn, args, remainingArity);
+  }
+
+  function def() {
+    return ta(arguments, o => !isT(o, 'undefined'));
+  }
+
+  function nil() {
+    return ta(arguments, o => o === null);
+  }
+
   /** is - Type Testing / Assertion */
   root.is = {
     /**
      * Test if something is a boolean type
      * @param val - value to test
      */
-    Bool: val => typeof val === 'boolean',
-    /**
-     * Test if something is a String
-     * @param args - value/values to test
-     */
-    String() {
-      let args = toArr(arguments);
-      return args.length && args.every(o => isT(o, 'string'))
-    },
-    /**
-     * Test if something is an Array
-     * @param args - value/values to test
-     */
-    Arr() {
-      let args = toArr(arguments);
-      return args.length && args.every(o => Array.isArray(o))
-    },
-    /**
-     * Test if something is an Array-Like
-     * @param args - value/values to test
-     */
-    Arraylike() {
-      let args = toArr(arguments);
-      return args.length && args.every(o => {
+    Bool() {
+        return ta(arguments, o => typeof val === 'boolean');
+      },
+      /**
+       * Test if something is a String
+       * @param args - value/values to test
+       */
+      String() {
+        return ta(arguments, o => isT(o, 'string'));
+      },
+      /**
+       * Test if something is an Array
+       * @param args - value/values to test
+       */
+      Arr() {
+        return ta(arguments, o => Array.isArray(o))
+      },
+      /**
+       * Test if something is an Array-Like
+       * @param args - value/values to test
+       */
+      Arraylike() {
         try {
-          return is.Def(o['length']);
+          return ta(arguments, o => def(o.length));
         } catch (e) {}
-      });
-    },
-    /**
-     * Determine whether a variable is undefined
-     * @param args - value/values to test
-     */
-    Undef() {
-      let args = toArr(arguments);
-      return args.length && args.every(o => isT(o, 'undefined'))
-     },
-    /**
-     * Determine whether a variable is in fact defined
-     * @param args - value/values to test
-     */
-    Def() {
-      let args = toArr(arguments);
-      return args.length && args.every(o => !isT(o, 'undefined'))
-     },
-    /**
-     * Determine whether a variable is null
-     * @param args - value/values to test
-     */
-    Null() {
-      let args = toArr(arguments);
-      return args.length && args.every(o => o === null);
-    },
-    /**
-     * Determine whether a variable is a DOM Node
-     * @param args - value/values to test
-     */
-    Node() {
-      let args = toArr(arguments);
-      return args.length && args.every(o => o instanceof Node);
-    },
-    /**
-     * Determine whether a variable is a DOM NodeList or Collection of Nodes
-     * @param args - value/values to test
-     */
-    NodeList() {
-      let args = toArr(arguments);
-      return args.length && args.every(n => n instanceof Node ? true : is.Arraylike(n) ? Array.from(n).every(o => is.Node(o)) : false) ? true : false;
-    },
-    /**
-     * Determine if a variable is a Number
-     * @param {...*} args - value/values to test
-     */
-    Num: (...args) => args.length && args.every(o => !isNaN(Number(o))),
-    /**
-     * Determine if a variable is an Object
-     * @param args - value/values to test
-     */
-    Object: (...args) => args.length && args.every(o => type(o, '[object Object]')),
-    /**
-     * Determine if a variable is a HTMLElement
-     * @param args - value/values to test
-     */
-    Element: (...args) => args.length && args.every(o => type(o, '[object HTMLElement]')),
-    /**
-     * Determine if a variable is a File Object
-     * @param args - value/values to test
-     */
-    File: (...args) => args.length && args.every(o => type(o, '[object File]')),
-    /**
-     * Determine if a variable is of a FormData type
-     * @param args - value/values to test
-     */
-    FormData: (...args) => args.length && args.every(o => type(o, '[object FormData]')),
-    /**
-     * Determine if a variable is a Map
-     * @param args - value/values to test
-     */
-    Map: (...args) => args.length && args.every(o => type(o, '[object Map]')),
-    /**
-     * Determine if a variable is a function
-     * @param args - value/values to test
-     */
-    Func: (...args) => args.length && args.every(o => typeof o === 'function'),
-    /**
-     * Determine if a variable is of Blob type
-     * @param obj - variable to test
-     */
-    Blob: obj => type(obj, '[object Blob]'),
-    /**
-     * Determine if a variable is a Regular Expression
-     * @param obj - variable to test
-     */
-    RegExp: obj => type(obj, '[object RegExp]'),
-    /**
-     * Determine if a variable is a Date type
-     * @param obj - variable to test
-     */
-    Date: obj => type(obj, '[object Date]'),
-    /**
-     * Determine if a variable is a Set
-     * @param obj - variable to test
-     */
-    Set: obj => type(obj, '[object Set]'),
-    Args: val => !is.Null(val) && (type(val, '[object Arguments]') || (typeof val === 'object' && 'callee' in val)),
-    /**
-     * Determine if a variable is a Symbol
-     * @param obj - variable to test
-     */
-    symbol: obj => type(obj, '[object Symbol]'),
-    char: val => is.String(val) && val.length === 1,
-    space: val => is.char(val) && (val.charCodeAt(0) > 8 && val.charCodeAt(0) < 14) || val.charCodeAt(0) === 32,
-    /**
-     * Determine if a String is UPPERCASE
-     * @param {string} char - variable to test
-     */
-    Uppercase: str => is.String(str) && !is.Num(str) && str === str.toUpperCase(),
-    /**
-     * Determine if a String is LOWERCASE
-     * @param {string} char - variable to test
-     */
-    Lowercase: str => is.String(str) && str === str.toLowerCase(),
-    /**
-     * Determine if a String contains only characters and numbers (alphanumeric)
-     * @param {string} str - variable to test
-     */
-    Alphanumeric: str => /^[0-9a-zA-Z]+$/.test(str),
-    /**
-     * Determines whether a String is a valid Email
-     * @param {string} email - variable to test
-     */
-    Email: email => regexps.email.test(email),
-    /**
-     * Determines whether a String is a URL
-     * @param {string} url - variable to test
-     */
-    URL: url => regexps.url.test(url),
-    /**
-     * Determines whether a String is a HEX-COLOR (#fff123)
-     * @param {string} HexColor - variable to test
-     */
-    HexColor: hexColor => regexps.hexColor.test(hexColor),
-    /**
-     * Determines whether a String is a ip
-     * @param {string} ip - variable to test
-     */
-    ip: ip => regexps.ip.test(ip),
-    /**
-     * Determines whether a String is a ipv4
-     * @param {string} ipv4 - variable to test
-     */
-    ipv4: ipv4 => regexps.ipv4.test(ipv4),
-    /**
-     * Determines whether a String is a ipv6
-     * @param {string} ipv6 - variable to test
-     */
-    ipv6: ipv6 => regexps.ipv6.test(ipv6),
-    /**
-     * Determines whether a String is hexadecimal
-     * @param {string} hexadecimal - variable to test
-     */
-    hexadecimal: hexadecimal => regexps.hexadecimal.test(hexadecimal),
-    /**
-     * checks wether a date is today
-     * @param obj - Date to test
-     */
-    today: obj => is.Date(obj) && obj.toDateString() === new Date().toDateString(),
-    /**
-     * checks wether a date is yesterday
-     * @param obj - Date to test
-     */
-    yesterday(obj) {
-      let now = new Date();
-      return is.Date(obj) && obj.toDateString() === new Date(now.setDate(now.getDate() - 1)).toDateString();
-    },
-    /**
-     * checks wether a date is tommorow
-     * @param obj - Date to test
-     */
-    tomorrow(obj) {
-      let now = new Date();
-      return is.Date(obj) && obj.toDateString() === new Date(now.setDate(now.getDate() + 1)).toDateString();
-    },
-    /**
-     * Determines if a date is in the past
-     * @param obj - Date to test
-     */
-    past: obj => is.Date(obj) && obj.getTime() < new Date().getTime(),
-    /**
-     * Determines if a date is in the future
-     * @param obj - Date to test
-     */
-    future: obj => !is.past(obj),
-    /**
-     * Determines whether a String is a timeString
-     * @param time - variable to test
-     */
-    time: time => regexps.timeString.test(time),
-    /**
-     * Determines whether a String is a dateString
-     * @param {string} dateString - variable to test
-     */
-    dateString: dateString => regexps.dateString.test(dateString),
-    /**
-     * Determines whether a Number is between a maximum and a minimum
-     * @param {Number} val - number value to test
-     * @param {Number} max - maximum to compare the value with
-     * @param {Number} min - minimum to compare the value with
-     * @returns {Boolean} wether or not the value is between the max and min
-     */
-    Between: (val, max, min) => (val <= max && val >= min),
-    /**
-     * checks if a number is an integer
-     * @param val - variable / value to test
-     */
-    int: val => is.Num(val) && val % 1 === 0,
-    /**
-     * checks if a number is an even number
-     * @param val - variable / value to test
-     */
-    even: val => is.Num(val) && val % 2 === 0,
-    /**
-     * checks if a number is an odd number
-     * @param val - variable / value to test
-     */
-    odd: val => is.Num(val) && val % 2 !== 0,
-    /**
-     * checks if a number is positive
-     * @param val - variable / value to test
-     */
-    positive: val => is.Num(val) && val > 0,
-    /**
-     * checks if a number is positive
-     * @param val - variable / value to test
-     */
-    negative: val => is.Num(val) && val < 0,
-    /**
-     * Determines if two variables are equal
-     * @param a - first value to compare
-     * @param b - second value to compare
-     */
-    eq: (a, b) => a === b,
-    /**
-     * Determines if a number is LOWER than another
-     * @param {Number} val - value to test
-     * @param {Number} other - num to test with value
-     */
-    lt: (val, other) => val < other,
-    /**
-     * Determines if a number is LOWER than or equal to another
-     * @param {Number} val - value to test
-     * @param {Number} other - num to test with value
-     */
-    lte: (val, other) => val <= other,
-    /**
-     * Determines if a number is BIGGER than another
-     * @param {Number} val - value to test
-     * @param {Number} other - num to test with value
-     */
-    bt: (val, other) => val > other,
-    /**
-     * Determines if a number is BIGGER than or equal to another
-     * @param {Number} val - value to test
-     * @param {Number} other - num to test with value
-     */
-    bte: (val, other) => val >= other,
-    /**
-     * Determine if a given collection or string is empty
-     * @param {Object|Array|string} val - value to test if empty
-     */
-    empty(val) {
-      if (is.Object(val)) {
-        let num = Object.getOwnPropertyNames(val).length;
-        return (num === 0 || (num === 1 && is.Arr(val)) || (num === 2 && is.Args(val))) ? true : false
-      } else return is.Arr(val) ? val.length <= 0 : val === ''
-    },
-    /**
-     * Determines if a value is an instance of the ReactiveVariable class
-     * @param args - value/values to test
-     */
-    ReactiveVariable() {
-      let args = Array.from(arguments);
-      return args.length && args.every(o => o instanceof ReactiveVariable);
-    },
-    /**
-     * Test if something is a Native JavaScript feature
-     * @param val - value to test
-     */
-    Native(val) {
-      let type = typeof val;
-      return type === 'function' ? RegExp('^' + String(Object.prototype.toString).replace(/[.*+?^${}()|[\]\/\\]/g, '\\$&').replace(/toString|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$').test(Function.prototype.toString.call(val)) : (val && type == 'object' && /^\[object .+?Constructor\]$/.test(val.toString)) || false;
-    },
-    Input: element => element.tagName === 'INPUT' || element.tagName === 'TEXTAREA',
+        return false;
+      },
+      /**
+       * Determine whether a variable is undefined
+       * @param args - value/values to test
+       */
+      Undef() {
+        return !def.apply(this, arguments);
+      },
+      /**
+       * Determine whether a variable is in fact defined
+       * @param args - value/values to test
+       */
+      Def: def,
+      /**
+       * Determine whether a variable is null
+       * @param args - value/values to test
+       */
+      Null() {
+        return ta(arguments, o => o === null);
+      },
+      /**
+       * Determine whether a variable is a DOM Node
+       * @param args - value/values to test
+       */
+      Node() {
+        return ta(arguments, o => o instanceof Node);
+      },
+      /**
+       * Determine whether a variable is a DOM NodeList or Collection of Nodes
+       * @param args - value/values to test
+       */
+      NodeList() {
+        return ta(arguments, nl => is.Arraylike(nl) ? ta(nl, n => n instanceof Node) : false);
+      },
+      /**
+       * Determine if a variable is a Number
+       * @param {...*} args - value/values to test
+       */
+      Num() {
+        return ta(arguments, o => !isNaN(Number(o)));
+      },
+      /**
+       * Determine if a variable is an Object
+       * @param args - value/values to test
+       */
+      Object() {
+        return ta(arguments, o => type(o, '[object Object]'));
+      },
+      /**
+       * Determine if a variable is a HTMLElement
+       * @param args - value/values to test
+       */
+      Element() {
+        return ta(arguments, o => type(o, '[object HTMLElement]'));
+      },
+      /**
+       * Determine if a variable is a File Object
+       * @param args - value/values to test
+       */
+      File() {
+        return ta(arguments, o => type(o, '[object File]'));
+      },
+      /**
+       * Determine if a variable is of a FormData type
+       * @param args - value/values to test
+       */
+      FormData() {
+        return ta(arguments, o => type(o, '[object FormData]'));
+      },
+      /**
+       * Determine if a variable is a Map
+       * @param args - value/values to test
+       */
+      Map() {
+        return ta(arguments, o => type(o, '[object Map]'));
+      },
+      /**
+       * Determine if a variable is a function
+       * @param args - value/values to test
+       */
+      Func() {
+        return ta(arguments, o => typeof o === 'function');
+      },
+      /**
+       * Determine if a variable/s are true
+       * @param args - value/values to test
+       */
+      True() {
+        return ta(arguments, o => o === true);
+      },
+      /**
+       * Determine if a variable/s are false
+       * @param args - value/values to test
+       */
+      False() {
+        return ta(arguments, o => o !== true);
+      },
+      /**
+       * Determine if a variable is of Blob type
+       * @param obj - variable to test
+       */
+      Blob() {
+        return ta(arguments, o => type(o, '[object Blob]'));
+      },
+      /**
+       * Determine if a variable is a Regular Expression
+       * @param obj - variable to test
+       */
+      RegExp() {
+        return ta(arguments, o => type(o, '[object RegExp]'));
+      },
+      /**
+       * Determine if a variable is a Date type
+       * @param {...*} variable to test
+       */
+      Date() {
+        return ta(arguments, o => type(o, '[object Date]'));
+      },
+      /**
+       * Determine if a variable is a Set
+       * @param obj - variable to test
+       */
+      Set() {
+        return ta(arguments, o => type(o, '[object Set]'));
+      },
+      Args: val => !nill(val) && (type(val, '[object Arguments]') || (typeof val === 'object' && 'callee' in val)),
+      /**
+       * Determine if a variable is a Symbol
+       * @param obj - variable to test
+       */
+      symbol: obj => type(obj, '[object Symbol]'),
+      char: val => is.String(val) && val.length === 1,
+      space: val => is.char(val) && (val.charCodeAt(0) > 8 && val.charCodeAt(0) < 14) || val.charCodeAt(0) === 32,
+      /**
+       * Determine if a String is UPPERCASE
+       * @param {string} char - variable to test
+       */
+      Uppercase: str => is.String(str) && !is.Num(str) && str === str.toUpperCase(),
+      /**
+       * Determine if a String is LOWERCASE
+       * @param {string} char - variable to test
+       */
+      Lowercase: str => is.String(str) && str === str.toLowerCase(),
+      /**
+       * Determine if a String contains only characters and numbers (alphanumeric)
+       * @param {string} str - variable to test
+       */
+      Alphanumeric: str => /^[0-9a-zA-Z]+$/.test(str),
+      /**
+       * Determines whether a String is a valid Email
+       * @param {string} email - variable to test
+       */
+      Email: email => regexps.email.test(email),
+      /**
+       * Determines whether a String is a URL
+       * @param {string} url - variable to test
+       */
+      URL: url => regexps.url.test(url),
+      /**
+       * Determines whether a String is a HEX-COLOR (#fff123)
+       * @param {string} HexColor - variable to test
+       */
+      HexColor: hexColor => regexps.hexColor.test(hexColor),
+      /**
+       * Determines whether a String is a ip
+       * @param {string} ip - variable to test
+       */
+      ip: ip => regexps.ip.test(ip),
+      /**
+       * Determines whether a String is a ipv4
+       * @param {string} ipv4 - variable to test
+       */
+      ipv4: ipv4 => regexps.ipv4.test(ipv4),
+      /**
+       * Determines whether a String is a ipv6
+       * @param {string} ipv6 - variable to test
+       */
+      ipv6: ipv6 => regexps.ipv6.test(ipv6),
+      /**
+       * Determines whether a String is hexadecimal
+       * @param {string} hexadecimal - variable to test
+       */
+      hexadecimal: hexadecimal => regexps.hexadecimal.test(hexadecimal),
+      /**
+       * checks wether a date is today
+       * @param obj - Date to test
+       */
+      today: obj => is.Date(obj) && obj.toDateString() === new Date().toDateString(),
+      /**
+       * checks wether a date is yesterday
+       * @param obj - Date to test
+       */
+      yesterday(obj) {
+        let now = new Date();
+        return is.Date(obj) && obj.toDateString() === new Date(now.setDate(now.getDate() - 1)).toDateString();
+      },
+      /**
+       * checks wether a date is tommorow
+       * @param obj - Date to test
+       */
+      tomorrow(obj) {
+        let now = new Date();
+        return is.Date(obj) && obj.toDateString() === new Date(now.setDate(now.getDate() + 1)).toDateString();
+      },
+      /**
+       * Determines if a date is in the past
+       * @param obj - Date to test
+       */
+      past: obj => is.Date(obj) && obj.getTime() < new Date().getTime(),
+      /**
+       * Determines if a date is in the future
+       * @param obj - Date to test
+       */
+      future: obj => !is.past(obj),
+      /**
+       * Determines whether a String is a timeString
+       * @param time - variable to test
+       */
+      time: time => regexps.timeString.test(time),
+      /**
+       * Determines whether a String is a dateString
+       * @param {string} dateString - variable to test
+       */
+      dateString: dateString => regexps.dateString.test(dateString),
+      /**
+       * Determines whether a Number is between a maximum and a minimum
+       * @param {Number} val - number value to test
+       * @param {Number} max - maximum to compare the value with
+       * @param {Number} min - minimum to compare the value with
+       * @returns {Boolean} wether or not the value is between the max and min
+       */
+      Between: (val, max, min) => (val <= max && val >= min),
+      /**
+       * checks if a number is an integer
+       * @param val - variable / value to test
+       */
+      int: val => is.Num(val) && val % 1 === 0,
+      /**
+       * checks if a number is an even number
+       * @param val - variable / value to test
+       */
+      even: val => is.Num(val) && val % 2 === 0,
+      /**
+       * checks if a number is an odd number
+       * @param val - variable / value to test
+       */
+      odd: val => is.Num(val) && val % 2 !== 0,
+      /**
+       * checks if a number is positive
+       * @param val - variable / value to test
+       */
+      positive: val => is.Num(val) && val > 0,
+      /**
+       * checks if a number is positive
+       * @param val - variable / value to test
+       */
+      negative: val => is.Num(val) && val < 0,
+      /**
+       * Determines if two variables are equal
+       * @param a - first value to compare
+       * @param b - second value to compare
+       */
+      eq: (a, b) => a === b,
+      /**
+       * Determines if a number is LOWER than another
+       * @param {Number} val - value to test
+       * @param {Number} other - num to test with value
+       */
+      lt: (val, other) => val < other,
+      /**
+       * Determines if a number is LOWER than or equal to another
+       * @param {Number} val - value to test
+       * @param {Number} other - num to test with value
+       */
+      lte: (val, other) => val <= other,
+      /**
+       * Determines if a number is BIGGER than another
+       * @param {Number} val - value to test
+       * @param {Number} other - num to test with value
+       */
+      bt: (val, other) => val > other,
+      /**
+       * Determines if a number is BIGGER than or equal to another
+       * @param {Number} val - value to test
+       * @param {Number} other - num to test with value
+       */
+      bte: (val, other) => val >= other,
+      /**
+       * Determine if a given collection or string is empty
+       * @param {Object|Array|string} val - value to test if empty
+       */
+      empty(val) {
+        if (is.Object(val)) {
+          let num = Object.getOwnPropertyNames(val).length;
+          return (num === 0 || (num === 1 && is.Arr(val)) || (num === 2 && is.Args(val))) ? true : false
+        } else return is.Arr(val) ? val.length <= 0 : val === ''
+      },
+      /**
+       * Determines if a value is an instance of the ReactiveVariable class
+       * @param args - value/values to test
+       */
+      ReactiveVariable() {
+        let args = toArr(arguments);
+        return args.length && args.every(o => o instanceof ReactiveVariable);
+      },
+      /**
+       * Test if something is a Native JavaScript feature
+       * @param val - value to test
+       */
+      Native(val) {
+        let type = typeof val;
+        return type === 'function' ? RegExp('^' + String(Object.prototype.toString).replace(/[.*+?^${}()|[\]\/\\]/g, '\\$&').replace(/toString|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$').test(Function.prototype.toString.call(val)) : (val && type == 'object' && /^\[object .+?Constructor\]$/.test(val.toString)) || false;
+      },
+      Input: element => element.tagName === 'INPUT' || element.tagName === 'TEXTAREA',
   };
 
   let rv = is.ReactiveVariable;
   /**
-   * Converts any Query/QueryAll to an Array of Nodes even if there is only one Node
+   * Converts any Query/QueryAll to an Array of Nodes even if there is only one Node , this is error proof when no arguments are present it returns an empty array
    * @param {Node|NodeList|Array|String} val - pass either a CSS Selector string , Node/NodeList or Array of Nodes
+   * @param {Node|NodeList|Array|String} within - pass either a CSS Selector string , Node/NodeList or Array of Nodes to search for val in
    */
   root.QueryOrNodetoNodeArray = (val, within) => {
-    if (is.String(val) && is.String(within) || is.Node(within)) val = queryAll(val, within);
-    else if (is.String(val)) val = queryAll(val);
-    return !is.Null(val) && is.Node(val) ? [val] : is.NodeList(val) ? Array.from(val) : [];
+    if (is.String(val) && (is.String(within) || is.Node(within))) val = queryAll(val, within);
+    else if (is.String(val)) val = queryAll(val)
+    return is.Node(val) ? [val] : is.NodeList(val) ? toArr(val) : [];
   }
 
   /**
@@ -400,11 +441,20 @@
    * @param {string} wsAddress - the WebSocket address example "ws://localhost:3000/"
    * @param {Array=} protocols - the protocols to pass to the WebSocket Connection
    */
-  function CraftSocket(wsAddress, protocols) {
-    is.Arr(protocols) ? this.Socket = new WebSocket(wsAddress, protocols) : this.Socket = new WebSocket(wsAddress);
-    this.messageCalls = [];
-    this.RecieveCalls = [];
-    this.Socket.onmessage = e => this.RecieveCalls.forEach(call => call(e));
+  function CraftSocket(address, protocols) {
+    try {
+      is.Arr(protocols) ? this.Socket = new WebSocket(address, protocols) : this.Socket = new WebSocket(address);
+      let Self = this;
+      this.open = true;
+      this.address = address;
+      if (def(protocols)) this.protocols = protocols;
+      this.messageCalls = [];
+      this.RecieveCalls = [];
+      this.Socket.onmessage = e => Self.RecieveCalls.forEach(call => call(e));
+      this.Socket.onclose = e => this.open = false;
+    } catch (e) {
+      throw new Error(err);
+    }
   }
   /**
    * Sends a message along the WebSocket Connection
@@ -412,11 +462,12 @@
    * @param {function=} func - optional function to recieve the response with -> "function ( response , event ) { ... } or response => ..."
    */
   CraftSocket.prototype.send = function (message, func) {
-      this.messageCalls.push(() => {
-        this.Socket.send(message);
-        if (is.Def(func) && is.Func(func)) this.recieve((data, e) => func(data, e));
+      let Self = this;
+      Self.messageCalls.push(() => {
+        Self.Socket.send(message);
+        if (is.Func(func) && Self.open) Self.recieve((data, e) => func(data, e));
       });
-      this.Socket.onopen = e => this.messageCalls[this.messageCalls.length - 1]();
+      Self.Socket.onopen = e => Self.messageCalls[Self.messageCalls.length - 1]();
       return this;
     }
     /**
@@ -424,7 +475,7 @@
      * @param {function} func - function to recieve the response and event with -> "function ( response , event ) { ... } or response => ..."
      */
   CraftSocket.prototype.recieve = function (func) {
-      is.Func(func) ? this.RecieveCalls.push(e => func(e.data, e)) : console.error("func is not a function or is not defined");
+      is.Func(func) && this.open ? this.RecieveCalls.push(e => func(e.data, e)) : console.error("no function or connection closed");
       return this;
     }
     /** Closes the WebSocket Connection */
@@ -442,7 +493,7 @@
     if (is.Func(handle)) {
       this.val = val;
       this.Handle = handle;
-    } else console.error('ReactiveVariable needs a handler function after the value');
+    } else console.error('ReactiveVariable needs function');
   }
   /**
    * Sets the new value of the ReactiveVariable , this will also call the handle function
@@ -453,8 +504,8 @@
         this.Oldval = this.val;
         this.val = val;
         this.Handle(this.Oldval, val);
+        return this.val;
       }
-      return this.val;
     }
     /**
      * Gets the value of the ReactiveVariable , ReactiveVariable.val also does this
@@ -468,6 +519,7 @@
      */
   ReactiveVariable.prototype.reset = function (handle) {
     is.Func(handle) ? this.Handle = handle : console.error('ReactiveVariable.Reset only takes a function');
+    return this;
   }
 
   /**
@@ -479,15 +531,22 @@
    * @returns Interface On,Off,Once
    */
   function EventHandler(EventType, Target, Func, Within, ...args) {
-    this.EventType = EventType;
+    this.EventType = EventType || 'click';
     this.Target = (Target !== root && Target !== doc) ? QueryOrNodetoNodeArray(Target, Within) : Target;
-    this.FuncWrapper = e => Func(e, e.srcElement, args || []);
+    this.FuncWrapper = e => Func(e, e.srcElement, args);
   }
   /**
    * Activates the EventHandler to start listening for the EventType on the Target/Targets
    */
   EventHandler.prototype.On = function () {
-      is.Arr(this.Target) ? this.Target.forEach(target => target.addEventListener(this.EventType, this.FuncWrapper)) : this.Target.addEventListener(this.EventType, this.FuncWrapper);
+    is.Arr(this.Target) ? this.Target.forEach(target => target.addEventListener(this.EventType, this.FuncWrapper)) : this.Target.addEventListener(this.EventType, this.FuncWrapper);
+    return this;
+  }
+
+  EventHandler.prototype.ChangeType = function (type) {
+      this.Off();
+      this.EventType = type;
+      this.On();
       return this;
     }
     /**
@@ -519,11 +578,11 @@
    * @param {Array|Object|NodeList} iterable - any collection that is either an Object or has a .length value
    * @param {function} func - function called on each iteration -> "function( value , indexOrKey ) {...}"
    */
-  root.forEach = function (iterable, func) {
-    if (is.Undef(iterable)) throw new Error("forEach -> cannot iterate through undefined");
-    if (!is.Func(func)) throw new Error("forEach -> invalid or undefined function provided");
+  root.forEach = (iterable, func) => {
+    if (!def(iterable)) throw new Error("forEach -> iterable undefined");
+    if (!is.Func(func)) throw new Error("forEach -> function invalid or undefined");
     let i = 0;
-    if (is.Def(iterable.length))
+    if (def(iterable.length))
       for (; i < iterable.length; i++) func(iterable[i], i);
     else
       for (i in iterable)
@@ -535,27 +594,46 @@
    * @param {string} selector - CSS selector to query the DOM Node with
    * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
    */
-  root.query = (selector, element) => is.Def(element) ? is.String(element) ? doc.querySelector(element).querySelector(selector) : element.querySelector(selector) : doc.querySelector(selector);
+  root.query = (selector, element) => def(element) ? is.String(element) ? doc.querySelector(element).querySelector(selector) : element.querySelector(selector) : doc.querySelector(selector);
 
   /**
    * Easy way to get a DOM NodeList or NodeList within another DOM Node using CSS selectors
    * @param {string} selector - CSS selector to query the DOM Nodes with
    * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
    */
-  root.queryAll = (selector, element) => is.Def(element) ? is.Node(element) || element === doc ? element.querySelectorAll(selector) : query(element).querySelectorAll(selector) : doc.querySelectorAll(selector);
+  root.queryAll = (selector, element) => def(element) ? is.Node(element) || element === doc ? element.querySelectorAll(selector) : query(element).querySelectorAll(selector) : doc.querySelectorAll(selector);
   /**
    * Easy way to loop through Nodes in the DOM using a CSS Selector or a NodeList
    * @param {string|NodeList} selector - CSS selector to query the DOM Nodes with or NodeList to iterate through
    * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
    * @param {function} func - function called on each iteration -> "function( Element , index ) {...}"
    */
-  root.queryEach = function (selector, element, func) {
+  root.queryEach = (selector, element, func) => {
     if (is.Func(element)) func = element;
     let elements, i = 0;
     is.Node(selector) ? elements = [selector] : elements = is.Func(element) ? queryAll(selector) : queryAll(selector, element);
     for (; i < elements.length; i++) func(elements[i], i);
   }
 
+  function EventTypes(Target, within, listen) {
+    let etype = (type, fn) => new EventHandler(type, Target, fn, within)[listen || 'On']();
+    return {
+      Click: fn => etype('click', fn),
+      Input: fn => etype('input', fn),
+      DoubleClick: fn => etype('dblclick', fn),
+      Focus: fn => etype('focus', fn),
+      Blur: fn => etype('blur', fn),
+      Keydown: fn => etype('keydown', fn),
+      Mousemove: fn => etype('mousemove', fn),
+      Mousedown: fn => etype('mousedown', fn),
+      Mouseup: fn => etype('mouseup', fn),
+      Mouseover: fn => etype('mouseover', fn),
+      Mouseout: fn => etype('mouseout', fn),
+      Mouseenter: fn => etype('mouseenter', fn),
+      Mouseleave: fn => etype('mouseleave', fn),
+      Scroll: fn => etype('scroll', fn),
+    };
+  }
 
   /**
    * Starts listening for an EventType on the Target/Targets
@@ -565,27 +643,13 @@
    * @returns Off - when On is defined as a variable "var x = On(...)" it allows you to access all the EventHandler interfaces Off,Once,On
    */
   root.On = function (EventType, Target, element, func) {
-    if (is.Func(Target)) return new EventHandler(EventType, root, Target).On();
-    else if (arguments.length < 3 && !Array.from(arguments).some(i => is.Func(i))) {
-      let newEvent = (type, fn) => new EventHandler(type, EventType, fn, Target).On();
-      return {
-        Click: fn => newEvent('click', fn),
-        Input: fn => newEvent('input', fn),
-        DoubleClick: fn => newEvent('dblclick', fn),
-        Focus: fn => newEvent('focus', fn),
-        Blur: fn => newEvent('blur', fn),
-        Keydown: fn => newEvent('keydown', fn),
-        Mousemove: fn => newEvent('mousemove', fn),
-        Mousedown: fn => newEvent('mousedown', fn),
-        Mouseup: fn => newEvent('mouseup', fn),
-        Mouseover: fn => newEvent('mouseover', fn),
-        Mouseout: fn => newEvent('mouseout', fn),
-        Mouseenter: fn => newEvent('mouseenter', fn),
-        Mouseleave: fn => newEvent('mouseleave', fn),
-        Scroll: fn => newEvent('scroll', fn),
-      }
-    }
-    return is.Func(element) ? new EventHandler(EventType, Target, element).On() : new EventHandler(EventType, Target, func, element).On();
+    let args = toArr(arguments),
+      types = args.length < 3 && !args.some(i => is.Func(i));
+
+    return is.Func(Target) ? new EventHandler(EventType, root, Target).On() :
+      types ? EventTypes(EventType, Target) :
+      is.Func(element) ? new EventHandler(EventType, Target, element).On() :
+      new EventHandler(EventType, Target, func, element).On();
   }
 
   /**
@@ -596,28 +660,13 @@
    * @returns On,Off,Once - when Once is defined as a variable "var x = Once(...)" it allows you to access all the EventHandler interfaces Off,Once,On
    */
   root.Once = function (EventType, Target, element, func) {
-    let args = Array.from(arguments);
-    if (is.Func(Target)) return new EventHandler(EventType, root, Target).Once();
-    else if (args.length < 3 && !args.some(i => is.Func(i))) {
-      let newEvent = (type, fn) => new EventHandler(type, EventType, fn, Target).Once();
-      return {
-        Click: fn => newEvent('click', fn),
-        Input: fn => newEvent('input', fn),
-        DoubleClick: fn => newEvent('dblclick', fn),
-        Focus: fn => newEvent('focus', fn),
-        Blur: fn => newEvent('blur', fn),
-        Keydown: fn => newEvent('keydown', fn),
-        Mousemove: fn => newEvent('mousemove', fn),
-        Mousedown: fn => newEvent('mousedown', fn),
-        Mouseup: fn => newEvent('mouseup', fn),
-        Mouseover: fn => newEvent('mouseover', fn),
-        Mouseout: fn => newEvent('mouseout', fn),
-        Mouseenter: fn => newEvent('mouseenter', fn),
-        Mouseleave: fn => newEvent('mouseleave', fn),
-        Scroll: fn => newEvent('scroll', fn),
-      }
-    }
-    return is.Func(element) ? new EventHandler(EventType, Target, element).Once() : new EventHandler(EventType, Target, func, element).Once();
+    let args = toArr(arguments),
+      types = args.length < 3 && !args.some(i => is.Func(i));
+
+    return is.Func(Target) ? new EventHandler(EventType, root, Target).Once() :
+      types ? EventTypes(EventType, Target, 'Once') :
+      is.Func(element) ? new EventHandler(EventType, Target, element).Once() :
+      new EventHandler(EventType, Target, func, element).Once();
   }
 
   function make_element(name, inner, attributes, NodeForm, extraAttr) {
@@ -626,8 +675,7 @@
       inner = '';
     }
     if (is.Bool(attributes)) NodeForm = attributes;
-
-    if (is.Undef(inner, attributes, NodeForm)) {
+    if (!def(inner, attributes, NodeForm)) {
       inner = '';
       NodeForm = true;
     }
@@ -635,14 +683,14 @@
       let newEl = doc.createElement(name);
       newEl.innerHTML = inner;
       if (is.Object(attributes)) forEach(attributes, (val, attr) => newEl.setAttribute(attr, val));
-      if (is.String(attributes)) attributes.split('&').forEach(attr => is.Def(attr.split('=')[1]) ? newEl.setAttribute(attr.split('=')[0], attr.split('=')[1]) : newEl.setAttribute(attr.split('=')[0], ''));
-      if (is.Def(extraAttr) && is.Object(extraAttr)) forEach(extraAttr, (val, attr) => newEl.setAttribute(attr, val));
+      if (is.String(attributes)) attributes.split('&').forEach(attr => def(attr.split('=')[1]) ? newEl.setAttribute(attr.split('=')[0], attr.split('=')[1]) : newEl.setAttribute(attr.split('=')[0], ''));
+      if (def(extraAttr) && is.Object(extraAttr)) forEach(extraAttr, (val, attr) => newEl.setAttribute(attr, val));
       return newEl;
     }
     let attrString = ``;
-    if (is.String(attributes)) attributes.split('&').forEach(attr => attrString += is.Def(attr.split('=')[1]) ? `${attr.split('=')[0]}="${attr.split('=')[1]}" ` : `${attr.split('=')[0]} `);
+    if (is.String(attributes)) attributes.split('&').forEach(attr => attrString += def(attr.split('=')[1]) ? `${attr.split('=')[0]}="${attr.split('=')[1]}" ` : `${attr.split('=')[0]} `);
     if (is.Object(attributes)) forEach(attributes, (val, attr) => attrString += ` ${attr}="${val}" `);
-    if (is.Def(extraAttr) && is.Object(extraAttr)) forEach(extraAttr, (val, attr) => attrString += ` ${attr}="${val}" `);
+    if (def(extraAttr) && is.Object(extraAttr)) forEach(extraAttr, (val, attr) => attrString += ` ${attr}="${val}" `);
     return `<${name} ${attrString}>${inner}</${name}>`;
   }
 
@@ -654,30 +702,27 @@
        * @param {function} func - handler function for the event
        * @returns handler (Off,Once,On)
        */
-      On(eventType, func) {
-          return On(eventType, elements, func);
-        },
-        /**
-         * Checks wether a Node is in the NodeList with either a refference to the Node or a CSS selector
-         * @param {Node|string} Node or CSS selector
-         */
-        includes(SelectorNode) {
-          for (let index = 0; index < elements.length; index++)
-            if (elements[index] === SelectorNode) return true;
-          return false;
-        },
-        /**
-         * add CSS style rules to NodeList
-         * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
-         */
-        css(styles) {
-          return is.Def(styles) ? forEach(this.element, el => forEach(styles, (prop, key) => el.style[key] = prop)) : console.error('styles unefined');
-        }
+      On: (eventType, func) => On(eventType, elements, func),
+      /**
+       * Checks wether a Node is in the NodeList with either a refference to the Node or a CSS selector
+       * @param {Node|string} Node or CSS selector
+       */
+      includes(SelectorNode) {
+        for (let i = 0; i < elements.length; i++)
+          if (elements[i] === SelectorNode) return true;
+        return false;
+      },
+      /**
+       * add CSS style rules to NodeList
+       * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
+       */
+      css: styles => def(styles) ? forEach(elements, el => forEach(styles, (prop, key) => el.style[key] = prop)) : console.error('styles unefined'),
+
     }
   }
 
   function domManip(element, within) {
-    if (is.String(element)) is.Def(within) ? element = query(element, within) : element = query(element);
+    if (is.String(element)) def(within) ? element = query(element, within) : element = query(element);
     this.element = element;
   }
   /**
@@ -686,8 +731,9 @@
    * @param {string=} sets the innerHTML value or when undefined gets the innerHTML value
    */
   domManip.prototype.html = function (val) {
-      if (!is.Def(val)) return this.element.innerHTML;
-      this.element.innerHTML = val;
+      let el = this.element;
+      if (!def(val)) return is.Input(el) ? el.value : el.innerHTML;
+      is.Input(el) ? el.value = val : el.innerHTML = val;
       return this;
     }
     /**
@@ -696,8 +742,10 @@
      * @param {string=} sets the textContent value or when undefined gets the textContent value
      */
   domManip.prototype.text = function (val) {
-      if (is.Def(val)) return this.element.textContent;
-      this.element.textContent = val;
+      let el = this.element,
+        input = is.Input(el);
+      if (!def(val)) return input ? el.value : el.textContent;
+      input ? el.value = val : el.textContent = val;
       return this;
     }
     /**
@@ -753,7 +801,7 @@
      * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
      */
   domManip.prototype.css = function (styles) {
-      is.Def(styles) ? forEach(styles, (prop, key) => this.element.style[key] = prop) : console.error('Styles Object undefined');
+      def(styles) ? forEach(styles, (prop, key) => this.element.style[key] = prop) : console.error('Styles Object undefined');
       return this;
     }
     /**
@@ -829,11 +877,9 @@
      * @param {string|number=} pixel value to set
      */
   domManip.prototype.Width = function (pixels) {
-      if (is.Def(pixels)) {
-        this.element.style.width = pixels;
-        return this;
-      }
-      return this.element.getBoundingClientRect().width;
+      let haspixels = def(pixels);
+      if (haspixels) this.element.style.width = pixels;
+      return haspixels ? this : this.element.getBoundingClientRect().width;
     }
     /**
      * sets or gets the element's pixel height
@@ -841,11 +887,9 @@
      * @param {string|number=} pixel value to set
      */
   domManip.prototype.Height = function (pixels) {
-      if (is.Def(pixels)) {
-        this.element.style.height = pixels;
-        return this;
-      }
-      return this.element.getBoundingClientRect().height;
+      let haspixels = def(pixels);
+      if (haspixels) this.element.style.height = pixels;
+      return haspixels ? this : this.element.getBoundingClientRect().height;
     }
     /**
      * gets all the element's dimentions (width,height,left,top,bottom,right)
@@ -899,12 +943,8 @@
    * @param {Node|string=} within - optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
    */
   root.dom = (element, within) => {
-    if (is.Node(element) || is.NodeList(element)) return is.Node(element) ? new domManip(element) : domNodeList(element);
-    else if (is.String(element)) {
-      let elements = is.String(within) || is.Node(within) ? queryAll(element, within) : queryAll(element);
-      return elements.length === 1 ? new domManip(elements[0]) : domNodeList(elements);
-    }
-    return Craft.dom;
+    let elements = QueryOrNodetoNodeArray(element, within);
+    return is.NodeList(elements) ? elements.length === 1 ? new domManip(elements[0]) : domNodeList(elements) : Craft.dom;
   }
 
   CrafterStyles = query('[crafterstyles]', head);
@@ -916,30 +956,23 @@
     /** Converts an Array to an Object
      * @param {Array} arr - array to be converted
      */
-    ArraytoObject(arr) {
+    ArrtoObj(arr) {
         let i, NewObject = {};
         for (i in arr)
-          if (is.Def(arr[i])) NewObject[i] = arr[i];
+          if (def(arr[i])) NewObject[i] = arr[i];
         return NewObject;
       },
-      filterArr(arr, func) {
-        let i = -1,
-          x = -1,
-          result = [];
-        while (++i < arr.length)
-          if (func(arr[i], i, arr)) result[++x] = arr[i];
-        return result;
-      },
+      toArr: toArr,
       omitFrom(Arr, val) {
         let index = Arr.indexOf(val),
           temp = [],
           string = false,
           i = 0;
         if (is.String(Arr)) {
-          Arr = Array.from(Arr);
+          Arr = toArr(Arr);
           string = true;
         }
-        if (is.NodeList(Arr)) Arr = Array.from(Arr);
+        if (is.NodeList(Arr)) Arr = toArr(Arr);
         for (; i < Arr.length; i++)
           if (i !== index) temp.push(Arr[i]);
         return string ? temp.join('') : temp;
@@ -957,7 +990,7 @@
         return true;
       },
       getDeep(obj, propString) {
-        if (is.Undef(propString)) return obj;
+        if (!def(propString)) return obj;
 
         let prop, val, props = propString.split('.'),
           candidate, i = 0,
@@ -966,7 +999,7 @@
         for (; i < iLen; i++) {
           prop = props[i];
           candidate = obj[prop];
-          if (is.Def(candidate)) obj = candidate;
+          if (def(candidate)) obj = candidate;
           else break;
         }
         try {
@@ -979,7 +1012,7 @@
         if (prop.length > 1) {
           let e = prop.shift();
           Craft.setDeep(obj[e] = is.Object(obj[e]) ? obj[e] : {}, prop, value);
-        } else if (!rv(obj[prop[0]]) && value !== undefined) obj[prop[0]] = value;
+        } else if (!rv(obj[prop[0]]) && def(value)) obj[prop[0]] = value;
         else if (value === undefined) delete obj[prop[0]];
         else obj[prop[0]].set(value);
         if (returnObj === true) return obj;
@@ -1006,7 +1039,6 @@
         })));
         return hostobj;
       },
-      mergeObjects: (hostobj, ...Objs) => Object.assign(hostobj, Objs),
       clone(obj) {
         if (obj === null || typeof (obj) !== 'object' || 'isActiveClone' in obj) return obj;
         var temp = obj.constructor();
@@ -1086,7 +1118,7 @@
           let list = ``;
           if (is.Arr(items)) items.forEach(item => {
             if (is.String(item)) list += make_element('li', item);
-            else if (is.Object(items)) list += make_element('li', item.inner, item.attr);
+            if (is.Object(items)) list += make_element('li', item.inner, item.attr);
           });
           return make_element('ol', list, attr, node)
         },
@@ -1109,10 +1141,10 @@
             let row = `<tr>`;
             if (key === 'cell' || key === 'td' || key === 'data') {
               if (is.String(val)) row += `<td>${val}</td>`;
-              else if (is.Object(val)) row += make_element('tr', val.inner, val.attr)
+              if (is.Object(val)) row += make_element('tr', val.inner, val.attr)
             } else if (key === 'head' || key === 'th') {
               if (is.String(val)) row += `<th>${val}</th>`;
-              else if (is.Object(val)) row += make_element('th', val.inner, val.attr)
+              if (is.Object(val)) row += make_element('th', val.inner, val.attr)
             }
             row += '</tr>'
             tableInner += row;
@@ -1121,7 +1153,7 @@
         },
       },
       CurrentBrowser: {
-        is: browser => _br.join(' ').toLowerCase().includes(browser.toLowerCase()) ? true : false,
+        is: browser => _br.join(' ').toLowerCase().includes(browser.toLowerCase()),
         browser: _br.join(' ')
       },
       loader: {
@@ -1155,9 +1187,8 @@
        * {...object} args - Objects containing options for Script/CSS/WebComponent import
        */
       Import() {
-        let promises = [],
-          args = Array.from(arguments);
-        args.forEach(arg => arg.test === false ? Craft.loader.remove(arg.css || arg.script) : promises.push(Craft.loader.fetchImport({
+        let promises = [];
+        toArr(arguments).forEach(arg => arg.test === false ? Craft.loader.remove(arg.css || arg.script) : promises.push(Craft.loader.fetchImport({
           url: arg.css || arg.script,
           type: arg.css ? 'css' : 'script',
           exec: arg.execute !== false,
@@ -1198,8 +1229,8 @@
               prefixedSRC = (`Cr:${src}`),
               view = localStorage.getItem(prefixedSRC);
             if (!is.String(position)) position = 'beforeend';
-            if (!is.Null(vh) && is.Null(view)) fetch(src).then(res => res.text().then(txt => {
-              if (cache === true && is.Null(view)) localStorage.setItem(prefixedSRC, txt);
+            if (!nil(vh) && nil(view)) fetch(src).then(res => res.text().then(txt => {
+              if (is.True(cache, nil(view))) localStorage.setItem(prefixedSRC, txt);
               vh.insertAdjacentHTML(position, txt);
             })).catch(err => console.error("Couldn't get view ->" + err));
             else vh.insertAdjacentHTML(position, view);
@@ -1237,8 +1268,7 @@
       curry: fn => createFn(fn, [], fn.length),
       delay: (func, ms) => setTimeout(func, ms),
       after(n, func) {
-        if (!is.Func(func) && is.Func(n)) func = n;
-        else throw new Error("after -> func is not a function");
+        !is.Func(func) && is.Func(n) ? func = n : console.error("after: no function");
         n = Number.isFinite(n = +n) ? n : 0;
         if (--n < 1) return function () {
           return func.apply(this, arguments);
@@ -1297,22 +1327,19 @@
           return res;
         }
       },
-      css: (el, styles) => is.Def(styles, el) && is.Node(el) ? forEach(styles, (prop, key) => el.style[key] = prop) : console.error('invalid args'),
-      hasCapitals: string => Array.from(string).some(c => is.Uppercase(c)),
+      css: (el, styles) => def(styles, el) && is.Node(el) ? forEach(styles, (prop, key) => el.style[key] = prop) : console.error('invalid args'),
+      hasCapitals: string => toArr(string).some(c => is.Uppercase(c)),
       OverrideFunction: (funcName, Func, ContextObject) => {
         let func = funcName.split(".").pop(),
           ns = funcName.split(".");
         for (let i = 0; i < ns.length; i++) ContextObject = ContextObject[ns[i]];
         ContextObject[func] = Func;
       },
-      len: val => {
-        if (is.Object(val)) return Object.keys(val).length;
-        if (is.Map(val) || is.Set(val)) return val.size;
+      len(val) {
         try {
-          return val.length;
-        } catch (e) {
-          console.warn("Couldn't find length " + e);
-        }
+          return is.Object(val) ? Object.keys(val).length : is.Map(val) || is.Set(val) ? val.size : val.length;
+        } catch (e) {}
+        return -1;
       },
       indexOfDate(Collection, date) {
         for (let i = 0; i < Collection.length; i++)
@@ -1320,16 +1347,15 @@
         return -1;
       },
       type() {
-        let types = [],
-          args = arguments;
-        forEach(args => types.push(typeof arg));
+        let types = [];
+        toArr(arguments).forEach(arg => types.push(typeof arg));
         return types.length < 2 ? types[0] : types;
       },
       memoize(func, resolver) {
-        if (!is.Func(func) || (resolver && !is.Func(resolver))) throw new TypeError("arg provided is not a function");
+        if (!is.Func(func) || (resolver && !is.Func(resolver))) throw new TypeError("no function");
         let cache = new WeakMap;
         let memoized = function () {
-          let args = Array.from(arguments),
+          let args = arguments,
             key = resolver ? resolver.apply(this, args) : args[0];
           if (cache.has(key)) return cache.get(key);
           let result = func.apply(this, args);
@@ -1396,18 +1422,10 @@
       URLfrom: text => URL.createObjectURL(new Blob([text])),
       OnScroll: (element, func) => is.Func(func) ? On('scroll', element, e => func(e.deltaY < 1 ? false : true, e)) : console.error('second param needs to be a function'),
       OnResize: func => is.Func(func) ? Craft.ResizeHandlers.add(func) : console.error("Craft.OnResize -> func is not a function"),
-      OnScrolledTo: (Scroll, ifFunc, elseFunc) => On('scroll', e => {
-        if (pageYOffset >= Scroll) ifFunc(e);
-        else if (is.Def(elseFunc)) elseFunc(e);
+      OnScrolledTo: Scroll => new Promise((pass, fail) => {
+        let evl = On('scroll', e => pageYOffset >= Scroll ? pass(e, evl) : fail(e, evl));
       }),
-      WhenScrolledTo: Scroll => new Promise((resolve, reject) => {
-        let scrollEvent = On('scroll', e => {
-          if (pageYOffset >= Scroll || pageYOffset <= Scroll) {
-            scrollEvent.Off();
-            resolve(e);
-          }
-        })
-      }),
+      WhenScrolledTo: Scroll => new Promise((pass, fail) => Once('scroll', e => pageYOffset >= Scroll || pageYOffset <= Scroll ? pass(e) : fail(e))),
       /**
        * function that returns a promise when the DOM and WebComponents are finished loading
        * @param {Object=} Scope - Optional overide to the default Craft.Scope passed to the promise
@@ -1480,7 +1498,7 @@
        * @param {string} webcomponent - JSON string from Crafter.js's (.wc) WebComponent format
        */
       createWebComponent(webcomponent, src) {
-        if (is.String) webcomponent = JSON.parse(webcomponent);
+        webcomponent = JSON.parse(webcomponent);
         CrafterStyles.innerHTML += webcomponent.css;
         head.appendChild(dom().script(webcomponent.js + `\nCraft.WebComponents.push('${src}')`, `webcomponent=${webcomponent.name}`, true));
       },
@@ -1499,7 +1517,7 @@
        * @param {object} config - Object containing all the element's lifecycle methods / extends and attached methods or properties
        */
       newComponent(tag, config) {
-        if (is.Undef(config)) throw new Error(`newComponent: ${tag} -> config undefined`);
+        if (!def(config)) throw new Error(tag + ': config undefined');
         let element = Object.create(HTMLElement.prototype),
           settings = {};
         forEach(config, (prop, key) => {
@@ -1515,7 +1533,7 @@
       },
       applyBinds(key, bindScope) {
         let bind, val = Craft.getBind(key, bindScope);
-        if (is.Undef(val)) val = '';
+        if (!def(val)) val = '';
         is.Object(val) && !rv(val) ? Craft.applyObjectProps(key, val) : queryEach(`[${ib}="${key}"],[${vb}="${key}"]`, el => is.Input(el) ? el.value = val : el.innerHTML = val);
       },
       applyObjectProps(okey, oval) {
@@ -1528,7 +1546,7 @@
       /** creates a new bound variable , part of Crafter.js's Data Binding System */
       newBind(key, val, handle, Scope) {
         if (is.Map(handle)) Scope = handle;
-        if (!is.Map(Scope) || Scope === Craft.Binds) Scope = Craft.Binds;
+        if (!is.Map(Scope)) Scope = Craft.Binds;
         if (is.Func(handle)) val = new ReactiveVariable(val, handle);
         key.includes('.') ? Craft.setBind(key, val, Scope) : Scope.set(key, val);
         Craft.applyBinds(key, Scope);
@@ -1537,15 +1555,15 @@
       setBind(key, val, Scope, parentignore) {
         let bind;
         if (is.Bool(Scope)) parentignore = Scope;
-        if (!is.Map(Scope) || Scope === Craft.Binds) Scope = Craft.Binds;
+        if (!is.Map(Scope)) Scope = Craft.Binds;
         if (!key.includes('.')) {
           bind = Scope.get(key);
           rv(bind) ? bind.set(val) : Scope.set(key, val);
         } else {
           let obj, okey = key.split('.'),
             oldval = Craft.getBind(key, Scope, true),
-          bind = Scope.get(okey[0]);
-          if (rv(bind) && !parentignore) bind.Handle(rv(oldval) ? oldval.val : oldval ,val,rv(bind) ? bind.val : bind);
+            bind = Scope.get(okey[0]);
+          if (rv(bind) && !parentignore) bind.Handle(rv(oldval) ? oldval.val : oldval, val, rv(bind) ? bind.val : bind);
           if (rv(oldval)) {
             oldval.set(val);
             val = oldval.val;
@@ -1557,9 +1575,9 @@
       },
       /** gets the value of a bound variable */
       getBind(key, Scope, returnReactiveVars) {
-        if (!is.Map(Scope) || Scope === Craft.Binds) Scope = Craft.Binds;
-        if (!Craft.BindExists(key, Scope)) return undefined;
+        if (!is.Map(Scope)) Scope = Craft.Binds;
         if (is.Bool(Scope)) returnReactiveVars = Scope;
+        if (!Craft.BindExists(key, Scope)) return undefined;
         if (!key.includes('.')) {
           let bind = Scope.get(key);
           if (returnReactiveVars === true) return bind;
@@ -1598,7 +1616,7 @@
         try {
           let okey = key.split('.'),
             bind = Craft.getBind(okey[0], Scope);
-          return is.Def(Craft.getDeep(bind, Craft.omitFrom(okey, okey[0]).join('.')));
+          return def(Craft.getDeep(bind, Craft.omitFrom(okey, okey[0]).join('.')));
         } catch (e) {}
         return false;
       },
@@ -1607,13 +1625,14 @@
   On('animationstart', doc, e => {
     if (e.animationName === 'NodeInserted' && is.Node(e.target)) {
       let element = e.target,
+        mnp = dom(element),
         isInput = is.Input(element);
-      if (element.hasAttribute(ib)) {
-        let key = element.getAttribute(ib),
-          OnInput = On(i, element, e => Craft.setBind(key, isInput ? element.value : element.innerHTML)),
+      if (mnp.hasAttr(ib)) {
+        let key = mnp.getAttr(ib),
+          OnInput = On(i, element, e => Craft.setBind(key, mnp.html())),
           observer = new MutationObserver(mutations => mutations.forEach(mut => {
             if (mut.type === 'attributes') {
-              if (mut.attributeName === ib && !element.hasAttribute(ib)) {
+              if (mut.attributeName === ib && !mnp.hasAttr(ib)) {
                 OnInput.Off();
                 observer.disconnect();
               }
@@ -1622,16 +1641,13 @@
         observer.observe(element, {
           attributes: true
         });
-        if (Craft.BindExists(key)) {
-          let val = Craft.getBind(key);
-          isInput ? element.value = val : element.innerHTML = val;
-        } else Craft.newBind(key, isInput ? element.value : element.innerHTML);
+        Craft.BindExists(key) ? mnp.html(Craft.getBind(key)) : Craft.newBind(key, mnp.html());
       }
-      if (element.hasAttribute(vb)) {
-        let key = element.getAttribute(vb);
-        Craft.BindExists(key) ? Craft.applyBinds(key) : Craft.newBind(key, isInput ? element.value : element.innerHTML);
+      if (mnp.hasAttr(vb)) {
+        let key = mnp.getAttr(vb);
+        Craft.BindExists(key) ? Craft.applyBinds(key) : Craft.newBind(key, mnp.html());
       }
-      if (element.hasAttribute('link')) On('click', element, e => element.hasAttribute('newtab') ? open(element.getAttribute('link')) : Craft.router.open(element.getAttribute('link')));
+      if (mnp.hasAttr('link')) On('click', element, e => mnp.hasAttr('newtab') ? open(mnp.hasAttr('link')) : Craft.router.open(mnp.hasAttr('link')));
     }
   });
 
