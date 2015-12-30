@@ -601,12 +601,12 @@
    * @param {Array|Object|NodeList} iterable - any collection that is either an Object or has a .length value
    * @param {function} func - function called on each iteration -> "function( value , indexOrKey ) {...}"
    */
-  function forEach(iterable, func) {
+  root.forEach = function(iterable, func) {
     if (!def(iterable)) throw new Error("forEach -> iterable undefined");
     if (!is.Func(func)) throw new Error("forEach -> function invalid or undefined");
     let i = 0
     if (is.Arraylike(iterable) && !localStorage)
-      for (; i < num; i++) func(iterable[i], i);
+      for (; i < iterable.length; i++) func(iterable[i], i);
     else
       for (i in iterable)
         if (iterable.hasOwnProperty(i)) func(iterable[i], i);
@@ -1727,7 +1727,6 @@
   On('hashchange', e => Craft.router.handlers.forEach(handler => (location.hash === handler.link || location === handler.link) ? handler.func(location.hash) : null));
 
   root.CraftSocket = CraftSocket;
-  root.forEach = forEach;
   root.EventHandler = EventHandler;
   root.ReactiveVariable = ReactiveVariable;
 })(document, self);
