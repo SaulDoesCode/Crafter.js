@@ -1647,7 +1647,7 @@
         let key = mnp.getAttr(vb);
         Craft.BindExists(key) ? Craft.applyBinds(key) : Craft.newBind(key, mnp.html());
       }
-      if (mnp.hasAttr('link')) On('click', element, e => mnp.hasAttr('newtab') ? open(mnp.hasAttr('link')) : Craft.router.open(mnp.hasAttr('link')));
+      if (mnp.hasAttr('link')) On('click', element, e => mnp.hasAttr('newtab') ? open(mnp.getAttr('link')) : Craft.router.open(mnp.getAttr('link')));
     }
   });
 

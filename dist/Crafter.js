@@ -2129,7 +2129,7 @@ function _typeof(obj) {
                     Craft.BindExists(key) ? Craft.applyBinds(key) : Craft.newBind(key, mnp.html());
                 }
                 if (mnp.hasAttr('link')) On('click', element, function(e) {
-                    return mnp.hasAttr('newtab') ? open(mnp.hasAttr('link')) : Craft.router.open(mnp.hasAttr('link'));
+                    return mnp.hasAttr('newtab') ? open(mnp.getAttr('link')) : Craft.router.open(mnp.getAttr('link'));
                 });
             })();
         }
