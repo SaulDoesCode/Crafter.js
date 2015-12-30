@@ -19,10 +19,6 @@
       ip: /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/
     },
     Ready = false,
-    i = 'input',
-    b = '-bind',
-    ib = i + b,
-    vb = 'view' + b,
     w = 'webcomponent',
     fw = 'fetch-' + w,
     head = doc.head,
@@ -33,7 +29,7 @@
   _br ? [_br[1], _br[2]] : [navigator.appName, navigator.appVersion, '-?'];
 
   CrafterStyles.setAttribute('crafterstyles', '');
-  CrafterStyles.innerHTML = `\n@keyframes NodeInserted {from {opacity:.99;}to {opacity: 1;}} [view-bind],[input-bind] {animation-duration: 0.001s;animation-name: NodeInserted;}`;
+  CrafterStyles.innerHTML = `\n@keyframes NodeInserted {from {opacity:.99;}to {opacity: 1;}} [bind] {animation-duration: 0.001s;animation-name: NodeInserted;}`;
   head.appendChild(CrafterStyles);
 
   function toArr(val) {
@@ -416,13 +412,6 @@
         return isO ? num === 0 || (num === 1 && isA) || (num === 2 && is.Args(val)) : isA ? val.length <= 0 : val === ''
       },
       /**
-       * Determines if a value is an instance of the ReactiveVariable class
-       * @param args - value/values to test
-       */
-      ReactiveVariable() {
-        return ta(arguments, o => o instanceof ReactiveVariable);
-      },
-      /**
        * Test if something is a Native JavaScript feature
        * @param val - value to test
        */
@@ -432,12 +421,6 @@
       },
       Input: element => element.tagName === 'INPUT' || element.tagName === 'TEXTAREA',
   };
-
-  let rv = is.ReactiveVariable;
-
-  function rvVal(Var) {
-    return rv(Var) ? Var.val : Var;
-  }
 
   /**
    * Converts any Query/QueryAll to an Array of Nodes even if there is only one Node , this is error proof when no arguments are present it returns an empty array
@@ -495,45 +478,6 @@
     /** Closes the WebSocket Connection */
   CraftSocket.prototype.close = function () {
     this.Socket.close()
-  }
-
-  /**
-   * Variable that is used for Data Binding and other reactive processes
-   * @param {*} val - value you'd liek the ReactiveVariable to Store
-   * @param {function} handle - function that gets called whenever the ReactiveVariable changes -> "function( OldValue , newValue ) {...}"
-   * @returns {*} Returns the value assigned to the ReactiveVariable
-   */
-  function ReactiveVariable(val, handle) {
-    if (is.Func(handle)) {
-      this.val = val;
-      this.Handle = handle;
-    } else console.error('ReactiveVariable needs function');
-  }
-  /**
-   * Sets the new value of the ReactiveVariable , this will also call the handle function
-   * @param {*} val - new value to assign the ReactiveVariable
-   */
-  ReactiveVariable.prototype.set = function (val) {
-      if (this.val !== val) {
-        this.Oldval = this.val;
-        this.val = val;
-        this.Handle(this.Oldval, val);
-        return this.val;
-      }
-    }
-    /**
-     * Gets the value of the ReactiveVariable , ReactiveVariable.val also does this
-     */
-  ReactiveVariable.prototype.get = function () {
-      return this.val
-    }
-    /**
-     * Redefine the handle function of the ReactiveVariable
-     * @param {function} handle - function that gets called whenever the ReactiveVariable changes -> "function( OldValue , newValue ) {...}"
-     */
-  ReactiveVariable.prototype.reset = function (handle) {
-    is.Func(handle) ? this.Handle = handle : console.error('ReactiveVariable.Reset only takes a function');
-    return this;
   }
 
   /**
@@ -601,7 +545,7 @@
    * @param {Array|Object|NodeList} iterable - any collection that is either an Object or has a .length value
    * @param {function} func - function called on each iteration -> "function( value , indexOrKey ) {...}"
    */
-  root.forEach = function(iterable, func) {
+  root.forEach = function (iterable, func) {
     if (!def(iterable)) throw new Error("forEach -> iterable undefined");
     if (!is.Func(func)) throw new Error("forEach -> function invalid or undefined");
     let i = 0
@@ -1393,15 +1337,22 @@
         years: (n) => n * Craft.millis.days(365),
       },
       Scope: {},
+      Binds : {},
       WebComponents: [],
       tabActive: true,
       make_element: make_element,
-      Binds: new Map,
       mouse: {
         x: 0,
         y: 0,
         over: null,
-        observe: new ReactiveVariable(false, (o, n) => n ? Craft.mouse.eventhandler.On() : Craft.mouse.eventhandler.Off())
+        track : false,
+        observe(val) {
+          if(is.Bool(val)) {
+            Craft.mouse.track = val;
+            Craft.mouse.track === true ? Craft.mouse.eventhandler.On() : Craft.mouse.eventhandler.Off();
+          }
+          else return Craft.mouse.track;
+        },
       },
       easing: {
         inOutQuad(t, b, c, d) {
@@ -1558,91 +1509,59 @@
         settings['prototype'] = element;
         doc.registerElement(tag, settings)
       },
-      applyBinds(key, bindScope) {
-        let bind, val = Craft.getBind(key, bindScope);
-        if (!def(val)) val = '';
-        is.Object(val) && !rv(val) ? Craft.applyObjectProps(key, val) : queryEach(`[${ib}="${key}"],[${vb}="${key}"]`, el => dom(el).html(val));
-      },
-      applyObjectProps(okey, oval) {
-        if (!hasdot(okey) && is.Object(oval) && !rv(oval)) Craft.forEachDeep(oval, (prop, key, obj, path) => {
-          if (rv(prop)) prop = prop.val;
-          let p = `${okey}.${path}`;
-          queryEach(`[${ib}="${p}"],[${vb}="${p}"]`, el => dom(el).html(prop));
-        });
-      },
-      /** creates a new bound variable , part of Crafter.js's Data Binding System */
-      newBind(key, val, handle, Scope) {
-        if (is.Map(handle)) Scope = handle;
-        else if (!is.Map(Scope)) Scope = Craft.Binds;
-        if (is.Func(handle)) val = new ReactiveVariable(val, handle);
-        cutdot(key) ? Craft.setBind(key, val, Scope) : Scope.set(key, val);
-        Craft.applyBinds(key, Scope);
-      },
-      /** sets the value of a bound variable */
-      setBind(key, val, Scope, parentignore) {
-        if (is.Bool(Scope)) parentignore = Scope;
-        if (!is.Map(Scope)) Scope = Craft.Binds;
-        if (!hasdot(key)) {
-          let bind = Scope.get(key);
-          rv(bind) ? bind.set(val) : Scope.set(key, val);
-        } else {
-          let obj, okey = cutdot(key),
-            oldval = Craft.getBind(key, Scope, true),
-            bind = Scope.get(okey[0]);
-          if (rv(bind) && !parentignore) bind.Handle(rvVal(oldval), val, rvVal(bind));
-          if (rv(oldval)) {
-            oldval.set(val);
-            val = rvVal(oldval);
-          }
-          obj = Craft.setDeep(rvVal(bind) || {}, Craft.omitFrom(okey, okey[0]).join('.'), val, true);
-          rv(bind) ? bind.set(obj) : Scope.set(okey[0], obj);
+      newBind(key,value,element) {
+        if(!def(Craft.Binds[key])) Craft.Binds[key] = {
+          val : value || '',
+          set value(val) {
+              this.oldVal = this.val;
+              this.val = val;
+              this.applyViews();
+          },
+          get value() {
+            return this.val;
+          },
+          applyViews() {
+            if(this.val !== this.oldVal && !is.empty(this.views)) this.views.forEach(view => {
+              if(is.Object(view) && is.Node(view['node'])) {
+                  if(!def(view.event) && view.twoway === true) view.event = On('input',view.node,e => {
+                      let val = view.manip.html();
+                      if(val !== this.val) this.value = val;
+                  });
+                  if(is.empty(this.val)) this.val = view.manip.html();
+                  else if(view.manip.html() !== this.val) view.manip.html(this.val);
+              } else this.views = Craft.omitFrom(this.views,view);
+            });
+          },
+          newView(selector,twoway) {
+            selector = dom(selector);
+            if(is.Node(selector['element'])) this.views.push({
+                  node : selector.element,
+                  manip : selector,
+                  twoway : twoway === true || is.Input(selector.element),
+            });
+            this.applyViews();
+          },
+          removeView(selector) {
+            selector = dom(selector);
+            if(is.Node(selector['element'])) {
+              this.views.forEach(view => {
+                 if (view.node === selector['element']) {
+                   if(def(view.event)) view.event.Off();
+                   this.views = Craft.omitFrom(this.views,view);
+                 }
+              });
+              Craft.Binds[mnp.getAttr('bind')].applyViews();
+            }
+          },
+          views : []
         }
-        queryEach(`[${ib}="${key}"],[${vb}="${key}"]`, el => dom(el).html(val));
+        if(def(element)) Craft.Binds[key].newView(element);
       },
-      /** gets the value of a bound variable */
-      getBind(key, Scope, rrv) {
-        if (is.Bool(Scope)) rrv = Scope;
-        if (!is.Map(Scope)) Scope = Craft.Binds;
-        rrv = rrv === true;
-        if (!Craft.BindExists(key, Scope)) return undefined;
-        if (!hasdot(key)) {
-          let bind = Scope.get(key);
-          return rrv ? bind : rvVal(bind);
-        } else {
-          let okey = cutdot(key),
-            bind = Scope.get(okey[0]),
-            val = Craft.getDeep(rvVal(bind), Craft.omitFrom(okey, okey[0]).join('.'));
-          return rrv ? val : rvVal(val);
-        }
+      getBind(key,obj) {
+        if(Craft.Binds.hasOwnProperty(key)) return obj ? Craft.Binds[key] : Craft.Binds[key].value;
       },
-      /**
-       *
-       */
-      deleteBind(key, Scope) {
-        let bind, val;
-        if (!is.Map(Scope) || Scope === Craft.Binds) Scope = Craft.Binds;
-        if (!hasdot(key)) Scope.delete(key);
-        else {
-          let obj, okey = cutdot(key);
-          bind = Craft.getBind(okey[0], Scope, true);
-          rv(bind) ? obj = bind.val : obj = bind;
-          val = Craft.setDeep(obj, Craft.omitFrom(okey, okey[0]).join('.'), undefined, true);
-          if (rv(bind)) {
-            bind.set(val);
-            val = bind;
-          }
-          Scope.set(okey[0], val);
-        }
-        Craft.applyBinds(key);
-      },
-      BindExists(key, Scope) {
-        if (!is.Map(Scope)) Scope = Craft.Binds;
-        if (!hasdot(key)) return Scope.has(key);
-        try {
-          let okey = cutdot(key);
-          return def(Craft.getDeep(Craft.getBind(okey[0], Scope), Craft.omitFrom(okey, okey[0]).join('.')));
-        } catch (e) {}
-        return false;
+      setBind(key,val) {
+        if(Craft.Binds.hasOwnProperty(key)) Craft.Binds[key].value = val;
       },
   };
 
@@ -1650,24 +1569,7 @@
     if (e.animationName === 'NodeInserted' && is.Node(e.target)) {
       let element = e.target,
         mnp = dom(element);
-      if (mnp.hasAttr(ib)) {
-        let key = mnp.getAttr(ib),
-          OnInput = On(i, element, e => Craft.setBind(key, mnp.html())),
-          observer = new MutationObserver(mutations => mutations.forEach(mut => {
-            if (mut.type === 'attributes' && mut.attributeName === ib && !mnp.hasAttr(ib)) {
-              OnInput.Off();
-              observer.disconnect();
-            }
-          }));
-        observer.observe(element, {
-          attributes: true
-        });
-        Craft.BindExists(key) ? mnp.html(Craft.getBind(key)) : Craft.newBind(key, mnp.html());
-      }
-      if (mnp.hasAttr(vb)) {
-        let key = mnp.getAttr(vb);
-        Craft.BindExists(key) ? Craft.applyBinds(key) : Craft.newBind(key, mnp.html());
-      }
+      if(mnp.hasAttr('bind')) Craft.newBind(mnp.getAttr('bind'),undefined,element);
       if (mnp.hasAttr('link')) On(element).Click(e => {
         let nt = mnp.getAttr('link');
         nil(nt) ? open(nt) : Craft.router.open(nt);
@@ -1680,7 +1582,7 @@
   Craft.curry.adapt = fn => Craft.curry.adaptTo(fn.length, fn);
   Craft.loader.removeAll(true);
   Craft.mouse.eventhandler = On('mousemove', e => {
-    if (Craft.mouse.observe.val === true) {
+    if (Craft.mouse.track === true) {
       Craft.mouse.x = e.clientX;
       Craft.mouse.y = e.clientY;
       Craft.mouse.over = e.target;
@@ -1728,5 +1630,4 @@
 
   root.CraftSocket = CraftSocket;
   root.EventHandler = EventHandler;
-  root.ReactiveVariable = ReactiveVariable;
 })(document, self);

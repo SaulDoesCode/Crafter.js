@@ -277,7 +277,7 @@
 
         let moveTooltip = () => {
           let movecheck = setInterval(() => {
-            Craft.mouse.observe.set(show);
+            Craft.mouse.observe(show);
             show ? dom(tooltip).move(Craft.mouse.x, Craft.mouse.y) : clearInterval(movecheck);
           }, 5);
         }
@@ -342,7 +342,7 @@
           movable = true;
           rect = element.getBoundingClientRect();
           move = setInterval(() => {
-            Craft.mouse.observe.set(movable);
+            Craft.mouse.observe(movable);
             movable ? dom(element).move(Craft.mouse.x - e.clientX + rect.left, Craft.mouse.y - e.clientY + rect.top) : clearInterval(move);
           },5);
         });
