@@ -1656,10 +1656,10 @@
           },
           newView(selector, twoway) {
             selector = dom(selector);
-            if (is.Node(selector['element'])) this.views.push({
-              node: selector.element,
+            if (is.Node(selector)) this.views.push({
+              node: selector,
               manip: selector,
-              twoway: twoway === true || is.Input(selector.element),
+              twoway: twoway === true || is.Input(selector),
             });
             this.applyViews();
           },
@@ -1706,7 +1706,7 @@
     if (e.animationName === 'NodeInserted' && is.Node(e.target)) {
       let element = e.target,
         mnp = dom(element);
-      if (mnp.hasAttr('bind')) Craft.newBind(mnp.getAttr('bind'), undefined, element);
+      if (mnp.hasAttr('bind')) Craft.newBind(mnp.getAttr('bind'),'', element);
       if (mnp.hasAttr('link')) On(element).Click(e => {
         let nt = mnp.getAttr('link');
         nil(nt) ? open(nt) : Craft.router.open(nt);
