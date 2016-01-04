@@ -8,14 +8,14 @@
 
   Craft.newComponent('ripple-effect', {
     inserted() {
-      let color, timing = this.hasAttribute("timing") ? this.getAttribute("timing") : 1600,
+      let ripple = dom(this) ,color, timing = ripple.hasAttr("timing") ? ripple.getAttr("timing") : 1600,
         rect = this.parentNode.getBoundingClientRect(),
         diameter = Math.max(rect.width, rect.height);
-      if (this.parentNode.hasAttribute("ripple")) color = this.parentNode.getAttribute("ripple");
-      else if (this.hasAttribute("color-accent")) color = this.getAttribute("color-accent");
-      else if (this.hasAttribute("color")) color = this.getAttribute("color");
+      if (this.parentNode.hasAttr("ripple")) color = ripple.parentNode.getAttr("ripple");
+      else if (ripple.hasAttr("color-accent")) color = ripple.getAttr("color-accent");
+      else if (ripple.hasAttr("color")) color = ripple.getAttr("color");
 
-      dom(this).css({
+      ripple.css({
         width: diameter + 'px',
         height: diameter + 'px',
         animation: `ripple ${timing}ms ease`
@@ -27,32 +27,21 @@
   });
 
   Craft.notification = (msg, state, side, duration) => {
-    if (query('.notifications-top-left') === null) doc.body.insertBefore(dom().div('', 'class=notifications-top-left', true), doc.body.firstChild);
-    if (query('.notifications-top-right') === null) doc.body.insertBefore(dom().div('', 'class=notifications-top-right', true), doc.body.firstChild);
-    if (query('.notifications-top-middle') === null) doc.body.insertBefore(dom().div('', 'class=notifications-top-middle', true), doc.body.firstChild);
-    if (query('.notifications-bottom-middle') === null) doc.body.insertBefore(dom().div('', 'class=notifications-bottom-middle', true), doc.body.firstChild);
-    if (query('.notifications-bottom-right') === null) doc.body.insertBefore(dom().div('', 'class=notifications-bottom-right', true), doc.body.firstChild);
-    if (query('.notifications-bottom-left') === null) doc.body.insertBefore(dom().div('', 'class=notifications-bottom-left', true), doc.body.firstChild);
     if (is.Num(state)) {
       side = state;
       duration = side;
       state = '';
     }
     if (is.Num(side)) {
-      if (side === 1) side = 'top-left';
-      else if (side === 2) side = 'top-right';
-      else if (side === 3) side = 'bottom-left';
-      else if (side === 4) side = 'bottom-right';
-      else if (side === 5) side = 'bottom-middle';
-      else if (side === 6) side = 'top-middle';
-      else {
-        duration = side;
-        side = 'top-left';
-      }
-    };
-
-    query(`.notifications-${side}`).appendChild(Craft.make_element('craft-notification', msg, {
-      duration: duration || 0,
+      side = side === 1 ? 'top-left' : side === 2 ? 'top-right' : side === 3 ? 'bottom-left' : side === 4 ? 'bottom-right' : side === 5 ? 'bottom-middle' : side === 6 ? 'top-middle' : 'top-left';
+    }
+    let host = query(`.notifications-${side}`);
+    if(host === null) {
+      doc.body.insertBefore(dom().div('', `class=notifications-${side}`, true), doc.body.firstChild);
+      host = query(`.notifications-${side}`);
+    }
+    host.appendChild(Craft.make_element('craft-notification', msg, {
+      duration: duration,
       side: side,
       state: state
     }, true));
@@ -60,13 +49,13 @@
 
   Craft.newComponent('craft-notification', {
     inserted() {
-        if (this.hasAttribute('duration') && parseInt(this.getAttribute('duration'), 10) !== 0) setTimeout(() => this.remove(), parseInt(this.getAttribute('duration'), 10));
-        if (this.hasAttribute('message')) this.innerHTML = this.getAttribute('message');
-        this.appendChild(dom().div('X', 'class=notification-close', true));
+        let note = dom(this);
+        if (note.hasAttr('duration') && parseInt(note.getAttr('duration'), 10) !== 0) setTimeout(() => note.remove(), parseInt(note.getAttr('duration'), 10) || 3000);
+        if (note.hasAttr('message')) note.html(note.getAttr('message'));
+        note.append(dom().div('X', 'class=notification-close', true));
         this.clickEvent = On('.notification-close', this).Click(e => this.remove());
       },
       destroyed() {
-        let side = this.getAttribute('side');
         this.clickEvent.Off();
       }
   })
@@ -76,7 +65,8 @@
   Craft.newComponent('context-menu', {
     inserted() {
         this.show = false;
-        dom(this).hasAttr('scope') ? this.contextmenuEvent = On('contextmenu', dom(this).getAttr('scope'), e => this.Show(true, e)) : console.error('no scope elements/attribute found on context-menu element \n can\' operate without a scope');
+        let ctx = dom(this);
+        ctx.hasAttr('scope') ? this.contextmenuEvent = On('contextmenu', ctx.getAttr('scope'), e => this.Show(true, e)) : console.error('context-menu : No Scope Attribute found');
         ContextMenus.push(this);
       },
       destroyed() {
@@ -84,14 +74,13 @@
         this.contextmenuEvent.Off();
       },
       Show(Show, ev) {
-        let manip = dom(this);
+        let el = dom(this);
         if (is.Def(ev)) ev.preventDefault();
         if (Show) {
-          manip.addClass('context-menu-active');
-          manip.move((ev.clientX + 5), (ev.clientY + 5));
+          el.addClass('context-menu-active').move((ev.clientX + 5), (ev.clientY + 5));
           this.show = true;
-        } else if (manip.gotClass('context-menu-active')) {
-          manip.stripClass('context-menu-active');
+        } else if (el.gotClass('context-menu-active')) {
+          el.stripClass('context-menu-active');
           this.show = false;
         }
       }
@@ -99,14 +88,16 @@
 
   Craft.newComponent('check-box', {
     created() {
-        this.Check();
-        this.OnClick = On(this).Click(e => {
-          this.value = !this.value;
-          this.Check();
+        let el = this;
+        el.Check();
+        el.OnClick = On(el).Click(e => {
+          el.value = !el.value;
+          el.Check();
         });
       },
       toggle(checked) {
-        checked === true || (is.Undef(this.value) && this.getAttribute('checked') === 'false') ? this.setAttribute('checked', 'true') : this.setAttribute('checked', 'false');
+        let el = dom(this) , chck = 'checked';
+        checked === true || (is.Undef(el.value) && el.getAttr(chck) === 'false') ? el.setAttr(chck, 'true') : el.setAttr(chck, 'false');
       },
       OnCheck(func) {
         if (is.Func(func)) this.func = func;
@@ -115,12 +106,13 @@
         this.value = val;
       },
       Check() {
-        if (is.Undef(this.value) && this.hasAttribute("checked")) {
-          let checked = this.getAttribute("checked");
-          if (checked === "true") this.value = true;
-          if (checked === "false") this.value = false;
-        } else this.value ? this.setAttribute("checked", "true") : this.setAttribute("checked", "false");
-        if (is.Func(this.func)) this.func(this.value);
+        let el = dom(this), chck = 'checked' , t = 'true' , f = 'false';
+        if (is.Undef(el.value) && el.hasAttr(chck)) {
+          let checked = el.getAttr(chck);
+          if (checked === t) this.value = true;
+          if (checked === f) this.value = false;
+        } else el.value ? el.setAttr(chck,t) : el.setAttr(chck, f);
+        if (is.Func(this.func)) el.func(this.value);
       },
       attr(attrName, oldVal, newVal) {
         if (attrName === "checked") this.Check();
@@ -132,12 +124,13 @@
 
   Craft.newComponent('toggle-button', {
     created() {
-        this.open ? this.setAttribute('open', 'true') : this.setAttribute('open', 'false');
+        let el = dom(this) , t = 'true' , f = 'false';
+        el.open ? el.setAttr('open',t) : el.setAttr('open',f);
         this.click = On(this).Click(e => {
           this.open = !this.open;
-          this.open ? this.setAttribute('open', 'true') : this.setAttribute('open', 'false');
+          el.setAttr('open',this.open ? t : f);
         });
-        this.appendChild(dom().span('', 'class=toggle', true));
+        el.append(dom().span('', 'class=toggle', true));
       },
       onToggle(func) {
         if (is.Func(func)) this.func = func;
@@ -147,7 +140,7 @@
       },
       attr(attrName, oldVal, newVal) {
         if (attrName === 'open') {
-          this.getAttribute('open') === 'true' ? this.open = true : this.open = false;
+          this.open = this.getAttribute('open') === 'true';
           if (is.Func(this.func)) this.func(this.open);
         }
       },
@@ -165,21 +158,21 @@
 
   Craft.newComponent('text-collapser', {
     created() {
-        let txt = this.innerHTML;
-        this.innerHTML = "";
+        let el = dom(this) ,txt = el.html();
+        el.html("");
 
-        this.appendChild(dom().label(this.hasAttribute('summary') ? `&#9654; \t ${this.getAttribute('summary')}` : '&#9654;', 'id=indicator', true));
-        this.appendChild(dom().label(txt, 'id=text', true));
-        this.hasAttribute('open') ? this.open = true : this.open = false;
+        el.append(dom().label(el.hasAttr('summary') ? `&#9654; \t ${el.getAttr('summary')}` : '&#9654;', 'id=indicator', true));
+        el.append(dom().label(txt, 'id=text', true));
+        this.open = el.hasAttr('open');
 
-        this.OnClick = On('click', '#indicator', this, e => this.toggle());
+        this.OnClick = On('#indicator', this).Click(e => this.toggle());
       },
       toggle(open) {
         is.Def(open) ? this.open = open : this.open = !this.open;
         this.open ? this.setAttribute('open', '') : this.removeAttribute('open');
       },
       attr(name, oldVal, newVal) {
-        if (name === 'open') this.hasAttribute('open') ? this.open = true : this.open = false;
+        if (name === 'open') this.open = this.hasAttribute('open');
       },
       destroyed() {
         this.OnClick.Off();
@@ -191,45 +184,45 @@
   Craft.newComponent('material-input', {
     inserted() {
         let clearText = dom().span(),
-          manip = dom(this),
+          el = dom(this),
           input = Craft.make_element("input", '', 'type=text', true);
         this.value = "";
-        this.innerHTML = "";
+        el.html("");
 
-        if (manip.hasAttr("type")) {
-          if (manip.getAttr("type") !== "submit" && manip.getAttr("type") !== "button" && manip.getAttr("type") !== "range") {
-            input.setAttribute("type", manip.getAttr("type"));
+        if (el.hasAttr("type")) {
+          if (el.getAttr("type") !== "submit" && el.getAttr("type") !== "button" && el.getAttr("type") !== "range") {
+            input.setAttribute("type", el.getAttr("type"));
           } else console.warn("<material-input> is only for text type inputs not buttons,ranges,submits it will default to text if wrong type is chosen");
         } else input.setAttribute("type", "text");
 
         for (let attr in InputAttributes) {
-          if (manip.hasAttr(InputAttributes[attr])) input.setAttribute(InputAttributes[attr], manip.getAttr(InputAttributes[attr]));
+          if (el.hasAttr(InputAttributes[attr])) input.setAttribute(InputAttributes[attr], manelip.getAttr(InputAttributes[attr]));
         }
 
-        this.appendChild(input);
+        el.append(input);
 
         this.labelEffects = () => {
-          if (manip.query('input').value.length > 0) {
-            manip.query('input').classList.add('inputhastext');
-            manip.query('span').style.display = 'inline-block';
-          } else if (manip.query('input').classList.contains('inputhastext')) {
-            manip.query('input').classList.remove('inputhastext');
-            manip.query('span').style.display = 'none';
+          if (el.query('input').value.length > 0) {
+            el.query('input').classList.add('inputhastext');
+            el.query('span').style.display = 'inline-block';
+          } else if (el.query('input').classList.contains('inputhastext')) {
+            el.query('input').classList.remove('inputhastext');
+            el.query('span').style.display = 'none';
           }
         }
 
-        this.onblur = this.labelEffects();
+        this.onblur = this.labelEffects;
 
-        if (manip.hasAttr("label") || manip.hasAttr("placeholder")) {
+        if (el.hasAttr("label") || el.hasAttr("placeholder")) {
           let label = dom().label();
-          label.innerHTML = manip.getAttr("label") || manip.getAttr("placeholder");
+          label.innerHTML = el.getAttr("label") || el.getAttr("placeholder");
           this.appendChild(label);
           this.labelEffects();
         }
 
-        this.OnInput = On('input', this).Input(Craft.throttle(100, e => {
-          this.value = manip.query('input').value;
-          if (manip.hasAttr("label")) this.labelEffects();
+        this.OnInput = el.On('input',Craft.throttle(100, e => {
+          this.value = el.query('input').value;
+          if (el.hasAttr("label")) this.labelEffects();
         }));
 
         this.OnClick = On(clearText).Click(e => {
@@ -237,7 +230,7 @@
           this.labelEffects();
         });
 
-        manip.append(clearText);
+        el.append(clearText);
       },
       attr(attrName, oldVal, newVal) {
         let mnp = dom(this);
@@ -289,12 +282,11 @@
             tooltip.style.display = show ? 'block' : 'none';
             setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
           } else {
-            if (element.hasAttribute('tooltip-delay')) {
-              setTimeout(() => {
+            if (element.hasAttribute('tooltip-delay')) setTimeout(() => {
                 tooltip.style.display = show ? 'block' : 'none';
                 setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
-              }, parseInt(element.getAttribute('tooltip-delay')))
-            } else {
+              }, parseInt(element.getAttribute('tooltip-delay')));
+            else {
               tooltip.style.display = show ? 'block' : 'none';
               setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
             }
@@ -306,7 +298,7 @@
           setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
         }));
 
-        tooltip.TooltipOwnerObserver = new MutationObserver(mutations => {
+        tooltip.hostObserver = new MutationObserver(mutations => {
           mutations.forEach(mut => {
             if (mut.type === 'attributes') {
               if (mut.attributeName === 'tooltip' && element.hasAttribute('tooltip')) {
@@ -319,14 +311,14 @@
               } else if (mut.attributeName === 'tooltip-direction' && element.hasAttribute('tooltip-direction')) {
                 tooltip.setAttribute('direction', element.getAttribute('tooltip-direction'));
               } else if (!element.hasAttribute('tooltip')) {
-                if (is.Def(tooltip.TooltipOwnerObserver)) tooltip.TooltipOwnerObserver.disconnect();
+                if (is.Def(tooltip.hostObserver)) tooltip.hostObserver.disconnect();
                 if (is.Def(tooltip.EventListeners)) tooltip.EventListeners.forEach(ev => ev.Off());
                 tooltip.remove();
               }
             }
           });
         });
-        tooltip.TooltipOwnerObserver.observe(element, {
+        tooltip.hostObserver.observe(element, {
           attributes: true
         });
 

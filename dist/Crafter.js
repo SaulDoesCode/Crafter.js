@@ -11,9 +11,12 @@ function _typeof(obj) {
 
 (function(doc, root) {
 
-    var regexps = {
-            // Thanks to github.com/arasatasaygin for these RegExps
-            url: /^(?:(?:https?|ftp):\/\/)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:\/\S*)?$/i,
+    var RegExps = {
+            foreach: /<for-each([\s\S]*?)<\/for-each>/igm,
+            ignorebetween: /#\{([\s\S]*?)\}#/igm,
+            template: /\$\{([a-zA-Z0-9\.\|?:\s\'\"!=<>]{1,})(?:(?!\s)\})/g,
+            ternary: /([a-zA-Z\.\'\"\s=!]{1,})(?:(?:\s{1,}?)\?(?:\s{1,})?)([a-zA-Z\.\'\"]{1,})(?:(?:\s{1,})?:(?:\s{1,})?)([a-zA-Z\.\'\"]{1,})/gm,
+            comparisons: /([a-zA-Z0-9\.\'\"]{1,})(?:(?:\s{1,}?)(and|or|is|[=!><\|&]{1,3})(?:\s{1,}?))([a-zA-Z0-9\.\'\"]{1,})/gm,
             email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
             timeString: /^(2[0-3]|[01]?[0-9]):([0-5]?[0-9]):([0-5]?[0-9])$/,
             dateString: /^(1[0-2]|0?[1-9])\/(3[01]|[12][0-9]|0?[1-9])\/(?:[0-9]{2})?[0-9]{2}$/,
@@ -35,8 +38,87 @@ function _typeof(obj) {
     _br ? [_br[1], _br[2]] : [navigator.appName, navigator.appVersion, '-?'];
 
     CrafterStyles.setAttribute('crafterstyles', '');
-    CrafterStyles.innerHTML = '\n@keyframes NodeInserted {from {opacity:.99;}to {opacity: 1;}} [bind] {animation-duration: 0.001s;animation-name: NodeInserted;}';
+    CrafterStyles.innerHTML = '\n@keyframes NodeInserted {from {opacity:.99;}to {opacity: 1;}} [bind],[craft-template] {animation-duration: 0.001s;animation-name: NodeInserted;} for-each {display:none;}';
     head.appendChild(CrafterStyles);
+
+    function getStringQuotes(str) {
+        return is.String(str) && (str.includes('"') || str.includes("'")) ? str.substring(1, str.length - 1) : str;
+    }
+
+    function getDeep(obj, propString) {
+        if (!is.Def(propString)) return obj;
+        if (has(propString, '\'"', true)) return getStringQuotes(propString);
+        else if (propString === 'true') return true;
+        else if (propString === 'false') return false;
+        else if (is.Num(propString)) return Number(propString);
+        if (has(propString, "[]")) {
+            var arr = Craft.omitFrom(template.split(/([\s\S]*)(?:\[(\d{1,20})\])/igm), ''),
+                Arr = getDeep(context, arr[0]);
+            if (is.Arr(Arr)) return Arr[Number(arr[1])];
+        }
+
+        var prop = undefined,
+            val = undefined,
+            props = propString.split('.'),
+            candidate = undefined,
+            i = 0,
+            iLen = props.length - 1;
+
+        for (; i < iLen; i++) {
+            prop = props[i];
+            candidate = obj[prop];
+            if (is.Def(candidate)) obj = candidate;
+            else break;
+        }
+        try {
+            val = obj[props[i]];
+        } catch (e) {}
+        return is.Def(val) ? val : '';
+    }
+
+    function has(str, strings, or) {
+        if (is.String(strings)) strings = strings.split('');
+        var type = or === true ? 'some' : 'every';
+        return strings[type](function(char) {
+            return str.includes(char);
+        });
+    }
+
+    function isComparator(str) {
+        return str === '==' || str === '===' || str === '!=' || str === '!==' || str === '||' || str === 'and' || str === 'or' || str === '&&' || str === '>=' || str === '<' || str === '>' || str === '<=';
+    }
+
+    function hasComparator(str) {
+        return has(str, "!<>=|&", true) || has(str, ['or', 'is'], true);
+    }
+
+    function compileComparision(comp, context) {
+        var comparison = comp.replace(RegExps.comparisons, function(m, left, comparator, right) {
+            left = getDeep(context, left);
+            right = getDeep(context, right);
+            if (comparator === '==' || comparator === '===' || comparator === 'is') return left === right;
+            if (comparator === '!=' || comparator === '!==' || comparator === 'not') return left !== right;
+            if (comparator === '||' || comparator === 'or') return left || right;
+            if (comparator === '&&' || comparator === 'and') return left && right;
+            if (comparator === '<') return left < right;
+            if (comparator === '>') return left > right;
+            if (comparator === '<=') return left <= right;
+            if (comparator === '>=') return left >= right;
+            return '';
+        });
+        if (comparison === 'true') return true;
+        else if (comparison === 'false') return false;
+        return comparison;
+    }
+
+    function compileTemplate(template, context, index) {
+        if (template.match(/value/igm) !== null) return context;
+        if (template.match(/index/igm) !== null) return index;
+        if (has(template, ':?')) return template.replace(RegExps.ternary, function(m, test, True, False) {
+            return getDeep(context, (hasComparator(test) ? compileComparision(test, context) : getDeep(context, test)) ? True : False);
+        });
+        return hasComparator(template) ? compileComparision(template, context) : getDeep(context, template);
+    }
 
     function toArr(val) {
         return Array.from(val);
@@ -183,6 +265,15 @@ function _typeof(obj) {
         }),
 
         /**
+         * Test an element's tagname
+         * @param {Node} element - node to test
+         * @param {string} tag - tag to test node for
+         */
+        Tag: function Tag(element, tag) {
+            return element instanceof Node && element.tagName === tag.toUpperCase();
+        },
+
+        /**
          * Determine whether a variable is a DOM NodeList or Collection of Nodes
          * @param args - value/values to test
          */
@@ -211,6 +302,21 @@ function _typeof(obj) {
         Object: function Object() {
             return ta(arguments, function(o) {
                 return type(o, '[object Object]');
+            });
+        },
+
+        /**
+         * Determine if a sring is JSON
+         * @param args - value/values to test
+         */
+        Json: function Json() {
+            return ta(arguments, function(str) {
+                try {
+                    JSON.parse(str);
+                } catch (e) {
+                    return false;
+                }
+                return true;
             });
         },
 
@@ -366,49 +472,64 @@ function _typeof(obj) {
          * @param {string} email - variable to test
          */
         Email: function Email(email) {
-            return regexps.email.test(email);
+            return RegExps.email.test(email);
         },
         /**
          * Determines whether a String is a URL
          * @param {string} url - variable to test
          */
-        URL: function URL(url) {
-            return regexps.url.test(url);
-        },
+        URL: (function(_URL) {
+            function URL(_x) {
+                return _URL.apply(this, arguments);
+            }
+
+            URL.toString = function() {
+                return _URL.toString();
+            };
+
+            return URL;
+        })(function(url) {
+            try {
+                new URL(url);
+                return true;
+            } catch (e) {}
+            return false;
+        }),
+
         /**
          * Determines whether a String is a HEX-COLOR (#fff123)
          * @param {string} HexColor - variable to test
          */
         HexColor: function HexColor(hexColor) {
-            return regexps.hexColor.test(hexColor);
+            return RegExps.hexColor.test(hexColor);
         },
         /**
          * Determines whether a String is a ip
          * @param {string} ip - variable to test
          */
         ip: function ip(_ip) {
-            return regexps.ip.test(_ip);
+            return RegExps.ip.test(_ip);
         },
         /**
          * Determines whether a String is a ipv4
          * @param {string} ipv4 - variable to test
          */
         ipv4: function ipv4(_ipv) {
-            return regexps.ipv4.test(_ipv);
+            return RegExps.ipv4.test(_ipv);
         },
         /**
          * Determines whether a String is a ipv6
          * @param {string} ipv6 - variable to test
          */
         ipv6: function ipv6(_ipv2) {
-            return regexps.ipv6.test(_ipv2);
+            return RegExps.ipv6.test(_ipv2);
         },
         /**
          * Determines whether a String is hexadecimal
          * @param {string} hexadecimal - variable to test
          */
         hexadecimal: function hexadecimal(_hexadecimal) {
-            return regexps.hexadecimal.test(_hexadecimal);
+            return RegExps.hexadecimal.test(_hexadecimal);
         },
         /**
          * checks wether a date is today
@@ -454,14 +575,14 @@ function _typeof(obj) {
          * @param time - variable to test
          */
         time: function time(_time) {
-            return regexps.timeString.test(_time);
+            return RegExps.timeString.test(_time);
         },
         /**
          * Determines whether a String is a dateString
          * @param {string} dateString - variable to test
          */
         dateString: function dateString(_dateString) {
-            return regexps.dateString.test(_dateString);
+            return RegExps.dateString.test(_dateString);
         },
         /**
          * Determines whether a Number is between a maximum and a minimum
@@ -585,69 +706,6 @@ function _typeof(obj) {
     };
 
     /**
-     * Handles WebSockets in a contained manner with send and recieve methods
-     * @param {string} wsAddress - the WebSocket address example "ws://localhost:3000/"
-     * @param {Array=} protocols - the protocols to pass to the WebSocket Connection
-     */
-    function CraftSocket(address, protocols) {
-        var _this = this;
-
-        try {
-            (function() {
-                is.Arr(protocols) ? _this.Socket = new WebSocket(address, protocols) : _this.Socket = new WebSocket(address);
-                var Self = _this;
-                _this.open = true;
-                _this.address = address;
-                if (def(protocols)) _this.protocols = protocols;
-                _this.messageCalls = [];
-                _this.RecieveCalls = [];
-                _this.Socket.onmessage = function(e) {
-                    return Self.RecieveCalls.forEach(function(call) {
-                        return call(e);
-                    });
-                };
-                _this.Socket.onclose = function(e) {
-                    return _this.open = false;
-                };
-            })();
-        } catch (e) {
-            throw new Error(err);
-        }
-    }
-    /**
-     * Sends a message along the WebSocket Connection
-     * @param {string} message - the WebSocket address example "ws://localhost:3000/"
-     * @param {function=} func - optional function to recieve the response with -> "function ( response , event ) { ... } or response => ..."
-     */
-    CraftSocket.prototype.send = function(message, func) {
-        var Self = this;
-        Self.messageCalls.push(function() {
-            Self.Socket.send(message);
-            if (is.Func(func) && Self.open) Self.recieve(function(data, e) {
-                return func(data, e);
-            });
-        });
-        Self.Socket.onopen = function(e) {
-            return Self.messageCalls[Self.messageCalls.length - 1]();
-        };
-        return this;
-    };
-    /**
-     * Recieves messages from the WebSocket Server
-     * @param {function} func - function to recieve the response and event with -> "function ( response , event ) { ... } or response => ..."
-     */
-    CraftSocket.prototype.recieve = function(func) {
-        is.Func(func) && this.open ? this.RecieveCalls.push(function(e) {
-            return func(e.data, e);
-        }) : console.error("no function or connection closed");
-        return this;
-    };
-    /** Closes the WebSocket Connection */
-    CraftSocket.prototype.close = function() {
-        this.Socket.close();
-    };
-
-    /**
      * Event Handling Class
      * @param {string} EventType - set the type of event to listen for example "click" or "scroll"
      * @param {Node|NodeList|window|document} Target - the Event Listener's target , can also be a NodeList to listen on multiple Nodes
@@ -670,10 +728,10 @@ function _typeof(obj) {
      * Activates the EventHandler to start listening for the EventType on the Target/Targets
      */
     EventHandler.prototype.On = function() {
-        var _this2 = this;
+        var _this = this;
 
         is.Arr(this.Target) ? this.Target.forEach(function(target) {
-            return target.addEventListener(_this2.EventType, _this2.FuncWrapper);
+            return target.addEventListener(_this.EventType, _this.FuncWrapper);
         }) : this.Target.addEventListener(this.EventType, this.FuncWrapper);
         return this;
     };
@@ -689,10 +747,10 @@ function _typeof(obj) {
      * can still optionally be re-activated with On again
      */
     EventHandler.prototype.Off = function() {
-        var _this3 = this;
+        var _this2 = this;
 
         is.Arr(this.Target) ? this.Target.forEach(function(target) {
-            return target.removeEventListener(_this3.EventType, _this3.FuncWrapper);
+            return target.removeEventListener(_this2.EventType, _this2.FuncWrapper);
         }) : this.Target.removeEventListener(this.EventType, this.FuncWrapper);
         return this;
     };
@@ -869,7 +927,7 @@ function _typeof(obj) {
         if (defIAN) NodeForm = true;
         if (In || defIAN) inner = '';
         if (NodeForm === true) {
-            var _ret2 = (function() {
+            var _ret = (function() {
                 var newEl = doc.createElement(name);
                 newEl.innerHTML = inner;
                 if (is.Object(attributes)) forEach(attributes, function(val, attr) {
@@ -886,7 +944,7 @@ function _typeof(obj) {
                 };
             })();
 
-            if ((typeof _ret2 === 'undefined' ? 'undefined' : _typeof(_ret2)) === "object") return _ret2.v;
+            if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
         }
         var attrString = '';
         if (is.String(attributes)) attributes.split('&').forEach(function(attr) {
@@ -910,7 +968,7 @@ function _typeof(obj) {
              * @returns handler (Off,Once,On)
              */
             On: (function(_On) {
-                function On(_x, _x2) {
+                function On(_x2, _x3) {
                     return _On.apply(this, arguments);
                 }
 
@@ -950,225 +1008,224 @@ function _typeof(obj) {
 
     function domManip(element, within) {
         if (is.String(element)) def(within) ? element = query(element, within) : element = query(element);
-        this.element = element;
+        /**
+         * changes or returns the innerHTML value of a Node
+         * @memberof dom
+         * @param {string=} sets the innerHTML value or when undefined gets the innerHTML value
+         */
+        element.html = function(val, position) {
+            var el = this,
+                input = is.Input(el),
+                hv = def(val);
+            if (hv) input ? el.value = val : el.innerHTML = val;
+            return hv ? el : input ? el.value : el.innerHTML;
+        };
+        /**
+         * changes or returns the textContent value of a Node
+         * @memberof dom
+         * @param {string=} sets the textContent value or when undefined gets the textContent value
+         */
+        element.text = function(val) {
+            var el = this,
+                input = is.Input(el);
+            if (def(val)) input ? el.value = val : el.textContent = val;
+            return def(val) ? this : input ? el.value : el.textContent;
+        };
+        /**
+         * replaces a Node with another node provided as a parameter/argument
+         * @memberof dom
+         * @param {Node} Node to replace with
+         */
+        element.replace = function(val) {
+            this.parentNode.replaceChild(val, this);
+            return this;
+        };
+        /**
+         * append the Element to another node using either a CSS selector or a Node
+         * @memberof dom
+         * @param {Node|string} CSS selector or Node to append the this.element to
+         */
+        element.appendTo = function(val, within) {
+            if (is.String(val)) val = def(within) ? query(val, within) : query(val);
+            if (is.Node(val)) val.appendChild(this.element);
+            return this;
+        };
+        /**
+         * append text or a Node to the element
+         * @memberof dom
+         * @param {Node|string} String or Node to append to the this.element
+         */
+        element.append = function(val) {
+            var el = this;
+            is.Node(val) ? el.appendChild(val) : el.insertAdjacentHTML('beforeend', val);
+            return this;
+        };
+        /**
+         * prepend text or a Node to the element
+         * @memberof dom
+         * @param {Node|string} String or Node to prepend to the this.element
+         */
+        element.prepend = function(val) {
+            var el = this;
+            is.Node(val) ? el.insertBefore(val, el.firstChild) : el.insertAdjacentHTML('afterbegin', val);
+            return this;
+        };
+        /**
+         * Listen for Events on the element or on all the elements in the NodeList
+         * @memberof dom
+         * @param {string} string indicating the type of event to listen for
+         * @param {function} func - handler function for the event
+         * @returns handler (Off,Once,On)
+         */
+        element.On = function(eventType, func) {
+            return On(eventType, this, func);
+        };
+        /**
+         * add CSS style rules to the Element or NodeList
+         * @memberof dom
+         * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
+         */
+        element.css = function(styles) {
+            var _this3 = this;
+
+            def(styles) ? forEach(styles, function(prop, key) {
+                return _this3.style[key] = prop;
+            }) : console.error('Styles Object undefined');
+            return this;
+        };
+        /**
+         * check if the element has got a specific CSS class
+         * @memberof dom
+         * @param {string} name of the class to check for
+         */
+        element.gotClass = function(Class) {
+            return this.classList.contains(Class);
+        };
+        /**
+         * Add a CSS class to the element
+         * @memberof dom
+         * @param {string} name of the class to add
+         */
+        element.addClass = function(Class) {
+            this.classList.add(Class);
+            return this;
+        };
+        /**
+         * removes a specific CSS class from the element
+         * @memberof dom
+         * @param {string} name of the class to strip
+         */
+        element.stripClass = function(Class) {
+            this.classList.remove(Class);
+            return this;
+        };
+        /**
+         * removes a specific Attribute from the this.element
+         * @memberof dom
+         * @param {string} name of the Attribute to strip
+         */
+        element.stripAttr = function(Attr) {
+            this.removeAttribute(Attr);
+            return this;
+        };
+        /**
+         * checks if the element has a specific Attribute
+         * @memberof dom
+         * @param {string} name of the Attribute to check for
+         */
+        element.hasAttr = function(Attr) {
+            return this.hasAttribute(Attr);
+        };
+        /**
+         * Sets or adds an Attribute on the element
+         * @memberof dom
+         * @param {string} Name of the Attribute to add/set
+         * @param {string} Value of the Attribute to add/set
+         */
+        element.setAttr = function(Attr, val) {
+            this.setAttribute(Attr, val);
+            return this;
+        };
+        element.getAttr = function(Attr) {
+            return this.getAttribute(Attr);
+        };
+        /**
+         * gets all the elements siblings within it's parentNode
+         * @memberof dom
+         */
+        element.getSiblings = function() {
+            var siblings = [],
+                AllChildren = this.parentNode.childNodes;
+            for (var _i2 = 0; _i2 < AllChildren.length; _i2++) {
+                if (AllChildren[_i2] !== this) siblings.push(AllChildren[_i2]);
+            }
+            return siblings;
+        };
+        /**
+         * sets or gets the element's pixel width
+         * @memberof dom
+         * @param {string|number=} pixel value to set
+         */
+        element.Width = function(pixels) {
+            var haspixels = def(pixels);
+            if (haspixels) this.style.width = pixels;
+            return haspixels ? this : this.getBoundingClientRect().width;
+        };
+        /**
+         * sets or gets the element's pixel height
+         * @memberof dom
+         * @param {string|number=} pixel value to set
+         */
+        element.Height = function(pixels) {
+            var haspixels = def(pixels);
+            if (haspixels) this.style.height = pixels;
+            return haspixels ? this : this.getBoundingClientRect().height;
+        };
+        /**
+         * gets all the element's dimentions (width,height,left,top,bottom,right)
+         * @memberof dom
+         */
+        element.getRect = function() {
+            return this.getBoundingClientRect();
+        };
+        /**
+         * move the element using either css transforms or plain css possitioning
+         * @param {string|num} x - x-axis position in pixels
+         * @param {string|num} y - y-axis position in pixels
+         * @param {boolean=} transform - should move set the position using css transforms or not
+         * @param {string=} position - set the position style of the element absolute/fixed...
+         * @param {boolean=} chainable - should this method be chainable defaults to false for performance reasons
+         */
+        element.move = function(x, y, transform, position, chainable) {
+            if (is.Bool(position)) chainable = position;
+            if (is.String(transform)) position = transfrom;
+            transform === true ? this.style.transform = 'translateX(' + x + 'px) translateY(' + y + 'px)' : this.css({
+                position: is.String(position) ? position : '',
+                left: x + 'px',
+                top: y + 'px'
+            });
+            if (chainable) return this;
+        };
+        /**
+         * performs a query inside the element
+         * @memberof dom
+         * @param {string} CSS selector
+         * @returns {Node|Null}
+         */
+        element.query = function(selector) {
+            return query(selector, this);
+        };
+        /**
+         * performs a queryAll inside the element
+         * @memberof dom
+         * @param {string} CSS selector
+         * @returns {NodeList|Null}
+         */
+        element.queryAll = function(selector) {
+            return queryAll(selector, this);
+        };
+        return element;
     }
-    /**
-     * changes or returns the innerHTML value of a Node
-     * @memberof dom
-     * @param {string=} sets the innerHTML value or when undefined gets the innerHTML value
-     */
-    domManip.prototype.html = function(val, position) {
-        var el = this.element,
-            input = is.Input(el),
-            hv = def(val);
-        if (hv) input ? el.value = val : el.innerHTML = val;
-        return hv ? this : input ? el.value : el.innerHTML;
-    };
-    /**
-     * changes or returns the textContent value of a Node
-     * @memberof dom
-     * @param {string=} sets the textContent value or when undefined gets the textContent value
-     */
-    domManip.prototype.text = function(val) {
-        var el = this.element,
-            input = is.Input(el);
-
-        if (def(val)) input ? el.value = val : el.textContent = val;
-        return def(val) ? this : input ? el.value : el.textContent;
-    };
-    /**
-     * replaces a Node with another node provided as a parameter/argument
-     * @memberof dom
-     * @param {Node} Node to replace with
-     */
-    domManip.prototype.replace = function(val) {
-        this.element.parentNode.replaceChild(el, this.element);
-        return this;
-    };
-    /**
-     * append the Element to another node using either a CSS selector or a Node
-     * @memberof dom
-     * @param {Node|string} CSS selector or Node to append the this.element to
-     */
-    domManip.prototype.appendTo = function(val) {
-        if (is.String(val)) val = query(val);
-        if (!nil(val)) val.appendChild(this.element);
-        return this;
-    };
-    /**
-     * append text or a Node to the element
-     * @memberof dom
-     * @param {Node|string} String or Node to append to the this.element
-     */
-    domManip.prototype.append = function(val) {
-        var el = this.element;
-        is.Node(val) ? el.appendChild(val) : el.insertAdjacentHTML('beforeend', val);
-        return this;
-    };
-    /**
-     * prepend text or a Node to the element
-     * @memberof dom
-     * @param {Node|string} String or Node to prepend to the this.element
-     */
-    domManip.prototype.prepend = function(val) {
-        var el = this.element;
-        is.Node(val) ? el.insertBefore(val, el.firstChild) : el.insertAdjacentHTML('afterbegin', val);
-        return this;
-    };
-    /**
-     * Listen for Events on the element or on all the elements in the NodeList
-     * @memberof dom
-     * @param {string} string indicating the type of event to listen for
-     * @param {function} func - handler function for the event
-     * @returns handler (Off,Once,On)
-     */
-    domManip.prototype.On = function(eventType, func) {
-        return On(eventType, this.element, func);
-    };
-    /**
-     * add CSS style rules to the Element or NodeList
-     * @memberof dom
-     * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
-     */
-    domManip.prototype.css = function(styles) {
-        var _this4 = this;
-
-        def(styles) ? forEach(styles, function(prop, key) {
-            return _this4.element.style[key] = prop;
-        }) : console.error('Styles Object undefined');
-        return this;
-    };
-    /**
-     * check if the element has got a specific CSS class
-     * @memberof dom
-     * @param {string} name of the class to check for
-     */
-    domManip.prototype.gotClass = function(Class) {
-        return this.element.classList.contains(Class);
-    };
-    /**
-     * Add a CSS class to the element
-     * @memberof dom
-     * @param {string} name of the class to add
-     */
-    domManip.prototype.addClass = function(Class) {
-        this.element.classList.add(Class);
-        return this;
-    };
-    /**
-     * removes a specific CSS class from the element
-     * @memberof dom
-     * @param {string} name of the class to strip
-     */
-    domManip.prototype.stripClass = function(Class) {
-        this.element.classList.remove(Class);
-        return this;
-    };
-    /**
-     * removes a specific Attribute from the this.element
-     * @memberof dom
-     * @param {string} name of the Attribute to strip
-     */
-    domManip.prototype.stripAttr = function(Attr) {
-        this.element.removeAttribute(Attr);
-        return this;
-    };
-    /**
-     * checks if the element has a specific Attribute
-     * @memberof dom
-     * @param {string} name of the Attribute to check for
-     */
-    domManip.prototype.hasAttr = function(Attr) {
-        return this.element.hasAttribute(Attr);
-    };
-    /**
-     * Sets or adds an Attribute on the element
-     * @memberof dom
-     * @param {string} Name of the Attribute to add/set
-     * @param {string} Value of the Attribute to add/set
-     */
-    domManip.prototype.setAttr = function(Attr, val) {
-        this.element.setAttribute(Attr, val);
-        return this;
-    };
-    domManip.prototype.getAttr = function(Attr) {
-        return this.element.getAttribute(Attr);
-    };
-    /**
-     * gets all the elements siblings within it's parentNode
-     * @memberof dom
-     */
-    domManip.prototype.getSiblings = function() {
-        var siblings = [],
-            AllChildren = this.element.parentNode.childNodes;
-        for (var _i2 = 0; _i2 < AllChildren.length; _i2++) {
-            if (AllChildren[_i2] !== this.element) siblings.push(AllChildren[_i2]);
-        }
-        return siblings;
-    };
-    /**
-     * sets or gets the element's pixel width
-     * @memberof dom
-     * @param {string|number=} pixel value to set
-     */
-    domManip.prototype.Width = function(pixels) {
-        var haspixels = def(pixels);
-        if (haspixels) this.element.style.width = pixels;
-        return haspixels ? this : this.element.getBoundingClientRect().width;
-    };
-    /**
-     * sets or gets the element's pixel height
-     * @memberof dom
-     * @param {string|number=} pixel value to set
-     */
-    domManip.prototype.Height = function(pixels) {
-        var haspixels = def(pixels);
-        if (haspixels) this.element.style.height = pixels;
-        return haspixels ? this : this.element.getBoundingClientRect().height;
-    };
-    /**
-     * gets all the element's dimentions (width,height,left,top,bottom,right)
-     * @memberof dom
-     */
-    domManip.prototype.getRect = function() {
-        return this.element.getBoundingClientRect();
-    };
-    /**
-     * move the element using either css transforms or plain css possitioning
-     * @param {string|num} x - x-axis position in pixels
-     * @param {string|num} y - y-axis position in pixels
-     * @param {boolean=} transform - should move set the position using css transforms or not
-     * @param {string=} position - set the position style of the element absolute/fixed...
-     * @param {boolean=} chainable - should this method be chainable defaults to false for performance reasons
-     */
-    domManip.prototype.move = function(x, y, transform, position, chainable) {
-        if (is.Bool(position)) chainable = position;
-        if (is.String(transform)) position = transfrom;
-        transform === true ? this.element.style.transform = 'translateX(' + x + 'px) translateY(' + y + 'px)' : this.css({
-            position: is.String(position) ? position : '',
-            left: x + 'px',
-            top: y + 'px'
-        });
-        if (chainable) return this;
-    };
-    /**
-     * performs a query inside the element
-     * @memberof dom
-     * @param {string} CSS selector
-     * @returns {Node|Null}
-     */
-    domManip.prototype.query = function(selector) {
-        return query(selector, this.element);
-    };
-    /**
-     * performs a queryAll inside the element
-     * @memberof dom
-     * @param {string} CSS selector
-     * @returns {NodeList|Null}
-     */
-    domManip.prototype.queryAll = function(selector) {
-        return queryAll(selector, this.element);
-    };
 
     /**
      * Function that returns many useful methods for interacting with and manipulating the DOM or creating elements
@@ -1179,7 +1236,7 @@ function _typeof(obj) {
      */
     root.dom = function(element, within) {
         var elements = QueryOrNodetoNodeArray(element, within);
-        return is.NodeList(elements) ? elements.length === 1 ? new domManip(elements[0]) : domNodeList(elements) : Craft.dom;
+        return is.NodeList(elements) ? elements.length === 1 ? domManip(elements[0]) : domNodeList(elements) : Craft.dom;
     };
 
     CrafterStyles = query('[crafterstyles]', head);
@@ -1201,23 +1258,10 @@ function _typeof(obj) {
             return NewObject;
         },
 
-        toArr: toArr,
-        omitFrom: function omitFrom(Arr, val) {
-            var index = Arr.indexOf(val),
-                temp = [],
-                string = false,
-                i = 0;
-            if (is.String(Arr)) {
-                Arr = toArr(Arr);
-                string = true;
-            }
-            if (is.NodeList(Arr)) Arr = toArr(Arr);
-            for (; i < Arr.length; i++) {
-                if (i !== index) temp.push(Arr[i]);
-            }
-            return string ? temp.join('') : temp;
+        cloneArr: function cloneArr(arr) {
+            return arr.slice(0);
         },
-
+        toArr: toArr,
         /**
          * Compares two arrays and determines if they are the same array
          * @param {Array} arr1 - array one
@@ -1257,9 +1301,8 @@ function _typeof(obj) {
             if (prop.length > 1) {
                 var e = prop.shift();
                 Craft.setDeep(obj[e] = is.Object(obj[e]) ? obj[e] : {}, prop, value);
-            } else if (!rv(obj[prop[0]]) && def(value)) obj[prop[0]] = value;
-            else if (value === undefined) delete obj[prop[0]];
-            else obj[prop[0]].set(value);
+            } else if (def(value)) obj[prop[0]] = value;
+            else if (value.includes('_DELETE_')) delete obj[prop[0]];
             if (returnObj === true) return obj;
         },
         forEachDeep: function forEachDeep(object, fn, path) {
@@ -1291,7 +1334,7 @@ function _typeof(obj) {
             return hostobj;
         },
         clone: (function(_clone) {
-            function clone(_x3) {
+            function clone(_x4) {
                 return _clone.apply(this, arguments);
             }
 
@@ -1312,12 +1355,26 @@ function _typeof(obj) {
             });
             return temp;
         }),
+        omitFrom: function omitFrom(Arr, val) {
+            var index = Arr.indexOf(val),
+                temp = [],
+                string = false,
+                i = 0;
+            if (is.String(Arr)) {
+                Arr = toArr(Arr);
+                string = true;
+            }
+            if (is.Arraylike(Arr)) Arr = toArr(Arr);
+            for (; i < Arr.length; i++) {
+                if (i !== index) temp.push(Arr[i]);
+            }
+            if (temp.includes(val)) temp = Craft.omitFrom(temp, val);
+            return string ? temp.join('') : temp;
+        },
         omit: function omit(obj, val) {
+            if (is.Arraylike(obj)) obj = Craft.omitFrom(obj, i);
             if (is.Object(obj) && obj !== val) forEach(obj, function(prop, key) {
                 if (val === key || val === prop) delete obj[key];
-            });
-            else if (is.ArrayLike(obj)) obj.forEach(function(i) {
-                if (val === i) obj = Craft.omitFrom(obj, i);
             });
             return obj;
         },
@@ -1432,6 +1489,13 @@ function _typeof(obj) {
                 return make_element('table', tableInner, attr, node);
             }
         },
+        isdomNode: function isdomNode(val) {
+            try {
+                return is.Node(val['element']);
+            } catch (e) {}
+            return false;
+        },
+
         CurrentBrowser: {
             is: function is(browser) {
                 return _br.join(' ').toLowerCase().includes(browser.toLowerCase());
@@ -1531,7 +1595,7 @@ function _typeof(obj) {
                 });
             },
             open: (function(_open) {
-                function open(_x4, _x5) {
+                function open(_x5, _x6) {
                     return _open.apply(this, arguments);
                 }
 
@@ -1603,6 +1667,77 @@ function _typeof(obj) {
                 return all;
             }
         },
+        /**
+         * Handles WebSockets in a contained manner with send and recieve methods
+         * @param {string} wsAddress - the WebSocket address example "ws://localhost:3000/"
+         * @param {Array=} protocols - the protocols to pass to the WebSocket Connection
+         */
+        newSocket: function newSocket(address, protocols) {
+            if (!address.includes('ws://') || !address.includes('wss://')) address = (location.protocol === 'http:' ? 'ws://' : 'wss://') + address;
+            if (is.URL(address)) {
+                var _ret2 = (function() {
+
+                    var Options = {
+                        socket: null,
+                        open: false,
+                        recievers: [],
+                        message: '',
+                        set send(msg) {
+                            var _this4 = this;
+
+                            if (this.socket['readyState'] === 1) this.socket.send(is.Object(msg) ? JSON.stringify(msg) : msg);
+                            else {
+                                (function() {
+                                    var poll = setInterval(function() {
+                                        if (_this4.socket['readyState'] === 1) {
+                                            _this4.socket.send(is.Object(msg) ? JSON.stringify(msg) : msg);
+                                            clearInterval(poll);
+                                        }
+                                    }, 20);
+                                    Craft.delay(function() {
+                                        return clearInterval(poll);
+                                    }, 2000);
+                                })();
+                            }
+                        },
+                        set recieve(func) {
+                            if (is.Func(func)) this.recievers.push(func);
+                        },
+                        get recieve() {
+                            return this.message;
+                        },
+                        close: function close() {
+                            this.socket.close();
+                        },
+                        reopen: function reopen() {
+                            if (this.open === false) this.socket = is.Def(protocols) ? new WebSocket(address) : new WebSocket(address, protocols);
+                        }
+                    };
+
+                    Options.socket = is.Def(protocols) ? new WebSocket(address) : new WebSocket(address, protocols);
+                    Options.socket.onopen = function(e) {
+                        return Options.open = true;
+                    };
+                    Options.socket.onclose = function(e) {
+                        return Options.open = false;
+                    };
+
+                    Options.socket.onmessage = function(e) {
+                        Options.message = e.data;
+                        Options.recievers.forEach(function(fn) {
+                            return fn(e.data, e);
+                        });
+                    };
+
+                    return {
+                        v: Options
+                    };
+                })();
+
+                if ((typeof _ret2 === 'undefined' ? 'undefined' : _typeof(_ret2)) === "object") return _ret2.v;
+            }
+        },
+
         curry: function curry(fn) {
             return createFn(fn, [], fn.length);
         },
@@ -1701,6 +1836,7 @@ function _typeof(obj) {
 
         For: For,
         forIn: forIn,
+        RegExps: RegExps,
         indexOfDate: function indexOfDate(Collection, date) {
             for (var _i4 = 0; _i4 < Collection.length; _i4++) {
                 if (+Collection[_i4] === +date) return _i4;
@@ -1866,7 +2002,7 @@ function _typeof(obj) {
                                 resolve(Scope);
                                 clearInterval(ReadyYet);
                             }
-                        }, 25);
+                        }, 20);
                         setTimeout(function() {
                             clearInterval(ReadyYet);
                             if (!Ready) reject("Things didn't load correctly -> load failed");
@@ -1939,7 +2075,10 @@ function _typeof(obj) {
         createWebComponent: function createWebComponent(webcomponent, src) {
             webcomponent = JSON.parse(webcomponent);
             CrafterStyles.innerHTML += webcomponent.css;
-            head.appendChild(dom().script(webcomponent.js + ('\nCraft.WebComponents.push(\'' + src + '\')'), 'webcomponent=' + webcomponent.name, true));
+            head.appendChild(dom().script('', {
+                src: Craft.URLfrom(webcomponent.js + ('\nCraft.WebComponents.push(\'' + src + '\')')),
+                webcomponent: webcomponent.name
+            }, true));
         },
 
         /**
@@ -2029,9 +2168,30 @@ function _typeof(obj) {
         },
         setBind: function setBind(key, val) {
             if (Craft.Binds.hasOwnProperty(key)) Craft.Binds[key].value = val;
+        },
+        InputSync: function InputSync(input, obj, key) {
+            input = dom(is.String(input) ? query(input) : input);
+            if (def(input['element'])) input.element['InputSync'] = input.On('input', function(e) {
+                return Craft.setDeep(obj, key, input.html());
+            });
+        },
+        DisconectInputSync: function DisconectInputSync(input) {
+            input = dom(is.String(input) ? query(input) : input);
+            if (def(input['element'])) {
+                if (def(input.element['InputSync'])) {
+                    input.element['InputSync'].Off();
+                    delete input.element['InputSync'];
+                }
+            }
         }
     };
 
+    On('blur', function(e) {
+        return Craft.tabActive = false;
+    });
+    On('focus', function(e) {
+        return Craft.tabActive = true;
+    });
     On('animationstart', doc, function(e) {
         if (e.animationName === 'NodeInserted' && is.Node(e.target)) {
             (function() {
@@ -2069,12 +2229,6 @@ function _typeof(obj) {
             Craft.mouse.over = e.target;
         }
     });
-    On('blur', function(e) {
-        return Craft.tabActive = false;
-    });
-    On('focus', function(e) {
-        return Craft.tabActive = true;
-    });
 
     Craft.newComponent(fw, {
         inserted: function inserted() {
@@ -2094,7 +2248,8 @@ function _typeof(obj) {
                         if (nil(wc)) fetch(src).then(function(res) {
                             return res.json().then(function(webcomponent) {
                                 CrafterStyles.innerHTML += webcomponent.css;
-                                head.appendChild(dom().script(webcomponent.js + ('\nCraft.WebComponents.push(\'' + src + '\')'), {
+                                head.appendChild(dom().script('', {
+                                    src: Craft.URLfrom(webcomponent.js + ('\nCraft.WebComponents.push(\'' + src + '\')')),
                                     webcomponent: webcomponent.name
                                 }, true));
                                 if (el.getAttr(cc) == 'true') localStorage.setItem(src, JSON.stringify(webcomponent));
@@ -2114,10 +2269,10 @@ function _typeof(obj) {
         });
         Craft.WebComponents.length === queryAll(fw).length ? Ready = true : Craft.poll(function() {
             return Craft.WebComponents.length === queryAll(fw).length;
-        }, 35, 2000).then(function() {
+        }, 35, 4000).then(function() {
             return Ready = true;
-        }).catch(function(err) {
-            console.warn('loaded with errors :( \t' + err);
+        }).catch(function() {
+            console.warn('loaded with errors :( \t');
             Ready = true;
         });
     });
@@ -2128,6 +2283,65 @@ function _typeof(obj) {
         });
     });
 
-    root.CraftSocket = CraftSocket;
+    Craft.newComponent('for-each', {
+        inserted: function inserted() {
+            var _this9 = this;
+
+            if (this.parentNode.tagName !== 'FOR-EACH' && this.parentNode.parentNode.tagName !== 'FOR-EACH' && this.parentNode.parentNode.parentNode.tagName !== 'FOR-EACH') {
+                (function() {
+                    var oldValue = _this9.parentNode.innerHTML,
+                        manage = function manage() {
+                            var element = _this9;
+                            if (element.hasAttribute('in')) {
+                                (function() {
+                                    var el = dom(element),
+                                        scopename = undefined,
+                                        output = '',
+                                        temp = undefined,
+                                        tempcopy = undefined,
+                                        tempscope = undefined,
+                                        tempoutput = undefined,
+                                        scope = Craft.getDeep(root, el.getAttr('in')) || Craft.getBind(el.getAttr('in'));
+
+                                    if (is.Object(scope) || is.Arr(scope)) forEach(scope, function(item, key) {
+                                        tempcopy = _this9.cloneNode(true);
+                                        queryEach('for-each', tempcopy, function(forEachNode) {
+                                            if (forEachNode.hasAttribute('in')) {
+                                                temp = forEachNode.getAttribute('in');
+                                                tempscope = key === temp ? item : getDeep(item, temp) || Craft.getDeep(root, temp);
+                                                tempoutput = '';
+                                                if (is.Object(tempscope) || is.Arr(tempscope)) forEach(tempscope, function(Titem, Tkey) {
+                                                    tempoutput += forEachNode.innerHTML.replace(RegExps.template, function(m, template) {
+                                                        return compileTemplate(template, Titem);
+                                                    });
+                                                });
+                                                forEachNode.insertAdjacentHTML('beforebegin', tempoutput);
+                                                forEachNode.outerHTML = '';
+                                            }
+                                        });
+                                        output += tempcopy.innerHTML.replace(RegExps.template, function(m, template) {
+                                            return compileTemplate(template, item);
+                                        });
+                                        tempcopy = null;
+                                    });
+                                    if (output !== '' || output !== ' ') _this9.insertAdjacentHTML('beforebegin', output);
+                                    if (_this9.parentNode.innerHTML !== oldValue) setTimeout(function() {
+                                        return _this9.remove();
+                                    }, 4500);
+                                    else setTimeout(function() {
+                                        return manage();
+                                    }, 200);
+                                })();
+                            }
+                        };
+
+                    Ready === true ? manage() : Craft.WhenReady().then(function() {
+                        return manage();
+                    });
+                })();
+            }
+        }
+    });
+
     root.EventHandler = EventHandler;
 })(document, self);
