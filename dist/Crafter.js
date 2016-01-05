@@ -1407,19 +1407,6 @@ function _typeof(obj) {
             });
             return hostobj;
         },
-        cloneObj: function cloneObj(source) {
-            var key = undefined,
-                value = undefined,
-                clone = Object.create(source);
-
-            for (key in source) {
-                if (source.hasOwnProperty(key)) {
-                    value = source[key];
-                    value !== null && (typeof value === 'undefined' ? 'undefined' : _typeof(value)) === "object" ? clone[key] = Craft.cloneObj(value) : clone[key] = value;
-                }
-            }
-            return clone;
-        },
 
         cloneArr: function cloneArr(arr) {
             return arr.slice(0);
@@ -1780,7 +1767,7 @@ function _typeof(obj) {
                                             clearInterval(poll);
                                         }
                                     }, 20);
-                                    Craft.delay(function() {
+                                    setTimeout(function() {
                                         return clearInterval(poll);
                                     }, 2000);
                                 })();
@@ -1826,9 +1813,6 @@ function _typeof(obj) {
 
         curry: function curry(fn) {
             return createFn(fn, [], fn.length);
-        },
-        delay: function delay(func, ms) {
-            return setTimeout(func, ms || 3000);
         },
         after: function after(n, func) {
             !is.Func(func) && is.Func(n) ? func = n : console.error("after: no function");
@@ -1896,7 +1880,7 @@ function _typeof(obj) {
         },
 
         css: function css(el, styles) {
-            return def(styles, el) && is.Node(el) ? forEach(styles, function(prop, key) {
+            return def(styles) && is.Node(el) ? forEach(styles, function(prop, key) {
                 return el.style[key] = prop;
             }) : console.error('invalid args');
         },
@@ -2080,6 +2064,7 @@ function _typeof(obj) {
         },
         /**
          * set functions that executes when the DOM and WebComponents are finished loading
+         * @param {function} func - function to execute when the DOM and webcomponents are ready
          */
         set WhenReady(func) {
             if (is.Func(func)) Craft.ReadyFunctions.push(func);
