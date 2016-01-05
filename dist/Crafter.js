@@ -12,8 +12,6 @@ function _typeof(obj) {
 (function(doc, root) {
 
     var RegExps = {
-            foreach: /<for-each([\s\S]*?)<\/for-each>/igm,
-            ignorebetween: /#\{([\s\S]*?)\}#/igm,
             template: /\$\{([a-zA-Z0-9\.\|?:\s\'\"!=<>]{1,})(?:(?!\s)\})/g,
             ternary: /([a-zA-Z\.\'\"\s=!]{1,})(?:(?:\s{1,}?)\?(?:\s{1,})?)([a-zA-Z\.\'\"]{1,})(?:(?:\s{1,})?:(?:\s{1,})?)([a-zA-Z\.\'\"]{1,})/gm,
             comparisons: /([a-zA-Z0-9\.\'\"]{1,})(?:(?:\s{1,}?)(and|or|is|[=!><\|&]{1,3})(?:\s{1,}?))([a-zA-Z0-9\.\'\"]{1,})/gm,
@@ -38,7 +36,7 @@ function _typeof(obj) {
     _br ? [_br[1], _br[2]] : [navigator.appName, navigator.appVersion, '-?'];
 
     CrafterStyles.setAttribute('crafterstyles', '');
-    CrafterStyles.innerHTML = '\n@keyframes NodeInserted {from {opacity:.99;}to {opacity: 1;}} [bind],[craft-template] {animation-duration: 0.001s;animation-name: NodeInserted;} for-each {display:none;}';
+    CrafterStyles.innerHTML = '\n@keyframes NodeInserted {from {opacity:.99;}to {opacity: 1;}} [bind] {animation-duration: 0.001s;animation-name: NodeInserted;} for-each,craft-template {display:none;}';
     head.appendChild(CrafterStyles);
 
     function getStringQuotes(str) {
@@ -112,16 +110,23 @@ function _typeof(obj) {
     }
 
     function compileTemplate(template, context, index) {
-        if (template.match(/value/igm) !== null) return context;
-        if (template.match(/index/igm) !== null) return index;
+        if (template.match(/value/igm) !== null && !is.Object(context)) return context;
+        if (template.match(/index/igm) !== null) return index || 0;
         if (has(template, ':?')) return template.replace(RegExps.ternary, function(m, test, True, False) {
             return getDeep(context, (hasComparator(test) ? compileComparision(test, context) : getDeep(context, test)) ? True : False);
         });
         return hasComparator(template) ? compileComparision(template, context) : getDeep(context, template);
     }
 
+    function toInt(val) {
+        var num = Number(val);
+        if (isNaN(num)) return 0;
+        if (num === 0 || !isFinite(num)) return num;
+        return (num > 0 ? 1 : -1) * Math.floor(Math.abs(num));
+    }
+
     function toArr(val) {
-        return Array.from(val);
+        return Array.prototype.slice.call(val);
     }
     // ta = TestArgs : convert arguments to array then tests it
     function ta(args, test) {
@@ -1078,7 +1083,7 @@ function _typeof(obj) {
          * @returns handler (Off,Once,On)
          */
         element.On = function(eventType, func) {
-            return On(eventType, this, func);
+            return On(eventType, element, func);
         };
         /**
          * add CSS style rules to the Element or NodeList
@@ -1177,16 +1182,15 @@ function _typeof(obj) {
          * @param {string|number=} pixel value to set
          */
         element.Height = function(pixels) {
-            var haspixels = def(pixels);
-            if (haspixels) this.style.height = pixels;
-            return haspixels ? this : this.getBoundingClientRect().height;
+            if (def(pixels)) this.style.height = pixels;
+            return def(pixels) ? this : this.getBoundingClientRect().height;
         };
         /**
          * gets all the element's dimentions (width,height,left,top,bottom,right)
          * @memberof dom
          */
         element.getRect = function() {
-            return this.getBoundingClientRect();
+            return element.getBoundingClientRect();
         };
         /**
          * move the element using either css transforms or plain css possitioning
@@ -1213,7 +1217,7 @@ function _typeof(obj) {
          * @returns {Node|Null}
          */
         element.query = function(selector) {
-            return query(selector, this);
+            return query(selector, element);
         };
         /**
          * performs a queryAll inside the element
@@ -1222,10 +1226,76 @@ function _typeof(obj) {
          * @returns {NodeList|Null}
          */
         element.queryAll = function(selector) {
-            return queryAll(selector, this);
+            return queryAll(selector, element);
         };
+
+        if (is.Input(element)) {
+            element.SyncInput = function(obj, key) {
+                return element['InputSync'] = On(element).Input(function(e) {
+                    return Craft.setDeep(obj, key, element.innerHTML);
+                });
+            };
+            element.disconectInputSync = function() {
+                if (def(element['InputSync'])) {
+                    element['InputSync'].Off();
+                    delete element['InputSync'];
+                }
+            };
+        }
+
         return element;
     }
+
+    var BindObj = {
+        val: '',
+        set value(val) {
+            this.oldVal = this.val;
+            this.val = val;
+            this.applyViews();
+        },
+        get value() {
+            return this.val;
+        },
+        applyViews: function applyViews() {
+            var _this4 = this;
+
+            if (this.val !== this.oldVal && !is.empty(this.views)) this.views.forEach(function(view) {
+                if (is.Object(view) && is.Node(view['node'])) {
+                    if (!def(view.event) && view.twoway === true) view.event = On('input', view.node, function(e) {
+                        var val = view.manip.html();
+                        if (val !== _this4.val) _this4.value = val;
+                    });
+                    if (is.empty(_this4.val)) _this4.val = view.manip.html();
+                    else if (view.manip.html() !== _this4.val) view.manip.html(_this4.val);
+                } else _this4.views = Craft.omitFrom(_this4.views, view);
+            });
+        },
+        newView: function newView(selector, twoway) {
+            selector = dom(selector);
+            if (is.Node(selector)) this.views.push({
+                node: selector,
+                manip: selector,
+                twoway: twoway === true || is.Input(selector)
+            });
+            this.applyViews();
+        },
+        removeView: function removeView(selector) {
+            var _this5 = this;
+
+            selector = dom(selector);
+            if (is.Node(selector['element'])) {
+                this.views.forEach(function(view) {
+                    if (view.node === selector['element']) {
+                        if (def(view.event)) view.event.Off();
+                        _this5.views = Craft.omitFrom(_this5.views, view);
+                    }
+                });
+                Craft.Binds[mnp.getAttr('bind')].applyViews();
+            }
+        },
+
+        views: []
+    };
 
     /**
      * Function that returns many useful methods for interacting with and manipulating the DOM or creating elements
@@ -1261,7 +1331,6 @@ function _typeof(obj) {
         cloneArr: function cloneArr(arr) {
             return arr.slice(0);
         },
-        toArr: toArr,
         /**
          * Compares two arrays and determines if they are the same array
          * @param {Array} arr1 - array one
@@ -1333,28 +1402,10 @@ function _typeof(obj) {
             });
             return hostobj;
         },
-        clone: (function(_clone) {
-            function clone(_x4) {
-                return _clone.apply(this, arguments);
-            }
 
-            clone.toString = function() {
-                return _clone.toString();
-            };
-
-            return clone;
-        })(function(obj) {
-            if (nil(obj) || !is.Object(obj) || 'isActiveClone' in obj) return obj;
-            var temp = obj.constructor();
-            forEach(obj, function(val, key) {
-                if (obj.hasOwnPropert.call(key)) {
-                    obj['isActiveClone'] = null;
-                    temp[key] = clone(obj[key]);
-                    delete obj['isActiveClone'];
-                }
-            });
-            return temp;
-        }),
+        clone: function clone(val) {
+            return is.Object(val) ? Object.create(val) : val.slice(0);
+        },
         omitFrom: function omitFrom(Arr, val) {
             var index = Arr.indexOf(val),
                 temp = [],
@@ -1563,7 +1614,10 @@ function _typeof(obj) {
             });
             return Promise.all(promises).then(function(src) {
                 return src.map(function(obj) {
-                    return obj.exec ? obj.type === 'css' ? CrafterStyles.innerHTML += '\n' + obj.data : head.appendChild(dom().script(obj.data, 'key=' + obj.key, obj.defer)) : undefined;
+                    if (obj.exec) obj.type === 'css' ? CrafterStyles.innerHTML += '\n' + obj.data : head.appendChild(dom().script('', {
+                        src: Craft.URLfrom(obj.data),
+                        key: obj.key
+                    }, obj.defer));
                 });
             });
         },
@@ -1595,7 +1649,7 @@ function _typeof(obj) {
                 });
             },
             open: (function(_open) {
-                function open(_x5, _x6) {
+                function open(_x4, _x5) {
                     return _open.apply(this, arguments);
                 }
 
@@ -1683,14 +1737,14 @@ function _typeof(obj) {
                         recievers: [],
                         message: '',
                         set send(msg) {
-                            var _this4 = this;
+                            var _this6 = this;
 
                             if (this.socket['readyState'] === 1) this.socket.send(is.Object(msg) ? JSON.stringify(msg) : msg);
                             else {
                                 (function() {
                                     var poll = setInterval(function() {
-                                        if (_this4.socket['readyState'] === 1) {
-                                            _this4.socket.send(is.Object(msg) ? JSON.stringify(msg) : msg);
+                                        if (_this6.socket['readyState'] === 1) {
+                                            _this6.socket.send(is.Object(msg) ? JSON.stringify(msg) : msg);
                                             clearInterval(poll);
                                         }
                                     }, 20);
@@ -1742,7 +1796,7 @@ function _typeof(obj) {
             return createFn(fn, [], fn.length);
         },
         delay: function delay(func, ms) {
-            return setTimeout(func, ms);
+            return setTimeout(func, ms || 3000);
         },
         after: function after(n, func) {
             !is.Func(func) && is.Func(n) ? func = n : console.error("after: no function");
@@ -1754,11 +1808,11 @@ function _typeof(obj) {
         debounce: function debounce(wait, func, immediate) {
             var timeout = undefined;
             return function() {
-                var _this5 = this,
+                var _this7 = this,
                     args = arguments,
                     later = function later() {
                         timeout = null;
-                        if (!immediate) func.apply(_this5, args);
+                        if (!immediate) func.apply(_this7, args);
                     },
                     callNow = immediate && !timeout;
 
@@ -1833,10 +1887,6 @@ function _typeof(obj) {
             } catch (e) {}
             return -1;
         },
-
-        For: For,
-        forIn: forIn,
-        RegExps: RegExps,
         indexOfDate: function indexOfDate(Collection, date) {
             for (var _i4 = 0; _i4 < Collection.length; _i4++) {
                 if (+Collection[_i4] === +date) return _i4;
@@ -1892,8 +1942,14 @@ function _typeof(obj) {
         Scope: {},
         Binds: {},
         WebComponents: [],
+        ReadyFunctions: [],
         tabActive: true,
         make_element: make_element,
+        toArr: toArr,
+        toInt: toInt,
+        For: For,
+        forIn: forIn,
+        RegExps: RegExps,
         mouse: {
             x: 0,
             y: 0,
@@ -1902,7 +1958,7 @@ function _typeof(obj) {
             observe: function observe(val) {
                 if (is.Bool(val)) {
                     Craft.mouse.track = val;
-                    Craft.mouse.track === true ? Craft.mouse.eventhandler.On() : Craft.mouse.eventhandler.Off();
+                    Craft.mouse.track ? Craft.mouse.eventhandler.On() : Craft.mouse.eventhandler.Off();
                 } else return Craft.mouse.track;
             }
         },
@@ -1942,9 +1998,6 @@ function _typeof(obj) {
             });
         },
 
-        nodeExists: function nodeExists(selector, within) {
-            return queryAll(selector, is.Node(within) ? within = within : within = query(within)) !== null;
-        },
         /**
          * converts Objects or URL variable strings to a FormData object
          * @param {object|string} val - values to convert
@@ -1967,11 +2020,11 @@ function _typeof(obj) {
         },
         OnScroll: function OnScroll(element, func) {
             return is.Func(func) ? On('scroll', element, function(e) {
-                return func(e.deltaY < 1 ? false : true, e);
-            }) : console.error('second param needs to be a function');
+                return func(e.deltaY < 1, e);
+            }) : console.error('no function');
         },
         OnResize: function OnResize(func) {
-            return is.Func(func) ? Craft.ResizeHandlers.add(func) : console.error("Craft.OnResize -> func is not a function");
+            return is.Func(func) ? Craft.ResizeHandlers.add(func) : console.error("Craft.OnResize -> no function");
         },
         OnScrolledTo: function OnScrolledTo(Scroll) {
             return new Promise(function(pass, fail) {
@@ -1987,29 +2040,17 @@ function _typeof(obj) {
                 });
             });
         },
-        /**
-         * function that returns a promise when the DOM and WebComponents are finished loading
-         * @param {Object=} Scope - Optional overide to the default Craft.Scope passed to the promise
-         */
-        WhenReady: function WhenReady(Scope) {
-            return new Promise(function(resolve, reject) {
-                Scope = Scope || Craft.Scope;
-                if (Ready) resolve(Scope);
-                else {
-                    (function() {
-                        var ReadyYet = setInterval(function() {
-                            if (Ready) {
-                                resolve(Scope);
-                                clearInterval(ReadyYet);
-                            }
-                        }, 20);
-                        setTimeout(function() {
-                            clearInterval(ReadyYet);
-                            if (!Ready) reject("Things didn't load correctly -> load failed");
-                        }, 4500);
-                    })();
-                }
+        set Ready(val) {
+            if (val === true) Craft.ReadyFunctions.forEach(function(fn) {
+                return fn(Craft.Scope);
             });
+            Craft.ReadyFunctions = null;
+        },
+        /**
+         * set functions that executes when the DOM and WebComponents are finished loading
+         */
+        set WhenReady(func) {
+            if (is.Func(func)) Craft.ReadyFunctions.push(func);
         },
         poll: function poll(test, interval, timeout) {
             return new Promise(function(pass, fail) {
@@ -2096,7 +2137,7 @@ function _typeof(obj) {
          * @param {object} config - Object containing all the element's lifecycle methods / extends and attached methods or properties
          */
         newComponent: function newComponent(tag, config) {
-            if (!def(config)) throw new Error(tag + ': config undefined');
+            if (!def(config)) throw new Error(tag + ' : config undefined');
             var element = Object.create(HTMLElement.prototype),
                 settings = {};
             forEach(config, function(prop, key) {
@@ -2111,56 +2152,7 @@ function _typeof(obj) {
             doc.registerElement(tag, settings);
         },
         newBind: function newBind(key, value, element) {
-            if (!def(Craft.Binds[key])) Craft.Binds[key] = {
-                val: value || '',
-                set value(val) {
-                    this.oldVal = this.val;
-                    this.val = val;
-                    this.applyViews();
-                },
-                get value() {
-                    return this.val;
-                },
-                applyViews: function applyViews() {
-                    var _this6 = this;
-
-                    if (this.val !== this.oldVal && !is.empty(this.views)) this.views.forEach(function(view) {
-                        if (is.Object(view) && is.Node(view['node'])) {
-                            if (!def(view.event) && view.twoway === true) view.event = On('input', view.node, function(e) {
-                                var val = view.manip.html();
-                                if (val !== _this6.val) _this6.value = val;
-                            });
-                            if (is.empty(_this6.val)) _this6.val = view.manip.html();
-                            else if (view.manip.html() !== _this6.val) view.manip.html(_this6.val);
-                        } else _this6.views = Craft.omitFrom(_this6.views, view);
-                    });
-                },
-                newView: function newView(selector, twoway) {
-                    selector = dom(selector);
-                    if (is.Node(selector)) this.views.push({
-                        node: selector,
-                        manip: selector,
-                        twoway: twoway === true || is.Input(selector)
-                    });
-                    this.applyViews();
-                },
-                removeView: function removeView(selector) {
-                    var _this7 = this;
-
-                    selector = dom(selector);
-                    if (is.Node(selector['element'])) {
-                        this.views.forEach(function(view) {
-                            if (view.node === selector['element']) {
-                                if (def(view.event)) view.event.Off();
-                                _this7.views = Craft.omitFrom(_this7.views, view);
-                            }
-                        });
-                        Craft.Binds[mnp.getAttr('bind')].applyViews();
-                    }
-                },
-
-                views: []
-            };
+            if (!def(Craft.Binds[key])) Craft.Binds[key] = Craft.clone(BindObj);
             if (def(element)) Craft.Binds[key].newView(element);
         },
         getBind: function getBind(key, obj) {
@@ -2170,18 +2162,16 @@ function _typeof(obj) {
             if (Craft.Binds.hasOwnProperty(key)) Craft.Binds[key].value = val;
         },
         InputSync: function InputSync(input, obj, key) {
-            input = dom(is.String(input) ? query(input) : input);
-            if (def(input['element'])) input.element['InputSync'] = input.On('input', function(e) {
-                return Craft.setDeep(obj, key, input.html());
+            if (is.String(input)) input = query(input);
+            if (is.Node(input)) input['InputSync'] = On(input).Input(function(e) {
+                return Craft.setDeep(obj, key, input.innerHTML);
             });
         },
         DisconectInputSync: function DisconectInputSync(input) {
-            input = dom(is.String(input) ? query(input) : input);
-            if (def(input['element'])) {
-                if (def(input.element['InputSync'])) {
-                    input.element['InputSync'].Off();
-                    delete input.element['InputSync'];
-                }
+            if (is.String(input)) input = query(input);
+            if (is.Node(input) && def(input['InputSync'])) {
+                input['InputSync'].Off();
+                delete input['InputSync'];
             }
         }
     };
@@ -2260,6 +2250,9 @@ function _typeof(obj) {
                     }
                 })();
             }
+            Craft.WhenReady = function() {
+                return _this8.remove();
+            };
         }
     });
 
@@ -2267,13 +2260,18 @@ function _typeof(obj) {
         Craft.router.links.forEach(function(link) {
             return link();
         });
-        Craft.WebComponents.length === queryAll(fw).length ? Ready = true : Craft.poll(function() {
+        if (Craft.WebComponents.length === queryAll(fw).length) {
+            Ready = true;
+            Craft.Ready = Ready;
+        } else Craft.poll(function() {
             return Craft.WebComponents.length === queryAll(fw).length;
         }, 35, 4000).then(function() {
-            return Ready = true;
+            Ready = true;
+            Craft.Ready = Ready;
         }).catch(function() {
             console.warn('loaded with errors :( \t');
             Ready = true;
+            Craft.Ready = Ready;
         });
     });
 
@@ -2283,15 +2281,43 @@ function _typeof(obj) {
         });
     });
 
+    Craft.newComponent('craft-template', {
+        inserted: function inserted() {
+            var _this9 = this,
+                manage = function manage() {
+                    var element = dom(_this9),
+                        oldValue = _this9.parentNode.innerHTML,
+                        scope = getDeep(root, element.getAttr('scope') || 'Craft.Scope'),
+                        output = '';
+                    if (is.Object(scope) || is.Arr(scope)) output = _this9.innerHTML.replace(RegExps.template, function(m, template) {
+                        return compileTemplate(template, scope);
+                    });
+                    if (output !== '' || output !== ' ') {
+                        _this9.insertAdjacentHTML('beforebegin', output);
+                        if (_this9.parentNode.innerHTML !== oldValue) setTimeout(function() {
+                            return _this9.remove();
+                        }, 4500);
+                        else setTimeout(function() {
+                            return manage();
+                        }, 250);
+                    } else _this9.remove();
+                };
+
+            Ready ? manage() : Craft.WhenReady = function() {
+                return manage();
+            };
+        }
+    });
+
     Craft.newComponent('for-each', {
         inserted: function inserted() {
-            var _this9 = this;
+            var _this10 = this;
 
             if (this.parentNode.tagName !== 'FOR-EACH' && this.parentNode.parentNode.tagName !== 'FOR-EACH' && this.parentNode.parentNode.parentNode.tagName !== 'FOR-EACH') {
                 (function() {
-                    var oldValue = _this9.parentNode.innerHTML,
+                    var oldValue = _this10.parentNode.innerHTML,
                         manage = function manage() {
-                            var element = _this9;
+                            var element = _this10;
                             if (element.hasAttribute('in')) {
                                 (function() {
                                     var el = dom(element),
@@ -2304,7 +2330,7 @@ function _typeof(obj) {
                                         scope = Craft.getDeep(root, el.getAttr('in')) || Craft.getBind(el.getAttr('in'));
 
                                     if (is.Object(scope) || is.Arr(scope)) forEach(scope, function(item, key) {
-                                        tempcopy = _this9.cloneNode(true);
+                                        tempcopy = _this10.cloneNode(true);
                                         queryEach('for-each', tempcopy, function(forEachNode) {
                                             if (forEachNode.hasAttribute('in')) {
                                                 temp = forEachNode.getAttribute('in');
@@ -2324,20 +2350,20 @@ function _typeof(obj) {
                                         });
                                         tempcopy = null;
                                     });
-                                    if (output !== '' || output !== ' ') _this9.insertAdjacentHTML('beforebegin', output);
-                                    if (_this9.parentNode.innerHTML !== oldValue) setTimeout(function() {
-                                        return _this9.remove();
+                                    if (output !== '' || output !== ' ') _this10.insertAdjacentHTML('beforebegin', output);
+                                    if (_this10.parentNode.innerHTML !== oldValue) setTimeout(function() {
+                                        return _this10.remove();
                                     }, 4500);
                                     else setTimeout(function() {
                                         return manage();
-                                    }, 200);
+                                    }, 250);
                                 })();
                             }
                         };
 
-                    Ready === true ? manage() : Craft.WhenReady().then(function() {
+                    Ready ? manage() : Craft.WhenReady = function() {
                         return manage();
-                    });
+                    };
                 })();
             }
         }

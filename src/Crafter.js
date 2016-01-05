@@ -7,8 +7,6 @@
 ((doc, root) => {
 
   let RegExps = {
-      foreach: /<for-each([\s\S]*?)<\/for-each>/igm,
-      ignorebetween: /#\{([\s\S]*?)\}#/igm,
       template: /\$\{([a-zA-Z0-9\.\|?:\s\'\"!=<>]{1,})(?:(?!\s)\})/g,
       ternary: /([a-zA-Z\.\'\"\s=!]{1,})(?:(?:\s{1,}?)\?(?:\s{1,})?)([a-zA-Z\.\'\"]{1,})(?:(?:\s{1,})?:(?:\s{1,})?)([a-zA-Z\.\'\"]{1,})/gm,
       comparisons: /([a-zA-Z0-9\.\'\"]{1,})(?:(?:\s{1,}?)(and|or|is|[=!><\|&]{1,3})(?:\s{1,}?))([a-zA-Z0-9\.\'\"]{1,})/gm,
@@ -32,7 +30,7 @@
   _br ? [_br[1], _br[2]] : [navigator.appName, navigator.appVersion, '-?'];
 
   CrafterStyles.setAttribute('crafterstyles', '');
-  CrafterStyles.innerHTML = `\n@keyframes NodeInserted {from {opacity:.99;}to {opacity: 1;}} [bind],[craft-template] {animation-duration: 0.001s;animation-name: NodeInserted;} for-each {display:none;}`;
+  CrafterStyles.innerHTML = `\n@keyframes NodeInserted {from {opacity:.99;}to {opacity: 1;}} [bind] {animation-duration: 0.001s;animation-name: NodeInserted;} for-each,craft-template {display:none;}`;
   head.appendChild(CrafterStyles);
 
 
@@ -102,16 +100,23 @@
   }
 
   function compileTemplate(template, context, index) {
-    if (template.match(/value/igm) !== null) return context;
-    if (template.match(/index/igm) !== null) return index;
+    if (template.match(/value/igm) !== null && !is.Object(context)) return context;
+    if (template.match(/index/igm) !== null) return index || 0;
     if (has(template, ':?')) return template.replace(RegExps.ternary, (m, test, True, False) => {
       return getDeep(context, (hasComparator(test) ? compileComparision(test, context) : getDeep(context, test)) ? True : False)
     });
     return hasComparator(template) ? compileComparision(template, context) : getDeep(context, template);
   }
 
+  function toInt(val) {
+    let num = Number(val);
+    if (isNaN(num)) return 0;
+    if (num === 0 || !isFinite(num)) return num;
+    return (num > 0 ? 1 : -1) * Math.floor(Math.abs(num));
+  }
+
   function toArr(val) {
-    return Array.from(val);
+    return Array.prototype.slice.call(val);
   }
   // ta = TestArgs : convert arguments to array then tests it
   function ta(args, test) {
@@ -224,7 +229,7 @@
        * @param {Node} element - node to test
        * @param {string} tag - tag to test node for
        */
-      Tag(element,tag) {
+      Tag(element, tag) {
         return element instanceof Node && element.tagName === tag.toUpperCase();
       },
       /**
@@ -814,14 +819,12 @@
        * @param {function} func - handler function for the event
        * @returns handler (Off,Once,On)
        */
-    element.On = function (eventType, func) {
-        return On(eventType, this, func);
-      }
-      /**
-       * add CSS style rules to the Element or NodeList
-       * @memberof dom
-       * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
-       */
+    element.On = (eventType, func) => On(eventType, element, func);
+    /**
+     * add CSS style rules to the Element or NodeList
+     * @memberof dom
+     * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
+     */
     element.css = function (styles) {
         def(styles) ? forEach(styles, (prop, key) => this.style[key] = prop) : console.error('Styles Object undefined');
         return this;
@@ -909,25 +912,22 @@
        * @param {string|number=} pixel value to set
        */
     element.Height = function (pixels) {
-        let haspixels = def(pixels);
-        if (haspixels) this.style.height = pixels;
-        return haspixels ? this : this.getBoundingClientRect().height;
+        if (def(pixels)) this.style.height = pixels;
+        return def(pixels) ? this : this.getBoundingClientRect().height;
       }
       /**
        * gets all the element's dimentions (width,height,left,top,bottom,right)
        * @memberof dom
        */
-    element.getRect = function () {
-        return this.getBoundingClientRect();
-      }
-      /**
-       * move the element using either css transforms or plain css possitioning
-       * @param {string|num} x - x-axis position in pixels
-       * @param {string|num} y - y-axis position in pixels
-       * @param {boolean=} transform - should move set the position using css transforms or not
-       * @param {string=} position - set the position style of the element absolute/fixed...
-       * @param {boolean=} chainable - should this method be chainable defaults to false for performance reasons
-       */
+    element.getRect = () => element.getBoundingClientRect();
+    /**
+     * move the element using either css transforms or plain css possitioning
+     * @param {string|num} x - x-axis position in pixels
+     * @param {string|num} y - y-axis position in pixels
+     * @param {boolean=} transform - should move set the position using css transforms or not
+     * @param {string=} position - set the position style of the element absolute/fixed...
+     * @param {boolean=} chainable - should this method be chainable defaults to false for performance reasons
+     */
     element.move = function (x, y, transform, position, chainable) {
         if (is.Bool(position)) chainable = position;
         if (is.String(transform)) position = transfrom;
@@ -944,22 +944,74 @@
        * @param {string} CSS selector
        * @returns {Node|Null}
        */
-    element.query = function (selector) {
-        return query(selector, this);
+    element.query = selector => query(selector, element);
+    /**
+     * performs a queryAll inside the element
+     * @memberof dom
+     * @param {string} CSS selector
+     * @returns {NodeList|Null}
+     */
+    element.queryAll = selector => queryAll(selector, element);
+
+    if (is.Input(element)) {
+      element.SyncInput = (obj, key) => element['InputSync'] = On(element).Input(e => Craft.setDeep(obj, key, element.innerHTML));
+      element.disconectInputSync = () => {
+        if (def(element['InputSync'])) {
+          element['InputSync'].Off();
+          delete element['InputSync'];
+        }
       }
-      /**
-       * performs a queryAll inside the element
-       * @memberof dom
-       * @param {string} CSS selector
-       * @returns {NodeList|Null}
-       */
-    element.queryAll = function (selector) {
-      return queryAll(selector, this);
     }
+
+
     return element;
   }
 
-
+  let BindObj = {
+    val: '',
+    set value(val) {
+      this.oldVal = this.val;
+      this.val = val;
+      this.applyViews();
+    },
+    get value() {
+      return this.val;
+    },
+    applyViews() {
+      if (this.val !== this.oldVal && !is.empty(this.views)) this.views.forEach(view => {
+        if (is.Object(view) && is.Node(view['node'])) {
+          if (!def(view.event) && view.twoway === true) view.event = On('input', view.node, e => {
+            let val = view.manip.html();
+            if (val !== this.val) this.value = val;
+          });
+          if (is.empty(this.val)) this.val = view.manip.html();
+          else if (view.manip.html() !== this.val) view.manip.html(this.val);
+        } else this.views = Craft.omitFrom(this.views, view);
+      });
+    },
+    newView(selector, twoway) {
+      selector = dom(selector);
+      if (is.Node(selector)) this.views.push({
+        node: selector,
+        manip: selector,
+        twoway: twoway === true || is.Input(selector),
+      });
+      this.applyViews();
+    },
+    removeView(selector) {
+      selector = dom(selector);
+      if (is.Node(selector['element'])) {
+        this.views.forEach(view => {
+          if (view.node === selector['element']) {
+            if (def(view.event)) view.event.Off();
+            this.views = Craft.omitFrom(this.views, view);
+          }
+        });
+        Craft.Binds[mnp.getAttr('bind')].applyViews();
+      }
+    },
+    views: []
+  }
 
 
   /**
@@ -990,7 +1042,6 @@
         return NewObject;
       },
       cloneArr: arr => arr.slice(0),
-      toArr: toArr,
       /**
        * Compares two arrays and determines if they are the same array
        * @param {Array} arr1 - array one
@@ -1052,18 +1103,7 @@
         })));
         return hostobj;
       },
-      clone(obj) {
-        if (nil(obj) || !is.Object(obj) || 'isActiveClone' in obj) return obj;
-        var temp = obj.constructor();
-        forEach(obj, (val, key) => {
-          if (obj.hasOwnPropert.call(key)) {
-            obj['isActiveClone'] = null;
-            temp[key] = clone(obj[key]);
-            delete obj['isActiveClone'];
-          }
-        });
-        return temp;
-      },
+      clone: val => is.Object(val) ? Object.create(val) : val.slice(0),
       omitFrom(Arr, val) {
         let index = Arr.indexOf(val),
           temp = [],
@@ -1228,7 +1268,12 @@
           key: arg.key,
           expire: arg.expire
         })));
-        return Promise.all(promises).then(src => src.map(obj => obj.exec ? obj.type === 'css' ? CrafterStyles.innerHTML += '\n' + obj.data : head.appendChild(dom().script(obj.data, 'key=' + obj.key, obj.defer)) : undefined));
+        return Promise.all(promises).then(src => src.map(obj => {
+          if (obj.exec) obj.type === 'css' ? CrafterStyles.innerHTML += '\n' + obj.data : head.appendChild(dom().script('', {
+            src: Craft.URLfrom(obj.data),
+            key: obj.key
+          }, obj.defer))
+        }));
       },
       router: {
         addHandle(link, func) {
@@ -1269,7 +1314,7 @@
           clearViews: () => For(localStorage, i => localStorage.removeItem(localStorage.key(i).includes("Cr:"))),
       },
       Cookies: {
-        get: (key) => key ? decodeURIComponent(doc.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1")) || null : null,
+        get: key => key ? decodeURIComponent(doc.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1")) || null : null,
         set(key, val, expires, path, domain, secure) {
           if (!key || /^(?:expires|max\-age|path|domain|secure)$/i.test(key)) return false;
           let expiry = "";
@@ -1346,7 +1391,7 @@
         }
       },
       curry: fn => createFn(fn, [], fn.length),
-      delay: (func, ms) => setTimeout(func, ms),
+      delay: (func, ms) => setTimeout(func, ms || 3000),
       after(n, func) {
         !is.Func(func) && is.Func(n) ? func = n : console.error("after: no function");
         n = Number.isFinite(n = +n) ? n : 0;
@@ -1409,7 +1454,7 @@
       },
       css: (el, styles) => def(styles, el) && is.Node(el) ? forEach(styles, (prop, key) => el.style[key] = prop) : console.error('invalid args'),
       hasCapitals: string => toArr(string).some(c => is.Uppercase(c)),
-      OverrideFunction: (funcName, Func, ContextObject) => {
+      OverrideFunction(funcName, Func, ContextObject) {
         let func = funcName.split(".").pop(),
           ns = funcName.split(".");
         for (let i = 0; i < ns.length; i++) ContextObject = ContextObject[ns[i]];
@@ -1421,9 +1466,6 @@
         } catch (e) {}
         return -1;
       },
-      For: For,
-      forIn: forIn,
-      RegExps: RegExps,
       indexOfDate(Collection, date) {
         for (let i = 0; i < Collection.length; i++)
           if (+Collection[i] === +date) return i;
@@ -1459,8 +1501,14 @@
       Scope: {},
       Binds: {},
       WebComponents: [],
+      ReadyFunctions: [],
       tabActive: true,
       make_element: make_element,
+      toArr: toArr,
+      toInt: toInt,
+      For: For,
+      forIn: forIn,
+      RegExps: RegExps,
       mouse: {
         x: 0,
         y: 0,
@@ -1469,7 +1517,7 @@
         observe(val) {
           if (is.Bool(val)) {
             Craft.mouse.track = val;
-            Craft.mouse.track === true ? Craft.mouse.eventhandler.On() : Craft.mouse.eventhandler.Off();
+            Craft.mouse.track ? Craft.mouse.eventhandler.On() : Craft.mouse.eventhandler.Off();
           } else return Craft.mouse.track;
         },
       },
@@ -1502,7 +1550,6 @@
           };
         requestAnimationFrame(time => loop(time))
       },
-      nodeExists: (selector, within) => queryAll(selector, (is.Node(within) ? within = within : within = query(within))) !== null,
       /**
        * converts Objects or URL variable strings to a FormData object
        * @param {object|string} val - values to convert
@@ -1520,32 +1567,22 @@
         return formData;
       },
       URLfrom: text => URL.createObjectURL(new Blob([text])),
-      OnScroll: (element, func) => is.Func(func) ? On('scroll', element, e => func(e.deltaY < 1 ? false : true, e)) : console.error('second param needs to be a function'),
-      OnResize: func => is.Func(func) ? Craft.ResizeHandlers.add(func) : console.error("Craft.OnResize -> func is not a function"),
+      OnScroll: (element, func) => is.Func(func) ? On('scroll', element, e => func(e.deltaY < 1, e)) : console.error('no function'),
+      OnResize: func => is.Func(func) ? Craft.ResizeHandlers.add(func) : console.error("Craft.OnResize -> no function"),
       OnScrolledTo: Scroll => new Promise((pass, fail) => {
         let ev = On('scroll', e => pageYOffset >= Scroll ? pass(e, ev) : fail(e, ev));
       }),
       WhenScrolledTo: Scroll => new Promise((pass, fail) => Once('scroll', e => pageYOffset >= Scroll || pageYOffset <= Scroll ? pass(e) : fail(e))),
+      set Ready(val) {
+        if (val === true) Craft.ReadyFunctions.forEach(fn => fn(Craft.Scope));
+        Craft.ReadyFunctions = null;
+      },
       /**
-       * function that returns a promise when the DOM and WebComponents are finished loading
-       * @param {Object=} Scope - Optional overide to the default Craft.Scope passed to the promise
+       * set functions that executes when the DOM and WebComponents are finished loading
        */
-      WhenReady: Scope => new Promise((resolve, reject) => {
-        Scope = Scope || Craft.Scope;
-        if (Ready) resolve(Scope);
-        else {
-          let ReadyYet = setInterval(() => {
-            if (Ready) {
-              resolve(Scope);
-              clearInterval(ReadyYet);
-            }
-          }, 20);
-          setTimeout(() => {
-            clearInterval(ReadyYet);
-            if (!Ready) reject("Things didn't load correctly -> load failed");
-          }, 4500);
-        }
-      }),
+      set WhenReady(func) {
+        if (is.Func(func)) Craft.ReadyFunctions.push(func);
+      },
       poll: (test, interval, timeout) => new Promise((pass, fail) => {
         if (!def(timeout)) interval = timeout;
         let bool = is.Bool(test) && test === true;
@@ -1597,9 +1634,9 @@
       createWebComponent(webcomponent, src) {
         webcomponent = JSON.parse(webcomponent);
         CrafterStyles.innerHTML += webcomponent.css;
-        head.appendChild(dom().script('',{
-          src : Craft.URLfrom(webcomponent.js + `\nCraft.WebComponents.push('${src}')`),
-          webcomponent : webcomponent.name
+        head.appendChild(dom().script('', {
+          src: Craft.URLfrom(webcomponent.js + `\nCraft.WebComponents.push('${src}')`),
+          webcomponent: webcomponent.name
         }, true));
       },
       /**
@@ -1617,7 +1654,7 @@
        * @param {object} config - Object containing all the element's lifecycle methods / extends and attached methods or properties
        */
       newComponent(tag, config) {
-        if (!def(config)) throw new Error(tag + ': config undefined');
+        if (!def(config)) throw new Error(tag + ' : config undefined');
         let element = Object.create(HTMLElement.prototype),
           settings = {};
         forEach(config, (prop, key) => {
@@ -1632,51 +1669,7 @@
         doc.registerElement(tag, settings)
       },
       newBind(key, value, element) {
-        if (!def(Craft.Binds[key])) Craft.Binds[key] = {
-          val: value || '',
-          set value(val) {
-            this.oldVal = this.val;
-            this.val = val;
-            this.applyViews();
-          },
-          get value() {
-            return this.val;
-          },
-          applyViews() {
-            if (this.val !== this.oldVal && !is.empty(this.views)) this.views.forEach(view => {
-              if (is.Object(view) && is.Node(view['node'])) {
-                if (!def(view.event) && view.twoway === true) view.event = On('input', view.node, e => {
-                  let val = view.manip.html();
-                  if (val !== this.val) this.value = val;
-                });
-                if (is.empty(this.val)) this.val = view.manip.html();
-                else if (view.manip.html() !== this.val) view.manip.html(this.val);
-              } else this.views = Craft.omitFrom(this.views, view);
-            });
-          },
-          newView(selector, twoway) {
-            selector = dom(selector);
-            if (is.Node(selector)) this.views.push({
-              node: selector,
-              manip: selector,
-              twoway: twoway === true || is.Input(selector),
-            });
-            this.applyViews();
-          },
-          removeView(selector) {
-            selector = dom(selector);
-            if (is.Node(selector['element'])) {
-              this.views.forEach(view => {
-                if (view.node === selector['element']) {
-                  if (def(view.event)) view.event.Off();
-                  this.views = Craft.omitFrom(this.views, view);
-                }
-              });
-              Craft.Binds[mnp.getAttr('bind')].applyViews();
-            }
-          },
-          views: []
-        }
+        if (!def(Craft.Binds[key])) Craft.Binds[key] = Craft.clone(BindObj);
         if (def(element)) Craft.Binds[key].newView(element);
       },
       getBind(key, obj) {
@@ -1686,18 +1679,16 @@
         if (Craft.Binds.hasOwnProperty(key)) Craft.Binds[key].value = val;
       },
       InputSync(input, obj, key) {
-        input = dom(is.String(input) ? query(input) : input);
-        if (def(input['element'])) input.element['InputSync'] = input.On('input', e => Craft.setDeep(obj, key, input.html()));
+        if (is.String(input)) input = query(input);
+        if (is.Node(input)) input['InputSync'] = On(input).Input(e => Craft.setDeep(obj, key, input.innerHTML));
       },
       DisconectInputSync(input) {
-        input = dom(is.String(input) ? query(input) : input);
-        if (def(input['element'])) {
-          if (def(input.element['InputSync'])) {
-            input.element['InputSync'].Off();
-            delete input.element['InputSync'];
-          }
+        if (is.String(input)) input = query(input);
+        if (is.Node(input) && def(input['InputSync'])) {
+          input['InputSync'].Off();
+          delete input['InputSync'];
         }
-      }
+      },
   };
 
   On('blur', e => Craft.tabActive = false);
@@ -1706,7 +1697,7 @@
     if (e.animationName === 'NodeInserted' && is.Node(e.target)) {
       let element = e.target,
         mnp = dom(element);
-      if (mnp.hasAttr('bind')) Craft.newBind(mnp.getAttr('bind'),'', element);
+      if (mnp.hasAttr('bind')) Craft.newBind(mnp.getAttr('bind'), '', element);
       if (mnp.hasAttr('link')) On(element).Click(e => {
         let nt = mnp.getAttr('link');
         nil(nt) ? open(nt) : Craft.router.open(nt);
@@ -1741,29 +1732,56 @@
           }
           if (nil(wc)) fetch(src).then(res => res.json().then(webcomponent => {
             CrafterStyles.innerHTML += webcomponent.css;
-            head.appendChild(dom().script('',{
-              src : Craft.URLfrom(webcomponent.js + `\nCraft.WebComponents.push('${src}')`),
+            head.appendChild(dom().script('', {
+              src: Craft.URLfrom(webcomponent.js + `\nCraft.WebComponents.push('${src}')`),
               webcomponent: webcomponent.name
             }, true));
             if (el.getAttr(cc) == 'true') localStorage.setItem(src, JSON.stringify(webcomponent));
           })).catch(err => console.error(err + ': could not load ' + w))
         }
       }
+      Craft.WhenReady = () => this.remove();
     }
   });
 
   Once('DOMContentLoaded', e => {
     Craft.router.links.forEach(link => link());
-    Craft.WebComponents.length === queryAll(fw).length ? Ready = true :
-      Craft.poll(() => Craft.WebComponents.length === queryAll(fw).length, 35, 4000)
-      .then(() => Ready = true)
+    if (Craft.WebComponents.length === queryAll(fw).length) {
+      Ready = true;
+      Craft.Ready = Ready;
+    } else Craft.poll(() => Craft.WebComponents.length === queryAll(fw).length, 35, 4000)
+      .then(() => {
+        Ready = true;
+        Craft.Ready = Ready;
+      })
       .catch(() => {
         console.warn('loaded with errors :( \t');
         Ready = true;
+        Craft.Ready = Ready;
       });
   });
 
   On('hashchange', e => Craft.router.handlers.forEach(handler => (location.hash === handler.link || location === handler.link) ? handler.func(location.hash) : null));
+
+  Craft.newComponent('craft-template', {
+    inserted() {
+      let manage = () => {
+        let element = dom(this),
+          oldValue = this.parentNode.innerHTML,
+          scope = getDeep(root, element.getAttr('scope') || 'Craft.Scope'),
+          output = '';
+        if (is.Object(scope) || is.Arr(scope)) output = this.innerHTML.replace(RegExps.template, (m, template) => compileTemplate(template, scope));
+        if (output !== '' || output !== ' ') {
+          this.insertAdjacentHTML('beforebegin', output);
+          if (this.parentNode.innerHTML !== oldValue) setTimeout(() => this.remove(), 4500);
+          else setTimeout(() => manage(), 250);
+        } else this.remove();
+
+      }
+      Ready ? manage() : Craft.WhenReady = () => manage();
+    }
+  });
+
 
   Craft.newComponent('for-each', {
     inserted() {
@@ -1794,12 +1812,12 @@
               output += tempcopy.innerHTML.replace(RegExps.template, (m, template) => compileTemplate(template, item));
               tempcopy = null;
             });
-            if(output !== '' || output !== ' ') this.insertAdjacentHTML('beforebegin',output);
-            if(this.parentNode.innerHTML !== oldValue) setTimeout(() => this.remove(),4500);
-            else setTimeout(() => manage(),200);
+            if (output !== '' || output !== ' ') this.insertAdjacentHTML('beforebegin', output);
+            if (this.parentNode.innerHTML !== oldValue) setTimeout(() => this.remove(), 4500);
+            else setTimeout(() => manage(), 250);
           }
         }
-        Ready === true ? manage() : Craft.WhenReady().then(() =>  manage());
+        Ready ? manage() : Craft.WhenReady = () => manage();
       }
     },
   });
