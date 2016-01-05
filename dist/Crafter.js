@@ -815,7 +815,8 @@ function _typeof(obj) {
      * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
      */
     root.query = function(selector, element) {
-        return def(element) ? is.String(element) ? doc.querySelector(element).querySelector(selector) : element.querySelector(selector) : doc.querySelector(selector);
+        if (is.String(element)) element = doc.querySelector(element);
+        return is.Node(element) ? element.querySelector(selector) : doc.querySelector(selector);
     };
 
     /**
@@ -824,7 +825,8 @@ function _typeof(obj) {
      * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
      */
     root.queryAll = function(selector, element) {
-        return def(element) ? is.Node(element) || element === doc ? element.querySelectorAll(selector) : query(element).querySelectorAll(selector) : doc.querySelectorAll(selector);
+        if (is.String(element)) element = query(element);
+        return is.Node(element) ? element.querySelectorAll(selector) : doc.querySelectorAll(selector);
     };
     /**
      * Easy way to loop through Nodes in the DOM using a CSS Selector or a NodeList
@@ -1013,6 +1015,7 @@ function _typeof(obj) {
 
     function domManip(element, within) {
         if (is.String(element)) def(within) ? element = query(element, within) : element = query(element);
+        element.hasDOMmethods = true;
         /**
          * changes or returns the innerHTML value of a Node
          * @memberof dom
@@ -1305,8 +1308,13 @@ function _typeof(obj) {
      * @param {Node|string=} within - optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
      */
     root.dom = function(element, within) {
-        var elements = QueryOrNodetoNodeArray(element, within);
-        return is.NodeList(elements) ? elements.length === 1 ? domManip(elements[0]) : domNodeList(elements) : Craft.dom;
+        if (is.String(element)) element = queryAll(element, within);
+        if (is.NodeList(element)) {
+            if (element.length === 1) element = element[0];
+            else return domNodeList(elements);
+        }
+        if (is.Node(element)) return element['hasDOMmethods'] !== true ? domManip(element) : element;
+        return Craft.dom;
     };
 
     CrafterStyles = query('[crafterstyles]', head);
@@ -1328,9 +1336,6 @@ function _typeof(obj) {
             return NewObject;
         },
 
-        cloneArr: function cloneArr(arr) {
-            return arr.slice(0);
-        },
         /**
          * Compares two arrays and determines if they are the same array
          * @param {Array} arr1 - array one
@@ -1402,25 +1407,52 @@ function _typeof(obj) {
             });
             return hostobj;
         },
+        cloneObj: function cloneObj(source) {
+            var key = undefined,
+                value = undefined,
+                clone = Object.create(source);
 
+            for (key in source) {
+                if (source.hasOwnProperty(key)) {
+                    value = source[key];
+                    value !== null && (typeof value === 'undefined' ? 'undefined' : _typeof(value)) === "object" ? clone[key] = Craft.cloneObj(value) : clone[key] = value;
+                }
+            }
+            return clone;
+        },
+
+        cloneArr: function cloneArr(arr) {
+            return arr.slice(0);
+        },
         clone: function clone(val) {
             return is.Object(val) ? Object.create(val) : val.slice(0);
         },
-        omitFrom: function omitFrom(Arr, val) {
-            var index = Arr.indexOf(val),
-                temp = [],
-                string = false,
-                i = 0;
-            if (is.String(Arr)) {
-                Arr = toArr(Arr);
-                string = true;
+        omitFrom: function omitFrom(Arr) {
+            for (var _len2 = arguments.length, values = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+                values[_key2 - 1] = arguments[_key2];
             }
-            if (is.Arraylike(Arr)) Arr = toArr(Arr);
-            for (; i < Arr.length; i++) {
-                if (i !== index) temp.push(Arr[i]);
+
+            if (values.length === 1) {
+                var val = values[0],
+                    index = Arr.indexOf(val),
+                    temp = [],
+                    string = false,
+                    _i3 = 0;
+                if (is.String(Arr)) {
+                    Arr = toArr(Arr);
+                    string = true;
+                }
+                if (is.Arraylike(Arr)) Arr = toArr(Arr);
+                for (; _i3 < Arr.length; _i3++) {
+                    if (_i3 !== index) temp.push(Arr[_i3]);
+                }
+                if (temp.includes(val)) temp = Craft.omitFrom(temp, val);
+                return string ? temp.join('') : temp;
             }
-            if (temp.includes(val)) temp = Craft.omitFrom(temp, val);
-            return string ? temp.join('') : temp;
+            values.forEach(function(val) {
+                return Arr = Craft.omitFrom(Arr, val);
+            });
+            return Arr;
         },
         omit: function omit(obj, val) {
             if (is.Arraylike(obj)) obj = Craft.omitFrom(obj, i);
@@ -1876,8 +1908,8 @@ function _typeof(obj) {
         OverrideFunction: function OverrideFunction(funcName, Func, ContextObject) {
             var func = funcName.split(".").pop(),
                 ns = funcName.split(".");
-            for (var _i3 = 0; _i3 < ns.length; _i3++) {
-                ContextObject = ContextObject[ns[_i3]];
+            for (var _i4 = 0; _i4 < ns.length; _i4++) {
+                ContextObject = ContextObject[ns[_i4]];
             }
             ContextObject[func] = Func;
         },
@@ -1888,8 +1920,8 @@ function _typeof(obj) {
             return -1;
         },
         indexOfDate: function indexOfDate(Collection, date) {
-            for (var _i4 = 0; _i4 < Collection.length; _i4++) {
-                if (+Collection[_i4] === +date) return _i4;
+            for (var _i5 = 0; _i5 < Collection.length; _i5++) {
+                if (+Collection[_i5] === +date) return _i5;
             }
             return -1;
         },
@@ -2083,8 +2115,8 @@ function _typeof(obj) {
             if (caps === true && Craft.hasCapitals(pass) === false) return reasons ? 'Password should contain Capital letters' : false;
             if (number === true && /\d/g.test(pass) === false) return reasons ? 'Password should contain a number' : false;
 
-            for (var _len2 = arguments.length, includeChars = Array(_len2 > 5 ? _len2 - 5 : 0), _key2 = 5; _key2 < _len2; _key2++) {
-                includeChars[_key2 - 5] = arguments[_key2];
+            for (var _len3 = arguments.length, includeChars = Array(_len3 > 5 ? _len3 - 5 : 0), _key3 = 5; _key3 < _len3; _key3++) {
+                includeChars[_key3 - 5] = arguments[_key3];
             }
 
             if (includeChars.length !== 0) {
@@ -2140,14 +2172,16 @@ function _typeof(obj) {
             if (!def(config)) throw new Error(tag + ' : config undefined');
             var element = Object.create(HTMLElement.prototype),
                 settings = {};
+
             forEach(config, function(prop, key) {
                 if (key === 'created') element.createdCallback = prop;
                 else if (key === 'inserted') element.attachedCallback = prop;
                 else if (key === 'destroyed') element.detachedCallback = prop;
                 else if (key === 'attr') element.attributeChangedCallback = prop;
                 else if (key === 'extends') settings.extends = prop;
-                else element[key] = prop;
+                else Object.defineProperty(element, key, Object.getOwnPropertyDescriptor(config, key));
             });
+
             settings['prototype'] = element;
             doc.registerElement(tag, settings);
         },
@@ -2201,8 +2235,8 @@ function _typeof(obj) {
     });
     Craft.curry.adaptTo = Craft.curry(function(num, fn) {
         return Craft.curry.to(num, function(context) {
-            for (var _len3 = arguments.length, args = Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
-                args[_key3 - 1] = arguments[_key3];
+            for (var _len4 = arguments.length, args = Array(_len4 > 1 ? _len4 - 1 : 0), _key4 = 1; _key4 < _len4; _key4++) {
+                args[_key4 - 1] = arguments[_key4];
             }
 
             return fn.apply(null, args.slice(1).concat(context));
