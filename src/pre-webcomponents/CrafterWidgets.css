@@ -790,6 +790,7 @@ material-input {
   position: relative;
   display: block;
   height: 7mm !important;
+  width:80%;
   text-align: left;
   box-sizing: content-box !important;
 }
@@ -799,7 +800,7 @@ material-input > input {
   -webkit-align-items: bottom;
   -ms-flex-align: bottom;
   align-items: bottom;
-  width: 80%;
+  width:100%;
   height: 7mm;
   display: block;
   padding: 0 !important;
@@ -836,7 +837,7 @@ material-input > label {
   -webkit-transition: all 240ms ease;
   transition: all 240ms ease;
 }
-material-input > [class*='inputhastext'] + label {
+material-input > input.inputhastext + label {
   top: -10px;
   font-size: 0.75em;
 }

@@ -625,20 +625,26 @@
    * @param {string} selector - CSS selector to query the DOM Node with
    * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
    */
-  root.query = (selector, element) => def(element) ? is.String(element) ? doc.querySelector(element).querySelector(selector) : element.querySelector(selector) : doc.querySelector(selector);
+  root.query = (selector, element) => {
+    if (is.String(element)) element = doc.querySelector(element);
+    return is.Node(element) ? element.querySelector(selector) : doc.querySelector(selector);
+  }
 
   /**
    * Easy way to get a DOM NodeList or NodeList within another DOM Node using CSS selectors
    * @param {string} selector - CSS selector to query the DOM Nodes with
    * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
    */
-  root.queryAll = (selector, element) => def(element) ? is.Node(element) || element === doc ? element.querySelectorAll(selector) : query(element).querySelectorAll(selector) : doc.querySelectorAll(selector);
-  /**
-   * Easy way to loop through Nodes in the DOM using a CSS Selector or a NodeList
-   * @param {string|NodeList} selector - CSS selector to query the DOM Nodes with or NodeList to iterate through
-   * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
-   * @param {function} func - function called on each iteration -> "function( Element , index ) {...}"
-   */
+  root.queryAll = (selector, element) => {
+      if (is.String(element)) element = query(element);
+      return is.Node(element) ? element.querySelectorAll(selector) : doc.querySelectorAll(selector);
+    }
+    /**
+     * Easy way to loop through Nodes in the DOM using a CSS Selector or a NodeList
+     * @param {string|NodeList} selector - CSS selector to query the DOM Nodes with or NodeList to iterate through
+     * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
+     * @param {function} func - function called on each iteration -> "function( Element , index ) {...}"
+     */
   root.queryEach = (selector, element, func) => {
     if (is.Func(element)) func = element;
     let elements, i = 0;
@@ -750,6 +756,7 @@
 
   function domManip(element, within) {
     if (is.String(element)) def(within) ? element = query(element, within) : element = query(element);
+    element.hasDOMmethods = true;
     /**
      * changes or returns the innerHTML value of a Node
      * @memberof dom
@@ -1022,8 +1029,13 @@
    * @param {Node|string=} within - optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
    */
   root.dom = (element, within) => {
-    let elements = QueryOrNodetoNodeArray(element, within);
-    return is.NodeList(elements) ? elements.length === 1 ? domManip(elements[0]) : domNodeList(elements) : Craft.dom;
+    if (is.String(element)) element = queryAll(element, within);
+    if (is.NodeList(element)) {
+      if (element.length === 1) element = element[0];
+      else return domNodeList(elements);
+    }
+    if (is.Node(element)) return element['hasDOMmethods'] !== true ? domManip(element) : element;
+    return Craft.dom;
   }
 
   CrafterStyles = query('[crafterstyles]', head);
@@ -1041,7 +1053,6 @@
           if (def(arr[i])) NewObject[i] = arr[i];
         return NewObject;
       },
-      cloneArr: arr => arr.slice(0),
       /**
        * Compares two arrays and determines if they are the same array
        * @param {Array} arr1 - array one
@@ -1103,22 +1114,38 @@
         })));
         return hostobj;
       },
+      cloneObj(source) {
+        let key, value, clone = Object.create(source);
+
+        for (key in source) {
+          if (source.hasOwnProperty(key)) {
+            value = source[key];
+            value !== null && typeof value === "object" ? clone[key] = Craft.cloneObj(value) : clone[key] = value;
+          }
+        }
+        return clone;
+      },
+      cloneArr: arr => arr.slice(0),
       clone: val => is.Object(val) ? Object.create(val) : val.slice(0),
-      omitFrom(Arr, val) {
-        let index = Arr.indexOf(val),
-          temp = [],
-          string = false,
-          i = 0;
-        if (is.String(Arr)) {
-          Arr = toArr(Arr);
-          string = true;
+      omitFrom(Arr, ...values) {
+        if(values.length === 1) {
+          let val = values[0], index = Arr.indexOf(val),
+            temp = [],
+            string = false,
+            i = 0;
+          if (is.String(Arr)) {
+            Arr = toArr(Arr);
+            string = true;
+          }
+          if (is.Arraylike(Arr)) Arr = toArr(Arr);
+          for (; i < Arr.length; i++) {
+            if (i !== index) temp.push(Arr[i]);
+          }
+          if (temp.includes(val)) temp = Craft.omitFrom(temp, val);
+          return string ? temp.join('') : temp;
         }
-        if (is.Arraylike(Arr)) Arr = toArr(Arr);
-        for (; i < Arr.length; i++) {
-          if (i !== index) temp.push(Arr[i]);
-        }
-        if (temp.includes(val)) temp = Craft.omitFrom(temp, val);
-        return string ? temp.join('') : temp;
+        values.forEach(val => Arr = Craft.omitFrom(Arr,val));
+        return Arr;
       },
       omit(obj, val) {
         if (is.Arraylike(obj)) obj = Craft.omitFrom(obj, i);
@@ -1655,16 +1682,17 @@
        */
       newComponent(tag, config) {
         if (!def(config)) throw new Error(tag + ' : config undefined');
-        let element = Object.create(HTMLElement.prototype),
-          settings = {};
+        let element = Object.create(HTMLElement.prototype) , settings = {};
+
         forEach(config, (prop, key) => {
           if (key === 'created') element.createdCallback = prop;
           else if (key === 'inserted') element.attachedCallback = prop;
           else if (key === 'destroyed') element.detachedCallback = prop;
           else if (key === 'attr') element.attributeChangedCallback = prop;
           else if (key === 'extends') settings.extends = prop;
-          else element[key] = prop;
+          else Object.defineProperty(element,key,Object.getOwnPropertyDescriptor(config,key));
         });
+
         settings['prototype'] = element;
         doc.registerElement(tag, settings)
       },

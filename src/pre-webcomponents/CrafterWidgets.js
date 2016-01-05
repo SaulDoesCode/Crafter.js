@@ -8,7 +8,8 @@
 
   Craft.newComponent('ripple-effect', {
     inserted() {
-      let ripple = dom(this) ,color, timing = ripple.hasAttr("timing") ? ripple.getAttr("timing") : 1600,
+      let ripple = dom(this),
+        color, timing = ripple.hasAttr("timing") ? ripple.getAttr("timing") : 1600,
         rect = this.parentNode.getBoundingClientRect(),
         diameter = Math.max(rect.width, rect.height);
       if (this.parentNode.hasAttr("ripple")) color = ripple.parentNode.getAttr("ripple");
@@ -36,7 +37,7 @@
       side = side === 1 ? 'top-left' : side === 2 ? 'top-right' : side === 3 ? 'bottom-left' : side === 4 ? 'bottom-right' : side === 5 ? 'bottom-middle' : side === 6 ? 'top-middle' : 'top-left';
     }
     let host = query(`.notifications-${side}`);
-    if(host === null) {
+    if (host === null) {
       doc.body.insertBefore(dom().div('', `class=notifications-${side}`, true), doc.body.firstChild);
       host = query(`.notifications-${side}`);
     }
@@ -96,7 +97,8 @@
         });
       },
       toggle(checked) {
-        let el = dom(this) , chck = 'checked';
+        let el = dom(this),
+          chck = 'checked';
         checked === true || (is.Undef(el.value) && el.getAttr(chck) === 'false') ? el.setAttr(chck, 'true') : el.setAttr(chck, 'false');
       },
       OnCheck(func) {
@@ -106,12 +108,15 @@
         this.value = val;
       },
       Check() {
-        let el = dom(this), chck = 'checked' , t = 'true' , f = 'false';
+        let el = dom(this),
+          chck = 'checked',
+          t = 'true',
+          f = 'false';
         if (is.Undef(el.value) && el.hasAttr(chck)) {
           let checked = el.getAttr(chck);
           if (checked === t) this.value = true;
           if (checked === f) this.value = false;
-        } else el.value ? el.setAttr(chck,t) : el.setAttr(chck, f);
+        } else el.value ? el.setAttr(chck, t) : el.setAttr(chck, f);
         if (is.Func(this.func)) el.func(this.value);
       },
       attr(attrName, oldVal, newVal) {
@@ -124,11 +129,13 @@
 
   Craft.newComponent('toggle-button', {
     created() {
-        let el = dom(this) , t = 'true' , f = 'false';
-        el.open ? el.setAttr('open',t) : el.setAttr('open',f);
+        let el = dom(this),
+          t = 'true',
+          f = 'false';
+        el.open ? el.setAttr('open', t) : el.setAttr('open', f);
         this.click = On(this).Click(e => {
           this.open = !this.open;
-          el.setAttr('open',this.open ? t : f);
+          el.setAttr('open', this.open ? t : f);
         });
         el.append(dom().span('', 'class=toggle', true));
       },
@@ -158,14 +165,15 @@
 
   Craft.newComponent('text-collapser', {
     created() {
-        let el = dom(this) ,txt = el.html();
+        let el = dom(this),
+          txt = el.html();
         el.html("");
 
-        el.append(dom().label(el.hasAttr('summary') ? `&#9654; \t ${el.getAttr('summary')}` : '&#9654;', 'id=indicator', true));
+        el.append(dom().label(el.hasAttr('summary') ? `&#9660; \t ${el.getAttr('summary')}` : '&#9654;', 'id=indicator', true));
         el.append(dom().label(txt, 'id=text', true));
         this.open = el.hasAttr('open');
 
-        this.OnClick = On('#indicator', this).Click(e => this.toggle());
+        this.onClick = On('#indicator', this).Click(e => this.toggle());
       },
       toggle(open) {
         is.Def(open) ? this.open = open : this.open = !this.open;
@@ -175,7 +183,7 @@
         if (name === 'open') this.open = this.hasAttribute('open');
       },
       destroyed() {
-        this.OnClick.Off();
+        this.onClick.Off();
       }
   });
 
@@ -183,31 +191,32 @@
 
   Craft.newComponent('material-input', {
     inserted() {
-        let clearText = dom().span(),
-          el = dom(this),
-          input = Craft.make_element("input", '', 'type=text', true);
-        this.value = "";
+        let el = dom(this),
+          input = dom(Craft.make_element("input", '', 'type=text', true));
         el.html("");
 
         if (el.hasAttr("type")) {
           if (el.getAttr("type") !== "submit" && el.getAttr("type") !== "button" && el.getAttr("type") !== "range") {
-            input.setAttribute("type", el.getAttr("type"));
+            input.setAttr("type", el.getAttr("type"));
           } else console.warn("<material-input> is only for text type inputs not buttons,ranges,submits it will default to text if wrong type is chosen");
-        } else input.setAttribute("type", "text");
+        } else input.setAttr("type", "text");
 
-        for (let attr in InputAttributes) {
-          if (el.hasAttr(InputAttributes[attr])) input.setAttribute(InputAttributes[attr], manelip.getAttr(InputAttributes[attr]));
-        }
+        forEach(InputAttributes, attr => {
+          if (el.hasAttr(attr)) input.setAttr(attr, el.getAttr(attr));
+        });
 
         el.append(input);
+        el.append(dom().span());
+        input = dom(el.query('input'));
+        let clearText = query('span',this);
 
         this.labelEffects = () => {
-          if (el.query('input').value.length > 0) {
-            el.query('input').classList.add('inputhastext');
-            el.query('span').style.display = 'inline-block';
-          } else if (el.query('input').classList.contains('inputhastext')) {
-            el.query('input').classList.remove('inputhastext');
-            el.query('span').style.display = 'none';
+          if (this.value.length > 0) {
+            input.addClass('inputhastext');
+            clearText.style.display = 'block';
+          } else {
+            input.stripClass('inputhastext');
+            clearText.style.display = '';
           }
         }
 
@@ -216,31 +225,38 @@
         if (el.hasAttr("label") || el.hasAttr("placeholder")) {
           let label = dom().label();
           label.innerHTML = el.getAttr("label") || el.getAttr("placeholder");
-          this.appendChild(label);
+          el.append(label);
           this.labelEffects();
         }
 
-        this.OnInput = el.On('input',Craft.throttle(100, e => {
-          this.value = el.query('input').value;
-          if (el.hasAttr("label")) this.labelEffects();
-        }));
+        this.OnInput = On(input).Input(e => {
+          if (el.hasAttr("label") || el.hasAttr("placeholder")) this.labelEffects();
+        });
 
-        this.OnClick = On(clearText).Click(e => {
-          input.value = '';
+        this.OnClick = On('span',this).Click(e => {
+          this.value = '';
           this.labelEffects();
         });
 
         el.append(clearText);
       },
       attr(attrName, oldVal, newVal) {
-        let mnp = dom(this);
-        InputAttributes.some(el => {
-          if (el === attrName) {
-            if (mnp.hasAttr(el)) {
-              query('input', this).setAttribute(el, newVal);
-            } else if (query('input', this).hasAttribute(el) && !mnp.hasAttr(el)) query('input', this).removeAttribute(el, newVal);
+        let el = dom(this),
+          input = dom('input', this);
+        InputAttributes.forEach(i => {
+          if (i === attrName) {
+            if (el.hasAttr(i)) input.setAttr(i, newVal);
+            else if (input.hasAttribute(i) && !el.hasAttr(i)) input.stripAttr(i, newVal);
           }
         });
+      },
+      set value(val) {
+        let input = dom('input', this);
+        input.text(val);
+        input.value.length > 0 || input.value == ' ' ? input.addClass('inputhastext') : input.stripClass('inputhastext');
+      },
+      get value() {
+        return query('input', this).value;
       }
   });
 
@@ -283,9 +299,9 @@
             setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
           } else {
             if (element.hasAttribute('tooltip-delay')) setTimeout(() => {
-                tooltip.style.display = show ? 'block' : 'none';
-                setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
-              }, parseInt(element.getAttribute('tooltip-delay')));
+              tooltip.style.display = show ? 'block' : 'none';
+              setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
+            }, parseInt(element.getAttribute('tooltip-delay')));
             else {
               tooltip.style.display = show ? 'block' : 'none';
               setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
@@ -336,7 +352,7 @@
           move = setInterval(() => {
             Craft.mouse.observe(movable);
             movable ? dom(element).move(Craft.mouse.x - e.clientX + rect.left, Craft.mouse.y - e.clientY + rect.top) : clearInterval(move);
-          },5);
+          }, 5);
         });
 
         On(doc).Mouseup(e => movable = false);

@@ -6,41 +6,35 @@ Crafter.js is still very W.I.P , so tread carefully
 ## Crafter.js makes use of
 - Promises
 - Fetch API
-- Latest ES6 Features
+- ES6
 - WebComponents
-
-Crafter.js also remains backward compatible using the Babel transpiler and Polyfills.     
-it will run on -
-* Chrome 43.0 and up
-* Firefox 41 and up
-* Opera 33+
-* Edge Browser 13+
-* Vivaldi and other Blink based browsers
 
 ## Crafter.js Offers
 - DOM Manipulation
-- Functional Data Manipulation
+- Several useful functional programming methods
 - Two Way Data Binding
 - Type assertion methods
 - JSON based WebComponent format (.wc)
-- Custom Element Creation system
-- Custom Attributes each with their own functionality
+- Streamlined Custom Element Creation
+- Useful custom attributes
+- Templating
 - Web Components
+- WebSocket wrapper for ease of use
 - Form Validation
 - Resource loader for Scripts and Style sheets
 - Front End Router
 - Event Handling system
 - Shorthand functions such as forEach, query/queryAll/queryEach
-- Promise based WhenReady method to execute code after everything has loaded
+- WhenReady method to execute code after everything has loaded
 
-### The optional CrafterWidgets extension
+### The CrafterWidgets extension
  adds several useful CSS classes and effects such as grids, ripple effects, sidebar , notifications , custom context menus,
  tooltips and more.
 
 ### Crafter Code Example
 
 ```javascript
-  Craft.WhenReady().then(() => {
+  Craft.WhenReady = () => {
 
     queryEach('.menu-items',element => On(element).Click(ev => dom('.page-view').append(dom().span('Hello!')));
     // or same thing differently
@@ -55,7 +49,7 @@ it will run on -
     // for less common elements or custom elements use Craft.make_element
     // you could also add attributes URI style
 
-    Craft.make_element('aside','text to go inside','id=aside2&class=side-content',true)
+    Craft.make_element('aside','text to go inside','id=asidecontent&class=side-content',true)
     // -> <aside id="aside2" class="side-content"> text to go inside </aside>
 
   })
@@ -78,7 +72,7 @@ Create a new Custom Element using the Craft.newComponent method
 
     },
     attr(name, oldValue , newValue) {
-      // optionally handle Attibute changes on the element
+      // handle Attibute changes on the element
     },
     destroyed() {
       // executed when the element is no more
@@ -96,7 +90,7 @@ Create a new Custom Element using the Craft.newComponent method
 #### Data Binding
 
 ```html
-<header view-bind='HeaderText'> </header>
+<header bind='HeaderText'> </header>
 ```
 
 ```javascript
@@ -116,23 +110,13 @@ You can bind `<input>` and `<textarea>` elements with the input-bind attribute,
 this is useful for forms and validation
 
 ```html
-<textarea input-bind="truestory">  
+<textarea bind="truestory">  
   All Changes gets reflected instantly
 </textarea>
 
-<article view-bind="truestory">
+<article bind="truestory">
   All Changes gets reflected instantly
 </article>
-
-```
-Optionally Bind in your own Binding Scope
-```javascript
-let myScope = new Map;
-
-Craft.newBind('Stats', { Health : 32 , Mana : 22 }, myScope);
-
-Craft.setBind('Stats',{ Health : 0 , Mana : 100}, myScope)
-
 ```
 
 #### TODO
