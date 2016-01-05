@@ -1114,17 +1114,6 @@
         })));
         return hostobj;
       },
-      cloneObj(source) {
-        let key, value, clone = Object.create(source);
-
-        for (key in source) {
-          if (source.hasOwnProperty(key)) {
-            value = source[key];
-            value !== null && typeof value === "object" ? clone[key] = Craft.cloneObj(value) : clone[key] = value;
-          }
-        }
-        return clone;
-      },
       cloneArr: arr => arr.slice(0),
       clone: val => is.Object(val) ? Object.create(val) : val.slice(0),
       omitFrom(Arr, ...values) {
@@ -1388,7 +1377,7 @@
                     clearInterval(poll);
                   }
                 }, 20);
-                Craft.delay(() => clearInterval(poll), 2000);
+                setTimeout(() => clearInterval(poll), 2000);
               }
             },
             set recieve(func) {
@@ -1418,7 +1407,6 @@
         }
       },
       curry: fn => createFn(fn, [], fn.length),
-      delay: (func, ms) => setTimeout(func, ms || 3000),
       after(n, func) {
         !is.Func(func) && is.Func(n) ? func = n : console.error("after: no function");
         n = Number.isFinite(n = +n) ? n : 0;
@@ -1479,7 +1467,7 @@
           return res;
         }
       },
-      css: (el, styles) => def(styles, el) && is.Node(el) ? forEach(styles, (prop, key) => el.style[key] = prop) : console.error('invalid args'),
+      css: (el, styles) => def(styles) && is.Node(el) ? forEach(styles, (prop, key) => el.style[key] = prop) : console.error('invalid args'),
       hasCapitals: string => toArr(string).some(c => is.Uppercase(c)),
       OverrideFunction(funcName, Func, ContextObject) {
         let func = funcName.split(".").pop(),
@@ -1606,6 +1594,7 @@
       },
       /**
        * set functions that executes when the DOM and WebComponents are finished loading
+       * @param {function} func - function to execute when the DOM and webcomponents are ready
        */
       set WhenReady(func) {
         if (is.Func(func)) Craft.ReadyFunctions.push(func);
