@@ -39,85 +39,6 @@ function _typeof(obj) {
     CrafterStyles.innerHTML = '\n@keyframes NodeInserted {from {opacity:.99;}to {opacity: 1;}} [bind] {animation-duration: 0.001s;animation-name: NodeInserted;} for-each,craft-template {display:none;}';
     head.appendChild(CrafterStyles);
 
-    function getStringQuotes(str) {
-        return is.String(str) && (str.includes('"') || str.includes("'")) ? str.substring(1, str.length - 1) : str;
-    }
-
-    function getDeep(obj, propString) {
-        if (!is.Def(propString)) return obj;
-        if (has(propString, '\'"', true)) return getStringQuotes(propString);
-        else if (propString === 'true') return true;
-        else if (propString === 'false') return false;
-        else if (is.Num(propString)) return Number(propString);
-        if (has(propString, "[]")) {
-            var arr = Craft.omitFrom(template.split(/([\s\S]*)(?:\[(\d{1,20})\])/igm), ''),
-                Arr = getDeep(context, arr[0]);
-            if (is.Arr(Arr)) return Arr[Number(arr[1])];
-        }
-
-        var prop = undefined,
-            val = undefined,
-            props = propString.split('.'),
-            candidate = undefined,
-            i = 0,
-            iLen = props.length - 1;
-
-        for (; i < iLen; i++) {
-            prop = props[i];
-            candidate = obj[prop];
-            if (is.Def(candidate)) obj = candidate;
-            else break;
-        }
-        try {
-            val = obj[props[i]];
-        } catch (e) {}
-        return is.Def(val) ? val : '';
-    }
-
-    function has(str, strings, or) {
-        if (is.String(strings)) strings = strings.split('');
-        var type = or === true ? 'some' : 'every';
-        return strings[type](function(char) {
-            return str.includes(char);
-        });
-    }
-
-    function isComparator(str) {
-        return str === '==' || str === '===' || str === '!=' || str === '!==' || str === '||' || str === 'and' || str === 'or' || str === '&&' || str === '>=' || str === '<' || str === '>' || str === '<=';
-    }
-
-    function hasComparator(str) {
-        return has(str, "!<>=|&", true) || has(str, ['or', 'is'], true);
-    }
-
-    function compileComparision(comp, context) {
-        var comparison = comp.replace(RegExps.comparisons, function(m, left, comparator, right) {
-            left = getDeep(context, left);
-            right = getDeep(context, right);
-            if (comparator === '==' || comparator === '===' || comparator === 'is') return left === right;
-            if (comparator === '!=' || comparator === '!==' || comparator === 'not') return left !== right;
-            if (comparator === '||' || comparator === 'or') return left || right;
-            if (comparator === '&&' || comparator === 'and') return left && right;
-            if (comparator === '<') return left < right;
-            if (comparator === '>') return left > right;
-            if (comparator === '<=') return left <= right;
-            if (comparator === '>=') return left >= right;
-            return '';
-        });
-        if (comparison === 'true') return true;
-        else if (comparison === 'false') return false;
-        return comparison;
-    }
-
-    function compileTemplate(template, context, index) {
-        if (template.match(/value/igm) !== null && !is.Object(context)) return context;
-        if (template.match(/index/igm) !== null) return index || 0;
-        if (has(template, ':?')) return template.replace(RegExps.ternary, function(m, test, True, False) {
-            return getDeep(context, (hasComparator(test) ? compileComparision(test, context) : getDeep(context, test)) ? True : False);
-        });
-        return hasComparator(template) ? compileComparision(template, context) : getDeep(context, template);
-    }
-
     function toInt(val) {
         var num = Number(val);
         if (isNaN(num)) return 0;
@@ -1137,12 +1058,26 @@ function _typeof(obj) {
             return this;
         };
         /**
-         * checks if the element has a specific Attribute
+         * checks if the element has a specific Attribute or Attributes
          * @memberof dom
-         * @param {string} name of the Attribute to check for
+         * @param {string|boolean} name of the Attribute or if true checks that it has some (||) of the attributes or if false checks that it has all of the attributes (&&)
+         * @param {...string} names of attributes to check for
          */
         element.hasAttr = function(Attr) {
-            return this.hasAttribute(Attr);
+            var _this4 = this;
+
+            if (is.String(Attr)) return this.hasAttribute(Attr);
+
+            for (var _len2 = arguments.length, attributes = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+                attributes[_key2 - 1] = arguments[_key2];
+            }
+
+            if (Attr === false) return attributes.every(function(attr) {
+                return _this4.hasAttribute(attr);
+            });
+            if (Attr === true) return attributes.some(function(attr) {
+                return _this4.hasAttribute(attr);
+            });
         };
         /**
          * Sets or adds an Attribute on the element
@@ -1151,11 +1086,20 @@ function _typeof(obj) {
          * @param {string} Value of the Attribute to add/set
          */
         element.setAttr = function(Attr, val) {
-            this.setAttribute(Attr, val);
+            var _this5 = this;
+
+            if (!def(val)) {
+                if (is.Object(Attr)) forEach(Attr, function(value, attr) {
+                    return _this5.setAttribute(attr, value);
+                });
+                else if (is.String(Attr)) Attr.split('&').forEach(function(attr) {
+                    return def(attr.split('=')[1]) ? _this5.setAttribute(attr.split('=')[0], attr.split('=')[1]) : _this5.setAttribute(attr.split('=')[0], '');
+                });
+            } else this.setAttribute(Attr, val);
             return this;
         };
         element.getAttr = function(Attr) {
-            return this.getAttribute(Attr);
+            return element.getAttribute(Attr);
         };
         /**
          * gets all the elements siblings within it's parentNode
@@ -1235,7 +1179,7 @@ function _typeof(obj) {
         if (is.Input(element)) {
             element.SyncInput = function(obj, key) {
                 return element['InputSync'] = On(element).Input(function(e) {
-                    return Craft.setDeep(obj, key, element.innerHTML);
+                    return Craft.setDeep(obj, key, element.html());
                 });
             };
             element.disconectInputSync = function() {
@@ -1249,57 +1193,6 @@ function _typeof(obj) {
         return element;
     }
 
-    var BindObj = {
-        val: '',
-        set value(val) {
-            this.oldVal = this.val;
-            this.val = val;
-            this.applyViews();
-        },
-        get value() {
-            return this.val;
-        },
-        applyViews: function applyViews() {
-            var _this4 = this;
-
-            if (this.val !== this.oldVal && !is.empty(this.views)) this.views.forEach(function(view) {
-                if (is.Object(view) && is.Node(view['node'])) {
-                    if (!def(view.event) && view.twoway === true) view.event = On('input', view.node, function(e) {
-                        var val = view.manip.html();
-                        if (val !== _this4.val) _this4.value = val;
-                    });
-                    if (is.empty(_this4.val)) _this4.val = view.manip.html();
-                    else if (view.manip.html() !== _this4.val) view.manip.html(_this4.val);
-                } else _this4.views = Craft.omitFrom(_this4.views, view);
-            });
-        },
-        newView: function newView(selector, twoway) {
-            selector = dom(selector);
-            if (is.Node(selector)) this.views.push({
-                node: selector,
-                manip: selector,
-                twoway: twoway === true || is.Input(selector)
-            });
-            this.applyViews();
-        },
-        removeView: function removeView(selector) {
-            var _this5 = this;
-
-            selector = dom(selector);
-            if (is.Node(selector['element'])) {
-                this.views.forEach(function(view) {
-                    if (view.node === selector['element']) {
-                        if (def(view.event)) view.event.Off();
-                        _this5.views = Craft.omitFrom(_this5.views, view);
-                    }
-                });
-                Craft.Binds[mnp.getAttr('bind')].applyViews();
-            }
-        },
-
-        views: []
-    };
-
     /**
      * Function that returns many useful methods for interacting with and manipulating the DOM or creating elements
      * in the absence of parameters the function will return methods for created elements
@@ -1311,11 +1204,129 @@ function _typeof(obj) {
         if (is.String(element)) element = queryAll(element, within);
         if (is.NodeList(element)) {
             if (element.length === 1) element = element[0];
-            else return domNodeList(elements);
+            else return domNodeList(element);
         }
         if (is.Node(element)) return element['hasDOMmethods'] !== true ? domManip(element) : element;
         return Craft.dom;
     };
+
+    var Bind = {
+        val: '',
+        views: [],
+        funcs: [],
+        set value(val) {
+            this.oldVal = this.val;
+            this.val = val;
+            this.applyViews();
+        },
+        get value() {
+            return this.val;
+        },
+        set func(fn) {
+            if (is.Func(fn)) this.funcs.push(fn);
+        },
+        removeFunc: function removeFunc(fn) {
+            if (this.funcs.includes(fn)) this.funcs = Craft.omitFrom(this.funcs, fn);
+        },
+        popFunc: function popFunc() {
+            return this.funcs.pop();
+        },
+        applyViews: function applyViews() {
+            var _this6 = this;
+
+            if (!is.empty(this.views)) {
+                this.funcs.forEach(function(fn) {
+                    return fn(_this6.oldVal, _this6.val);
+                });
+                this.views.forEach(function(view) {
+                    if (is.Object(view) && is.Node(view.node)) {
+                        if (view.twoway === true && !def(view.node['InputSync'])) view.node.SyncInput(_this6, "value");
+                        if (is.empty(_this6.val) || _this6.val === '') _this6.val = view.node.html();
+                        else if (view.node.html() !== _this6.val) view.node.html(_this6.val);
+                    } else _this6.views = Craft.omitFrom(_this6.views, view);
+                });
+            }
+        },
+        newView: function newView(selector, twoway) {
+            selector = dom(selector);
+            if (is.Node(selector)) this.views.push({
+                node: selector,
+                twoway: twoway === true && is.Input(selector)
+            });
+            this.applyViews();
+        },
+        removeView: function removeView(selector) {
+            var _this7 = this;
+
+            selector = dom(selector);
+            if (is.Node(selector)) {
+                this.views.forEach(function(view) {
+                    if (view.node.isEqualNode(selector)) {
+                        if (def(view.node['InputSync'])) view.node.disconectInputSync();
+                        _this7.views = Craft.omitFrom(_this7.views, view);
+                    }
+                });
+                this.applyViews();
+            }
+        }
+    };
+
+    function getStringQuotes(str) {
+        return is.String(str) && (str.includes('"') || str.includes("'")) ? str.substring(1, str.length - 1) : str;
+    }
+
+    function getDeep(obj, keychain) {
+        if (!is.Def(keychain)) return obj;
+        if (has(keychain, '\'"', true)) return getStringQuotes(keychain);
+        else if (keychain === 'true') return true;
+        else if (keychain === 'false') return false;
+        else if (is.Num(keychain)) return Number(keychain);
+        return Craft.getDeep(obj, keychain) || '';
+    }
+
+    function has(str, strings, or) {
+        if (is.String(strings)) strings = strings.split('');
+        var type = or ? 'some' : 'every';
+        return strings[type](function(char) {
+            return str.includes(char);
+        });
+    }
+
+    function isComparator(str) {
+        return str === '==' || str === '===' || str === '!=' || str === '!==' || str === '||' || str === 'and' || str === 'or' || str === '&&' || str === '>=' || str === '<' || str === '>' || str === '<=';
+    }
+
+    function hasComparator(str) {
+        return has(str, "!<>=|&", true) || has(str, ['or', 'is'], true);
+    }
+
+    function compileComparision(comp, context) {
+        var comparison = comp.replace(RegExps.comparisons, function(m, left, comparator, right) {
+            left = getDeep(context, left);
+            right = getDeep(context, right);
+            if (comparator === '==' || comparator === '===' || comparator === 'is') return left === right;
+            if (comparator === '!=' || comparator === '!==' || comparator === 'not') return left !== right;
+            if (comparator === '||' || comparator === 'or') return left || right;
+            if (comparator === '&&' || comparator === 'and') return left && right;
+            if (comparator === '<') return left < right;
+            if (comparator === '>') return left > right;
+            if (comparator === '<=') return left <= right;
+            if (comparator === '>=') return left >= right;
+            return '';
+        });
+        if (comparison === 'true') return true;
+        else if (comparison === 'false') return false;
+        return comparison;
+    }
+
+    function compileTemplate(template, context, index) {
+        if (template.match(/value/igm) !== null && !is.Object(context)) return context;
+        if (template.match(/index/igm) !== null) return index || 0;
+        if (has(template, ':?')) return template.replace(RegExps.ternary, function(m, test, True, False) {
+            return getDeep(context, (hasComparator(test) ? compileComparision(test, context) : getDeep(context, test)) ? True : False);
+        });
+        return hasComparator(template) ? compileComparision(template, context) : getDeep(context, template);
+    }
 
     CrafterStyles = query('[crafterstyles]', head);
 
@@ -1349,47 +1360,44 @@ function _typeof(obj) {
             }
             return true;
         },
-        getDeep: function getDeep(obj, propString) {
-            if (!def(propString)) return obj;
-
-            var prop = undefined,
-                val = undefined,
-                props = propString.split('.'),
-                candidate = undefined,
-                i = 0,
-                iLen = props.length - 1;
-
-            for (; i < iLen; i++) {
-                prop = props[i];
-                candidate = obj[prop];
-                if (def(candidate)) obj = candidate;
-                else break;
-            }
+        getDeep: function getDeep(obj, keychain) {
+            keychain = keychain.replace(/\[(\w+)\]/g, '.$1');
+            keychain = keychain.replace(/^\./, '');
+            var a = keychain.split('.');
             try {
-                val = obj[props[i]];
-            } catch (e) {}
-            return val;
+                for (var _i3 = 0; _i3 < a.length; ++_i3) {
+                    a[_i3] in obj ? obj = obj[a[_i3]] : obj = undefined;
+                }
+            } catch (e) {
+                return undefined;
+            }
+            return obj;
         },
         setDeep: function setDeep(obj, prop, value, returnObj) {
-            if (is.String(prop)) prop = prop.split(".");
-            if (prop.length > 1) {
+            if (is.Arr(prop) && prop.length === 1) prop = prop[0];
+            if (is.String(prop) && !hasdot(prop)) value !== "_DELETE_" ? obj[prop] = value : delete obj[prop];
+            else {
+                if (is.String(prop)) prop = prop.split(".");
                 var e = prop.shift();
-                Craft.setDeep(obj[e] = is.Object(obj[e]) ? obj[e] : {}, prop, value);
-            } else if (def(value)) obj[prop[0]] = value;
-            else if (value.includes('_DELETE_')) delete obj[prop[0]];
+                if (!is.Object(obj[e])) obj[e] = {};
+                Craft.setDeep(obj[e], prop, value);
+            }
             if (returnObj === true) return obj;
         },
         forEachDeep: function forEachDeep(object, fn, path) {
             path = path || '';
             var currentPath = path,
-                nestable = undefined;
-            forEach(object, function(val, key) {
+                nestable = undefined,
+                val = undefined,
+                key = undefined;
+            for (key in object) {
+                if (object.hasOwnProperty(key)) val = object[key];
                 currentPath = path;
                 nestable = false;
                 is.Arr(object) ? currentPath += '[' + key + ']' : !currentPath ? currentPath = key : currentPath += '.' + key;
                 nestable = fn(val, key, object, currentPath) !== false;
                 if (nestable && (is.Arr(val) || is.Object(val))) Craft.forEachDeep(val, fn, currentPath);
-            });
+            }
         },
         concatObjects: function concatObjects(hostobj) {
             var _arguments = arguments;
@@ -1415,8 +1423,8 @@ function _typeof(obj) {
             return is.Object(val) ? Object.create(val) : val.slice(0);
         },
         omitFrom: function omitFrom(Arr) {
-            for (var _len2 = arguments.length, values = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-                values[_key2 - 1] = arguments[_key2];
+            for (var _len3 = arguments.length, values = Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
+                values[_key3 - 1] = arguments[_key3];
             }
 
             if (values.length === 1) {
@@ -1424,14 +1432,14 @@ function _typeof(obj) {
                     index = Arr.indexOf(val),
                     temp = [],
                     string = false,
-                    _i3 = 0;
+                    _i4 = 0;
                 if (is.String(Arr)) {
                     Arr = toArr(Arr);
                     string = true;
                 }
                 if (is.Arraylike(Arr)) Arr = toArr(Arr);
-                for (; _i3 < Arr.length; _i3++) {
-                    if (_i3 !== index) temp.push(Arr[_i3]);
+                for (; _i4 < Arr.length; _i4++) {
+                    if (_i4 !== index) temp.push(Arr[_i4]);
                 }
                 if (temp.includes(val)) temp = Craft.omitFrom(temp, val);
                 return string ? temp.join('') : temp;
@@ -1503,6 +1511,17 @@ function _typeof(obj) {
                     src: src,
                     alt: alt
                 });
+            },
+            input: function input(type, attributes) {
+                var input = doc.createElement('input');
+                input.type = type || 'text';
+                if (is.Object(attributes)) forEach(attributes, function(val, attr) {
+                    return input.setAttribute(attr, val);
+                });
+                if (is.String(attributes)) attributes.split('&').forEach(function(attr) {
+                    return def(attr.split('=')[1]) ? input.setAttribute(attr.split('=')[0], attr.split('=')[1]) : input.setAttribute(attr.split('=')[0], '');
+                });
+                return input;
             },
             ul: function ul(items, attr, node) {
                 var list = '';
@@ -1756,14 +1775,14 @@ function _typeof(obj) {
                         recievers: [],
                         message: '',
                         set send(msg) {
-                            var _this6 = this;
+                            var _this8 = this;
 
                             if (this.socket['readyState'] === 1) this.socket.send(is.Object(msg) ? JSON.stringify(msg) : msg);
                             else {
                                 (function() {
                                     var poll = setInterval(function() {
-                                        if (_this6.socket['readyState'] === 1) {
-                                            _this6.socket.send(is.Object(msg) ? JSON.stringify(msg) : msg);
+                                        if (_this8.socket['readyState'] === 1) {
+                                            _this8.socket.send(is.Object(msg) ? JSON.stringify(msg) : msg);
                                             clearInterval(poll);
                                         }
                                     }, 20);
@@ -1824,11 +1843,11 @@ function _typeof(obj) {
         debounce: function debounce(wait, func, immediate) {
             var timeout = undefined;
             return function() {
-                var _this7 = this,
+                var _this9 = this,
                     args = arguments,
                     later = function later() {
                         timeout = null;
-                        if (!immediate) func.apply(_this7, args);
+                        if (!immediate) func.apply(_this9, args);
                     },
                     callNow = immediate && !timeout;
 
@@ -1892,8 +1911,8 @@ function _typeof(obj) {
         OverrideFunction: function OverrideFunction(funcName, Func, ContextObject) {
             var func = funcName.split(".").pop(),
                 ns = funcName.split(".");
-            for (var _i4 = 0; _i4 < ns.length; _i4++) {
-                ContextObject = ContextObject[ns[_i4]];
+            for (var _i5 = 0; _i5 < ns.length; _i5++) {
+                ContextObject = ContextObject[ns[_i5]];
             }
             ContextObject[func] = Func;
         },
@@ -1904,8 +1923,8 @@ function _typeof(obj) {
             return -1;
         },
         indexOfDate: function indexOfDate(Collection, date) {
-            for (var _i5 = 0; _i5 < Collection.length; _i5++) {
-                if (+Collection[_i5] === +date) return _i5;
+            for (var _i6 = 0; _i6 < Collection.length; _i6++) {
+                if (+Collection[_i6] === +date) return _i6;
             }
             return -1;
         },
@@ -2100,8 +2119,8 @@ function _typeof(obj) {
             if (caps === true && Craft.hasCapitals(pass) === false) return reasons ? 'Password should contain Capital letters' : false;
             if (number === true && /\d/g.test(pass) === false) return reasons ? 'Password should contain a number' : false;
 
-            for (var _len3 = arguments.length, includeChars = Array(_len3 > 5 ? _len3 - 5 : 0), _key3 = 5; _key3 < _len3; _key3++) {
-                includeChars[_key3 - 5] = arguments[_key3];
+            for (var _len4 = arguments.length, includeChars = Array(_len4 > 5 ? _len4 - 5 : 0), _key4 = 5; _key4 < _len4; _key4++) {
+                includeChars[_key4 - 5] = arguments[_key4];
             }
 
             if (includeChars.length !== 0) {
@@ -2170,9 +2189,9 @@ function _typeof(obj) {
             settings['prototype'] = element;
             doc.registerElement(tag, settings);
         },
-        newBind: function newBind(key, value, element) {
-            if (!def(Craft.Binds[key])) Craft.Binds[key] = Craft.clone(BindObj);
-            if (def(element)) Craft.Binds[key].newView(element);
+        newBind: function newBind(key, value, element, twoway) {
+            if (!def(Craft.Binds[key])) Craft.Binds[key] = Object.create(Bind);
+            if (def(element)) Craft.Binds[key].newView(element, twoway);
         },
         getBind: function getBind(key, obj) {
             if (Craft.Binds.hasOwnProperty(key)) return obj ? Craft.Binds[key] : Craft.Binds[key].value;
@@ -2206,7 +2225,7 @@ function _typeof(obj) {
             (function() {
                 var element = e.target,
                     mnp = dom(element);
-                if (mnp.hasAttr('bind')) Craft.newBind(mnp.getAttr('bind'), '', element);
+                if (mnp.hasAttr('bind')) Craft.newBind(mnp.getAttr('bind'), element.html(), element, is.Input(element));
                 if (mnp.hasAttr('link')) On(element).Click(function(e) {
                     var nt = mnp.getAttr('link');
                     nil(nt) ? open(nt) : Craft.router.open(nt);
@@ -2220,8 +2239,8 @@ function _typeof(obj) {
     });
     Craft.curry.adaptTo = Craft.curry(function(num, fn) {
         return Craft.curry.to(num, function(context) {
-            for (var _len4 = arguments.length, args = Array(_len4 > 1 ? _len4 - 1 : 0), _key4 = 1; _key4 < _len4; _key4++) {
-                args[_key4 - 1] = arguments[_key4];
+            for (var _len5 = arguments.length, args = Array(_len5 > 1 ? _len5 - 1 : 0), _key5 = 1; _key5 < _len5; _key5++) {
+                args[_key5 - 1] = arguments[_key5];
             }
 
             return fn.apply(null, args.slice(1).concat(context));
@@ -2241,13 +2260,13 @@ function _typeof(obj) {
 
     Craft.newComponent(fw, {
         inserted: function inserted() {
-            var _this8 = this,
+            var _this10 = this,
                 src = this.getAttribute('src');
 
             if (!nil(src)) {
                 (function() {
                     var wc = null,
-                        el = dom(_this8),
+                        el = dom(_this10),
                         cc = 'cache-component';
                     if (!Craft.WebComponents.includes(src)) {
                         if (el.hasAttr(cc)) {
@@ -2270,7 +2289,7 @@ function _typeof(obj) {
                 })();
             }
             Craft.WhenReady = function() {
-                return _this8.remove();
+                return _this10.remove();
             };
         }
     });
@@ -2302,24 +2321,24 @@ function _typeof(obj) {
 
     Craft.newComponent('craft-template', {
         inserted: function inserted() {
-            var _this9 = this,
+            var _this11 = this,
                 manage = function manage() {
-                    var element = dom(_this9),
-                        oldValue = _this9.parentNode.innerHTML,
+                    var element = dom(_this11),
+                        oldValue = _this11.parentNode.innerHTML,
                         scope = getDeep(root, element.getAttr('scope') || 'Craft.Scope'),
                         output = '';
-                    if (is.Object(scope) || is.Arr(scope)) output = _this9.innerHTML.replace(RegExps.template, function(m, template) {
+                    if (is.Object(scope) || is.Arr(scope)) output = _this11.innerHTML.replace(RegExps.template, function(m, template) {
                         return compileTemplate(template, scope);
                     });
                     if (output !== '' || output !== ' ') {
-                        _this9.insertAdjacentHTML('beforebegin', output);
-                        if (_this9.parentNode.innerHTML !== oldValue) setTimeout(function() {
-                            return _this9.remove();
+                        _this11.insertAdjacentHTML('beforebegin', output);
+                        if (_this11.parentNode.innerHTML !== oldValue) setTimeout(function() {
+                            return _this11.remove();
                         }, 4500);
                         else setTimeout(function() {
                             return manage();
                         }, 250);
-                    } else _this9.remove();
+                    } else _this11.remove();
                 };
 
             Ready ? manage() : Craft.WhenReady = function() {
@@ -2330,13 +2349,13 @@ function _typeof(obj) {
 
     Craft.newComponent('for-each', {
         inserted: function inserted() {
-            var _this10 = this;
+            var _this12 = this;
 
             if (this.parentNode.tagName !== 'FOR-EACH' && this.parentNode.parentNode.tagName !== 'FOR-EACH' && this.parentNode.parentNode.parentNode.tagName !== 'FOR-EACH') {
                 (function() {
-                    var oldValue = _this10.parentNode.innerHTML,
+                    var oldValue = _this12.parentNode.innerHTML,
                         manage = function manage() {
-                            var element = _this10;
+                            var element = _this12;
                             if (element.hasAttribute('in')) {
                                 (function() {
                                     var el = dom(element),
@@ -2349,7 +2368,7 @@ function _typeof(obj) {
                                         scope = Craft.getDeep(root, el.getAttr('in')) || Craft.getBind(el.getAttr('in'));
 
                                     if (is.Object(scope) || is.Arr(scope)) forEach(scope, function(item, key) {
-                                        tempcopy = _this10.cloneNode(true);
+                                        tempcopy = _this12.cloneNode(true);
                                         queryEach('for-each', tempcopy, function(forEachNode) {
                                             if (forEachNode.hasAttribute('in')) {
                                                 temp = forEachNode.getAttribute('in');
@@ -2369,9 +2388,9 @@ function _typeof(obj) {
                                         });
                                         tempcopy = null;
                                     });
-                                    if (output !== '' || output !== ' ') _this10.insertAdjacentHTML('beforebegin', output);
-                                    if (_this10.parentNode.innerHTML !== oldValue) setTimeout(function() {
-                                        return _this10.remove();
+                                    if (output !== '' || output !== ' ') _this12.insertAdjacentHTML('beforebegin', output);
+                                    if (_this12.parentNode.innerHTML !== oldValue) setTimeout(function() {
+                                        return _this12.remove();
                                     }, 4500);
                                     else setTimeout(function() {
                                         return manage();
