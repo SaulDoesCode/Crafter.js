@@ -923,11 +923,9 @@
 
   let Bind = {
     val: '',
-    oldVal: '',
     views: [],
     funcs: [],
     set value(val) {
-      console.log('hello');
       this.oldVal = this.val;
       this.val = val;
       this.applyViews();
@@ -941,8 +939,11 @@
     removeFunc(fn) {
       if (this.funcs.includes(fn)) this.funcs = Craft.omitFrom(this.funcs, fn);
     },
+    popFunc() {
+      return this.funcs.pop();
+    },
     applyViews() {
-      if (this.val !== this.oldVal && !is.empty(this.views)) {
+      if (!is.empty(this.views)) {
         this.funcs.forEach(fn => fn(this.oldVal, this.val));
         this.views.forEach(view => {
           if (is.Object(view) && is.Node(view.node)) {
@@ -957,7 +958,7 @@
       selector = dom(selector);
       if (is.Node(selector)) this.views.push({
         node: selector,
-        twoway: twoway === true && is.Input(selector),
+        twoway: twoway === true && is.Input(selector)
       });
       this.applyViews();
     },
@@ -1685,9 +1686,9 @@
         settings['prototype'] = element;
         doc.registerElement(tag, settings)
       },
-      newBind(key, value, element) {
+      newBind(key, value, element,twoway) {
         if (!def(Craft.Binds[key])) Craft.Binds[key] = Object.create(Bind);
-        if (def(element)) Craft.Binds[key].newView(element);
+        if (def(element)) Craft.Binds[key].newView(element,twoway);
       },
       getBind(key, obj) {
         if (Craft.Binds.hasOwnProperty(key)) return obj ? Craft.Binds[key] : Craft.Binds[key].value;
@@ -1714,7 +1715,7 @@
     if (e.animationName === 'NodeInserted' && is.Node(e.target)) {
       let element = e.target,
         mnp = dom(element);
-      if (mnp.hasAttr('bind')) Craft.newBind(mnp.getAttr('bind'), '', element);
+      if (mnp.hasAttr('bind')) Craft.newBind(mnp.getAttr('bind'),element.html(), element,is.Input(element));
       if (mnp.hasAttr('link')) On(element).Click(e => {
         let nt = mnp.getAttr('link');
         nil(nt) ? open(nt) : Craft.router.open(nt);
