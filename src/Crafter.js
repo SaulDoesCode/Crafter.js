@@ -33,81 +33,6 @@
   CrafterStyles.innerHTML = `\n@keyframes NodeInserted {from {opacity:.99;}to {opacity: 1;}} [bind] {animation-duration: 0.001s;animation-name: NodeInserted;} for-each,craft-template {display:none;}`;
   head.appendChild(CrafterStyles);
 
-
-  function getStringQuotes(str) {
-    return is.String(str) && (str.includes('"') || str.includes("'")) ? str.substring(1, str.length - 1) : str;
-  }
-
-  function getDeep(obj, propString) {
-    if (!is.Def(propString)) return obj;
-    if (has(propString, `'"`, true)) return getStringQuotes(propString);
-    else if (propString === 'true') return true;
-    else if (propString === 'false') return false;
-    else if (is.Num(propString)) return Number(propString);
-    if (has(propString, "[]")) {
-      let arr = Craft.omitFrom(template.split(/([\s\S]*)(?:\[(\d{1,20})\])/igm), ''),
-        Arr = getDeep(context, arr[0]);
-      if (is.Arr(Arr)) return Arr[Number(arr[1])];
-    }
-
-    let prop, val, props = propString.split('.'),
-      candidate, i = 0,
-      iLen = props.length - 1;
-
-    for (; i < iLen; i++) {
-      prop = props[i];
-      candidate = obj[prop];
-      if (is.Def(candidate)) obj = candidate;
-      else break;
-    }
-    try {
-      val = obj[props[i]];
-    } catch (e) {}
-    return is.Def(val) ? val : '';
-  }
-
-  function has(str, strings, or) {
-    if (is.String(strings)) strings = strings.split('');
-    let type = or === true ? 'some' : 'every';
-    return strings[type](char => str.includes(char));
-  }
-
-  function isComparator(str) {
-    return str === '==' || str === '===' || str === '!=' || str === '!==' || str === '||' || str === 'and' || str === 'or' || str === '&&' || str === '>=' || str === '<' || str === '>' || str === '<=';
-  }
-
-  function hasComparator(str) {
-    return has(str, "!<>=|&", true) || has(str, ['or', 'is'], true);
-  }
-
-  function compileComparision(comp, context) {
-    let comparison = comp.replace(RegExps.comparisons, (m, left, comparator, right) => {
-      left = getDeep(context, left);
-      right = getDeep(context, right);
-      if (comparator === '==' || comparator === '===' || comparator === 'is') return left === right;
-      if (comparator === '!=' || comparator === '!==' || comparator === 'not') return left !== right;
-      if (comparator === '||' || comparator === 'or') return left || right;
-      if (comparator === '&&' || comparator === 'and') return left && right;
-      if (comparator === '<') return left < right;
-      if (comparator === '>') return left > right;
-      if (comparator === '<=') return left <= right;
-      if (comparator === '>=') return left >= right;
-      return '';
-    });
-    if (comparison === 'true') return true;
-    else if (comparison === 'false') return false;
-    return comparison;
-  }
-
-  function compileTemplate(template, context, index) {
-    if (template.match(/value/igm) !== null && !is.Object(context)) return context;
-    if (template.match(/index/igm) !== null) return index || 0;
-    if (has(template, ':?')) return template.replace(RegExps.ternary, (m, test, True, False) => {
-      return getDeep(context, (hasComparator(test) ? compileComparision(test, context) : getDeep(context, test)) ? True : False)
-    });
-    return hasComparator(template) ? compileComparision(template, context) : getDeep(context, template);
-  }
-
   function toInt(val) {
     let num = Number(val);
     if (isNaN(num)) return 0;
@@ -872,12 +797,15 @@
         return this;
       }
       /**
-       * checks if the element has a specific Attribute
+       * checks if the element has a specific Attribute or Attributes
        * @memberof dom
-       * @param {string} name of the Attribute to check for
+       * @param {string|boolean} name of the Attribute or if true checks that it has some (||) of the attributes or if false checks that it has all of the attributes (&&)
+       * @param {...string} names of attributes to check for
        */
-    element.hasAttr = function (Attr) {
-        return this.hasAttribute(Attr);
+    element.hasAttr = function (Attr, ...attributes) {
+        if (is.String(Attr)) return this.hasAttribute(Attr);
+        if (Attr === false) return attributes.every(attr => this.hasAttribute(attr));
+        if (Attr === true) return attributes.some(attr => this.hasAttribute(attr));
       }
       /**
        * Sets or adds an Attribute on the element
@@ -886,16 +814,17 @@
        * @param {string} Value of the Attribute to add/set
        */
     element.setAttr = function (Attr, val) {
-      this.setAttribute(Attr, val);
+      if (!def(val)) {
+        if (is.Object(Attr)) forEach(Attr, (value, attr) => this.setAttribute(attr, value));
+        else if (is.String(Attr)) Attr.split('&').forEach(attr => def(attr.split('=')[1]) ? this.setAttribute(attr.split('=')[0], attr.split('=')[1]) : this.setAttribute(attr.split('=')[0], ''));
+      } else this.setAttribute(Attr, val);
       return this;
     }
-    element.getAttr = function (Attr) {
-        return this.getAttribute(Attr);
-      }
-      /**
-       * gets all the elements siblings within it's parentNode
-       * @memberof dom
-       */
+    element.getAttr = Attr => element.getAttribute(Attr);
+    /**
+     * gets all the elements siblings within it's parentNode
+     * @memberof dom
+     */
     element.getSiblings = function () {
         let siblings = [],
           AllChildren = this.parentNode.childNodes;
@@ -961,7 +890,7 @@
     element.queryAll = selector => queryAll(selector, element);
 
     if (is.Input(element)) {
-      element.SyncInput = (obj, key) => element['InputSync'] = On(element).Input(e => Craft.setDeep(obj, key, element.innerHTML));
+      element.SyncInput = (obj, key) => element['InputSync'] = On(element).Input(e => Craft.setDeep(obj, key, element.html()));
       element.disconectInputSync = () => {
         if (def(element['InputSync'])) {
           element['InputSync'].Off();
@@ -972,52 +901,6 @@
 
 
     return element;
-  }
-
-  let BindObj = {
-    val: '',
-    set value(val) {
-      this.oldVal = this.val;
-      this.val = val;
-      this.applyViews();
-    },
-    get value() {
-      return this.val;
-    },
-    applyViews() {
-      if (this.val !== this.oldVal && !is.empty(this.views)) this.views.forEach(view => {
-        if (is.Object(view) && is.Node(view['node'])) {
-          if (!def(view.event) && view.twoway === true) view.event = On('input', view.node, e => {
-            let val = view.manip.html();
-            if (val !== this.val) this.value = val;
-          });
-          if (is.empty(this.val)) this.val = view.manip.html();
-          else if (view.manip.html() !== this.val) view.manip.html(this.val);
-        } else this.views = Craft.omitFrom(this.views, view);
-      });
-    },
-    newView(selector, twoway) {
-      selector = dom(selector);
-      if (is.Node(selector)) this.views.push({
-        node: selector,
-        manip: selector,
-        twoway: twoway === true || is.Input(selector),
-      });
-      this.applyViews();
-    },
-    removeView(selector) {
-      selector = dom(selector);
-      if (is.Node(selector['element'])) {
-        this.views.forEach(view => {
-          if (view.node === selector['element']) {
-            if (def(view.event)) view.event.Off();
-            this.views = Craft.omitFrom(this.views, view);
-          }
-        });
-        Craft.Binds[mnp.getAttr('bind')].applyViews();
-      }
-    },
-    views: []
   }
 
 
@@ -1032,10 +915,122 @@
     if (is.String(element)) element = queryAll(element, within);
     if (is.NodeList(element)) {
       if (element.length === 1) element = element[0];
-      else return domNodeList(elements);
+      else return domNodeList(element);
     }
     if (is.Node(element)) return element['hasDOMmethods'] !== true ? domManip(element) : element;
     return Craft.dom;
+  }
+
+  let Bind = {
+    val: '',
+    oldVal: '',
+    views: [],
+    funcs: [],
+    set value(val) {
+      console.log('hello');
+      this.oldVal = this.val;
+      this.val = val;
+      this.applyViews();
+    },
+    get value() {
+      return this.val;
+    },
+    set func(fn) {
+      if (is.Func(fn)) this.funcs.push(fn);
+    },
+    removeFunc(fn) {
+      if (this.funcs.includes(fn)) this.funcs = Craft.omitFrom(this.funcs, fn);
+    },
+    applyViews() {
+      if (this.val !== this.oldVal && !is.empty(this.views)) {
+        this.funcs.forEach(fn => fn(this.oldVal, this.val));
+        this.views.forEach(view => {
+          if (is.Object(view) && is.Node(view.node)) {
+            if (view.twoway === true && !def(view.node['InputSync'])) view.node.SyncInput(this, "value");
+            if (is.empty(this.val) || this.val === '') this.val = view.node.html();
+            else if (view.node.html() !== this.val) view.node.html(this.val);
+          } else this.views = Craft.omitFrom(this.views, view);
+        });
+      }
+    },
+    newView(selector, twoway) {
+      selector = dom(selector);
+      if (is.Node(selector)) this.views.push({
+        node: selector,
+        twoway: twoway === true && is.Input(selector),
+      });
+      this.applyViews();
+    },
+    removeView(selector) {
+      selector = dom(selector);
+      if (is.Node(selector)) {
+        this.views.forEach(view => {
+          if (view.node.isEqualNode(selector)) {
+            if (def(view.node['InputSync'])) view.node.disconectInputSync();
+            this.views = Craft.omitFrom(this.views, view);
+          }
+        });
+        this.applyViews();
+      }
+    }
+  }
+
+
+
+
+  function getStringQuotes(str) {
+    return is.String(str) && (str.includes('"') || str.includes("'")) ? str.substring(1, str.length - 1) : str;
+  }
+
+  function getDeep(obj, keychain) {
+    if (!is.Def(keychain)) return obj;
+    if (has(keychain, `'"`, true)) return getStringQuotes(keychain);
+    else if (keychain === 'true') return true;
+    else if (keychain === 'false') return false;
+    else if (is.Num(keychain)) return Number(keychain);
+    return Craft.getDeep(obj, keychain) || '';
+  }
+
+  function has(str, strings, or) {
+    if (is.String(strings)) strings = strings.split('');
+    let type = or ? 'some' : 'every';
+    return strings[type](char => str.includes(char));
+  }
+
+  function isComparator(str) {
+    return str === '==' || str === '===' || str === '!=' || str === '!==' || str === '||' || str === 'and' || str === 'or' || str === '&&' || str === '>=' || str === '<' || str === '>' || str === '<=';
+  }
+
+  function hasComparator(str) {
+    return has(str, "!<>=|&", true) || has(str, ['or', 'is'], true);
+  }
+
+  function compileComparision(comp, context) {
+    let comparison = comp.replace(RegExps.comparisons, (m, left, comparator, right) => {
+      left = getDeep(context, left);
+      right = getDeep(context, right);
+      if (comparator === '==' || comparator === '===' || comparator === 'is') return left === right;
+      if (comparator === '!=' || comparator === '!==' || comparator === 'not') return left !== right;
+      if (comparator === '||' || comparator === 'or') return left || right;
+      if (comparator === '&&' || comparator === 'and') return left && right;
+      if (comparator === '<') return left < right;
+      if (comparator === '>') return left > right;
+      if (comparator === '<=') return left <= right;
+      if (comparator === '>=') return left >= right;
+      return '';
+    });
+    if (comparison === 'true') return true;
+    else if (comparison === 'false') return false;
+    return comparison;
+  }
+
+  function compileTemplate(template, context, index) {
+    if (template.match(/value/igm) !== null && !is.Object(context)) return context;
+    if (template.match(/index/igm) !== null) return index || 0;
+    if (has(template, ':?')) return template.replace(RegExps.ternary, (m, test, True, False) => {
+      return getDeep(context, (hasComparator(test) ? compileComparision(test, context) : getDeep(context, test)) ? True : False)
+    });
+    return hasComparator(template) ? compileComparision(template, context) : getDeep(context, template);
   }
 
   CrafterStyles = query('[crafterstyles]', head);
@@ -1065,44 +1060,40 @@
           if (arr1[i] !== arr2[i]) return false;
         return true;
       },
-      getDeep(obj, propString) {
-        if (!def(propString)) return obj;
-
-        let prop, val, props = propString.split('.'),
-          candidate, i = 0,
-          iLen = props.length - 1;
-
-        for (; i < iLen; i++) {
-          prop = props[i];
-          candidate = obj[prop];
-          if (def(candidate)) obj = candidate;
-          else break;
-        }
-        try {
-          val = obj[props[i]];
-        } catch (e) {}
-        return val;
+      getDeep(obj, keychain) {
+            keychain = keychain.replace(/\[(\w+)\]/g, '.$1');
+            keychain = keychain.replace(/^\./, '');
+            let a = keychain.split('.');
+            try {
+              for (let i = 0; i < a.length; ++i) a[i] in obj ? obj = obj[a[i]] : obj = undefined;
+            } catch(e) {
+              return undefined;
+            }
+            return obj;
       },
       setDeep(obj, prop, value, returnObj) {
-        if (is.String(prop)) prop = prop.split(".");
-        if (prop.length > 1) {
+         if (is.Arr(prop) && prop.length === 1) prop = prop[0];
+         if (is.String(prop) && !hasdot(prop)) value !== "_DELETE_" ? obj[prop] = value : delete obj[prop];
+         else {
+          if (is.String(prop)) prop = prop.split(".");
           let e = prop.shift();
-          Craft.setDeep(obj[e] = is.Object(obj[e]) ? obj[e] : {}, prop, value);
-        } else if (def(value)) obj[prop[0]] = value;
-        else if (value.includes('_DELETE_')) delete obj[prop[0]];
+          if(!is.Object(obj[e])) obj[e] = {};
+          Craft.setDeep(obj[e], prop, value);
+        }
         if (returnObj === true) return obj;
       },
       forEachDeep(object, fn, path) {
         path = path || '';
         let currentPath = path,
-          nestable;
-        forEach(object, (val, key) => {
+          nestable, val, key;
+        for (key in object) {
+          if (object.hasOwnProperty(key)) val = object[key];
           currentPath = path;
           nestable = false;
           is.Arr(object) ? currentPath += `[${key}]` : !currentPath ? currentPath = key : currentPath += '.' + key;
           nestable = fn(val, key, object, currentPath) !== false;
           if (nestable && (is.Arr(val) || is.Object(val))) Craft.forEachDeep(val, fn, currentPath);
-        });
+        }
       },
       concatObjects(hostobj) {
         forEach(hostobj, o => Craft.omitFrom(toArr(arguments), hostobj).forEach(obj => forEach(obj, (prop, key) => {
@@ -1117,8 +1108,9 @@
       cloneArr: arr => arr.slice(0),
       clone: val => is.Object(val) ? Object.create(val) : val.slice(0),
       omitFrom(Arr, ...values) {
-        if(values.length === 1) {
-          let val = values[0], index = Arr.indexOf(val),
+        if (values.length === 1) {
+          let val = values[0],
+            index = Arr.indexOf(val),
             temp = [],
             string = false,
             i = 0;
@@ -1133,7 +1125,7 @@
           if (temp.includes(val)) temp = Craft.omitFrom(temp, val);
           return string ? temp.join('') : temp;
         }
-        values.forEach(val => Arr = Craft.omitFrom(Arr,val));
+        values.forEach(val => Arr = Craft.omitFrom(Arr, val));
         return Arr;
       },
       omit(obj, val) {
@@ -1188,6 +1180,13 @@
           src: src,
           alt: alt
         }),
+        input(type, attributes) {
+          let input = doc.createElement('input');
+          input.type = type || 'text';
+          if (is.Object(attributes)) forEach(attributes, (val, attr) => input.setAttribute(attr, val));
+          if (is.String(attributes)) attributes.split('&').forEach(attr => def(attr.split('=')[1]) ? input.setAttribute(attr.split('=')[0], attr.split('=')[1]) : input.setAttribute(attr.split('=')[0], ''));
+          return input;
+        },
         ul(items, attr, node) {
           let list = ``;
           if (is.Arr(items)) items.forEach(item => {
@@ -1671,7 +1670,8 @@
        */
       newComponent(tag, config) {
         if (!def(config)) throw new Error(tag + ' : config undefined');
-        let element = Object.create(HTMLElement.prototype) , settings = {};
+        let element = Object.create(HTMLElement.prototype),
+          settings = {};
 
         forEach(config, (prop, key) => {
           if (key === 'created') element.createdCallback = prop;
@@ -1679,14 +1679,14 @@
           else if (key === 'destroyed') element.detachedCallback = prop;
           else if (key === 'attr') element.attributeChangedCallback = prop;
           else if (key === 'extends') settings.extends = prop;
-          else Object.defineProperty(element,key,Object.getOwnPropertyDescriptor(config,key));
+          else Object.defineProperty(element, key, Object.getOwnPropertyDescriptor(config, key));
         });
 
         settings['prototype'] = element;
         doc.registerElement(tag, settings)
       },
       newBind(key, value, element) {
-        if (!def(Craft.Binds[key])) Craft.Binds[key] = Craft.clone(BindObj);
+        if (!def(Craft.Binds[key])) Craft.Binds[key] = Object.create(Bind);
         if (def(element)) Craft.Binds[key].newView(element);
       },
       getBind(key, obj) {

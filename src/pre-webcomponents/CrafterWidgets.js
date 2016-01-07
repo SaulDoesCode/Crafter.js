@@ -157,10 +157,33 @@
   });
 
   Craft.newComponent('grid-host', {
-    extends: 'div'
-  });
-  Craft.newComponent('grid-row', {
-    extends: 'div'
+    inserted() {
+        let el = dom(this),
+          int;
+        if (el.hasAttr('columns')) {
+          int = Craft.toInt(el.getAttr('columns'));
+          el.css({
+            webkitColumnCount: int,
+            mozColumnCount: int,
+            columnCount: int,
+          });
+        }
+
+      },
+      attr(name, oldval, newval) {
+
+      },
+      set columns(val) {
+        if (is.Num(val)) {
+          let el = dom(this),
+            int = Craft.toInt(el.getAttr('collumns'));
+          el.css({
+            webkitColumnCount: int,
+            mozColumnCount: int,
+            columnCount: int,
+          });
+        }
+      }
   });
 
   Craft.newComponent('text-collapser', {
@@ -169,11 +192,11 @@
           txt = el.html();
         el.html("");
 
-        el.append(dom().label(el.hasAttr('summary') ? `&#9660; \t ${el.getAttr('summary')}` : '&#9654;', 'id=indicator', true));
-        el.append(dom().label(txt, 'id=text', true));
+        el.append(dom().label(el.getAttr('summary'), 'class=indicator', true));
+        el.append(dom().label(txt, 'class=text', true));
         this.open = el.hasAttr('open');
 
-        this.onClick = On('#indicator', this).Click(e => this.toggle());
+        this.onClick = On('.indicator', this).Click(e => this.toggle());
       },
       toggle(open) {
         is.Def(open) ? this.open = open : this.open = !this.open;
@@ -208,7 +231,7 @@
         el.append(input);
         el.append(dom().span());
         input = dom(el.query('input'));
-        let clearText = query('span',this);
+        let clearText = query('span', this);
 
         this.labelEffects = () => {
           if (this.value.length > 0) {
@@ -233,7 +256,7 @@
           if (el.hasAttr("label") || el.hasAttr("placeholder")) this.labelEffects();
         });
 
-        this.OnClick = On('span',this).Click(e => {
+        this.OnClick = On('span', this).Click(e => {
           this.value = '';
           this.labelEffects();
         });
