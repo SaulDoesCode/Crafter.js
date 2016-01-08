@@ -36,7 +36,7 @@ function _typeof(obj) {
     _br ? [_br[1], _br[2]] : [navigator.appName, navigator.appVersion, '-?'];
 
     CrafterStyles.setAttribute('crafterstyles', '');
-    CrafterStyles.innerHTML = '\n@keyframes NodeInserted {from {opacity:.99;}to {opacity: 1;}} [bind] {animation-duration: 0.001s;animation-name: NodeInserted;} for-each,craft-template {display:none;}';
+    CrafterStyles.textContent = '\n@keyframes NodeInserted {from {opacity:.99;}to {opacity: 1;}} [bind] {animation-duration: 0.001s;animation-name: NodeInserted;} for-each,craft-template {display:none;}';
     head.appendChild(CrafterStyles);
 
     function toInt(val) {
@@ -46,12 +46,16 @@ function _typeof(obj) {
         return (num > 0 ? 1 : -1) * Math.floor(Math.abs(num));
     }
 
+    function docfragFromString(strHTML) {
+        return doc.createRange().createContextualFragment(strHTML);
+    }
+
     function toArr(val) {
         return Array.prototype.slice.call(val);
     }
     // ta = TestArgs : convert arguments to array then tests it
     function ta(args, test) {
-        return args.length === 0 ? false : Array.from(args).every(test);
+        return args.length === 0 ? false : toArr(args).every(test);
     }
 
     function type(obj, str) {
@@ -699,36 +703,20 @@ function _typeof(obj) {
         }) : target.addEventListener(etype, listenOnce);
         return this;
     };
-
-    function For(num, func) {
-        for (var _i = 0; _i < num; _i++) {
-            func(_i);
-        }
-    }
-
-    function forIn(obj, func) {
-        for (i in obj) {
-            if (obj.hasOwnProperty(i)) func(obj[i], i);
-        }
-    }
-
     /**
      * Easy way to loop through Collections and Objects
      * @param {Array|Object|NodeList} iterable - any collection that is either an Object or has a .length value
      * @param {function} func - function called on each iteration -> "function( value , indexOrKey ) {...}"
      */
-    root.forEach = function(iterable, func) {
-        if (!def(iterable)) throw new Error("forEach -> iterable undefined");
-        if (!is.Func(func)) throw new Error("forEach -> function invalid or undefined");
-        var i = 0;
+    function forEach(iterable, func) {
         if (is.Arraylike(iterable) && !localStorage)
-            for (; i < iterable.length; i++) {
-                func(iterable[i], i);
+            for (var _i = 0; _i < iterable.length; _i++) {
+                func(iterable[_i], _i);
             } else
-                for (i in iterable) {
-                    if (iterable.hasOwnProperty(i)) func(iterable[i], i);
+                for (var _i2 in iterable) {
+                    if (iterable.hasOwnProperty(_i2)) func(iterable[_i2], _i2);
                 }
-    };
+    }
 
     /**
      * Easy way to get a DOM Node or Node within another DOM Node using CSS selectors
@@ -857,7 +845,7 @@ function _typeof(obj) {
         if (NodeForm === true) {
             var _ret = (function() {
                 var newEl = doc.createElement(name);
-                newEl.innerHTML = inner;
+                newEl.appendChild(docfragFromString(inner));
                 if (is.Object(attributes)) forEach(attributes, function(val, attr) {
                     return newEl.setAttribute(attr, val);
                 });
@@ -985,8 +973,7 @@ function _typeof(obj) {
          * @param {Node|string} String or Node to append to the this.element
          */
         element.append = function(val) {
-            var el = this;
-            is.Node(val) ? el.appendChild(val) : el.insertAdjacentHTML('beforeend', val);
+            this.appendChild(is.Node(val) ? val : docfragFromString(val));
             return this;
         };
         /**
@@ -995,8 +982,7 @@ function _typeof(obj) {
          * @param {Node|string} String or Node to prepend to the this.element
          */
         element.prepend = function(val) {
-            var el = this;
-            is.Node(val) ? el.insertBefore(val, el.firstChild) : el.insertAdjacentHTML('afterbegin', val);
+            this.insertBefore(is.Node(val) ? val : docfragFromString(val), el.firstChild);
             return this;
         };
         /**
@@ -1051,10 +1037,14 @@ function _typeof(obj) {
         /**
          * removes a specific Attribute from the this.element
          * @memberof dom
-         * @param {string} name of the Attribute to strip
+         * @param {...string} name of the Attribute/s to strip
          */
-        element.stripAttr = function(Attr) {
-            this.removeAttribute(Attr);
+        element.stripAttr = function() {
+            var _this4 = this;
+
+            toArr(arguments).forEach(function(attr) {
+                return _this4.removeAttribute(attr);
+            });
             return this;
         };
         /**
@@ -1064,7 +1054,7 @@ function _typeof(obj) {
          * @param {...string} names of attributes to check for
          */
         element.hasAttr = function(Attr) {
-            var _this4 = this;
+            var _this5 = this;
 
             if (is.String(Attr)) return this.hasAttribute(Attr);
 
@@ -1073,10 +1063,10 @@ function _typeof(obj) {
             }
 
             if (Attr === false) return attributes.every(function(attr) {
-                return _this4.hasAttribute(attr);
+                return _this5.hasAttribute(attr);
             });
             if (Attr === true) return attributes.some(function(attr) {
-                return _this4.hasAttribute(attr);
+                return _this5.hasAttribute(attr);
             });
         };
         /**
@@ -1086,14 +1076,14 @@ function _typeof(obj) {
          * @param {string} Value of the Attribute to add/set
          */
         element.setAttr = function(Attr, val) {
-            var _this5 = this;
+            var _this6 = this;
 
             if (!def(val)) {
                 if (is.Object(Attr)) forEach(Attr, function(value, attr) {
-                    return _this5.setAttribute(attr, value);
+                    return _this6.setAttribute(attr, value);
                 });
                 else if (is.String(Attr)) Attr.split('&').forEach(function(attr) {
-                    return def(attr.split('=')[1]) ? _this5.setAttribute(attr.split('=')[0], attr.split('=')[1]) : _this5.setAttribute(attr.split('=')[0], '');
+                    return def(attr.split('=')[1]) ? _this6.setAttribute(attr.split('=')[0], attr.split('=')[1]) : _this6.setAttribute(attr.split('=')[0], '');
                 });
             } else this.setAttribute(Attr, val);
             return this;
@@ -1106,12 +1096,14 @@ function _typeof(obj) {
          * @memberof dom
          */
         element.getSiblings = function() {
-            var siblings = [],
-                AllChildren = this.parentNode.childNodes;
-            for (var _i2 = 0; _i2 < AllChildren.length; _i2++) {
-                if (AllChildren[_i2] !== this) siblings.push(AllChildren[_i2]);
-            }
-            return siblings;
+            return Craft.omitFrom(toArr(element.parentNode.childNodes), element);
+        };
+        /**
+         * gets all the element's dimentions (width,height,left,top,bottom,right)
+         * @memberof dom
+         */
+        element.getRect = function() {
+            return element.getBoundingClientRect();
         };
         /**
          * sets or gets the element's pixel width
@@ -1121,7 +1113,7 @@ function _typeof(obj) {
         element.Width = function(pixels) {
             var haspixels = def(pixels);
             if (haspixels) this.style.width = pixels;
-            return haspixels ? this : this.getBoundingClientRect().width;
+            return haspixels ? this : this.getRect().width;
         };
         /**
          * sets or gets the element's pixel height
@@ -1130,14 +1122,7 @@ function _typeof(obj) {
          */
         element.Height = function(pixels) {
             if (def(pixels)) this.style.height = pixels;
-            return def(pixels) ? this : this.getBoundingClientRect().height;
-        };
-        /**
-         * gets all the element's dimentions (width,height,left,top,bottom,right)
-         * @memberof dom
-         */
-        element.getRect = function() {
-            return element.getBoundingClientRect();
+            return def(pixels) ? this : this.getRect().height;
         };
         /**
          * move the element using either css transforms or plain css possitioning
@@ -1210,67 +1195,6 @@ function _typeof(obj) {
         return Craft.dom;
     };
 
-    var Bind = {
-        val: '',
-        views: [],
-        funcs: [],
-        set value(val) {
-            this.oldVal = this.val;
-            this.val = val;
-            this.applyViews();
-        },
-        get value() {
-            return this.val;
-        },
-        set func(fn) {
-            if (is.Func(fn)) this.funcs.push(fn);
-        },
-        removeFunc: function removeFunc(fn) {
-            if (this.funcs.includes(fn)) this.funcs = Craft.omitFrom(this.funcs, fn);
-        },
-        popFunc: function popFunc() {
-            return this.funcs.pop();
-        },
-        applyViews: function applyViews() {
-            var _this6 = this;
-
-            if (!is.empty(this.views)) {
-                this.funcs.forEach(function(fn) {
-                    return fn(_this6.oldVal, _this6.val);
-                });
-                this.views.forEach(function(view) {
-                    if (is.Object(view) && is.Node(view.node)) {
-                        if (view.twoway === true && !def(view.node['InputSync'])) view.node.SyncInput(_this6, "value");
-                        if (is.empty(_this6.val) || _this6.val === '') _this6.val = view.node.html();
-                        else if (view.node.html() !== _this6.val) view.node.html(_this6.val);
-                    } else _this6.views = Craft.omitFrom(_this6.views, view);
-                });
-            }
-        },
-        newView: function newView(selector, twoway) {
-            selector = dom(selector);
-            if (is.Node(selector)) this.views.push({
-                node: selector,
-                twoway: twoway === true && is.Input(selector)
-            });
-            this.applyViews();
-        },
-        removeView: function removeView(selector) {
-            var _this7 = this;
-
-            selector = dom(selector);
-            if (is.Node(selector)) {
-                this.views.forEach(function(view) {
-                    if (view.node.isEqualNode(selector)) {
-                        if (def(view.node['InputSync'])) view.node.disconectInputSync();
-                        _this7.views = Craft.omitFrom(_this7.views, view);
-                    }
-                });
-                this.applyViews();
-            }
-        }
-    };
-
     function getStringQuotes(str) {
         return is.String(str) && (str.includes('"') || str.includes("'")) ? str.substring(1, str.length - 1) : str;
     }
@@ -1327,6 +1251,95 @@ function _typeof(obj) {
         });
         return hasComparator(template) ? compileComparision(template, context) : getDeep(context, template);
     }
+
+    var templateBind = {
+            hostelement: null,
+            baseTemplate: '',
+            newValue: function newValue(key, val) {
+                this['$' + key] = val;
+                Object.defineProperty(this, key, {
+                    get: function get() {
+                        return this['$' + key];
+                    },
+                    set: function set(value) {
+                        this['$' + key] = value;
+                        this.applyValues();
+                    },
+                    writable: true,
+                    enumerable: true,
+                    configurable: true
+                });
+            },
+            applyValues: function applyValues() {
+                var _this7 = this,
+                    newtemplate = this.baseTemplate;
+
+                newtemplate = newtemplate.replace(RegExps.template, function(m, template) {
+                    return compileTemplate(template, _this7);
+                });
+                this.hostelement.textContent = docfragFromString(newtemplate);
+            }
+        },
+        Bind = {
+            val: '',
+            views: [],
+            funcs: [],
+            set value(val) {
+                this.oldVal = this.val;
+                this.val = val;
+                this.applyViews();
+            },
+            get value() {
+                return this.val;
+            },
+            set func(fn) {
+                if (is.Func(fn)) this.funcs.push(fn);
+            },
+            removeFunc: function removeFunc(fn) {
+                if (this.funcs.includes(fn)) this.funcs = Craft.omitFrom(this.funcs, fn);
+            },
+            popFunc: function popFunc() {
+                return this.funcs.pop();
+            },
+            applyViews: function applyViews() {
+                var _this8 = this;
+
+                if (!is.empty(this.views)) {
+                    this.funcs.forEach(function(fn) {
+                        return fn(_this8.oldVal, _this8.val);
+                    });
+                    this.views.forEach(function(view) {
+                        if (is.Object(view) && is.Node(view.node)) {
+                            if (view.twoway === true && !def(view.node['InputSync'])) view.node.SyncInput(_this8, "value");
+                            if (is.empty(_this8.val) || _this8.val === '') _this8.val = view.node.textContent;
+                            else if (view.node.textContent !== _this8.val) view.node.textContent = _this8.val;
+                        } else _this8.views = Craft.omitFrom(_this8.views, view);
+                    });
+                }
+            },
+            newView: function newView(selector, twoway) {
+                selector = dom(selector);
+                if (is.Node(selector)) this.views.push({
+                    node: selector,
+                    twoway: twoway === true && is.Input(selector)
+                });
+                this.applyViews();
+            },
+            removeView: function removeView(selector) {
+                var _this9 = this;
+
+                selector = dom(selector);
+                if (is.Node(selector)) {
+                    this.views.forEach(function(view) {
+                        if (view.node.isEqualNode(selector)) {
+                            if (def(view.node['InputSync'])) view.node.disconectInputSync();
+                            _this9.views = Craft.omitFrom(_this9.views, view);
+                        }
+                    });
+                    this.applyViews();
+                }
+            }
+        };
 
     CrafterStyles = query('[crafterstyles]', head);
 
@@ -1625,9 +1638,9 @@ function _typeof(obj) {
                 return localStorage.removeItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key);
             },
             removeAll: function removeAll(expired) {
-                return For(localStorage, function(i) {
-                    if (!expired || Craft.loader.get(i).expire <= +new Date()) Craft.loader.remove(i);
-                });
+                for (var _i5 in localStorage) {
+                    if (!expired || Craft.loader.get(_i5).expire <= +new Date()) Craft.loader.remove(_i5);
+                }
             }
         },
         /**
@@ -1720,11 +1733,10 @@ function _typeof(obj) {
                     return console.error("fetchView: " + err);
                 }) : vh.html(view, position);
             },
-
             clearViews: function clearViews() {
-                return For(localStorage, function(i) {
-                    return localStorage.removeItem(localStorage.key(i).includes("Cr:"));
-                });
+                for (var _i6 in localStorage) {
+                    localStorage.removeItem(localStorage.key(_i6).includes("Cr:"));
+                }
             }
         },
         Cookies: {
@@ -1775,14 +1787,14 @@ function _typeof(obj) {
                         recievers: [],
                         message: '',
                         set send(msg) {
-                            var _this8 = this;
+                            var _this10 = this;
 
                             if (this.socket['readyState'] === 1) this.socket.send(is.Object(msg) ? JSON.stringify(msg) : msg);
                             else {
                                 (function() {
                                     var poll = setInterval(function() {
-                                        if (_this8.socket['readyState'] === 1) {
-                                            _this8.socket.send(is.Object(msg) ? JSON.stringify(msg) : msg);
+                                        if (_this10.socket['readyState'] === 1) {
+                                            _this10.socket.send(is.Object(msg) ? JSON.stringify(msg) : msg);
                                             clearInterval(poll);
                                         }
                                     }, 20);
@@ -1843,11 +1855,11 @@ function _typeof(obj) {
         debounce: function debounce(wait, func, immediate) {
             var timeout = undefined;
             return function() {
-                var _this9 = this,
+                var _this11 = this,
                     args = arguments,
                     later = function later() {
                         timeout = null;
-                        if (!immediate) func.apply(_this9, args);
+                        if (!immediate) func.apply(_this11, args);
                     },
                     callNow = immediate && !timeout;
 
@@ -1911,8 +1923,8 @@ function _typeof(obj) {
         OverrideFunction: function OverrideFunction(funcName, Func, ContextObject) {
             var func = funcName.split(".").pop(),
                 ns = funcName.split(".");
-            for (var _i5 = 0; _i5 < ns.length; _i5++) {
-                ContextObject = ContextObject[ns[_i5]];
+            for (var _i7 = 0; _i7 < ns.length; _i7++) {
+                ContextObject = ContextObject[ns[_i7]];
             }
             ContextObject[func] = Func;
         },
@@ -1923,8 +1935,8 @@ function _typeof(obj) {
             return -1;
         },
         indexOfDate: function indexOfDate(Collection, date) {
-            for (var _i6 = 0; _i6 < Collection.length; _i6++) {
-                if (+Collection[_i6] === +date) return _i6;
+            for (var _i8 = 0; _i8 < Collection.length; _i8++) {
+                if (+Collection[_i8] === +date) return _i8;
             }
             return -1;
         },
@@ -1982,8 +1994,6 @@ function _typeof(obj) {
         make_element: make_element,
         toArr: toArr,
         toInt: toInt,
-        For: For,
-        forIn: forIn,
         RegExps: RegExps,
         mouse: {
             x: 0,
@@ -2075,18 +2085,24 @@ function _typeof(obj) {
                 });
             });
         },
-        set Ready(val) {
-            if (val === true) Craft.ReadyFunctions.forEach(function(fn) {
-                return fn(Craft.Scope);
-            });
-            Craft.ReadyFunctions = null;
-        },
         /**
          * set functions that executes when the DOM and WebComponents are finished loading
          * @param {function} func - function to execute when the DOM and webcomponents are ready
          */
-        set WhenReady(func) {
-            if (is.Func(func)) Craft.ReadyFunctions.push(func);
+        WhenReady: function WhenReady() {
+            return new Promise(function(pass, fail) {
+                if (Ready) return pass(Craft.Scope);
+                var check = setInterval(function() {
+                    if (Ready) {
+                        pass(Craft.Scope);
+                        clearInterval(check);
+                    }
+                }, 30);
+                setTimeout(function() {
+                    clearInterval(check);
+                    if (!Ready) fail('loading took too long loaded with errors :(');
+                }, 5500);
+            });
         },
         poll: function poll(test, interval, timeout) {
             return new Promise(function(pass, fail) {
@@ -2151,7 +2167,7 @@ function _typeof(obj) {
          */
         createWebComponent: function createWebComponent(webcomponent, src) {
             webcomponent = JSON.parse(webcomponent);
-            CrafterStyles.innerHTML += webcomponent.css;
+            CrafterStyles.textComponent += webcomponent.css;
             head.appendChild(dom().script('', {
                 src: Craft.URLfrom(webcomponent.js + ('\nCraft.WebComponents.push(\'' + src + '\')')),
                 webcomponent: webcomponent.name
@@ -2199,10 +2215,10 @@ function _typeof(obj) {
         setBind: function setBind(key, val) {
             if (Craft.Binds.hasOwnProperty(key)) Craft.Binds[key].value = val;
         },
-        InputSync: function InputSync(input, obj, key) {
+        SyncInput: function SyncInput(input, obj, key) {
             if (is.String(input)) input = query(input);
-            if (is.Node(input)) input['InputSync'] = On(input).Input(function(e) {
-                return Craft.setDeep(obj, key, input.innerHTML);
+            if (is.Input(input)) input['InputSync'] = On(input).Input(function(e) {
+                return Craft.setDeep(obj, key, input.value);
             });
         },
         DisconectInputSync: function DisconectInputSync(input) {
@@ -2260,13 +2276,13 @@ function _typeof(obj) {
 
     Craft.newComponent(fw, {
         inserted: function inserted() {
-            var _this10 = this,
+            var _this12 = this,
                 src = this.getAttribute('src');
 
             if (!nil(src)) {
                 (function() {
                     var wc = null,
-                        el = dom(_this10),
+                        el = dom(_this12),
                         cc = 'cache-component';
                     if (!Craft.WebComponents.includes(src)) {
                         if (el.hasAttr(cc)) {
@@ -2288,13 +2304,13 @@ function _typeof(obj) {
                     }
                 })();
             }
-            Craft.WhenReady = function() {
-                return _this10.remove();
-            };
+            Craft.WhenReady().then(function() {
+                return _this12.remove();
+            });
         }
     });
 
-    Once('DOMContentLoaded', function(e) {
+    Once('DOMContentLoaded', function() {
         Craft.router.links.forEach(function(link) {
             return link();
         });
@@ -2303,13 +2319,11 @@ function _typeof(obj) {
             Craft.Ready = Ready;
         } else Craft.poll(function() {
             return Craft.WebComponents.length === queryAll(fw).length;
-        }, 35, 4000).then(function() {
-            Ready = true;
-            Craft.Ready = Ready;
+        }, 35, 5035).then(function() {
+            return Ready = true;
         }).catch(function() {
-            console.warn('loaded with errors :( \t');
             Ready = true;
-            Craft.Ready = Ready;
+            console.warn('loading webcomponents took too long loaded with errors :( \t');
         });
     });
 
@@ -2319,43 +2333,69 @@ function _typeof(obj) {
         });
     });
 
+    /*let templateBind = {
+      hostelement: null,
+      baseTemplate: '',
+      newValue(key, val) {
+        this['$' + key] = val;
+        Object.defineProperty(this, key, {
+          get: function () {
+            return this['$' + key];
+          },
+          set: function (value) {
+            this['$' + key] = value;
+            this.applyValues();
+          },
+          writable: true,
+          enumerable: true,
+          configurable: true
+        });
+      },
+      applyValues() {
+        let newtemplate = this.baseTemplate;
+        newtemplate = newtemplate.replace(RegExps.template, (m, template) => compileTemplate(template, this));
+        this.hostelement.textContent = docfragFromString(newtemplate);
+      }
+    }*/
+
     Craft.newComponent('craft-template', {
         inserted: function inserted() {
-            var _this11 = this,
+            var _this13 = this,
                 manage = function manage() {
-                    var element = dom(_this11),
-                        oldValue = _this11.parentNode.innerHTML,
+                    var element = dom(_this13),
+                        oldValue = _this13.parentNode.textContent,
                         scope = getDeep(root, element.getAttr('scope') || 'Craft.Scope'),
                         output = '';
-                    if (is.Object(scope) || is.Arr(scope)) output = _this11.innerHTML.replace(RegExps.template, function(m, template) {
+                    //Craft.Scope.Binds[''] = this.innerHTML;
+                    if (is.Object(scope) || is.Arr(scope)) output = _this13.innerHTML.replace(RegExps.template, function(m, template) {
                         return compileTemplate(template, scope);
                     });
                     if (output !== '' || output !== ' ') {
-                        _this11.insertAdjacentHTML('beforebegin', output);
-                        if (_this11.parentNode.innerHTML !== oldValue) setTimeout(function() {
-                            return _this11.remove();
+                        _this13.parentNode.appendChild(docfragFromString(output));
+                        if (_this13.parentNode.textContent !== oldValue) setTimeout(function() {
+                            return _this13.remove();
                         }, 4500);
                         else setTimeout(function() {
                             return manage();
                         }, 250);
-                    } else _this11.remove();
+                    } else _this13.remove();
                 };
 
-            Ready ? manage() : Craft.WhenReady = function() {
+            Ready ? manage() : Craft.WhenReady().then(function() {
                 return manage();
-            };
+            });
         }
     });
 
     Craft.newComponent('for-each', {
         inserted: function inserted() {
-            var _this12 = this;
+            var _this14 = this;
 
             if (this.parentNode.tagName !== 'FOR-EACH' && this.parentNode.parentNode.tagName !== 'FOR-EACH' && this.parentNode.parentNode.parentNode.tagName !== 'FOR-EACH') {
                 (function() {
-                    var oldValue = _this12.parentNode.innerHTML,
+                    var oldValue = _this14.parentNode.textContent,
                         manage = function manage() {
-                            var element = _this12;
+                            var element = _this14;
                             if (element.hasAttribute('in')) {
                                 (function() {
                                     var el = dom(element),
@@ -2368,7 +2408,7 @@ function _typeof(obj) {
                                         scope = Craft.getDeep(root, el.getAttr('in')) || Craft.getBind(el.getAttr('in'));
 
                                     if (is.Object(scope) || is.Arr(scope)) forEach(scope, function(item, key) {
-                                        tempcopy = _this12.cloneNode(true);
+                                        tempcopy = _this14.cloneNode(true);
                                         queryEach('for-each', tempcopy, function(forEachNode) {
                                             if (forEachNode.hasAttribute('in')) {
                                                 temp = forEachNode.getAttribute('in');
@@ -2379,8 +2419,9 @@ function _typeof(obj) {
                                                         return compileTemplate(template, Titem);
                                                     });
                                                 });
-                                                forEachNode.insertAdjacentHTML('beforebegin', tempoutput);
-                                                forEachNode.outerHTML = '';
+                                                //forEachNode.insertAdjacentHTML('beforebegin', tempoutput);
+                                                forEachNode.parentNode.appendChild(docfragFromString(tempoutput));
+                                                forEachNode.remove();
                                             }
                                         });
                                         output += tempcopy.innerHTML.replace(RegExps.template, function(m, template) {
@@ -2388,9 +2429,9 @@ function _typeof(obj) {
                                         });
                                         tempcopy = null;
                                     });
-                                    if (output !== '' || output !== ' ') _this12.insertAdjacentHTML('beforebegin', output);
-                                    if (_this12.parentNode.innerHTML !== oldValue) setTimeout(function() {
-                                        return _this12.remove();
+                                    if (output !== '' || output !== ' ') _this14.parentNode.appendChild(docfragFromString(output));
+                                    if (_this14.parentNode.textContent !== oldValue) setTimeout(function() {
+                                        return _this14.remove();
                                     }, 4500);
                                     else setTimeout(function() {
                                         return manage();
@@ -2399,13 +2440,13 @@ function _typeof(obj) {
                             }
                         };
 
-                    Ready ? manage() : Craft.WhenReady = function() {
+                    Ready ? manage() : Craft.WhenReady().then(function() {
                         return manage();
-                    };
+                    });
                 })();
             }
         }
     });
-
+    root.forEach = forEach;
     root.EventHandler = EventHandler;
 })(document, self);
