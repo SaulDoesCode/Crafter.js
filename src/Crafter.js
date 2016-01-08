@@ -30,7 +30,7 @@
   _br ? [_br[1], _br[2]] : [navigator.appName, navigator.appVersion, '-?'];
 
   CrafterStyles.setAttribute('crafterstyles', '');
-  CrafterStyles.innerHTML = `\n@keyframes NodeInserted {from {opacity:.99;}to {opacity: 1;}} [bind] {animation-duration: 0.001s;animation-name: NodeInserted;} for-each,craft-template {display:none;}`;
+  CrafterStyles.textContent = `\n@keyframes NodeInserted {from {opacity:.99;}to {opacity: 1;}} [bind] {animation-duration: 0.001s;animation-name: NodeInserted;} for-each,craft-template {display:none;}`;
   head.appendChild(CrafterStyles);
 
   function toInt(val) {
@@ -40,12 +40,17 @@
     return (num > 0 ? 1 : -1) * Math.floor(Math.abs(num));
   }
 
+
+  function docfragFromString(strHTML) {
+    return doc.createRange().createContextualFragment(strHTML);
+  }
+
   function toArr(val) {
     return Array.prototype.slice.call(val);
   }
   // ta = TestArgs : convert arguments to array then tests it
   function ta(args, test) {
-    return args.length === 0 ? false : Array.from(args).every(test);
+    return args.length === 0 ? false : toArr(args).every(test);
   }
 
   function type(obj, str) {
@@ -509,39 +514,26 @@
      * the Handler function will be called only Once
      */
   EventHandler.prototype.Once = function () {
-    let func = this.FuncWrapper,
-      target = this.Target,
-      etype = this.EventType,
-      listenOnce = e => {
-        func(e);
-        is.Arr(target) ? target.forEach(t => t.removeEventListener(etype, listenOnce)) : target.removeEventListener(etype, listenOnce);
-      }
-    is.Arr(target) ? target.forEach(t => t.addEventListener(etype, listenOnce)) : target.addEventListener(etype, listenOnce);
-    return this;
-  }
-
-  function For(num, func) {
-    for (let i = 0; i < num; i++) func(i);
-  }
-
-  function forIn(obj, func) {
-    for (i in obj)
-      if (obj.hasOwnProperty(i)) func(obj[i], i);
-  }
-
-  /**
-   * Easy way to loop through Collections and Objects
-   * @param {Array|Object|NodeList} iterable - any collection that is either an Object or has a .length value
-   * @param {function} func - function called on each iteration -> "function( value , indexOrKey ) {...}"
-   */
-  root.forEach = function (iterable, func) {
-    if (!def(iterable)) throw new Error("forEach -> iterable undefined");
-    if (!is.Func(func)) throw new Error("forEach -> function invalid or undefined");
-    let i = 0
+      let func = this.FuncWrapper,
+        target = this.Target,
+        etype = this.EventType,
+        listenOnce = e => {
+          func(e);
+          is.Arr(target) ? target.forEach(t => t.removeEventListener(etype, listenOnce)) : target.removeEventListener(etype, listenOnce);
+        }
+      is.Arr(target) ? target.forEach(t => t.addEventListener(etype, listenOnce)) : target.addEventListener(etype, listenOnce);
+      return this;
+    }
+    /**
+     * Easy way to loop through Collections and Objects
+     * @param {Array|Object|NodeList} iterable - any collection that is either an Object or has a .length value
+     * @param {function} func - function called on each iteration -> "function( value , indexOrKey ) {...}"
+     */
+  function forEach(iterable, func) {
     if (is.Arraylike(iterable) && !localStorage)
-      for (; i < iterable.length; i++) func(iterable[i], i);
+      for (let i = 0; i < iterable.length; i++) func(iterable[i], i);
     else
-      for (i in iterable)
+      for (let i in iterable)
         if (iterable.hasOwnProperty(i)) func(iterable[i], i);
   }
 
@@ -640,7 +632,7 @@
     if (In || defIAN) inner = '';
     if (NodeForm === true) {
       let newEl = doc.createElement(name);
-      newEl.innerHTML = inner;
+      newEl.appendChild(docfragFromString(inner));
       if (is.Object(attributes)) forEach(attributes, (val, attr) => newEl.setAttribute(attr, val));
       if (is.String(attributes)) attributes.split('&').forEach(attr => def(attr.split('=')[1]) ? newEl.setAttribute(attr.split('=')[0], attr.split('=')[1]) : newEl.setAttribute(attr.split('=')[0], ''));
       if (is.Object(extraAttr)) forEach(extraAttr, (val, attr) => newEl.setAttribute(attr, val));
@@ -730,8 +722,7 @@
        * @param {Node|string} String or Node to append to the this.element
        */
     element.append = function (val) {
-        let el = this;
-        is.Node(val) ? el.appendChild(val) : el.insertAdjacentHTML('beforeend', val);
+        this.appendChild(is.Node(val) ? val : docfragFromString(val));
         return this;
       }
       /**
@@ -740,8 +731,7 @@
        * @param {Node|string} String or Node to prepend to the this.element
        */
     element.prepend = function (val) {
-        let el = this;
-        is.Node(val) ? el.insertBefore(val, el.firstChild) : el.insertAdjacentHTML('afterbegin', val);
+        this.insertBefore(is.Node(val) ? val : docfragFromString(val), el.firstChild);
         return this;
       }
       /**
@@ -790,10 +780,10 @@
       /**
        * removes a specific Attribute from the this.element
        * @memberof dom
-       * @param {string} name of the Attribute to strip
+       * @param {...string} name of the Attribute/s to strip
        */
-    element.stripAttr = function (Attr) {
-        this.removeAttribute(Attr);
+    element.stripAttr = function () {
+        toArr(arguments).forEach(attr => this.removeAttribute(attr));
         return this;
       }
       /**
@@ -825,22 +815,21 @@
      * gets all the elements siblings within it's parentNode
      * @memberof dom
      */
-    element.getSiblings = function () {
-        let siblings = [],
-          AllChildren = this.parentNode.childNodes;
-        for (let i = 0; i < AllChildren.length; i++)
-          if (AllChildren[i] !== this) siblings.push(AllChildren[i]);
-        return siblings;
-      }
-      /**
-       * sets or gets the element's pixel width
-       * @memberof dom
-       * @param {string|number=} pixel value to set
-       */
+    element.getSiblings = () => Craft.omitFrom(toArr(element.parentNode.childNodes), element);
+    /**
+     * gets all the element's dimentions (width,height,left,top,bottom,right)
+     * @memberof dom
+     */
+    element.getRect = () => element.getBoundingClientRect();
+    /**
+     * sets or gets the element's pixel width
+     * @memberof dom
+     * @param {string|number=} pixel value to set
+     */
     element.Width = function (pixels) {
         let haspixels = def(pixels);
         if (haspixels) this.style.width = pixels;
-        return haspixels ? this : this.getBoundingClientRect().width;
+        return haspixels ? this : this.getRect().width;
       }
       /**
        * sets or gets the element's pixel height
@@ -849,28 +838,23 @@
        */
     element.Height = function (pixels) {
         if (def(pixels)) this.style.height = pixels;
-        return def(pixels) ? this : this.getBoundingClientRect().height;
+        return def(pixels) ? this : this.getRect().height;
       }
       /**
-       * gets all the element's dimentions (width,height,left,top,bottom,right)
-       * @memberof dom
+       * move the element using either css transforms or plain css possitioning
+       * @param {string|num} x - x-axis position in pixels
+       * @param {string|num} y - y-axis position in pixels
+       * @param {boolean=} transform - should move set the position using css transforms or not
+       * @param {string=} position - set the position style of the element absolute/fixed...
+       * @param {boolean=} chainable - should this method be chainable defaults to false for performance reasons
        */
-    element.getRect = () => element.getBoundingClientRect();
-    /**
-     * move the element using either css transforms or plain css possitioning
-     * @param {string|num} x - x-axis position in pixels
-     * @param {string|num} y - y-axis position in pixels
-     * @param {boolean=} transform - should move set the position using css transforms or not
-     * @param {string=} position - set the position style of the element absolute/fixed...
-     * @param {boolean=} chainable - should this method be chainable defaults to false for performance reasons
-     */
     element.move = function (x, y, transform, position, chainable) {
         if (is.Bool(position)) chainable = position;
         if (is.String(transform)) position = transfrom;
         transform === true ? this.style.transform = `translateX(${x}px) translateY(${y}px)` : this.css({
           position: is.String(position) ? position : '',
-          left: `${x}px`,
-          top: `${y}px`
+          left: x + 'px',
+          top: y + 'px'
         });
         if (chainable) return this;
       }
@@ -920,63 +904,6 @@
     if (is.Node(element)) return element['hasDOMmethods'] !== true ? domManip(element) : element;
     return Craft.dom;
   }
-
-  let Bind = {
-    val: '',
-    views: [],
-    funcs: [],
-    set value(val) {
-      this.oldVal = this.val;
-      this.val = val;
-      this.applyViews();
-    },
-    get value() {
-      return this.val;
-    },
-    set func(fn) {
-      if (is.Func(fn)) this.funcs.push(fn);
-    },
-    removeFunc(fn) {
-      if (this.funcs.includes(fn)) this.funcs = Craft.omitFrom(this.funcs, fn);
-    },
-    popFunc() {
-      return this.funcs.pop();
-    },
-    applyViews() {
-      if (!is.empty(this.views)) {
-        this.funcs.forEach(fn => fn(this.oldVal, this.val));
-        this.views.forEach(view => {
-          if (is.Object(view) && is.Node(view.node)) {
-            if (view.twoway === true && !def(view.node['InputSync'])) view.node.SyncInput(this, "value");
-            if (is.empty(this.val) || this.val === '') this.val = view.node.html();
-            else if (view.node.html() !== this.val) view.node.html(this.val);
-          } else this.views = Craft.omitFrom(this.views, view);
-        });
-      }
-    },
-    newView(selector, twoway) {
-      selector = dom(selector);
-      if (is.Node(selector)) this.views.push({
-        node: selector,
-        twoway: twoway === true && is.Input(selector)
-      });
-      this.applyViews();
-    },
-    removeView(selector) {
-      selector = dom(selector);
-      if (is.Node(selector)) {
-        this.views.forEach(view => {
-          if (view.node.isEqualNode(selector)) {
-            if (def(view.node['InputSync'])) view.node.disconectInputSync();
-            this.views = Craft.omitFrom(this.views, view);
-          }
-        });
-        this.applyViews();
-      }
-    }
-  }
-
-
 
 
   function getStringQuotes(str) {
@@ -1034,6 +961,87 @@
     return hasComparator(template) ? compileComparision(template, context) : getDeep(context, template);
   }
 
+  let templateBind = {
+    hostelement: null,
+    baseTemplate: '',
+    newValue(key, val) {
+      this['$' + key] = val;
+      Object.defineProperty(this, key, {
+        get: function () {
+          return this['$' + key];
+        },
+        set: function (value) {
+          this['$' + key] = value;
+          this.applyValues();
+        },
+        writable: true,
+        enumerable: true,
+        configurable: true
+      });
+    },
+    applyValues() {
+      let newtemplate = this.baseTemplate;
+      newtemplate = newtemplate.replace(RegExps.template, (m, template) => compileTemplate(template, this));
+      this.hostelement.textContent = docfragFromString(newtemplate);
+    }
+  }
+
+
+  let Bind = {
+    val: '',
+    views: [],
+    funcs: [],
+    set value(val) {
+      this.oldVal = this.val;
+      this.val = val;
+      this.applyViews();
+    },
+    get value() {
+      return this.val;
+    },
+    set func(fn) {
+      if (is.Func(fn)) this.funcs.push(fn);
+    },
+    removeFunc(fn) {
+      if (this.funcs.includes(fn)) this.funcs = Craft.omitFrom(this.funcs, fn);
+    },
+    popFunc() {
+      return this.funcs.pop();
+    },
+    applyViews() {
+      if (!is.empty(this.views)) {
+        this.funcs.forEach(fn => fn(this.oldVal, this.val));
+        this.views.forEach(view => {
+          if (is.Object(view) && is.Node(view.node)) {
+            if (view.twoway === true && !def(view.node['InputSync'])) view.node.SyncInput(this, "value");
+            if (is.empty(this.val) || this.val === '') this.val = view.node.textContent;
+            else if (view.node.textContent !== this.val) view.node.textContent = this.val;
+          } else this.views = Craft.omitFrom(this.views, view);
+        });
+      }
+    },
+    newView(selector, twoway) {
+      selector = dom(selector);
+      if (is.Node(selector)) this.views.push({
+        node: selector,
+        twoway: twoway === true && is.Input(selector)
+      });
+      this.applyViews();
+    },
+    removeView(selector) {
+      selector = dom(selector);
+      if (is.Node(selector)) {
+        this.views.forEach(view => {
+          if (view.node.isEqualNode(selector)) {
+            if (def(view.node['InputSync'])) view.node.disconectInputSync();
+            this.views = Craft.omitFrom(this.views, view);
+          }
+        });
+        this.applyViews();
+      }
+    }
+  }
+
   CrafterStyles = query('[crafterstyles]', head);
 
   /**
@@ -1062,23 +1070,23 @@
         return true;
       },
       getDeep(obj, keychain) {
-            keychain = keychain.replace(/\[(\w+)\]/g, '.$1');
-            keychain = keychain.replace(/^\./, '');
-            let a = keychain.split('.');
-            try {
-              for (let i = 0; i < a.length; ++i) a[i] in obj ? obj = obj[a[i]] : obj = undefined;
-            } catch(e) {
-              return undefined;
-            }
-            return obj;
+        keychain = keychain.replace(/\[(\w+)\]/g, '.$1');
+        keychain = keychain.replace(/^\./, '');
+        let a = keychain.split('.');
+        try {
+          for (let i = 0; i < a.length; ++i) a[i] in obj ? obj = obj[a[i]] : obj = undefined;
+        } catch (e) {
+          return undefined;
+        }
+        return obj;
       },
       setDeep(obj, prop, value, returnObj) {
-         if (is.Arr(prop) && prop.length === 1) prop = prop[0];
-         if (is.String(prop) && !hasdot(prop)) value !== "_DELETE_" ? obj[prop] = value : delete obj[prop];
-         else {
+        if (is.Arr(prop) && prop.length === 1) prop = prop[0];
+        if (is.String(prop) && !hasdot(prop)) value !== "_DELETE_" ? obj[prop] = value : delete obj[prop];
+        else {
           if (is.String(prop)) prop = prop.split(".");
           let e = prop.shift();
-          if(!is.Object(obj[e])) obj[e] = {};
+          if (!is.Object(obj[e])) obj[e] = {};
           Craft.setDeep(obj[e], prop, value);
         }
         if (returnObj === true) return obj;
@@ -1262,9 +1270,10 @@
         setPrekey: str => Craft.loader.pre = str + ':',
         get: key => JSON.parse(localStorage.getItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key) || false),
         remove: key => localStorage.removeItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key),
-        removeAll: expired => For(localStorage, i => {
-          if (!expired || Craft.loader.get(i).expire <= +new Date()) Craft.loader.remove(i);
-        }),
+        removeAll(expired) {
+          for (let i in localStorage)
+            if (!expired || Craft.loader.get(i).expire <= +new Date()) Craft.loader.remove(i)
+        },
       },
       /**
        * Crafter.js resource loader for Scripts and Style sheets,
@@ -1327,7 +1336,9 @@
               vh.html(txt, position);
             })).catch(err => console.error("fetchView: " + err)) : vh.html(view, position);
           },
-          clearViews: () => For(localStorage, i => localStorage.removeItem(localStorage.key(i).includes("Cr:"))),
+          clearViews() {
+            for (let i in localStorage) localStorage.removeItem(localStorage.key(i).includes("Cr:"))
+          },
       },
       Cookies: {
         get: key => key ? decodeURIComponent(doc.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1")) || null : null,
@@ -1521,8 +1532,6 @@
       make_element: make_element,
       toArr: toArr,
       toInt: toInt,
-      For: For,
-      forIn: forIn,
       RegExps: RegExps,
       mouse: {
         x: 0,
@@ -1588,17 +1597,23 @@
         let ev = On('scroll', e => pageYOffset >= Scroll ? pass(e, ev) : fail(e, ev));
       }),
       WhenScrolledTo: Scroll => new Promise((pass, fail) => Once('scroll', e => pageYOffset >= Scroll || pageYOffset <= Scroll ? pass(e) : fail(e))),
-      set Ready(val) {
-        if (val === true) Craft.ReadyFunctions.forEach(fn => fn(Craft.Scope));
-        Craft.ReadyFunctions = null;
-      },
       /**
        * set functions that executes when the DOM and WebComponents are finished loading
        * @param {function} func - function to execute when the DOM and webcomponents are ready
        */
-      set WhenReady(func) {
-        if (is.Func(func)) Craft.ReadyFunctions.push(func);
-      },
+      WhenReady: () => new Promise((pass, fail) => {
+        if (Ready) return pass(Craft.Scope);
+          let check = setInterval(() => {
+            if (Ready) {
+              pass(Craft.Scope);
+              clearInterval(check);
+            }
+          }, 30);
+          setTimeout(() => {
+            clearInterval(check);
+            if (!Ready) fail('loading took too long loaded with errors :(');
+          }, 5500);
+      }),
       poll: (test, interval, timeout) => new Promise((pass, fail) => {
         if (!def(timeout)) interval = timeout;
         let bool = is.Bool(test) && test === true;
@@ -1649,7 +1664,7 @@
        */
       createWebComponent(webcomponent, src) {
         webcomponent = JSON.parse(webcomponent);
-        CrafterStyles.innerHTML += webcomponent.css;
+        CrafterStyles.textComponent += webcomponent.css;
         head.appendChild(dom().script('', {
           src: Craft.URLfrom(webcomponent.js + `\nCraft.WebComponents.push('${src}')`),
           webcomponent: webcomponent.name
@@ -1686,9 +1701,9 @@
         settings['prototype'] = element;
         doc.registerElement(tag, settings)
       },
-      newBind(key, value, element,twoway) {
+      newBind(key, value, element, twoway) {
         if (!def(Craft.Binds[key])) Craft.Binds[key] = Object.create(Bind);
-        if (def(element)) Craft.Binds[key].newView(element,twoway);
+        if (def(element)) Craft.Binds[key].newView(element, twoway);
       },
       getBind(key, obj) {
         if (Craft.Binds.hasOwnProperty(key)) return obj ? Craft.Binds[key] : Craft.Binds[key].value;
@@ -1696,9 +1711,9 @@
       setBind(key, val) {
         if (Craft.Binds.hasOwnProperty(key)) Craft.Binds[key].value = val;
       },
-      InputSync(input, obj, key) {
+      SyncInput(input, obj, key) {
         if (is.String(input)) input = query(input);
-        if (is.Node(input)) input['InputSync'] = On(input).Input(e => Craft.setDeep(obj, key, input.innerHTML));
+        if (is.Input(input)) input['InputSync'] = On(input).Input(e => Craft.setDeep(obj, key, input.value));
       },
       DisconectInputSync(input) {
         if (is.String(input)) input = query(input);
@@ -1715,7 +1730,7 @@
     if (e.animationName === 'NodeInserted' && is.Node(e.target)) {
       let element = e.target,
         mnp = dom(element);
-      if (mnp.hasAttr('bind')) Craft.newBind(mnp.getAttr('bind'),element.html(), element,is.Input(element));
+      if (mnp.hasAttr('bind')) Craft.newBind(mnp.getAttr('bind'), element.html(), element, is.Input(element));
       if (mnp.hasAttr('link')) On(element).Click(e => {
         let nt = mnp.getAttr('link');
         nil(nt) ? open(nt) : Craft.router.open(nt);
@@ -1758,45 +1773,65 @@
           })).catch(err => console.error(err + ': could not load ' + w))
         }
       }
-      Craft.WhenReady = () => this.remove();
+      Craft.WhenReady().then(() => this.remove());
     }
   });
 
-  Once('DOMContentLoaded', e => {
+  Once('DOMContentLoaded', () => {
     Craft.router.links.forEach(link => link());
     if (Craft.WebComponents.length === queryAll(fw).length) {
       Ready = true;
       Craft.Ready = Ready;
-    } else Craft.poll(() => Craft.WebComponents.length === queryAll(fw).length, 35, 4000)
-      .then(() => {
+    } else Craft.poll(() => Craft.WebComponents.length === queryAll(fw).length, 35, 5035)
+      .then(() => Ready = true).catch(() => {
         Ready = true;
-        Craft.Ready = Ready;
-      })
-      .catch(() => {
-        console.warn('loaded with errors :( \t');
-        Ready = true;
-        Craft.Ready = Ready;
+        console.warn('loading webcomponents took too long loaded with errors :( \t');
       });
   });
 
   On('hashchange', e => Craft.router.handlers.forEach(handler => (location.hash === handler.link || location === handler.link) ? handler.func(location.hash) : null));
 
+  /*let templateBind = {
+    hostelement: null,
+    baseTemplate: '',
+    newValue(key, val) {
+      this['$' + key] = val;
+      Object.defineProperty(this, key, {
+        get: function () {
+          return this['$' + key];
+        },
+        set: function (value) {
+          this['$' + key] = value;
+          this.applyValues();
+        },
+        writable: true,
+        enumerable: true,
+        configurable: true
+      });
+    },
+    applyValues() {
+      let newtemplate = this.baseTemplate;
+      newtemplate = newtemplate.replace(RegExps.template, (m, template) => compileTemplate(template, this));
+      this.hostelement.textContent = docfragFromString(newtemplate);
+    }
+  }*/
+
   Craft.newComponent('craft-template', {
     inserted() {
       let manage = () => {
         let element = dom(this),
-          oldValue = this.parentNode.innerHTML,
+          oldValue = this.parentNode.textContent,
           scope = getDeep(root, element.getAttr('scope') || 'Craft.Scope'),
           output = '';
+        //Craft.Scope.Binds[''] = this.innerHTML;
         if (is.Object(scope) || is.Arr(scope)) output = this.innerHTML.replace(RegExps.template, (m, template) => compileTemplate(template, scope));
         if (output !== '' || output !== ' ') {
-          this.insertAdjacentHTML('beforebegin', output);
-          if (this.parentNode.innerHTML !== oldValue) setTimeout(() => this.remove(), 4500);
+          this.parentNode.appendChild(docfragFromString(output));
+          if (this.parentNode.textContent !== oldValue) setTimeout(() => this.remove(), 4500);
           else setTimeout(() => manage(), 250);
         } else this.remove();
-
       }
-      Ready ? manage() : Craft.WhenReady = () => manage();
+      Ready ? manage() : Craft.WhenReady().then(() => manage());
     }
   });
 
@@ -1804,7 +1839,7 @@
   Craft.newComponent('for-each', {
     inserted() {
       if (this.parentNode.tagName !== 'FOR-EACH' && this.parentNode.parentNode.tagName !== 'FOR-EACH' && this.parentNode.parentNode.parentNode.tagName !== 'FOR-EACH') {
-        let oldValue = this.parentNode.innerHTML;
+        let oldValue = this.parentNode.textContent;
         let manage = () => {
           let element = this;
           if (element.hasAttribute('in')) {
@@ -1823,22 +1858,23 @@
                   if (is.Object(tempscope) || is.Arr(tempscope)) forEach(tempscope, (Titem, Tkey) => {
                     tempoutput += forEachNode.innerHTML.replace(RegExps.template, (m, template) => compileTemplate(template, Titem));
                   });
-                  forEachNode.insertAdjacentHTML('beforebegin', tempoutput);
-                  forEachNode.outerHTML = '';
+                  //forEachNode.insertAdjacentHTML('beforebegin', tempoutput);
+                  forEachNode.parentNode.appendChild(docfragFromString(tempoutput));
+                  forEachNode.remove();
                 }
               });
               output += tempcopy.innerHTML.replace(RegExps.template, (m, template) => compileTemplate(template, item));
               tempcopy = null;
             });
-            if (output !== '' || output !== ' ') this.insertAdjacentHTML('beforebegin', output);
-            if (this.parentNode.innerHTML !== oldValue) setTimeout(() => this.remove(), 4500);
+            if (output !== '' || output !== ' ') this.parentNode.appendChild(docfragFromString(output));
+            if (this.parentNode.textContent !== oldValue) setTimeout(() => this.remove(), 4500);
             else setTimeout(() => manage(), 250);
           }
         }
-        Ready ? manage() : Craft.WhenReady = () => manage();
+        Ready ? manage() : Craft.WhenReady().then(() => manage());
       }
     },
   });
-
+  root.forEach = forEach;
   root.EventHandler = EventHandler;
 })(document, self);

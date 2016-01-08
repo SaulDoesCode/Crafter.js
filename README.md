@@ -17,7 +17,7 @@ Crafter.js is still very W.I.P , so tread carefully
 - JSON based WebComponent format (.wc)
 - Streamlined Custom Element Creation
 - Useful custom attributes
-- Templating
+- Templating within craft-template and for-each elements
 - Web Components
 - WebSocket wrapper for ease of use
 - Form Validation
@@ -34,11 +34,11 @@ Crafter.js is still very W.I.P , so tread carefully
 ### Crafter Code Example
 
 ```javascript
-  Craft.WhenReady = () => {
+  Craft.WhenReady().then(() => {
 
-    queryEach('.menu-items',element => On(element).Click(ev => dom('.page-view').append(dom().span('Hello!')));
+    queryEach('.menu-items',element => On('click',element,ev => dom('.page-view').append(dom().span('Hello!')));
     // or same thing differently
-    On('click','.menu-items',ev => dom('.page-view').append(dom().span('Hello!'));
+    On('.menu-items').Click(ev => dom('.page-view').append(dom().span('Hello!'));
 
     // Element Methods
     dom('.text').prepend('Prepend Some Text to an element').append('Append Text to Same Element');
