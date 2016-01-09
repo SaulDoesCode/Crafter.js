@@ -2,7 +2,7 @@
 
   Craft.newComponent('crafter-tabs', {
     created() {
-        let element = this,
+        let element = dom(this),
           activeTab = 0,
           tabViews = queryAll('tab-view', this);
         this.tabs = [];
@@ -26,7 +26,7 @@
         });
 
         if (this.hasAttribute('selected')) {
-          activeTab = parseInt(element.getAttribute('selected'), 10);
+          activeTab = parseInt(element.getAttr('selected'), 10);
           this.tabs[activeTab].handle.setAttribute('active', '');
           this.tabs[activeTab].view.setAttribute('active', '');
         } else {
@@ -34,8 +34,8 @@
           this.tabs[0].view.setAttribute('active', '');
         }
 
-        this.scrollHandle = On('wheel','tab-handles', this, e => {
-          forEach(queryAll('[active]', element), el => el.removeAttribute('active'));
+        this.scrollHandle = On('wheel', 'tab-handles', this, e => {
+          queryEach('[active]', element, el => el.removeAttribute('active'));
           (e.deltaY < 1) ? activeTab-- : activeTab++;
           e.preventDefault();
           if (activeTab >= this.tabs.length) activeTab = 0;
@@ -52,7 +52,7 @@
       attr(attrName, oldVal, newVal) {
         if (attrName === 'selected') {
           if (this.hasAttribute('selected')) {
-            let activeTab = parseInt(element.getAttribute('selected'), 10);
+            let activeTab = parseInt(this.getAttribute('selected'), 10);
             this.tabs[activeTab].handle.setAttribute('active', '');
             this.tabs[activeTab].view.setAttribute('active', '');
           } else {
@@ -87,42 +87,37 @@
       attr(attrName, oldVal, newVal) {
         this.manageAttributes(attrName);
       },
-      manageAttributes(...args) {
-        if (args.includes('src') && this.hasAttribute('src')) {
-          let element = this;
-
-          if (this.hasAttribute('cache-view')) {
-            if (localStorage.getItem('craft-tabs:' + this.getAttribute('cache-view')) !== null) {
-              let cachedView = JSON.parse(localStorage.getItem('craft-tabs:' + this.getAttribute('cache-view')));
-              if (element.hasAttribute('pre')) {
-                let fixhtml = cachedView.source.replace(/&/g, '&amp;').replace(/</g, '&lt;');
-                (element.hasAttribute('code')) ? element.innerHTML = "<pre><code>" + fixhtml + "</code></pre>": element.innerHTML = "<pre>" + fixhtml + "</pre>";
-              } else element.innerHTML = cachedView.source;
-            } else this.getAttribute('cache-view').length >= 2 ? fetch(this.getAttribute('src')).then(res => {
-              res.text().then(txt => {
-                if (element.hasAttribute('pre')) {
-                  let fixhtml = txt.replace(/&/g, '&amp;').replace(/</g, '&lt;');
-                  (element.hasAttribute('code')) ? element.innerHTML = "<pre><code>" + fixhtml + "</code></pre>": element.innerHTML = "<pre>" + fixhtml + "</pre>";
-                } else element.innerHTML = txt;
-                let saveView = JSON.stringify({
-                  url: this.getAttribute('src'),
-                  source: txt
-                });
-                localStorage.setItem('craft-tabs:' + this.getAttribute('cache-view'), saveView);
-              });
-            }).catch(res => log('warn', 'Could not fetch view for tab-view element -> ' + res)) : console.error('cache-view must have value longer than 2 characters');
-          } else {
-            fetch(this.getAttribute('src')).then(res => res.text().then(txt => {
-              if (element.hasAttribute('pre')) {
+      manageAttributes(name) {
+        if (name === 'src' && this.hasAttribute('src')) {
+          let element = dom(this);
+          if (element.hasAttr('cache-view')) {
+            if (localStorage.getItem('craft-tabs:' + element.getAttr('cache-view')) !== null) {
+              let cachedView = JSON.parse(localStorage.getItem('craft-tabs:' + element.getAttr('cache-view')));
+              if (element.hasAttr('pre')) {
+                let html = txt.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+                element.html(element.hasAttr('code') ? `<pre><code>${html}</code></pre>` : `<pre>${html}</pre>`);
+              } else element.html(cachedView.source);
+            } else element.getAttr('cache-view').length > 2 ? fetch(element.getAttr('src')).then(res => res.text().then(txt => {
+              if (element.hasAttr('pre')) {
                 let fixhtml = txt.replace(/&/g, '&amp;').replace(/</g, '&lt;');
-                (element.hasAttribute('code')) ? element.innerHTML = "<pre><code>" + fixhtml + "</code></pre>": element.innerHTML = "<pre>" + fixhtml + "</pre>";
-              } else element.innerHTML = txt;
-            })).catch(res => console.warn(`Could not fetch view for tab-view element -> ${res}`));
-            for (let i = 0; i < localStorage.length; i++) {
+                element.html(element.hasAttr('code') ? `<pre><code>${fixhtml}</code></pre>` : `<pre>${fixhtml}</pre>`);
+              } else element.html(txt);
+              localStorage.setItem('craft-tabs:' + element.getAttr('cache-view'), JSON.stringify({
+                url: element.getAttr('src'),
+                source: txt
+              }));
+            })).catch(res => console.warn(`Couldn't fetch tab-view src -> ${res}`)) : console.error('cache-view must have longer value');
+          } else {
+            fetch(element.getAttr('src')).then(res => res.text().then(txt => {
+              if (element.hasAttr('pre')) {
+                let fixhtml = txt.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+                element.html(element.hasAttr('code') ? `<pre><code>${fixhtml}</code></pre>` : `<pre>${fixhtml}</pre>`);
+              } else element.html(txt);
+            })).catch(res => console.warn(`Couldn't fetch tab-view src -> ${res}`));
+            for (let i = 0; i < localStorage.length; i++)
               if (localStorage.key(i).includes('craft-tabs:')) {
-                if (this.getAttribute('src') === JSON.parse(localStorage.getItem(localStorage.key(i))).url) localStorage.removeItem(localStorage.key(i));
+                if (element.getAttr('src') === JSON.parse(localStorage.getItem(localStorage.key(i))).url) localStorage.removeItem(localStorage.key(i));
               }
-            }
           }
         }
       }
@@ -134,6 +129,5 @@
   Craft.newComponent('tab-views', {
     extends: 'div'
   });
-
 
 })(document, self);

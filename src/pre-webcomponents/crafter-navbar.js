@@ -36,8 +36,8 @@ Craft.newComponent('crafter-navbar', {
       forEach(this.navItems, el => el.navIndex = Array.from(this.navItems).indexOf(el));
     },
     setActive(select) {
-      let el = dom(this);
-      if (el.query('[selected]') !== null) el.query('[selected]').removeAttribute('selected');
+      let el = this , selected = query('[selected]',el);
+      if (selected !== null) selected.removeAttribute('selected');
       this.navItems[select].setAttribute('selected', '');
     },
     attr(attrName, oldVal, newVal) {
@@ -55,7 +55,7 @@ Craft.newComponent('crafter-navbar', {
 });
 
 Craft.newComponent('navbar-item', {
-  created() {
+  inserted() {
       let el = dom(this),
         r = 'ripple';
       if (el.hasAttr(r)) el.css({

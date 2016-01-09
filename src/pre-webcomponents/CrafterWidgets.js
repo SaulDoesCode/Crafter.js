@@ -215,13 +215,13 @@
   Craft.newComponent('material-input', {
     inserted() {
         let el = dom(this),
-          input = dom(Craft.make_element("input", '', 'type=text', true));
+          input = dom(dom().input('text'));
         el.html("");
 
         if (el.hasAttr("type")) {
           if (el.getAttr("type") !== "submit" && el.getAttr("type") !== "button" && el.getAttr("type") !== "range") {
             input.setAttr("type", el.getAttr("type"));
-          } else console.warn("<material-input> is only for text type inputs not buttons,ranges,submits it will default to text if wrong type is chosen");
+          } else console.warn("<material-input> is only for text type inputs it will default to text if wrong type is chosen");
         } else input.setAttr("type", "text");
 
         forEach(InputAttributes, attr => {
@@ -265,11 +265,11 @@
       },
       attr(attrName, oldVal, newVal) {
         let el = dom(this),
-          input = dom('input', this);
+          input = dom('input', el);
         InputAttributes.forEach(i => {
           if (i === attrName) {
             if (el.hasAttr(i)) input.setAttr(i, newVal);
-            else if (input.hasAttribute(i) && !el.hasAttr(i)) input.stripAttr(i, newVal);
+            else if (input.hasAttr(i) && !el.hasAttr(i)) input.stripAttr(i, newVal);
           }
         });
       },
@@ -283,6 +283,41 @@
       }
   });
 
+  Craft.newComponent('radio-button', {
+    created() {
+      let element = dom(this);
+
+      if (element.hasAttr('name') || element.hasAttr('label')) element.html(dom().label(element.getAttr('name') || element.getAttr('label'),false));
+
+      element.prepend(dom().span('','radio'));
+
+      this.CheckGroup = active => {
+        let Group = [];
+        queryEach('radio-button',active.parentNode,rb => {
+          if(rb.hasAttribute('checked')) Group.push(rb);
+        });
+        if (Group.length > 1) Group.forEach(rb => {
+            if (rb !== active) rb.checked = false;
+        });
+      }
+
+      On(this).Click(e => element.checked = !element.checked);
+
+      Object.defineProperty(this,'checked',{
+        set : function(val) {
+          element.toggleAttr('checked',val);
+          if(element.hasAttr('checked')) this.CheckGroup(element);
+        },
+        get : () => element.hasAttr('checked')
+      });
+
+    },
+    attr(name) {
+      if(name === "checked" && this.hasAttribute("checked")) this.CheckGroup(this);
+      else if ((name === "name" || name === "label") && (this.hasAttribute("name") || this.hasAttribute("label"))) this.name = this.getAttribute("name") || this.getAttribute("label");
+    }
+  });
+
   On('blur', e => queryEach('context-menu', el => el.Show()));
   On(doc).Click(e => {
     if (e.target.parentNode.tagName !== 'CONTEXT-MENU' && e.target.tagName !== 'SECTION') ContextMenus.forEach(el => el.Show());
@@ -290,22 +325,22 @@
 
   On('animationstart', doc, e => {
     if (e.animationName === 'NodeInserted' && is.Node(e.target)) {
-      let element = e.target;
-      if (element.hasAttribute('ripple')) Craft.ripple(element);
-      if (element.hasAttribute('tooltip')) {
+      let element = dom(e.target);
+      if (element.hasAttr('ripple')) Craft.ripple(element);
+      if (element.hasAttr('tooltip')) {
         queryEach(`[owner="${e.target.parentNode.tagName}${e.target.tagName}${e.target.className}"]`, el => {
           if (is.Def(el.TooltipOwnerObserver)) el.TooltipOwnerObserver.disconnect();
           if (is.Def(el.EventListeners)) el.EventListeners.forEach(ev => ev.Off());
           el.remove();
         });
         let show = false,
-          tooltip = dom().span('', element.hasAttribute('tooltip-direction') ? `direction=${element.getAttribute('tooltip-direction')}&class=craft-tooltip` : 'direction=right&class=craft-tooltip', true);
+          tooltip = dom().span('', element.hasAttr('tooltip-direction') ? `direction=${element.getAttr('tooltip-direction')}&class=craft-tooltip` : 'direction=right&class=craft-tooltip', true);
 
         tooltip.EventListeners = [];
-        tooltip.innerHTML = element.getAttribute('tooltip');
+        tooltip.textContent = element.getAttr('tooltip');
         tooltip.setAttribute('owner', `${e.target.parentNode.tagName}${e.target.tagName}${e.target.className}`);
-        if (element.hasAttribute('ripple')) tooltip.style.borderColor = element.getAttribute('ripple');
-        if (element.hasAttribute('color-accent')) tooltip.style.borderColor = element.getAttribute('color-accent');
+        if (element.hasAttr('ripple')) tooltip.style.borderColor = element.getAttr('ripple');
+        if (element.hasAttr('color-accent')) tooltip.style.borderColor = element.getAttr('color-accent');
 
         let moveTooltip = () => {
           let movecheck = setInterval(() => {
@@ -321,10 +356,10 @@
             tooltip.style.display = show ? 'block' : 'none';
             setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
           } else {
-            if (element.hasAttribute('tooltip-delay')) setTimeout(() => {
+            if (element.hasAttr('tooltip-delay')) setTimeout(() => {
               tooltip.style.display = show ? 'block' : 'none';
               setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
-            }, parseInt(element.getAttribute('tooltip-delay')));
+            }, parseInt(element.getAttr('tooltip-delay')));
             else {
               tooltip.style.display = show ? 'block' : 'none';
               setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
@@ -340,16 +375,16 @@
         tooltip.hostObserver = new MutationObserver(mutations => {
           mutations.forEach(mut => {
             if (mut.type === 'attributes') {
-              if (mut.attributeName === 'tooltip' && element.hasAttribute('tooltip')) {
-                tooltip.innerHTML = element.getAttribute('tooltip');
-              } else if (mut.attributeName === 'tooltip-delay' && element.hasAttribute('tooltip-delay')) {
+              if (mut.attributeName === 'tooltip' && element.hasAttr('tooltip')) {
+                tooltip.innerHTML = element.getAttr('tooltip');
+              } else if (mut.attributeName === 'tooltip-delay' && element.hasAttr('tooltip-delay')) {
                 setTimeout(() => {
                   tooltip.style.display = show ? 'block' : 'none';
                   setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
-                }, parseInt(element.getAttribute('tooltip-delay')));
-              } else if (mut.attributeName === 'tooltip-direction' && element.hasAttribute('tooltip-direction')) {
-                tooltip.setAttribute('direction', element.getAttribute('tooltip-direction'));
-              } else if (!element.hasAttribute('tooltip')) {
+                }, parseInt(element.getAttr('tooltip-delay')));
+              } else if (mut.attributeName === 'tooltip-direction' && element.hasAttr('tooltip-direction')) {
+                tooltip.setAttribute('direction', element.getAttr('tooltip-direction'));
+              } else if (!element.hasAttr('tooltip')) {
                 if (is.Def(tooltip.hostObserver)) tooltip.hostObserver.disconnect();
                 if (is.Def(tooltip.EventListeners)) tooltip.EventListeners.forEach(ev => ev.Off());
                 tooltip.remove();

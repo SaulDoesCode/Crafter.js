@@ -2,35 +2,37 @@
 (() => {
   Craft.newComponent('side-bar', {
     inserted() {
-        let el = this;
-        if (!el.hasAttribute('sidebar-direction')) el.setAttribute('sidebar-direction', 'left');
-        if (el.hasAttribute('color-accent')) el.color = el.getAttribute('color-accent');
-        if (el.hasAttribute('toggle-element')) el.setToggleElement(el.getAttribute('toggle-element'));
+        let el = dom(this);
+        if (!el.hasAttr('sidebar-direction')) el.setAttr('sidebar-direction', 'left');
+        if (el.hasAttr('color-accent')) el.color = el.getAttr('color-accent');
+        if (el.hasAttr('toggle-element')) el.setToggleElement(el.getAttr('toggle-element'));
         el.onClick = On('click', el, e => {
-          queryEach('[selected]',el, s => {
-            if (s !== e.target) s.removeAttribute('selected');
+          queryEach('[selected]', el, s => {
+            if (s !== e.target) s.removeAttr('selected');
           });
-          queryEach('[accordion="open"]',el, s => {
-            if (s !== e.target && s !== e.target.parentNode) s.setAttribute('accordion', 'closed');
+          queryEach('[accordion="open"]', el, s => {
+            if (s !== e.target && s !== e.target.parentNode) s.setAttr('accordion', 'closed');
           });
         });
       },
       setToggler(selector, func) {
-        let s = this;
+        let s = dom(this);
         if (is.Def(func)) {
-          this.func = func;
-          this.func(!this.hasAttribute('hidden'));
+          s.func = func;
+          s.func(!s.hasAttr('hidden'));
         }
-        s.onToggleClick = On('click', selector, e => s.toggle());
+        s.onToggleClick = On(selector).Click(e => s.toggle());
       },
       toggle(open) {
-        let el = this,
-          sbt = 'hidden', gotSBT = this.hasAttribute(sbt);
-        if(is.Def(open)) open ? el.removeAttribute(sbt) : el.setAttribute(sbt, '');
-        else gotSBT ? el.removeAttribute(sbt) : el.setAttribute(sbt, '');
+        let el = dom(this),
+          sbt = 'hidden',
+          gotSBT = el.hasAttr(sbt);
+        if (is.Def(open)) open ? el.stripAttr(sbt) : el.setAttr(sbt, '');
+        else gotSBT ? el.stripAttr(sbt) : el.setAttr(sbt, '');
       },
       attr(name) {
-        if (name === 'hidden' && is.Func(this.func)) this.func(!this.hasAttribute('hidden'));
+        let el = dom(this);
+        if (name === 'hidden' && is.Func(el.func)) this.func(!el.hasAttr('hidden'));
       },
       destroyed() {
         this.onClick.Off();
@@ -47,11 +49,12 @@
 
   Craft.newComponent('sidebar-heading', {
     inserted() {
-        if (this.hasAttribute('ripple')) this.color = this.getAttribute('ripple');
-        if (this.hasAttribute('color-accent')) this.color = this.getAttribute('color-accent');
+        let el = dom(this);
+        if (el.hasAttr('ripple')) el.color = el.getAttr('ripple');
+        if (el.hasAttr('color-accent')) el.color = el.getAttr('color-accent');
         setTimeout(() => {
-          if (query('sidebar-icon', this) !== null) query('sidebar-icon', this).style.color = this.color;
-          if (this.textContent.length > 40) this.style.height = 'auto';
+          if (query('sidebar-icon', el) !== null) query('sidebar-icon', el).style.color = el.color;
+          if (el.text().length > 40) el.style.height = 'auto';
         }, 40);
       },
       attr() {
@@ -62,11 +65,12 @@
 
   Craft.newComponent('sidebar-item', {
     inserted() {
-        if (this.hasAttribute('ripple')) this.color = this.getAttribute('ripple');
-        if (this.hasAttribute('color-accent')) this.color = this.getAttribute('color-accent');
-        this.style.borderColor = this.color;
-        if (query('sidebar-icon', this) !== null) query('sidebar-icon', this).style.color = this.color;
-        this.Onclick = On('click', this, e => this.hasAttribute('selected') ? this.removeAttribute('selected') : setTimeout(() => this.setAttribute('selected', ''), 50));
+        let el = dom(this);
+        if (el.hasAttr('ripple')) el.color = el.getAttr('ripple');
+        if (el.hasAttr('color-accent')) el.color = el.getAttr('color-accent');
+        el.style.borderColor = el.color;
+        if (query('sidebar-icon', el) !== null) query('sidebar-icon', el).style.color = el.color;
+        el.Onclick = On('click', el, e => el.hasAttr('selected') ? el.removeAttr('selected') : setTimeout(() => el.setAttr('selected', ''), 50));
       },
       attr(attrName, oldVal, newVal) {
         if (attrName === 'ripple' || attrName === 'color-accent') this.color = newVal;
@@ -80,30 +84,30 @@
 
   Craft.newComponent('sidebar-accordion', {
     created() {
-        let heading, el = this;
-        el.open = el.getAttribute('accordion') === 'open' ? true : false;
-        el.setAttribute('accordion', el.open ? 'open' : 'closed');
+        let heading, el = dom(this);
+        el.open = el.getAttr('accordion') === 'open' ? true : false;
+        el.setAttr('accordion', el.open ? 'open' : 'closed');
         setTimeout(() => {
-          heading = query('sidebar-heading', el);
-          el.headingclick = On('click', heading, e => {
+          heading = dom('sidebar-heading', el);
+          el.headingclick = On(heading).Click(e => {
             el.open = !el.open;
-            setTimeout(() => el.setAttribute('accordion', el.open ? 'open' : 'closed'), 50);
+            setTimeout(() => el.setAttr('accordion', el.open ? 'open' : 'closed'), 50);
             el.style.height = el.open ? ((queryAll('sidebar-item', el).length * 8.5) + 12) + "mm" : '';
           });
           el.Click = On('click', el, e => queryEach('sidebar-item[selected]', el, s => {
             if (s !== e.target && e.target.tagName !== 'SIDEBAR-HEADING') s.removeAttribute('selected');
           }));
-          if (heading.hasAttribute('ripple')) el.color = heading.getAttribute('ripple');
-          if (heading.hasAttribute('color-accent')) el.color = heading.getAttribute('color-accent');
+          if (heading.hasAttr('ripple')) el.color = heading.getAttr('ripple');
+          if (heading.hasAttr('color-accent')) el.color = heading.getAttr('color-accent');
           queryEach('sidebar-item', el, item => {
             if (is.Def(el.color)) item.setAttribute('color-accent', el.color);
           });
         }, 40);
       },
       attr() {
-        let el = this;
-        el.getAttribute('accordion') === 'open' ? el.open = true : el.open = false;
-        setTimeout(() => el.setAttribute('accordion', el.open ? 'open' : 'closed'), 50);
+        let el = dom(this);
+        el.getAttr('accordion') === 'open' ? el.open = true : el.open = false;
+        setTimeout(() => el.setAttr('accordion', el.open ? 'open' : 'closed'), 50);
         el.style.height = el.open ? ((queryAll('sidebar-item', el).length * 8.5) + 12) + "mm" : '';
       },
       destroyed() {

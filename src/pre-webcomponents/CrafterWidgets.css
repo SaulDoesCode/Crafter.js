@@ -274,15 +274,31 @@ craft-notification > .notification-close {
   z-index: 5;
 }
 .craft-grid , grid-host {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
   display: flex;
-  align-items:center;
-  align-content:flex-start;
-  justify-content: center;
-  flex-flow: row wrap;
+  -webkit-box-align:center;
+  -webkit-align-items:center;
+      -ms-flex-align:center;
+          align-items:center;
+  -webkit-align-content:flex-start;
+      -ms-flex-line-pack:start;
+          align-content:flex-start;
+  -webkit-box-pack: center;
+  -webkit-justify-content: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  -webkit-flex-flow: row wrap;
+      -ms-flex-flow: row wrap;
+          flex-flow: row wrap;
   box-sizing: border-box;
 }
 .biscuit-tall, .biscuit-double, .biscuit-big, .biscuit {
-  flex:0 0 auto;
+  -webkit-box-flex:0;
+  -webkit-flex:0 0 auto;
+      -ms-flex:0 0 auto;
+          flex:0 0 auto;
   background: white;
   color: hsl(0, 0%, 25%);
   border-radius: 1px;
@@ -296,10 +312,10 @@ craft-notification > .notification-close {
   -webkit-transition: all 0.3s cubic-bezier(.4, .2, .5, 1.4);
   transition: all 0.3s cubic-bezier(.4, .2, .5, 1.4);
 }
-.biscuit-tall:last-of-type, .biscuit-double:last-of-type, .biscuit-square:last-of-type, .biscuit:last-of-type {
+.biscuit-tall:last-of-type, .biscuit-double:last-of-type, .biscuit-big:last-of-type, .biscuit:last-of-type {
   margin-right:0;
 }
-.biscuit-tall:hover, .biscuit-double:hover, .biscuit-square:hover, .biscuit:hover {
+.biscuit-tall:hover, .biscuit-double:hover, .biscuit-big:hover, .biscuit:hover {
   box-shadow: 0 5px 8px hsla(0, 0%, 20%, 0.2);
 }
 .biscuit-double {
@@ -540,7 +556,7 @@ radio-button {
   position: relative;
   display: inline-block;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible;
   cursor: pointer;
   color: hsl(0, 0%, 20%);
 }
@@ -562,6 +578,10 @@ radio-button > [radio] {
   -webkit-transition: all 150ms ease;
   transition: all 150ms ease;
 }
+radio-button:hover:not([disabled]) > [radio] {
+  filter: drop-shadow(0 1px 3px hsla(0, 0%, 10%, 0.45));
+  -webkit-filter: drop-shadow(0 1px 3px hsla(0, 0%, 10%, 0.45));
+}
 radio-button[disabled] {
   pointer-events: none;
   -webkit-pointer-events: none;
@@ -576,13 +596,9 @@ radio-button > label {
   display: inline-block;
   vertical-align: middle;
 }
-radio-button[checked='true'] > [radio] {
+radio-button[checked] > [radio] {
   border: 3px solid hsl(0, 0%, 65%);
   background: hsl(0, 0%, 30%);
-}
-.flat-input {
-  background: #fff;
-  border-bottom: 2px solid rgb(21, 235, 132);
 }
 input[type=range] {
   -webkit-appearance: none;
@@ -675,6 +691,10 @@ text-collapser > .indicator {
   -webkit-transform: translateZ(10px);
   transform: translateZ(10px);
   z-index: 2;
+}
+.flat-input {
+  background: #fff;
+  border-bottom: 2px solid rgb(21, 235, 132);
 }
 text-collapser[open] > .indicator:before {
   content:'▼ ';
