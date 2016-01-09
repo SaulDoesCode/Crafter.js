@@ -624,12 +624,12 @@
   }
 
   function make_element(name, inner, attributes, NodeForm, extraAttr) {
-    let In = inner === true,
-      defIAN = !def(inner, attributes, NodeForm);
-    if (In) NodeForm = inner;
+    if (!def(NodeForm)) NodeForm = true;
+    if (!is.String(inner) && !is.Node(inner)) {
+      if (is.Object(inner)) attributes = inner;
+      inner = '';
+    }
     if (is.Bool(attributes)) NodeForm = attributes;
-    if (defIAN) NodeForm = true;
-    if (In || defIAN) inner = '';
     if (NodeForm === true) {
       let newEl = doc.createElement(name);
       newEl.appendChild(docfragFromString(inner));
@@ -731,7 +731,7 @@
        * @param {Node|string} String or Node to prepend to the this.element
        */
     element.prepend = function (val) {
-        this.insertBefore(is.Node(val) ? val : docfragFromString(val), el.firstChild);
+        this.insertBefore(is.Node(val) ? val : docfragFromString(val), this.firstChild);
         return this;
       }
       /**
@@ -771,10 +771,10 @@
       /**
        * removes a specific CSS class from the element
        * @memberof dom
-       * @param {string} name of the class to strip
+       * @param {...string} name of the class to strip
        */
-    element.stripClass = function (Class) {
-        this.classList.remove(Class);
+    element.stripClass = function () {
+        toArr(arguments).forEach(Class => this.classList.remove(Class));
         return this;
       }
       /**
@@ -792,10 +792,21 @@
        * @param {string|boolean} name of the Attribute or if true checks that it has some (||) of the attributes or if false checks that it has all of the attributes (&&)
        * @param {...string} names of attributes to check for
        */
-    element.hasAttr = function (Attr, ...attributes) {
-        if (is.String(Attr)) return this.hasAttribute(Attr);
-        if (Attr === false) return attributes.every(attr => this.hasAttribute(attr));
-        if (Attr === true) return attributes.some(attr => this.hasAttribute(attr));
+    element.hasAttr = function (attr, ...attributes) {
+        if (is.String(attr)) return this.hasAttribute(attr);
+        if (attr === false) return attributes.every(a => this.hasAttribute(a));
+        if (attr === true) return attributes.some(a => this.hasAttribute(a));
+      }
+      /**
+       * Toggles an attribute on element , optionally add value when toggle is adding attribute
+       * @param {string} name - name of the attribute to toggle
+       * @param {string} val - value to set attribute to
+       * @param {boolean=} returnState - optionally return a bool witht the toggle state otherwise returns the element
+       */
+    element.toggleAttr = function (name, val, returnState) {
+        is.Bool(val) ? !val ? this.stripAttr(name) : this.setAttr(name, '') :
+          this.hasAttribute(name) ? this.stripAttr(name) : this.setAttr(name, val || '');
+        return returnState ? this.hasAttr(name) : this;
       }
       /**
        * Sets or adds an Attribute on the element
@@ -803,14 +814,44 @@
        * @param {string} Name of the Attribute to add/set
        * @param {string} Value of the Attribute to add/set
        */
-    element.setAttr = function (Attr, val) {
+    element.setAttr = function (attr, val) {
       if (!def(val)) {
-        if (is.Object(Attr)) forEach(Attr, (value, attr) => this.setAttribute(attr, value));
-        else if (is.String(Attr)) Attr.split('&').forEach(attr => def(attr.split('=')[1]) ? this.setAttribute(attr.split('=')[0], attr.split('=')[1]) : this.setAttribute(attr.split('=')[0], ''));
-      } else this.setAttribute(Attr, val);
+        if (is.Object(attr)) forEach(attr, (value, attr) => this.setAttribute(attr, value));
+        else if (is.String(attr)) attr.split('&').forEach(attr => def(attr.split('=')[1]) ? this.setAttribute(attr.split('=')[0], attr.split('=')[1]) : this.setAttribute(attr.split('=')[0], ''));
+      } else this.setAttribute(attr, val || '');
       return this;
     }
-    element.getAttr = Attr => element.getAttribute(Attr);
+    element.getAttr = attr => element.getAttribute(attr);
+
+    /**
+     * Define a Handler for a Custom Attribute on the element
+     * @param {string} name - what you call the attribute
+     * @param {function} handle - called on creation and changes, arguments  = (value, element, mutation)
+     * @param {function=} death - called on removal of the attribute , arguments  = (mutation, observer, element)
+     */
+    element.CustomAttribute = function (name, handle, death) {
+        element[name + "_observer"] = new MutationObserver(mutations => {
+          mutations.forEach(mut => {
+            if (mut.type === 'attributes' && mut['attributeName'] === name) {
+              if (element.hasAttr(name)) handle(element.getAttr(name), element, mut);
+              else if (is.Func(death)) death(mut, element[name + "_observer"], element);
+            }
+          });
+        });
+        element[name + "_observer"].observe(element, {
+          attributes: true
+        });
+        return this;
+      }
+      /**
+       * Remove the element after a time in milliseconds
+       * @param {number=} time - time to wait before self destructing the element
+       */
+    element.removeAfter = time => {
+      setTimeout(() => element.remove(), time || 5000);
+      return element;
+    }
+
     /**
      * gets all the elements siblings within it's parentNode
      * @memberof dom
@@ -933,6 +974,29 @@
     return has(str, "!<>=|&", true) || has(str, ['or', 'is'], true);
   }
 
+  let templateBind = {
+    __HOST__: null,
+    __template__: '',
+    set reflectorObject(obj) {
+      forEach(obj, (val, key) => Object.defineProperty(this, key, {
+        get: function () {
+          return obj[key];
+        },
+        set: function (value) {
+          if (obj[key] != value) {
+            obj[key] = value;
+            this.applyValues();
+          }
+        },
+        enumerable: true,
+        configurable: true
+      }));
+    },
+    applyValues() {
+      this.__HOST__.innerHTML = this.__template__.replace(RegExps.template, (m, template) => compileTemplate(template, this));
+    }
+  }
+
   function compileComparision(comp, context) {
     let comparison = comp.replace(RegExps.comparisons, (m, left, comparator, right) => {
       left = getDeep(context, left);
@@ -960,32 +1024,6 @@
     });
     return hasComparator(template) ? compileComparision(template, context) : getDeep(context, template);
   }
-
-  let templateBind = {
-    hostelement: null,
-    baseTemplate: '',
-    newValue(key, val) {
-      this['$' + key] = val;
-      Object.defineProperty(this, key, {
-        get: function () {
-          return this['$' + key];
-        },
-        set: function (value) {
-          this['$' + key] = value;
-          this.applyValues();
-        },
-        writable: true,
-        enumerable: true,
-        configurable: true
-      });
-    },
-    applyValues() {
-      let newtemplate = this.baseTemplate;
-      newtemplate = newtemplate.replace(RegExps.template, (m, template) => compileTemplate(template, this));
-      this.hostelement.textContent = docfragFromString(newtemplate);
-    }
-  }
-
 
   let Bind = {
     val: '',
@@ -1160,7 +1198,7 @@
          * @param {string|Object=} sets span attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
          * @param {Boolean=} should the span be a plain String or a Node defaults to string
          */
-        span: (inner, attr, node) => make_element('span', inner, attr, node),
+        span: (inner, attr, node) => make_element('span', inner, attr, node || true),
         /**
          * creates a label element with the options provided
          * @memberof dom
@@ -1168,7 +1206,7 @@
          * @param {string|Object=} sets label attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
          * @param {Boolean=} should the label be a plain String or a Node defaults to string
          */
-        label: (inner, attr, node) => make_element('label', inner, attr, node),
+        label: (inner, attr, node) => make_element('label', inner, attr, node || true),
         /**
          * creates a p (paragraph) element with the options provided
          * @memberof dom
@@ -1338,7 +1376,7 @@
           },
           clearViews() {
             for (let i in localStorage) localStorage.removeItem(localStorage.key(i).includes("Cr:"))
-          },
+          }
       },
       Cookies: {
         get: key => key ? decodeURIComponent(doc.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1")) || null : null,
@@ -1526,6 +1564,7 @@
       },
       Scope: {},
       Binds: {},
+      TemplateBinds: {},
       WebComponents: [],
       ReadyFunctions: [],
       tabActive: true,
@@ -1603,16 +1642,16 @@
        */
       WhenReady: () => new Promise((pass, fail) => {
         if (Ready) return pass(Craft.Scope);
-          let check = setInterval(() => {
-            if (Ready) {
-              pass(Craft.Scope);
-              clearInterval(check);
-            }
-          }, 30);
-          setTimeout(() => {
+        let check = setInterval(() => {
+          if (Ready) {
+            pass(Craft.Scope);
             clearInterval(check);
-            if (!Ready) fail('loading took too long loaded with errors :(');
-          }, 5500);
+          }
+        }, 30);
+        setTimeout(() => {
+          clearInterval(check);
+          if (!Ready) fail('loading took too long loaded with errors :(');
+        }, 5500);
       }),
       poll: (test, interval, timeout) => new Promise((pass, fail) => {
         if (!def(timeout)) interval = timeout;
@@ -1715,7 +1754,7 @@
         if (is.String(input)) input = query(input);
         if (is.Input(input)) input['InputSync'] = On(input).Input(e => Craft.setDeep(obj, key, input.value));
       },
-      DisconectInputSync(input) {
+      disconectInputSync(input) {
         if (is.String(input)) input = query(input);
         if (is.Node(input) && def(input['InputSync'])) {
           input['InputSync'].Off();
@@ -1724,13 +1763,19 @@
       },
   };
 
-  On('blur', e => Craft.tabActive = false);
-  On('focus', e => Craft.tabActive = true);
+  On('blur', e => {
+    Craft.tabActive = false;
+  });
+  On('focus', e => {
+    Craft.tabActive = true;
+    forEach(Craft.TemplateBinds, val => val.applyValues());
+  });
+
   On('animationstart', doc, e => {
     if (e.animationName === 'NodeInserted' && is.Node(e.target)) {
       let element = e.target,
         mnp = dom(element);
-      if (mnp.hasAttr('bind')) Craft.newBind(mnp.getAttr('bind'), element.html(), element, is.Input(element));
+      if (mnp.hasAttr('bind')) Craft.newBind(mnp.getAttr('bind'), '', element, is.Input(element));
       if (mnp.hasAttr('link')) On(element).Click(e => {
         let nt = mnp.getAttr('link');
         nil(nt) ? open(nt) : Craft.router.open(nt);
@@ -1789,32 +1834,11 @@
       });
   });
 
-  On('hashchange', e => Craft.router.handlers.forEach(handler => (location.hash === handler.link || location === handler.link) ? handler.func(location.hash) : null));
+  On('hashchange', e => {
+    Craft.router.handlers.forEach(handler => (location.hash === handler.link || location === handler.link) ? handler.func(location.hash) : null);
+    forEach(Craft.TemplateBinds, val => val.applyValues());
+  });
 
-  /*let templateBind = {
-    hostelement: null,
-    baseTemplate: '',
-    newValue(key, val) {
-      this['$' + key] = val;
-      Object.defineProperty(this, key, {
-        get: function () {
-          return this['$' + key];
-        },
-        set: function (value) {
-          this['$' + key] = value;
-          this.applyValues();
-        },
-        writable: true,
-        enumerable: true,
-        configurable: true
-      });
-    },
-    applyValues() {
-      let newtemplate = this.baseTemplate;
-      newtemplate = newtemplate.replace(RegExps.template, (m, template) => compileTemplate(template, this));
-      this.hostelement.textContent = docfragFromString(newtemplate);
-    }
-  }*/
 
   Craft.newComponent('craft-template', {
     inserted() {
@@ -1823,27 +1847,32 @@
           oldValue = this.parentNode.textContent,
           scope = getDeep(root, element.getAttr('scope') || 'Craft.Scope'),
           output = '';
-        //Craft.Scope.Binds[''] = this.innerHTML;
-        if (is.Object(scope) || is.Arr(scope)) output = this.innerHTML.replace(RegExps.template, (m, template) => compileTemplate(template, scope));
+        if (is.Object(scope) && element.hasAttr('reflector')) {
+          let reflector = element.getAttr('reflector');
+          Craft.TemplateBinds[reflector] = Object.create(templateBind);
+          Craft.TemplateBinds[reflector].reflectorObject = scope;
+          Craft.TemplateBinds[reflector].__HOST__ = element.parentNode;
+          Craft.TemplateBinds[reflector].__template__ = element.innerHTML;
+          scope = Craft.TemplateBinds[reflector];
+        }
+        if (is.Object(scope) || is.Arr(scope)) output = element.html().replace(RegExps.template, (m, template) => compileTemplate(template, scope));
         if (output !== '' || output !== ' ') {
           this.parentNode.appendChild(docfragFromString(output));
-          if (this.parentNode.textContent !== oldValue) setTimeout(() => this.remove(), 4500);
-          else setTimeout(() => manage(), 250);
+          this.parentNode.textContent !== oldValue ? element.removeAfter(3500) : setTimeout(manage, 450);
         } else this.remove();
       }
-      Ready ? manage() : Craft.WhenReady().then(() => manage());
+      Ready ? manage() : Craft.WhenReady().then(manage);
     }
   });
 
 
   Craft.newComponent('for-each', {
     inserted() {
-      if (this.parentNode.tagName !== 'FOR-EACH' && this.parentNode.parentNode.tagName !== 'FOR-EACH' && this.parentNode.parentNode.parentNode.tagName !== 'FOR-EACH') {
+      if (this.parentNode.tagName !== 'FOR-EACH' && this.parentNode.parentNode.tagName !== 'FOR-EACH') {
         let oldValue = this.parentNode.textContent;
         let manage = () => {
-          let element = this;
-          if (element.hasAttribute('in')) {
-            let el = dom(element),
+          if (this.hasAttribute('in')) {
+            let el = dom(this),
               scopename, output = '',
               temp, tempcopy, tempscope, tempoutput,
               scope = Craft.getDeep(root, el.getAttr('in')) || Craft.getBind(el.getAttr('in'));
@@ -1858,7 +1887,6 @@
                   if (is.Object(tempscope) || is.Arr(tempscope)) forEach(tempscope, (Titem, Tkey) => {
                     tempoutput += forEachNode.innerHTML.replace(RegExps.template, (m, template) => compileTemplate(template, Titem));
                   });
-                  //forEachNode.insertAdjacentHTML('beforebegin', tempoutput);
                   forEachNode.parentNode.appendChild(docfragFromString(tempoutput));
                   forEachNode.remove();
                 }
@@ -1867,7 +1895,7 @@
               tempcopy = null;
             });
             if (output !== '' || output !== ' ') this.parentNode.appendChild(docfragFromString(output));
-            if (this.parentNode.textContent !== oldValue) setTimeout(() => this.remove(), 4500);
+            if (this.parentNode.textContent !== oldValue) el.removeAfter(4500);
             else setTimeout(() => manage(), 250);
           }
         }
