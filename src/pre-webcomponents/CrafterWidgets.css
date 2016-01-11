@@ -5,7 +5,7 @@
   animation-name: NodeInserted;
 }
 context-menu {
-  position: absolute;
+  position: fixed;
   display: none;
   width: 165px;
   height: auto;
@@ -546,7 +546,7 @@ check-box {
   -webkit-transition: all 100ms ease;
   transition: all 100ms ease;
 }
-check-box[checked="true"]::before {
+check-box[checked]:before {
   content: '\2714';
 }
 check-box:hover {

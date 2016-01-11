@@ -1,7 +1,7 @@
 "use strict";
 ((doc, root) => {
 
-  Craft.ripple = (SelectorOrNode, options) => queryEach(SelectorOrNode, element => element.onmousedown = e => element.appendChild(Craft.make_element('ripple-effect', '', options || {}, true, {
+  Craft.ripple = (SelectorOrNode, options) => queryEach(SelectorOrNode, element => element.onmousedown = e => element.appendChild(dom().element('ripple-effect','',options || {}, true, {
     x: e.clientX,
     y: e.clientY
   })));
@@ -20,10 +20,10 @@
         width: diameter + 'px',
         height: diameter + 'px',
         animation: `ripple ${timing}ms ease`
-      }).move(parseInt(this.getAttribute('x')) - rect.left - (diameter / 2), parseInt(this.getAttribute('y')) - rect.top - (diameter / 2));
+      }).move(parseInt(ripple.getAttr('x')) - rect.left - (diameter / 2), parseInt(ripple.getAttr('y')) - rect.top - (diameter / 2));
 
       if (is.Def(color)) this.style.backgroundColor = color;
-      setTimeout(() => this.remove(), timing);
+      ripple.removeAfter(timing);
     }
   });
 
@@ -41,7 +41,7 @@
       doc.body.insertBefore(dom().div('', `class=notifications-${side}`, true), doc.body.firstChild);
       host = query(`.notifications-${side}`);
     }
-    host.appendChild(Craft.make_element('craft-notification', msg, {
+    host.appendChild(dom().element('craft-notification', msg, {
       duration: duration,
       side: side,
       state: state
@@ -65,65 +65,52 @@
 
   Craft.newComponent('context-menu', {
     inserted() {
-        this.show = false;
-        let ctx = dom(this);
-        ctx.hasAttr('scope') ? this.contextmenuEvent = On('contextmenu', ctx.getAttr('scope'), e => this.Show(true, e)) : console.error('context-menu : No Scope Attribute found');
+        let el = dom(this);
+
+        Object.defineProperty(this,'show',{
+          set : function(val) {
+            Craft.mouse.observe(Show);
+            setTimeout(() => val ? el.addClass('context-menu-active').move((Craft.mouse.x + 5), (Craft.mouse.y + 5)) : el.stripClass('context-menu-active'), 50);
+            Craft.mouse.observe(false);
+          },
+          get : () => el.gotClass('context-menu-active')
+        });
+
+        el.hasAttr('scope') ? this.Contextmenu = On('contextmenu', el.getAttr('scope'), e => this.Show(true, e)) : console.error('context-menu : No Scope Attribute found');
         ContextMenus.push(this);
       },
       destroyed() {
         ContextMenus = Craft.omit(ContextMenus, this);
-        this.contextmenuEvent.Off();
+        this.Contextmenu.Off();
       },
       Show(Show, ev) {
-        let el = dom(this);
         if (is.Def(ev)) ev.preventDefault();
-        if (Show) {
-          el.addClass('context-menu-active').move((ev.clientX + 5), (ev.clientY + 5));
-          this.show = true;
-        } else if (el.gotClass('context-menu-active')) {
-          el.stripClass('context-menu-active');
-          this.show = false;
-        }
+        let el = dom(this);
+        Show ? el.addClass('context-menu-active').move((ev.clientX + 5), (ev.clientY + 5)) : el.stripClass('context-menu-active');
       }
   });
 
   Craft.newComponent('check-box', {
     created() {
-        let el = this;
-        el.Check();
-        el.OnClick = On(el).Click(e => {
-          el.value = !el.value;
-          el.Check();
+        let el = dom(this);
+        el.Click = On(el).Click(e => el.value = !el.value);
+
+        Object.defineProperty(this,'value',{
+          set : val => {
+            el.toggleAttr('checked',val);
+            if (is.Func(el.func)) el.func(el.hasAttr('checked'));
+          },
+          get : () => el.hasAttr('checked')
         });
       },
-      toggle(checked) {
-        let el = dom(this),
-          chck = 'checked';
-        checked === true || (is.Undef(el.value) && el.getAttr(chck) === 'false') ? el.setAttr(chck, 'true') : el.setAttr(chck, 'false');
+      toggle(val) {
+        this.value = is.Bool(val) ? val : !this.value;
       },
       OnCheck(func) {
         if (is.Func(func)) this.func = func;
       },
-      setValue(val) {
-        this.value = val;
-      },
-      Check() {
-        let el = dom(this),
-          chck = 'checked',
-          t = 'true',
-          f = 'false';
-        if (is.Undef(el.value) && el.hasAttr(chck)) {
-          let checked = el.getAttr(chck);
-          if (checked === t) this.value = true;
-          if (checked === f) this.value = false;
-        } else el.value ? el.setAttr(chck, t) : el.setAttr(chck, f);
-        if (is.Func(this.func)) el.func(this.value);
-      },
-      attr(attrName, oldVal, newVal) {
-        if (attrName === "checked") this.Check();
-      },
       destroyed() {
-        this.OnClick.Off();
+        this.Click.Off();
       }
   });
 
@@ -194,13 +181,16 @@
 
         el.append(dom().label(el.getAttr('summary'), 'class=indicator', true));
         el.append(dom().label(txt, 'class=text', true));
-        this.open = el.hasAttr('open');
+
+        Object.defineProperty(this,'open',{
+          get : () => el.hasAttr('open'),
+          set : val => el.toggleAttr('open',val)
+        });
 
         this.onClick = On('.indicator', this).Click(e => this.toggle());
       },
       toggle(open) {
-        is.Def(open) ? this.open = open : this.open = !this.open;
-        this.open ? this.setAttribute('open', '') : this.removeAttribute('open');
+        this.open = is.Bool(open) ? open : !this.open;
       },
       attr(name, oldVal, newVal) {
         if (name === 'open') this.open = this.hasAttribute('open');

@@ -8,10 +8,10 @@
         if (el.hasAttr('toggle-element')) el.setToggleElement(el.getAttr('toggle-element'));
         el.onClick = On('click', el, e => {
           queryEach('[selected]', el, s => {
-            if (s !== e.target) s.removeAttr('selected');
+            if (s !== e.target) s.removeAttribute('selected');
           });
           queryEach('[accordion="open"]', el, s => {
-            if (s !== e.target && s !== e.target.parentNode) s.setAttr('accordion', 'closed');
+            if (s !== e.target && s !== e.target.parentNode) s.setAttribute('accordion', 'closed');
           });
         });
       },
@@ -57,9 +57,8 @@
           if (el.text().length > 40) el.style.height = 'auto';
         }, 40);
       },
-      attr() {
-        if (attrName === 'ripple') this.color = newVal;
-        if (attrName === 'color-accent') this.color = newVal;
+      attr(name,ov,nv) {
+        if (name === 'ripple' || name === 'color-accent') this.color = nv;
       }
   });
 
@@ -83,7 +82,7 @@
   });
 
   Craft.newComponent('sidebar-accordion', {
-    created() {
+    inserted() {
         let heading, el = dom(this);
         el.open = el.getAttr('accordion') === 'open' ? true : false;
         el.setAttr('accordion', el.open ? 'open' : 'closed');
