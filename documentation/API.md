@@ -1,16 +1,6 @@
 # 
 
-# dom
-
-Function that returns many useful methods for interacting with and manipulating the DOM or creating elements
-in the absence of parameters the function will return methods for created elements
-
-**Parameters**
-
--   `element` **[Node or NodeList or string]** optional Node, NodeList or CSS Selector that will be affected by the methods returned
--   `within` **[Node or string]** optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
-
-## addClass
+# addClass
 
 Add a CSS class to the element
 
@@ -19,7 +9,7 @@ Add a CSS class to the element
 -   `name` **string** of the class to add
 -   `Class`  
 
-## append
+# append
 
 append text or a Node to the element
 
@@ -28,7 +18,7 @@ append text or a Node to the element
 -   `String` **Node or string** or Node to append to the this.element
 -   `val`  
 
-## appendTo
+# appendTo
 
 append the Element to another node using either a CSS selector or a Node
 
@@ -36,8 +26,9 @@ append the Element to another node using either a CSS selector or a Node
 
 -   `CSS` **Node or string** selector or Node to append the this.element to
 -   `val`  
+-   `within`  
 
-## css
+# css
 
 add CSS style rules to the Element or NodeList
 
@@ -45,7 +36,7 @@ add CSS style rules to the Element or NodeList
 
 -   `styles` **object** should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
 
-## div
+# div
 
 creates a div element with the options provided
 
@@ -58,15 +49,15 @@ creates a div element with the options provided
 -   `attr`  
 -   `node`  
 
-## getRect
+# getRect
 
 gets all the element's dimentions (width,height,left,top,bottom,right)
 
-## getSiblings
+# getSiblings
 
 gets all the elements siblings within it's parentNode
 
-## gotClass
+# gotClass
 
 check if the element has got a specific CSS class
 
@@ -75,16 +66,18 @@ check if the element has got a specific CSS class
 -   `name` **string** of the class to check for
 -   `Class`  
 
-## hasAttr
+# hasAttr
 
-checks if the element has a specific Attribute
+checks if the element has a specific Attribute or Attributes
 
 **Parameters**
 
--   `name` **string** of the Attribute to check for
--   `Attr`  
+-   `name` **string or boolean** of the Attribute or if true checks that it has some (||) of the attributes or if false checks that it has all of the attributes (&&)
+-   `names` **...string** of attributes to check for
+-   `attr`  
+-   `attributes` **...** 
 
-## Height
+# Height
 
 sets or gets the element's pixel height
 
@@ -93,7 +86,7 @@ sets or gets the element's pixel height
 -   `pixel` **[string or number]** value to set
 -   `pixels`  
 
-## html
+# html
 
 changes or returns the innerHTML value of a Node
 
@@ -101,8 +94,9 @@ changes or returns the innerHTML value of a Node
 
 -   `sets` **[string]** the innerHTML value or when undefined gets the innerHTML value
 -   `val`  
+-   `position`  
 
-## img
+# img
 
 creates an img element with the options provided
 
@@ -117,7 +111,7 @@ creates an img element with the options provided
 -   `attr`  
 -   `node`  
 
-## label
+# label
 
 creates a label element with the options provided
 
@@ -130,7 +124,7 @@ creates a label element with the options provided
 -   `attr`  
 -   `node`  
 
-## On
+# On
 
 Listen for Events on the element or on all the elements in the NodeList
 
@@ -142,7 +136,7 @@ Listen for Events on the element or on all the elements in the NodeList
 
 Returns **** handler (Off,Once,On)
 
-## p
+# p
 
 creates a p (paragraph) element with the options provided
 
@@ -155,7 +149,7 @@ creates a p (paragraph) element with the options provided
 -   `attr`  
 -   `node`  
 
-## prepend
+# prepend
 
 prepend text or a Node to the element
 
@@ -164,7 +158,7 @@ prepend text or a Node to the element
 -   `String` **Node or string** or Node to prepend to the this.element
 -   `val`  
 
-## query
+# query
 
 performs a query inside the element
 
@@ -175,7 +169,7 @@ performs a query inside the element
 
 Returns **Node or Null** 
 
-## queryAll
+# queryAll
 
 performs a queryAll inside the element
 
@@ -186,7 +180,7 @@ performs a queryAll inside the element
 
 Returns **NodeList or Null** 
 
-## replace
+# replace
 
 replaces a Node with another node provided as a parameter/argument
 
@@ -195,7 +189,7 @@ replaces a Node with another node provided as a parameter/argument
 -   `Node` **Node** to replace with
 -   `val`  
 
-## setAttr
+# setAttr
 
 Sets or adds an Attribute on the element
 
@@ -203,10 +197,10 @@ Sets or adds an Attribute on the element
 
 -   `Name` **string** of the Attribute to add/set
 -   `Value` **string** of the Attribute to add/set
--   `Attr`  
+-   `attr`  
 -   `val`  
 
-## span
+# span
 
 creates a span element with the options provided
 
@@ -219,25 +213,23 @@ creates a span element with the options provided
 -   `attr`  
 -   `node`  
 
-## stripAttr
+# stripAttr
 
 removes a specific Attribute from the this.element
 
 **Parameters**
 
--   `name` **string** of the Attribute to strip
--   `Attr`  
+-   `name` **...string** of the Attribute/s to strip
 
-## stripClass
+# stripClass
 
 removes a specific CSS class from the element
 
 **Parameters**
 
--   `name` **string** of the class to strip
--   `Class`  
+-   `name` **...string** of the class to strip
 
-## text
+# text
 
 changes or returns the textContent value of a Node
 
@@ -246,7 +238,7 @@ changes or returns the textContent value of a Node
 -   `sets` **[string]** the textContent value or when undefined gets the textContent value
 -   `val`  
 
-## Width
+# Width
 
 sets or gets the element's pixel width
 
@@ -258,10 +250,6 @@ sets or gets the element's pixel width
 # is
 
 is - Type Testing / Assertion
-
-**Parameters**
-
--   `val`  
 
 ## Alphanumeric
 
@@ -277,7 +265,7 @@ Test if something is an Array
 
 **Parameters**
 
--   `args` **...** value/values to test
+-   `args`  value/values to test
 
 ## Arraylike
 
@@ -285,7 +273,7 @@ Test if something is an Array-Like
 
 **Parameters**
 
--   `args` **...** value/values to test
+-   `args`  value/values to test
 
 ## Between
 
@@ -339,7 +327,7 @@ Determine if a variable is a Date type
 
 **Parameters**
 
--   `obj`  variable to test
+-   `variable` **...Any** to test
 
 ## dateString
 
@@ -355,7 +343,7 @@ Determine whether a variable is in fact defined
 
 **Parameters**
 
--   `args` **...** value/values to test
+-   `args`  value/values to test
 
 ## Element
 
@@ -363,7 +351,7 @@ Determine if a variable is a HTMLElement
 
 **Parameters**
 
--   `args` **...** value/values to test
+-   `args`  value/values to test
 
 ## Email
 
@@ -398,13 +386,21 @@ checks if a number is an even number
 
 -   `val`  variable / value to test
 
+## False
+
+Determine if a variable/s are false
+
+**Parameters**
+
+-   `args`  value/values to test
+
 ## File
 
 Determine if a variable is a File Object
 
 **Parameters**
 
--   `args` **...** value/values to test
+-   `args`  value/values to test
 
 ## FormData
 
@@ -412,7 +408,7 @@ Determine if a variable is of a FormData type
 
 **Parameters**
 
--   `args` **...** value/values to test
+-   `args`  value/values to test
 
 ## Func
 
@@ -420,7 +416,7 @@ Determine if a variable is a function
 
 **Parameters**
 
--   `args` **...** value/values to test
+-   `args`  value/values to test
 
 ## future
 
@@ -479,6 +475,14 @@ Determines whether a String is a ipv6
 
 -   `ipv6` **string** variable to test
 
+## Json
+
+Determine if a sring is JSON
+
+**Parameters**
+
+-   `args`  value/values to test
+
 ## Lowercase
 
 Determine if a String is LOWERCASE
@@ -512,7 +516,7 @@ Determine if a variable is a Map
 
 **Parameters**
 
--   `args` **...** value/values to test
+-   `args`  value/values to test
 
 ## Native
 
@@ -536,7 +540,7 @@ Determine whether a variable is a DOM Node
 
 **Parameters**
 
--   `args` **...** value/values to test
+-   `args`  value/values to test
 
 ## NodeList
 
@@ -544,7 +548,7 @@ Determine whether a variable is a DOM NodeList or Collection of Nodes
 
 **Parameters**
 
--   `args` **...** value/values to test
+-   `args`  value/values to test
 
 ## Null
 
@@ -552,7 +556,7 @@ Determine whether a variable is null
 
 **Parameters**
 
--   `args` **...** value/values to test
+-   `args`  value/values to test
 
 ## Num
 
@@ -568,7 +572,7 @@ Determine if a variable is an Object
 
 **Parameters**
 
--   `args` **...** value/values to test
+-   `args`  value/values to test
 
 ## odd
 
@@ -594,14 +598,6 @@ checks if a number is positive
 
 -   `val`  variable / value to test
 
-## ReactiveVariable
-
-Determines if a value is an instance of the ReactiveVariable class
-
-**Parameters**
-
--   `args` **...** value/values to test
-
 ## RegExp
 
 Determine if a variable is a Regular Expression
@@ -624,15 +620,24 @@ Test if something is a String
 
 **Parameters**
 
--   `args` **...** value/values to test
+-   `args`  value/values to test
 
-## Symbol
+## symbol
 
 Determine if a variable is a Symbol
 
 **Parameters**
 
 -   `obj`  variable to test
+
+## Tag
+
+Test an element's tagname
+
+**Parameters**
+
+-   `element` **Node** node to test
+-   `tag` **string** tag to test node for
 
 ## time
 
@@ -658,13 +663,21 @@ checks wether a date is tommorow
 
 -   `obj`  Date to test
 
+## True
+
+Determine if a variable/s are true
+
+**Parameters**
+
+-   `args`  value/values to test
+
 ## Undef
 
 Determine whether a variable is undefined
 
 **Parameters**
 
--   `args` **...** value/values to test
+-   `args`  value/values to test
 
 ## Uppercase
 
@@ -699,7 +712,7 @@ Craft is Crafter.js's Core containing most functionality.
 
 -   `arr`  
 
-## ArraytoObject
+## ArrtoObj
 
 Converts an Array to an Object
 
@@ -721,15 +734,6 @@ Part of Crafter.js's own WebComponent format (.wc) it takes a json object that c
 similar to Craft.randomString in that it generates a unique string , in this case a Unique ID with random alphanumeric strings separated by hyphens
 example 0ebf-c7d2-ef81-2667-08ef-4cde
 
-## getBind
-
-gets the value of a bound variable
-
-**Parameters**
-
--   `key`  
--   `bindScope`  
-
 ## Import
 
 Crafter.js resource loader for Scripts and Style sheets,
@@ -737,21 +741,6 @@ each import option is an object with properties like 'script/css/wc : "location"
 other options include 'cache' - determines wether to cache the resource or not , 'test' : usefull for conditional imports if test is false the resource won't load or execute ,
 'key' custom name to cache the resource in localStorage with instead of the resource location, 'defer' optionally load the script when the dom is loaded or load when it's ready,
 {...object} args - Objects containing options for Script/CSS/WebComponent import
-
-**Parameters**
-
--   `args` **...** 
-
-## newBind
-
-creates a new bound variable , part of Crafter.js's Data Binding System
-
-**Parameters**
-
--   `key`  
--   `val`  
--   `handle`  
--   `bindScope`  
 
 ## newComponent
 
@@ -784,15 +773,14 @@ Compares two arrays and determines if they are the same array
 -   `arr1` **Array** array one
 -   `arr2` **Array** array two
 
-## setBind
+## Socket
 
-sets the value of a bound variable
+Handles WebSockets in a contained manner with send and recieve methods
 
 **Parameters**
 
--   `key`  
--   `val`  
--   `bindScope`  
+-   `address` **string** the WebSocket address example "ws://localhost:3000/" but the ws:// or wss:// is optional
+-   `protocols` **[Array]** the protocols to pass to the WebSocket Connection
 
 ## strongPassword
 
@@ -807,152 +795,31 @@ Usefull method for validating passwords , example Craft.strongPassword('#MyFancy
 -   `reasons` **Boolean** should the function return a short string explaining the reason exept when it's a pass then it gives a bool;
 -   `includeChars` **...string** every extra argument should be a string containing a character you want the password to include
 
+## toFormData
+
+converts Objects or URL variable strings to a FormData object
+
+**Parameters**
+
+-   `val` **object or string** values to convert
+
 ## WhenReady
 
-function that returns a promise when the DOM and WebComponents are finished loading
+set functions that executes when the DOM and WebComponents are finished loading
 
 **Parameters**
 
--   `Scope` **[Object]** Optional overide to the default Craft.Scope passed to the promise
+-   `func` **function** function to execute when the DOM and webcomponents are ready
 
-# CraftSocket
+# dom
 
-Handles WebSockets in a contained manner with send and recieve methods
-
-**Parameters**
-
--   `wsAddress` **string** the WebSocket address example "ws://localhost:3000/"
--   `protocols` **[Array]** the protocols to pass to the WebSocket Connection
-
-## close
-
-Closes the WebSocket Connection
-
-## recieve
-
-Recieves messages from the WebSocket Server
+Function that returns many useful methods for interacting with and manipulating the DOM or creating elements
+in the absence of parameters the function will return methods for created elements
 
 **Parameters**
 
--   `func` **function** function to recieve the response and event with -> "function ( response , event ) { ... } or response => ..."
-
-## send
-
-Sends a message along the WebSocket Connection
-
-**Parameters**
-
--   `message` **string** the WebSocket address example "ws://localhost:3000/"
--   `func` **[function]** optional function to recieve the response with -> "function ( response , event ) { ... } or response => ..."
-
-# css
-
-add CSS style rules to NodeList
-
-**Parameters**
-
--   `styles` **object** should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
-
-# EventHandler
-
-Event Handling Class
-
-**Parameters**
-
--   `EventType` **string** set the type of event to listen for example "click" or "scroll"
--   `Target` **Node or NodeList or window or document** the Event Listener's target , can also be a NodeList to listen on multiple Nodes
--   `Func` **function** Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
--   `Within`  
--   `args` **...Any** extra optional arguments/parameters to pass to the handler function
-
-Returns **** Interface On,Off,Once
-
-## Off
-
-De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
-can still optionally be re-activated with On again
-
-## On
-
-Activates the EventHandler to start listening for the EventType on the Target/Targets
-
-## Once
-
-Once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
-the Handler function will be called only Once
-
-# forEach
-
-Easy way to loop through Collections and Objects
-
-**Parameters**
-
--   `iterable` **Array or Object or NodeList** any collection that is either an Object or has a .length value
--   `func` **function** function called on each iteration -> "function( value , indexOrKey ) {...}"
-
-# ReactiveVariable
-
-Variable that is used for Data Binding and other reactive processes
-
-**Parameters**
-
--   `val` **Any** value you'd liek the ReactiveVariable to Store
--   `handle` **function** function that gets called whenever the ReactiveVariable changes -> "function( OldValue , newValue ) {...}"
-
-Returns **Any** Returns the value assigned to the ReactiveVariable
-
-## get
-
-Gets the value of the ReactiveVariable , ReactiveVariable.val also does this
-
-## reset
-
-Redefine the handle function of the ReactiveVariable
-
-**Parameters**
-
--   `handle` **function** function that gets called whenever the ReactiveVariable changes -> "function( OldValue , newValue ) {...}"
-
-## set
-
-Sets the new value of the ReactiveVariable , this will also call the handle function
-
-**Parameters**
-
--   `val` **Any** new value to assign the ReactiveVariable
-
-# includes
-
-Checks wether a Node is in the NodeList with either a refference to the Node or a CSS selector
-
-**Parameters**
-
--   `Node` **Node or string** or CSS selector
--   `SelectorNode`  
-
-# move
-
-move the element using either css transforms or plain css possitioning
-
-**Parameters**
-
--   `x` **string or num** x-axis position in pixels
--   `y` **string or num** y-axis position in pixels
--   `transform` **[boolean]** should move set the position using css transforms or not
--   `position` **[string]** set the position style of the element absolute/fixed...
--   `chainable` **[boolean]** should this method be chainable defaults to false for performance reasons
-
-# On
-
-Listen for Events on the NodeList
-
-**Parameters**
-
--   `string` **string** indicating the type of event to listen for
--   `eventType`  
--   `func` **function** handler function for the event
-
-Returns **** handler (Off,Once,On)
+-   `element` **[Node or NodeList or string]** optional Node, NodeList or CSS Selector that will be affected by the methods returned
+-   `within` **[Node or string]** optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
 
 # On
 
@@ -1012,9 +879,115 @@ Easy way to loop through Nodes in the DOM using a CSS Selector or a NodeList
 
 # QueryOrNodetoNodeArray
 
-Converts any Query/QueryAll to an Array of Nodes even if there is only one Node
+Converts any Query/QueryAll to an Array of Nodes even if there is only one Node , this is error proof when no arguments are present it returns an empty array
 
 **Parameters**
 
 -   `val` **Node or NodeList or Array or String** pass either a CSS Selector string , Node/NodeList or Array of Nodes
--   `within`  
+-   `within` **Node or NodeList or Array or String** pass either a CSS Selector string , Node/NodeList or Array of Nodes to search for val in
+
+# css
+
+add CSS style rules to NodeList
+
+**Parameters**
+
+-   `styles` **object** should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
+
+# CustomAttribute
+
+Define a Handler for a Custom Attribute on the element
+
+**Parameters**
+
+-   `name` **string** what you call the attribute
+-   `handle` **function** called on creation and changes, arguments  = (value, element, mutation)
+-   `death` **[function]** called on removal of the attribute , arguments  = (mutation, observer, element)
+
+# move
+
+move the element using either css transforms or plain css possitioning
+
+**Parameters**
+
+-   `x` **string or num** x-axis position in pixels
+-   `y` **string or num** y-axis position in pixels
+-   `transform` **[boolean]** should move set the position using css transforms or not
+-   `position` **[string]** set the position style of the element absolute/fixed...
+-   `chainable` **[boolean]** should this method be chainable defaults to false for performance reasons
+
+# removeAfter
+
+Remove the element after a time in milliseconds
+
+**Parameters**
+
+-   `time` **[number]** time to wait before self destructing the element
+
+# toggleAttr
+
+Toggles an attribute on element , optionally add value when toggle is adding attribute
+
+**Parameters**
+
+-   `name` **string** name of the attribute to toggle
+-   `val` **string** value to set attribute to
+-   `returnState` **[boolean]** optionally return a bool witht the toggle state otherwise returns the element
+
+# EventHandler
+
+Event Handling Class
+
+**Parameters**
+
+-   `EventType` **string** set the type of event to listen for example "click" or "scroll"
+-   `Target` **Node or NodeList or window or document** the Event Listener's target , can also be a NodeList to listen on multiple Nodes
+-   `Func` **function** Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
+-   `Within`  
+-   `args` **...Any** extra optional arguments/parameters to pass to the handler function
+
+Returns **** Interface On,Off,Once
+
+## Off
+
+De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
+can still optionally be re-activated with On again
+
+## On
+
+Activates the EventHandler to start listening for the EventType on the Target/Targets
+
+## Once
+
+Once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
+the Handler function will be called only Once
+
+# forEach
+
+Easy way to loop through Collections and Objects
+
+**Parameters**
+
+-   `iterable` **Array or Object or NodeList** any collection that is either an Object or has a .length value
+-   `func` **function** function called on each iteration -> "function( value , indexOrKey ) {...}"
+
+# includes
+
+Checks wether a Node is in the NodeList with either a refference to the Node or a CSS selector
+
+**Parameters**
+
+-   `Node` **Node or string** or CSS selector
+-   `selector`  
+
+# On
+
+Listen for Events on the NodeList
+
+**Parameters**
+
+-   `string` **string** indicating the type of event to listen for
+-   `eventType`  
+-   `func` **function** handler function for the event
+
+Returns **** handler (Off,Once,On)
