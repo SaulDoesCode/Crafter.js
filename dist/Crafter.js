@@ -1,9 +1,21 @@
+'use strict';
 /**
  *  @overview Crafter.js , minimalist front-end library
  *  @author Saul van der Walt - https://github.com/SaulDoesCode/
  *  @license MIT
  */
-"use strict";
+"use strict ";
+
+function _toConsumableArray(arr) {
+    if (Array.isArray(arr)) {
+        for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) {
+            arr2[i] = arr[i];
+        }
+        return arr2;
+    } else {
+        return Array.from(arr);
+    }
+}
 
 function _typeof(obj) {
     return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj;
@@ -24,6 +36,7 @@ function _typeof(obj) {
         Ready = false,
         w = 'webcomponent',
         fw = 'fetch-' + w,
+        sI = 'Isync',
         head = doc.head,
         CrafterStyles = doc.createElement('style'),
         ua = navigator.userAgent,
@@ -33,8 +46,59 @@ function _typeof(obj) {
     _br ? [_br[1], _br[2]] : [navigator.appName, navigator.appVersion, '-?'];
 
     CrafterStyles.setAttribute('crafterstyles', '');
-    CrafterStyles.textContent = '\n@keyframes NodeInserted {from {opacity:.99;}to {opacity: 1;}} [bind] {animation-duration: 0.001s;animation-name: NodeInserted;} for-each,craft-template {display:none;}';
     head.appendChild(CrafterStyles);
+
+    function manageCustomAttributes(element) {
+        var mnp = dom(element);
+        if (mnp.hasAttr('bind')) {
+            var manage = function manage() {
+                try {
+                    (function() {
+                        var bind = mnp.getAttr('bind'),
+                            cutbind = cutdot(bind),
+                            prop = cutbind[cutbind.length - 1],
+                            obj = Craft.getDeep(root, Craft.omitFrom(cutbind, prop).join('.')) || CraftScope,
+                            val = Craft.getDeep(obj, cutbind.length > 1 ? Craft.omit(cutbind, cutbind[0]).join('.') : prop);
+                        def(val) ? mnp.html(val) : Craft.setDeep(obj, prop, mnp.html());
+
+                        if (def(Object.getOwnPropertyDescriptor(obj, 'listen'))) obj.listen = function(o, n, v) {
+                            if (n == prop) mnp.html(v);
+                        };
+
+                        if (is.Input(mnp)) mnp.SyncInput(obj, prop);
+                    })();
+                } catch (e) {
+                    console.warn("couldn't bind :", mnp);
+                }
+            };
+            Ready ? manage() : Craft.WhenReady.then(manage);
+        }
+        if (mnp.hasAttr('link')) On(mnp).Click(function(e) {
+            var link = mnp.getAttr('link');
+            (mnp.hasAttr('newtab') ? open : Craft.router.open)(link);
+        });
+        def(Craft.WidgetWatchers) ? Craft.WidgetWatchers(mnp) : Craft.WhenReady.then(function() {
+            return setTimeout(function() {
+                if (def(Craft.WidgetWatchers)) Craft.WidgetWatchers(mnp);
+            }, 200);
+        });
+    }
+
+    var domwatcher = new MutationObserver(function(muts) {
+        return muts.forEach(function(mut) {
+
+            if (mut.type === 'attributes') {
+                if (['tooltip', 'bind', 'movable', 'ripple', 'link'].some(function(el) {
+                        return el === mut.attributeName;
+                    }) && is.Node(mut.target)) manageCustomAttributes(mut.target);
+            }
+        });
+    });
+    domwatcher.observe(doc.documentElement, {
+        attributes: true,
+        childlist: true,
+        subtree: true
+    });
 
     function toInt(val) {
         var num = Number(val);
@@ -43,16 +107,16 @@ function _typeof(obj) {
         return (num > 0 ? 1 : -1) * Math.floor(Math.abs(num));
     }
 
-    function docfragFromString(strHTML) {
-        return doc.createRange().createContextualFragment(strHTML);
+    function docfragFromString(html) {
+        return doc.createRange().createContextualFragment(html);
     }
 
     function toArr(val) {
         return Array.prototype.slice.call(val);
     }
-    // ta = TestArgs : convert arguments to array then tests it
+    // ta = TestArgs : convert arguments to array then tests them
     function ta(args, test) {
-        return args.length === 0 ? false : toArr(args).every(test);
+        return args.length !== 0 && toArr(args).every(test);
     }
 
     function type(obj, str) {
@@ -63,22 +127,28 @@ function _typeof(obj) {
         return (typeof val === 'undefined' ? 'undefined' : _typeof(val)) === str;
     }
 
-    function manageInvoke(fn, argsArr, totalArity) {
+    function doInvok(fn, argsArr, totalArity) {
         argsArr = argsArr.length > totalArity ? argsArr.slice(0, totalArity) : argsArr;
-        return argsArr.length === totalArity ? fn.apply(null, argsArr) : createFn(fn, argsArr, totalArity);
+        return argsArr.length === totalArity ? fn.apply(null, argsArr) : makeFn(fn, argsArr, totalArity);
     }
 
-    function createFn(fn, Args, totalArity) {
+    function makeFn(fn, Args, totalArity) {
         var remainingArity = totalArity - Args.length;
         return is.Between(remainingArity, 10, 0) ? function() {
             var args = toArr(arguments);
-            return manageInvoke(fn, Args.concat(args), totalArity);
+            return doInvok(fn, Args.concat(args), totalArity);
         } : (function(fn, args, arity) {
             var a = [];
             forEach(arity, function(v, i) {
                 return a.push('a' + i.toString());
             });
-            return eval('false||function(' + a.join(',') + '){ return manageInvoke(fn, args.concat(toArr(arguments)));}');
+            return function() {
+                for (var _len = arguments.length, a = Array(_len), _key = 0; _key < _len; _key++) {
+                    a[_key] = arguments[_key];
+                }
+
+                return doInvok(fn, args.concat(toArr(arguments)));
+            };
         })(fn, args, remainingArity);
     }
 
@@ -96,10 +166,6 @@ function _typeof(obj) {
 
     function cutdot(str) {
         return str.split('.');
-    }
-
-    function hasdot(str) {
-        return str.includes('.');
     }
 
     /** is - Type Testing / Assertion */
@@ -240,10 +306,9 @@ function _typeof(obj) {
             return ta(arguments, function(str) {
                 try {
                     JSON.parse(str);
-                } catch (e) {
-                    return false;
-                }
-                return true;
+                    return !0;
+                } catch (e) {}
+                return !1;
             });
         },
 
@@ -358,13 +423,13 @@ function _typeof(obj) {
         },
 
         Args: function Args(val) {
-            return !nill(val) && (type(val, '[object Arguments]') || (typeof val === 'undefined' ? 'undefined' : _typeof(val)) === 'object' && 'callee' in val);
+            return !nil(val) && type(val, '[object Arguments]');
         },
         /**
          * Determine if a variable is a Symbol
          * @param obj - variable to test
          */
-        symbol: function symbol(obj) {
+        Symbol: function Symbol(obj) {
             return type(obj, '[object Symbol]');
         },
         char: function char(val) {
@@ -601,10 +666,7 @@ function _typeof(obj) {
          * @param {Object|Array|string} val - value to test if empty
          */
         empty: function empty(val) {
-            var isO = is.Object(val),
-                isA = is.Arr(val),
-                num = isO ? Object.keys(val).length : null;
-            return isO ? num === 0 || num === 1 && isA || num === 2 && is.Args(val) : isA ? val.length <= 0 : val === '';
+            return Craft.len(val) === 0 || val === '';
         },
 
         /**
@@ -617,7 +679,9 @@ function _typeof(obj) {
         },
 
         Input: function Input(element) {
-            return element.tagName === 'INPUT' || element.tagName === 'TEXTAREA';
+            return ['INPUT', 'TEXTAREA'].some(function(i) {
+                return element.tagName === i;
+            });
         }
     };
 
@@ -626,11 +690,11 @@ function _typeof(obj) {
      * @param {Node|NodeList|Array|String} val - pass either a CSS Selector string , Node/NodeList or Array of Nodes
      * @param {Node|NodeList|Array|String} within - pass either a CSS Selector string , Node/NodeList or Array of Nodes to search for val in
      */
-    root.QueryOrNodetoNodeArray = function(val, within) {
+    function NodeOrQuerytoArr(val, within) {
         if (is.String(val) && (is.String(within) || is.Node(within))) val = queryAll(val, within);
         else if (is.String(val)) val = queryAll(val);
         return is.Node(val) ? [val] : is.NodeList(val) ? toArr(val) : [];
-    };
+    }
 
     /**
      * Event Handling Class
@@ -641,12 +705,12 @@ function _typeof(obj) {
      * @returns Interface On,Off,Once
      */
     function EventHandler(EventType, Target, Func, Within) {
-        for (var _len = arguments.length, args = Array(_len > 4 ? _len - 4 : 0), _key = 4; _key < _len; _key++) {
-            args[_key - 4] = arguments[_key];
+        for (var _len2 = arguments.length, args = Array(_len2 > 4 ? _len2 - 4 : 0), _key2 = 4; _key2 < _len2; _key2++) {
+            args[_key2 - 4] = arguments[_key2];
         }
 
         this.EventType = EventType || 'click';
-        this.Target = Target !== root && Target !== doc ? QueryOrNodetoNodeArray(Target, Within) : Target;
+        this.Target = Target !== root && Target !== doc ? NodeOrQuerytoArr(Target, Within) : [Target];
         this.FuncWrapper = function(e) {
             return Func(e, e.srcElement, args);
         };
@@ -657,12 +721,15 @@ function _typeof(obj) {
     EventHandler.prototype.On = function() {
         var _this = this;
 
-        is.Arr(this.Target) ? this.Target.forEach(function(target) {
+        this.Target.forEach(function(target) {
             return target.addEventListener(_this.EventType, _this.FuncWrapper);
-        }) : this.Target.addEventListener(this.EventType, this.FuncWrapper);
+        });
         return this;
     };
-
+    /**
+     * Change the Event type to listen for
+     * {string} type - the name of the event to listen for
+     */
     EventHandler.prototype.ChangeType = function(type) {
         this.Off();
         this.EventType = type;
@@ -676,9 +743,9 @@ function _typeof(obj) {
     EventHandler.prototype.Off = function() {
         var _this2 = this;
 
-        is.Arr(this.Target) ? this.Target.forEach(function(target) {
+        this.Target.forEach(function(target) {
             return target.removeEventListener(_this2.EventType, _this2.FuncWrapper);
-        }) : this.Target.removeEventListener(this.EventType, this.FuncWrapper);
+        });
         return this;
     };
     /**
@@ -691,13 +758,13 @@ function _typeof(obj) {
             etype = this.EventType,
             listenOnce = function listenOnce(e) {
                 func(e);
-                is.Arr(target) ? target.forEach(function(t) {
+                target.forEach(function(t) {
                     return t.removeEventListener(etype, listenOnce);
-                }) : target.removeEventListener(etype, listenOnce);
+                });
             };
-        is.Arr(target) ? target.forEach(function(t) {
+        target.forEach(function(t) {
             return t.addEventListener(etype, listenOnce);
-        }) : target.addEventListener(etype, listenOnce);
+        });
         return this;
     };
     /**
@@ -706,13 +773,22 @@ function _typeof(obj) {
      * @param {function} func - function called on each iteration -> "function( value , indexOrKey ) {...}"
      */
     function forEach(iterable, func) {
-        if (is.Arraylike(iterable) && !localStorage)
-            for (var _i = 0; _i < iterable.length; _i++) {
-                func(iterable[_i], _i);
-            } else
+        if (!is.empty(iterable) && is.Func(func)) {
+            if (is.Arraylike(iterable) && !localStorage) {
+                for (var _i = 0; _i < iterable.length; _i++) {
+                    func(iterable[_i], _i);
+                }
+            } else if (is.int(iterable)) {
+                iterable = Number(iterable);
+                for (; 0 < iterable; iterable--) {
+                    func(iterable);
+                }
+            } else {
                 for (var _i2 in iterable) {
                     if (iterable.hasOwnProperty(_i2)) func(iterable[_i2], _i2);
                 }
+            }
+        }
     }
 
     /**
@@ -742,12 +818,7 @@ function _typeof(obj) {
      */
     root.queryEach = function(selector, element, func) {
         if (is.Func(element)) func = element;
-        var elements = undefined,
-            i = 0;
-        is.Node(selector) ? elements = [selector] : elements = is.Func(element) ? queryAll(selector) : queryAll(selector, element);
-        for (; i < elements.length; i++) {
-            func(elements[i], i);
-        }
+        forEach(NodeOrQuerytoArr(selector, element), func);
     };
 
     function EventTypes(Target, within, listen) {
@@ -832,46 +903,22 @@ function _typeof(obj) {
         return is.Func(Target) ? new EventHandler(EventType, root, Target).Once() : types ? EventTypes(EventType, Target, 'Once') : is.Func(element) ? new EventHandler(EventType, Target, element).Once() : new EventHandler(EventType, Target, func, element).Once();
     };
 
-    function make_element(name, inner, attributes, NodeForm, extraAttr) {
-        if (!def(NodeForm)) NodeForm = true;
-        if (!is.String(inner) && !is.Node(inner)) {
-            if (is.Object(inner)) attributes = inner;
-            if (is.Func(inner)) inner = inner();
-            else inner = '';
-        }
-
-        if (is.Bool(attributes)) NodeForm = attributes;
-        if (NodeForm === true) {
-            var _ret = (function() {
-                var newEl = doc.createElement(name);
-                newEl.appendChild(is.Node(inner) ? inner : docfragFromString(inner));
-                if (is.Object(attributes)) forEach(attributes, function(val, attr) {
-                    return newEl.setAttribute(attr, val);
-                });
-                if (is.String(attributes)) attributes.split('&').forEach(function(attr) {
-                    return def(attr.split('=')[1]) ? newEl.setAttribute(attr.split('=')[0], attr.split('=')[1]) : newEl.setAttribute(attr.split('=')[0], '');
-                });
-                if (is.Object(extraAttr)) forEach(extraAttr, function(val, attr) {
-                    return newEl.setAttribute(attr, val);
-                });
-                return {
-                    v: newEl
-                };
-            })();
-
-            if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
-        }
-        var attrString = '';
-        if (is.String(attributes)) attributes.split('&').forEach(function(attr) {
-            return attrString += def(attr.split('=')[1]) ? attr.split('=')[0] + '="' + attr.split('=')[1] + '" ' : attr.split('=')[0] + ' ';
-        });
+    function craftElement(name, inner, attributes, extraAttr, stringForm) {
+        if (is.False(is.String(inner), is.Node(inner))) is.Object(inner) ? attributes = inner : inner = is.Func(inner) ? inner() : '';
+        var newEl = dom(doc.createElement(name));
+        newEl.html(inner);
         if (is.Object(attributes)) forEach(attributes, function(val, attr) {
-            return attrString += ' ' + attr + '="' + val + '" ';
+            return newEl.setAttr(attr, val);
+        });
+        if (is.String(attributes)) attributes.split('&').forEach(function(attr) {
+            return def(attr.split('=')[1]) ? newEl.setAttr(attr.split('=')[0], attr.split('=')[1]) : newEl.setAttr(attr.split('=')[0], '');
         });
         if (is.Object(extraAttr)) forEach(extraAttr, function(val, attr) {
-            return attrString += ' ' + attr + '="' + val + '" ';
+            return newEl.setAttr(attr, val);
         });
-        return '<' + name + ' ' + attrString + '>' + inner + '</' + name + '>';
+        if (is.Bool(extraAttr)) stringForm = extraAttr;
+        if (stringForm === true) newEl = newEl.outerHTML;
+        return newEl;
     }
 
     function domNodeList(elements) {
@@ -931,10 +978,10 @@ function _typeof(obj) {
          */
         element.html = function(val, position) {
             var el = this,
-                input = is.Input(el),
-                hv = def(val);
-            if (hv) input ? el.value = val : el.innerHTML = val;
-            return hv ? el : input ? el.value : el.innerHTML;
+                input = is.Input(el);
+            if (is.Node(val)) val = val.outerHTML;
+            if (def(val)) input ? el.value = val : el.innerHTML = val;
+            return def(val) ? el : input ? el.value : el.innerHTML;
         };
         /**
          * changes or returns the textContent value of a Node
@@ -944,6 +991,7 @@ function _typeof(obj) {
         element.text = function(val) {
             var el = this,
                 input = is.Input(el);
+            if (is.Node(val)) val = val.outerHTML;
             if (def(val)) input ? el.value = val : el.textContent = val;
             return def(val) ? this : input ? el.value : el.textContent;
         };
@@ -1061,8 +1109,8 @@ function _typeof(obj) {
 
             if (is.String(attr)) return this.hasAttribute(attr);
 
-            for (var _len2 = arguments.length, attributes = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-                attributes[_key2 - 1] = arguments[_key2];
+            for (var _len3 = arguments.length, attributes = Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
+                attributes[_key3 - 1] = arguments[_key3];
             }
 
             if (attr === false) return attributes.every(function(a) {
@@ -1113,8 +1161,8 @@ function _typeof(obj) {
          * @param {function=} death - called on removal of the attribute , arguments  = (mutation, observer, element)
          */
         element.CustomAttribute = function(name, handle, death) {
-            element[name + "_observer"] = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mut) {
+            element[name + "_observer"] = new MutationObserver(function(muts) {
+                return muts.forEach(function(mut) {
                     if (mut.type === 'attributes' && mut['attributeName'] === name) {
                         if (element.hasAttr(name)) handle(element.getAttr(name), element, mut);
                         else if (is.Func(death)) death(mut, element[name + "_observer"], element);
@@ -1142,7 +1190,7 @@ function _typeof(obj) {
          * @memberof dom
          */
         element.getSiblings = function() {
-            return Craft.omitFrom(toArr(element.parentNode.childNodes), element);
+            return Craft.omit(toArr(element.parentNode.childNodes), element);
         };
         /**
          * gets all the element's dimentions (width,height,left,top,bottom,right)
@@ -1157,9 +1205,9 @@ function _typeof(obj) {
          * @param {string|number=} pixel value to set
          */
         element.Width = function(pixels) {
-            var haspixels = def(pixels);
-            if (haspixels) this.style.width = pixels;
-            return haspixels ? this : this.getRect().width;
+            var dp = def(pixels);
+            if (dp) this.style.width = pixels;
+            return dp ? this : this.getRect().width;
         };
         /**
          * sets or gets the element's pixel height
@@ -1167,8 +1215,9 @@ function _typeof(obj) {
          * @param {string|number=} pixel value to set
          */
         element.Height = function(pixels) {
-            if (def(pixels)) this.style.height = pixels;
-            return def(pixels) ? this : this.getRect().height;
+            var dp = def(pixels);
+            if (dp) this.style.height = pixels;
+            return dp ? this : this.getRect().height;
         };
         /**
          * move the element using either css transforms or plain css possitioning
@@ -1209,14 +1258,14 @@ function _typeof(obj) {
 
         if (is.Input(element)) {
             element.SyncInput = function(obj, key) {
-                return element['InputSync'] = On(element).Input(function(e) {
-                    return Craft.setDeep(obj, key, element.html());
+                return element[sI] = On(element).Input(function(e) {
+                    return Craft.setDeep(obj, key, element.value);
                 });
             };
             element.disconectInputSync = function() {
-                if (def(element['InputSync'])) {
-                    element['InputSync'].Off();
-                    delete element['InputSync'];
+                if (def(element[sI])) {
+                    element[sI].Off();
+                    delete element[sI];
                 }
             };
         }
@@ -1231,12 +1280,18 @@ function _typeof(obj) {
      * @param {Node|NodeList|string=} element - optional Node, NodeList or CSS Selector that will be affected by the methods returned
      * @param {Node|string=} within - optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
      */
-    root.dom = function(element, within) {
-        if (is.String(element)) element = queryAll(element, within);
-        if (is.NodeList(element)) {
-            if (element.length === 1) element = element[0];
-            else return domNodeList(element);
+    root.dom = function(element, within, one) {
+        if (within === true) {
+            one = within;
+            within = null;
         }
+        if (one !== true) {
+            if (is.String(element)) element = queryAll(element, within);
+            if (is.NodeList(element)) {
+                if (element.length === 1) element = element[0];
+                else return domNodeList(element);
+            }
+        } else if (is.String(element)) element = query(element, within);
         if (is.Node(element)) return element['hasDOMmethods'] !== true ? domManip(element) : element;
         return Craft.dom;
     };
@@ -1288,7 +1343,7 @@ function _typeof(obj) {
         },
         setDeep: function setDeep(obj, prop, value, returnObj) {
             if (is.Arr(prop) && prop.length === 1) prop = prop[0];
-            if (is.String(prop) && !hasdot(prop)) value !== "_DELETE_" ? obj[prop] = value : delete obj[prop];
+            if (is.String(prop) && !prop.includes('.')) value !== "_DELETE_" ? obj[prop] = value : delete obj[prop];
             else {
                 if (is.String(prop)) prop = prop.split(".");
                 var e = prop.shift();
@@ -1330,79 +1385,79 @@ function _typeof(obj) {
         },
 
         cloneArr: function cloneArr(arr) {
-            return arr.slice(0);
+            return Array.apply(undefined, _toConsumableArray(arr));
         },
         clone: function clone(val) {
             return is.Object(val) ? Object.create(val) : val.slice(0);
         },
         omitFrom: function omitFrom(Arr) {
-            for (var _len3 = arguments.length, values = Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
-                values[_key3 - 1] = arguments[_key3];
+            for (var _len4 = arguments.length, values = Array(_len4 > 1 ? _len4 - 1 : 0), _key4 = 1; _key4 < _len4; _key4++) {
+                values[_key4 - 1] = arguments[_key4];
             }
 
-            if (values.length === 1) {
-                var temp = [],
-                    string = is.String(Arr);
-                if (is.Arraylike(Arr)) Arr = toArr(Arr);
-                for (var _i4 = 0, index = Arr.indexOf(values[0]); _i4 < Arr.length; _i4++) {
-                    if (_i4 !== index) temp.push(Arr[_i4]);
-                }
-                return string ? temp.join('') : temp;
-            }
-            values.forEach(function(val) {
-                return Arr = Craft.omitFrom(Arr, val);
+            var string = is.String(Arr);
+            Arr = (is.Arraylike(Arr) ? toArr(Arr) : Arr).filter(function(e) {
+                if (!values.some(function(v) {
+                        return is.eq(v, e);
+                    })) return e;
             });
-            return Arr;
+            return string ? Arr.join('') : Arr;
         },
-        omit: function omit(obj, val) {
-            if (is.Arraylike(obj)) obj = Craft.omitFrom(obj, i);
-            if (is.Object(obj) && obj !== val) forEach(obj, function(prop, key) {
-                if (val === key || val === prop) delete obj[key];
+        omit: function omit(val) {
+            var _Craft;
+
+            for (var _len5 = arguments.length, values = Array(_len5 > 1 ? _len5 - 1 : 0), _key5 = 1; _key5 < _len5; _key5++) {
+                values[_key5 - 1] = arguments[_key5];
+            }
+
+            if (is.Arraylike(val)) val = (_Craft = Craft).omitFrom.apply(_Craft, [val].concat(values));
+            if (is.Object(val) && !values.some(function(v) {
+                    return v === val;
+                })) forEach(val, function(prop, key) {
+                if (values.some(function(v) {
+                        return is.eq(v, prop) || is.eq(v, key);
+                    })) delete val[key];
             });
-            return obj;
+            return val;
         },
 
         dom: {
-            element: make_element,
+            element: craftElement,
             /**
              * creates a div element with the options provided
              * @memberof dom
              * @param {string} sets innerHTML of the div
              * @param {string|Object=} sets div attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
-             * @param {Boolean=} should the div be a plain String or a Node defaults to string
              */
-            div: function div(inner, attr, node) {
-                return Craft.dom.element('div', inner, attr, node);
+            div: function div(inner, attr) {
+                return craftElement('div', inner, attr);
             },
             /**
              * creates a span element with the options provided
              * @memberof dom
              * @param {string} sets innerHTML of the span
              * @param {string|Object=} sets span attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
-             * @param {Boolean=} should the span be a plain String or a Node defaults to string
              */
-            span: function span(inner, attr, node) {
-                return Craft.dom.element('span', inner, attr, node || true);
+            span: function span(inner, attr) {
+                return craftElement('span', inner, attr);
             },
             /**
              * creates a label element with the options provided
              * @memberof dom
              * @param {string} sets innerHTML of the label
              * @param {string|Object=} sets label attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
-             * @param {Boolean=} should the label be a plain String or a Node defaults to string
              */
-            label: function label(inner, attr, node) {
-                return Craft.dom.element('label', inner, attr, node || true);
+            label: function label(inner, attr) {
+                return craftElement('label', inner, attr);
             },
             /**
              * creates a p (paragraph) element with the options provided
              * @memberof dom
              * @param {string} sets innerHTML of the p
              * @param {string|Object=} sets p attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
-             * @param {Boolean=} should the p be a plain String or a Node defaults to string
              */
-            p: function p(inner, attr, node) {
-                return Craft.dom.element('p', inner, attr, node);
+            p: function p(inner, attr) {
+                return craftElement('p', inner, attr);
             },
             /**
              * creates an img element with the options provided
@@ -1410,78 +1465,72 @@ function _typeof(obj) {
              * @param {string} sets src of the img
              * @param {string} sets alt of the img
              * @param {string|Object=} sets p attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
-             * @param {Boolean=} should the p be a plain String or a Node defaults to string
              */
-            img: function img(src, alt, attr, node) {
-                return Craft.dom.element('img', '', attr, node, {
+            img: function img(src, alt, attr) {
+                return craftElement('img', '', attr, {
                     src: src,
                     alt: alt
                 });
             },
             input: function input(type, attributes) {
-                var input = doc.createElement('input');
-                input.type = type || 'text';
-                if (is.Object(attributes)) forEach(attributes, function(val, attr) {
-                    return input.setAttribute(attr, val);
+                return craftElement('input', '', attributes, {
+                    type: type || 'text'
                 });
-                if (is.String(attributes)) attributes.split('&').forEach(function(attr) {
-                    return def(attr.split('=')[1]) ? input.setAttribute(attr.split('=')[0], attr.split('=')[1]) : input.setAttribute(attr.split('=')[0], '');
-                });
-                return input;
             },
-            ul: function ul(items, attr, node) {
+            ul: function ul(items, attr) {
                 var list = '';
                 if (is.Arr(items)) items.forEach(function(item) {
-                    if (is.String(item)) list += Craft.dom.element('li', item);
-                    else if (is.Object(items)) list += Craft.dom.element('li', item.inner, item.attr);
+                    if (is.String(item)) list += craftElement('li', item).outerHTML;
+                    else if (is.Object(items)) list += craftElement('li', item.inner, item.attr).outerHTML;
                 });
-                return Craft.dom.element('ul', list, attr, node);
+                return craftElement('ul', list, attr);
             },
             ol: function ol(items, attr, node) {
                 var list = '';
                 if (is.Arr(items)) items.forEach(function(item) {
-                    if (is.String(item)) list += Craft.dom.element('li', item);
-                    if (is.Object(items)) list += Craft.dom.element('li', item.inner, item.attr);
+                    if (is.String(item)) list += craftElement('li', item).outerHTML;
+                    if (is.Object(items)) list += craftElement('li', item.inner, item.attr).outerHTML;
                 });
-                return Craft.dom.element('ol', list, attr, node);
+                return craftElement('ol', list, attr, node);
             },
 
             h: function h(level, inner, attr, node) {
-                return Craft.dom.element('h' + level, inner, attr, node);
+                return craftElement('h' + level, inner, attr, node);
             },
             a: function a(link, inner, attr, node) {
-                return Craft.dom.element('a', inner, attr, node, {
+                return craftElement('a', inner, attr, node, {
                     href: link
                 });
             },
             script: function script(code, attr, defer) {
-                var script = Craft.dom.element('script', code, attr, true, {
-                    type: 'text/javascript'
+                var script = craftElement('script', '', attr, {
+                    type: 'text/javascript',
+                    src: Craft.URLfrom(code)
                 });
                 script.defer = defer !== false;
                 return script;
             },
-            table: function table(rows, attr, node) {
-                if (!is.Arr(rows)) return is.String(rows) ? Craft.dom.element('table', rows, attr, node) : Craft.dom.element('table', '', attr, node);
+            table: function table(rows, attr) {
+                if (!is.Arr(rows)) return (is.String(rows) ? craftElement('table', rows, attr, node) : craftElement('table', '', attr, node)).outerHTML;
                 if (!rows.every(function(o) {
                         return is.Object(o);
                     })) throw new TypeError('dom.table -> rows : all entries need to be objects');
                 var tableInner = '';
                 forEach(rows, function(row) {
                     return forEach(row, function(val, key) {
-                        var row = '<tr>';
+                        var row = '';
                         if (key === 'cell' || key === 'td' || key === 'data') {
                             if (is.String(val)) row += '<td>' + val + '</td>';
-                            if (is.Object(val)) row += Craft.dom.element('tr', val.inner, val.attr);
+                            if (is.Object(val)) row += craftElement('tr', val.inner, val.attr).outerHTML;
                         } else if (key === 'head' || key === 'th') {
                             if (is.String(val)) row += '<th>' + val + '</th>';
-                            if (is.Object(val)) row += Craft.dom.element('th', val.inner, val.attr);
+                            if (is.Object(val)) row += craftElement('th', val.inner, val.attr).outerHTML;
                         }
-                        row += '</tr>';
-                        tableInner += row;
+                        row += '';
+                        tableInner += craftElement('tr', row).outerHTML;
                     });
                 });
-                return Craft.dom.element('table', tableInner, attr, node);
+                return craftElement('table', tableInner, attr);
             }
         },
         CurrentBrowser: {
@@ -1524,8 +1573,8 @@ function _typeof(obj) {
                 return localStorage.removeItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key);
             },
             removeAll: function removeAll(expired) {
-                for (var _i5 in localStorage) {
-                    if (!expired || Craft.loader.get(_i5).expire <= +new Date()) Craft.loader.remove(_i5);
+                for (var _i4 in localStorage) {
+                    if (!expired || Craft.loader.get(_i4).expire <= +new Date()) Craft.loader.remove(_i4);
                 }
             }
         },
@@ -1603,10 +1652,10 @@ function _typeof(obj) {
                 return doc.title = title;
             },
             setView: function setView(selector, view, position) {
-                dom(selector).html(view, position);
+                dom(selector, true).html(view, position);
             },
             fetchView: function fetchView(selector, src, cache, position) {
-                var vh = dom(selector),
+                var vh = dom(selector, true),
                     srcpre = 'Cr:' + src,
                     view = localStorage.getItem(srcpre);
                 if (!def(vh.element)) return;
@@ -1620,8 +1669,8 @@ function _typeof(obj) {
                 }) : vh.html(view, position);
             },
             clearViews: function clearViews() {
-                for (var _i6 in localStorage) {
-                    localStorage.removeItem(localStorage.key(_i6).includes("Cr:"));
+                for (var _i5 in localStorage) {
+                    localStorage.removeItem(localStorage.key(_i5).includes("Cr:"));
                 }
             }
         },
@@ -1774,7 +1823,7 @@ function _typeof(obj) {
         },
 
         curry: function curry(fn) {
-            return createFn(fn, [], fn.length);
+            return makeFn(fn, [], fn.length);
         },
         after: function after(n, func) {
             !is.Func(func) && is.Func(n) ? func = n : console.error("after: no function");
@@ -1854,8 +1903,8 @@ function _typeof(obj) {
         OverrideFunction: function OverrideFunction(funcName, Func, ContextObject) {
             var func = funcName.split(".").pop(),
                 ns = funcName.split(".");
-            for (var _i7 = 0; _i7 < ns.length; _i7++) {
-                ContextObject = ContextObject[ns[_i7]];
+            for (var _i6 = 0; _i6 < ns.length; _i6++) {
+                ContextObject = ContextObject[ns[_i6]];
             }
             ContextObject[func] = Func;
         },
@@ -1866,8 +1915,8 @@ function _typeof(obj) {
             return -1;
         },
         indexOfDate: function indexOfDate(Collection, date) {
-            for (var _i8 = 0; _i8 < Collection.length; _i8++) {
-                if (+Collection[_i8] === +date) return _i8;
+            for (var _i7 = 0; _i7 < Collection.length; _i7++) {
+                if (+Collection[_i7] === +date) return _i7;
             }
             return -1;
         },
@@ -1917,10 +1966,7 @@ function _typeof(obj) {
                 return n * Craft.millis.days(365);
             }
         },
-        Scope: {},
-        TemplateBinds: {},
         WebComponents: [],
-        ReadyFunctions: [],
         tabActive: true,
         toArr: toArr,
         toInt: toInt,
@@ -2013,18 +2059,15 @@ function _typeof(obj) {
             });
         },
         /**
-         * set functions that executes when the DOM and WebComponents are finished loading
+         * returns a promise when the DOM and WebComponents are all finished loading
          * @param {function} func - function to execute when the DOM and webcomponents are ready
          */
         get WhenReady() {
             return new Promise(function(pass, fail) {
-                if (Ready) {
-                    pass(Craft.Scope);
-                    return;
-                }
+                if (Ready) return pass();
                 var check = setInterval(function() {
                     if (Ready) {
-                        pass(Craft.Scope);
+                        pass();
                         clearInterval(check);
                     }
                 }, 30);
@@ -2065,8 +2108,8 @@ function _typeof(obj) {
             if (caps === true && Craft.hasCapitals(pass) === false) return reasons ? 'Password should contain Capital letters' : false;
             if (number === true && /\d/g.test(pass) === false) return reasons ? 'Password should contain a number' : false;
 
-            for (var _len4 = arguments.length, includeChars = Array(_len4 > 5 ? _len4 - 5 : 0), _key4 = 5; _key4 < _len4; _key4++) {
-                includeChars[_key4 - 5] = arguments[_key4];
+            for (var _len6 = arguments.length, includeChars = Array(_len6 > 5 ? _len6 - 5 : 0), _key6 = 5; _key6 < _len6; _key6++) {
+                includeChars[_key6 - 5] = arguments[_key6];
             }
 
             if (includeChars.length !== 0) {
@@ -2098,10 +2141,7 @@ function _typeof(obj) {
         createWebComponent: function createWebComponent(webcomponent, src) {
             webcomponent = JSON.parse(webcomponent);
             CrafterStyles.textComponent += webcomponent.css;
-            head.appendChild(dom().script('', {
-                src: Craft.URLfrom(webcomponent.js + ('\nCraft.WebComponents.push(\'' + src + '\')')),
-                webcomponent: webcomponent.name
-            }, true));
+            head.appendChild(dom().script(webcomponent.js + ('\nCraft.WebComponents.push(\'' + src + '\')'), 'webcomponent=' + webcomponent.name));
         },
 
         /**
@@ -2120,7 +2160,7 @@ function _typeof(obj) {
          */
         newComponent: function newComponent(tag, config) {
             if (!def(config)) throw new Error(tag + ' : config undefined');
-            var element = Object.create(HTMLElement.prototype),
+            var element = Craft.clone(HTMLElement.prototype),
                 settings = {};
 
             forEach(config, function(prop, key) {
@@ -2137,18 +2177,19 @@ function _typeof(obj) {
         },
         SyncInput: function SyncInput(input, obj, key) {
             if (is.String(input)) input = query(input);
-            if (is.Input(input)) input['InputSync'] = On(input).Input(function(e) {
+            if (is.Input(input)) input[sI] = On(input).Input(function(e) {
                 return Craft.setDeep(obj, key, input.value);
             });
         },
         disconectInputSync: function disconectInputSync(input) {
             if (is.String(input)) input = query(input);
-            if (is.Node(input) && def(input['InputSync'])) {
-                input['InputSync'].Off();
-                delete input['InputSync'];
+            if (is.Node(input) && def(input[sI])) {
+                input[sI].Off();
+                delete input[sI];
             }
         }
     };
+    root.CraftScope = Craft.observable({});
 
     On('blur', function(e) {
         Craft.tabActive = false;
@@ -2160,58 +2201,13 @@ function _typeof(obj) {
         });
     });
 
-    var firstRun = 0;
-    On('animationstart', doc, function(e) {
-        if (e.animationName === 'NodeInserted' && is.Node(e.target)) {
-            (function() {
-                var element = e.target,
-                    mnp = dom(element);
-                if (mnp.hasAttr('bind')) {
-                    (function() {
-                        var manage = function manage() {
-                            firstRun++;
-                            try {
-                                (function() {
-                                    var bind = mnp.getAttr('bind'),
-                                        cutbind = cutdot(bind),
-                                        prop = cutbind[cutbind.length - 1],
-                                        obj = Craft.getDeep(root, Craft.omitFrom(cutbind, prop).join('.')),
-                                        val = Craft.getDeep(root, bind);
-
-                                    def(val) ? mnp.html(val) : Craft.setDeep(obj, prop, mnp.html());
-
-                                    if (bind.includes('.')) obj.listen = function(o, n, v) {
-                                        return n == prop ? mnp.html(v) : null;
-                                    };
-
-                                    if (is.Input(mnp)) mnp.SyncInput(obj, prop);
-                                })();
-                            } catch (e) {
-                                console.log(e);
-                                console.warn('could not bind : ', element);
-                            }
-                        };
-                        if (firstRun === 0) setTimeout(function() {
-                            return Craft.WhenReady.then(manage);
-                        }, 250);
-                        else Craft.WhenReady.then(manage);
-                    })();
-                }
-                if (mnp.hasAttr('link')) On(element).Click(function(e) {
-                    var nt = mnp.getAttr('link');
-                    nil(nt) ? open(nt) : Craft.router.open(nt);
-                });
-            })();
-        }
-    });
-
     Craft.curry.to = Craft.curry(function(arity, fn) {
-        return createFn(fn, [], arity);
+        return makeFn(fn, [], arity);
     });
     Craft.curry.adaptTo = Craft.curry(function(num, fn) {
         return Craft.curry.to(num, function(context) {
-            for (var _len5 = arguments.length, args = Array(_len5 > 1 ? _len5 - 1 : 0), _key5 = 1; _key5 < _len5; _key5++) {
-                args[_key5 - 1] = arguments[_key5];
+            for (var _len7 = arguments.length, args = Array(_len7 > 1 ? _len7 - 1 : 0), _key7 = 1; _key7 < _len7; _key7++) {
+                args[_key7 - 1] = arguments[_key7];
             }
 
             return fn.apply(null, args.slice(1).concat(context));
@@ -2247,21 +2243,16 @@ function _typeof(obj) {
                         if (nil(wc)) fetch(src).then(function(res) {
                             return res.json().then(function(webcomponent) {
                                 CrafterStyles.innerHTML += webcomponent.css;
-                                head.appendChild(dom().script('', {
-                                    src: Craft.URLfrom(webcomponent.js + ('\nCraft.WebComponents.push(\'' + src + '\')')),
-                                    webcomponent: webcomponent.name
-                                }, true));
+                                head.appendChild(dom().script(webcomponent.js + ('\nCraft.WebComponents.push(\'' + src + '\')'), 'webcomponent=' + webcomponent.name));
                                 if (el.getAttr(cc) == 'true') localStorage.setItem(src, JSON.stringify(webcomponent));
                             });
                         }).catch(function(err) {
                             return console.error(err + ': could not load ' + w);
                         });
                     }
+                    el.removeAfter(3500);
                 })();
             }
-            Craft.WhenReady.then(function() {
-                return _this10.remove();
-            });
         }
     });
 
@@ -2269,13 +2260,13 @@ function _typeof(obj) {
         Craft.router.links.forEach(function(link) {
             return link();
         });
-        if (Craft.WebComponents.length === queryAll(fw).length) {
-            Ready = true;
-            Craft.Ready = Ready;
-        } else Craft.poll(function() {
+        Craft.WebComponents.length === queryAll(fw).length ? Ready = true : Craft.poll(function() {
             return Craft.WebComponents.length === queryAll(fw).length;
         }, 35, 5035).then(function() {
-            return Ready = true;
+            Ready = true;
+            setTimeout(function() {
+                return queryEach('[bind],[tooltip],[ripple],[movable],[link]', manageCustomAttributes);
+            }, 50);
         }).catch(function() {
             Ready = true;
             console.warn('loading webcomponents took too long loaded with errors :( \t');

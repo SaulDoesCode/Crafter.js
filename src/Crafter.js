@@ -3,7 +3,8 @@
  *  @author Saul van der Walt - https://github.com/SaulDoesCode/
  *  @license MIT
  */
-"use strict";
+"use strict ";
+
 ((doc, root) => {
 
   let RegExps = {
@@ -19,6 +20,7 @@
     Ready = false,
     w = 'webcomponent',
     fw = 'fetch-' + w,
+    sI = 'Isync',
     head = doc.head,
     CrafterStyles = doc.createElement('style'),
     ua = navigator.userAgent,
@@ -27,8 +29,53 @@
   _br ? [_br[1], _br[2]] : [navigator.appName, navigator.appVersion, '-?'];
 
   CrafterStyles.setAttribute('crafterstyles', '');
-  CrafterStyles.textContent = `\n@keyframes NodeInserted {from {opacity:.99;}to {opacity: 1;}} [bind] {animation-duration: 0.001s;animation-name: NodeInserted;} for-each,craft-template {display:none;}`;
   head.appendChild(CrafterStyles);
+
+  function manageCustomAttributes(element) {
+    let mnp = dom(element);
+    if (mnp.hasAttr('bind')) {
+      let manage = () => {
+        try {
+          let bind = mnp.getAttr('bind'),
+            cutbind = cutdot(bind),
+            prop = cutbind[cutbind.length - 1],
+            obj = Craft.getDeep(root, Craft.omitFrom(cutbind, prop).join('.')) || CraftScope,
+            val = Craft.getDeep(obj, cutbind.length > 1 ? Craft.omit(cutbind, cutbind[0]).join('.') : prop);
+          def(val) ? mnp.html(val) : Craft.setDeep(obj, prop, mnp.html());
+
+          if (def(Object.getOwnPropertyDescriptor(obj, 'listen'))) obj.listen = (o, n, v) => {
+            if (n == prop) mnp.html(v);
+          }
+
+          if (is.Input(mnp)) mnp.SyncInput(obj, prop);
+        } catch (e) {
+          console.warn("couldn't bind :", mnp);
+        }
+      }
+      Ready ? manage() : Craft.WhenReady.then(manage);
+    }
+    if (mnp.hasAttr('link')) On(mnp).Click(e => {
+      let link = mnp.getAttr('link');
+      (mnp.hasAttr('newtab') ? open : Craft.router.open)(link);
+    });
+    def(Craft.WidgetWatchers) ? Craft.WidgetWatchers(mnp) :
+      Craft.WhenReady.then(() => setTimeout(() => {
+        if (def(Craft.WidgetWatchers)) Craft.WidgetWatchers(mnp);
+      }, 200));
+  }
+
+  let domwatcher = new MutationObserver(muts => muts.forEach(mut => {
+
+    if (mut.type === 'attributes') {
+      if (['tooltip', 'bind', 'movable', 'ripple', 'link'].some(el => el === mut.attributeName) && is.Node(mut.target)) manageCustomAttributes(mut.target);
+    }
+
+  }));
+  domwatcher.observe(doc.documentElement, {
+    attributes: true,
+    childlist: true,
+    subtree: true
+  });
 
   function toInt(val) {
     let num = Number(val);
@@ -38,16 +85,16 @@
   }
 
 
-  function docfragFromString(strHTML) {
-    return doc.createRange().createContextualFragment(strHTML);
+  function docfragFromString(html) {
+    return doc.createRange().createContextualFragment(html);
   }
 
   function toArr(val) {
     return Array.prototype.slice.call(val);
   }
-  // ta = TestArgs : convert arguments to array then tests it
+  // ta = TestArgs : convert arguments to array then tests them
   function ta(args, test) {
-    return args.length === 0 ? false : toArr(args).every(test);
+    return args.length !== 0 && toArr(args).every(test);
   }
 
   function type(obj, str) {
@@ -58,21 +105,22 @@
     return typeof val === str;
   }
 
-  function manageInvoke(fn, argsArr, totalArity) {
+  function doInvok(fn, argsArr, totalArity) {
     argsArr = argsArr.length > totalArity ? argsArr.slice(0, totalArity) : argsArr;
-    return argsArr.length === totalArity ? fn.apply(null, argsArr) : createFn(fn, argsArr, totalArity);
+    return argsArr.length === totalArity ? fn.apply(null, argsArr) : makeFn(fn, argsArr, totalArity);
   }
 
-
-  function createFn(fn, Args, totalArity) {
+  function makeFn(fn, Args, totalArity) {
     let remainingArity = totalArity - Args.length;
     return is.Between(remainingArity, 10, 0) ? function () {
       let args = toArr(arguments);
-      return manageInvoke(fn, Args.concat(args), totalArity);
+      return doInvok(fn, Args.concat(args), totalArity);
     } : (function (fn, args, arity) {
       let a = [];
       forEach(arity, (v, i) => a.push('a' + i.toString()));
-      return eval(`false||function(${a.join(',')}){ return manageInvoke(fn, args.concat(toArr(arguments)));}`);
+      return function (...a) {
+        return doInvok(fn, args.concat(toArr(arguments)));
+      }
     })(fn, args, remainingArity);
   }
 
@@ -86,10 +134,6 @@
 
   function cutdot(str) {
     return str.split('.');
-  }
-
-  function hasdot(str) {
-    return str.includes('.');
   }
 
   /** is - Type Testing / Assertion */
@@ -188,10 +232,9 @@
         return ta(arguments, str => {
           try {
             JSON.parse(str);
-          } catch (e) {
-            return false;
-          }
-          return true;
+            return !0;
+          } catch (e) {}
+          return !1;
         });
       },
       /**
@@ -271,12 +314,12 @@
       Set() {
         return ta(arguments, o => type(o, '[object Set]'));
       },
-      Args: val => !nill(val) && (type(val, '[object Arguments]') || (typeof val === 'object' && 'callee' in val)),
+      Args: val => !nil(val) && type(val, '[object Arguments]'),
       /**
        * Determine if a variable is a Symbol
        * @param obj - variable to test
        */
-      symbol: obj => type(obj, '[object Symbol]'),
+      Symbol: obj => type(obj, '[object Symbol]'),
       char: val => is.String(val) && val.length === 1,
       space: val => is.char(val) && (val.charCodeAt(0) > 8 && val.charCodeAt(0) < 14) || val.charCodeAt(0) === 32,
       /**
@@ -444,10 +487,7 @@
        * @param {Object|Array|string} val - value to test if empty
        */
       empty(val) {
-        let isO = is.Object(val),
-          isA = is.Arr(val),
-          num = isO ? Object.keys(val).length : null;
-        return isO ? num === 0 || (num === 1 && isA) || (num === 2 && is.Args(val)) : isA ? val.length <= 0 : val === ''
+        return Craft.len(val) === 0 || val === ''
       },
       /**
        * Test if something is a Native JavaScript feature
@@ -457,7 +497,7 @@
         let type = typeof val;
         return is.Func(val) ? RegExp('^' + String(Object.prototype.toString).replace(/[.*+?^${}()|[\]\/\\]/g, '\\$&').replace(/toString|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$').test(Function.prototype.toString.call(val)) : (val && type == 'object' && /^\[object .+?Constructor\]$/.test(val.toString)) || false;
       },
-      Input: element => element.tagName === 'INPUT' || element.tagName === 'TEXTAREA',
+      Input: element => ['INPUT', 'TEXTAREA'].some(i => element.tagName === i),
   };
 
   /**
@@ -465,7 +505,7 @@
    * @param {Node|NodeList|Array|String} val - pass either a CSS Selector string , Node/NodeList or Array of Nodes
    * @param {Node|NodeList|Array|String} within - pass either a CSS Selector string , Node/NodeList or Array of Nodes to search for val in
    */
-  root.QueryOrNodetoNodeArray = (val, within) => {
+  function NodeOrQuerytoArr(val, within) {
     if (is.String(val) && (is.String(within) || is.Node(within))) val = queryAll(val, within);
     else if (is.String(val)) val = queryAll(val)
     return is.Node(val) ? [val] : is.NodeList(val) ? toArr(val) : [];
@@ -481,17 +521,20 @@
    */
   function EventHandler(EventType, Target, Func, Within, ...args) {
     this.EventType = EventType || 'click';
-    this.Target = (Target !== root && Target !== doc) ? QueryOrNodetoNodeArray(Target, Within) : Target;
+    this.Target = (Target !== root && Target !== doc) ? NodeOrQuerytoArr(Target, Within) : [Target];
     this.FuncWrapper = e => Func(e, e.srcElement, args);
   }
   /**
    * Activates the EventHandler to start listening for the EventType on the Target/Targets
    */
   EventHandler.prototype.On = function () {
-    is.Arr(this.Target) ? this.Target.forEach(target => target.addEventListener(this.EventType, this.FuncWrapper)) : this.Target.addEventListener(this.EventType, this.FuncWrapper);
-    return this;
-  }
-
+      this.Target.forEach(target => target.addEventListener(this.EventType, this.FuncWrapper));
+      return this;
+    }
+    /**
+     * Change the Event type to listen for
+     * {string} type - the name of the event to listen for
+     */
   EventHandler.prototype.ChangeType = function (type) {
       this.Off();
       this.EventType = type;
@@ -503,7 +546,7 @@
      * can still optionally be re-activated with On again
      */
   EventHandler.prototype.Off = function () {
-      is.Arr(this.Target) ? this.Target.forEach(target => target.removeEventListener(this.EventType, this.FuncWrapper)) : this.Target.removeEventListener(this.EventType, this.FuncWrapper);
+      this.Target.forEach(target => target.removeEventListener(this.EventType, this.FuncWrapper));
       return this;
     }
     /**
@@ -516,9 +559,9 @@
         etype = this.EventType,
         listenOnce = e => {
           func(e);
-          is.Arr(target) ? target.forEach(t => t.removeEventListener(etype, listenOnce)) : target.removeEventListener(etype, listenOnce);
+          target.forEach(t => t.removeEventListener(etype, listenOnce));
         }
-      is.Arr(target) ? target.forEach(t => t.addEventListener(etype, listenOnce)) : target.addEventListener(etype, listenOnce);
+      target.forEach(t => t.addEventListener(etype, listenOnce));
       return this;
     }
     /**
@@ -527,11 +570,19 @@
      * @param {function} func - function called on each iteration -> "function( value , indexOrKey ) {...}"
      */
   function forEach(iterable, func) {
-    if (is.Arraylike(iterable) && !localStorage)
-      for (let i = 0; i < iterable.length; i++) func(iterable[i], i);
-    else
-      for (let i in iterable)
-        if (iterable.hasOwnProperty(i)) func(iterable[i], i);
+    if (!is.empty(iterable) && is.Func(func)) {
+      if (is.Arraylike(iterable) && !localStorage) {
+        for (let i = 0; i < iterable.length; i++) func(iterable[i], i);
+      } else if (is.int(iterable)) {
+        iterable = Number(iterable)
+        for (; 0 < iterable; iterable--) func(iterable);
+      } else {
+        for (let i in iterable) {
+          if (iterable.hasOwnProperty(i)) func(iterable[i], i);
+        }
+      }
+
+    }
   }
 
   /**
@@ -561,9 +612,7 @@
      */
   root.queryEach = (selector, element, func) => {
     if (is.Func(element)) func = element;
-    let elements, i = 0;
-    is.Node(selector) ? elements = [selector] : elements = is.Func(element) ? queryAll(selector) : queryAll(selector, element);
-    for (; i < elements.length; i++) func(elements[i], i);
+    forEach(NodeOrQuerytoArr(selector, element), func);
   }
 
   function EventTypes(Target, within, listen) {
@@ -620,28 +669,16 @@
       new EventHandler(EventType, Target, func, element).Once();
   }
 
-  function make_element(name, inner, attributes, NodeForm, extraAttr) {
-    if (!def(NodeForm)) NodeForm = true;
-    if (!is.String(inner) && !is.Node(inner)) {
-      if (is.Object(inner)) attributes = inner;
-      if (is.Func(inner)) inner = inner();
-      else inner = '';
-    }
-
-    if (is.Bool(attributes)) NodeForm = attributes;
-    if (NodeForm === true) {
-      let newEl = doc.createElement(name);
-      newEl.appendChild(is.Node(inner) ? inner : docfragFromString(inner));
-      if (is.Object(attributes)) forEach(attributes, (val, attr) => newEl.setAttribute(attr, val));
-      if (is.String(attributes)) attributes.split('&').forEach(attr => def(attr.split('=')[1]) ? newEl.setAttribute(attr.split('=')[0], attr.split('=')[1]) : newEl.setAttribute(attr.split('=')[0], ''));
-      if (is.Object(extraAttr)) forEach(extraAttr, (val, attr) => newEl.setAttribute(attr, val));
-      return newEl;
-    }
-    let attrString = ``;
-    if (is.String(attributes)) attributes.split('&').forEach(attr => attrString += def(attr.split('=')[1]) ? `${attr.split('=')[0]}="${attr.split('=')[1]}" ` : `${attr.split('=')[0]} `);
-    if (is.Object(attributes)) forEach(attributes, (val, attr) => attrString += ` ${attr}="${val}" `);
-    if (is.Object(extraAttr)) forEach(extraAttr, (val, attr) => attrString += ` ${attr}="${val}" `);
-    return `<${name} ${attrString}>${inner}</${name}>`;
+  function craftElement(name, inner, attributes, extraAttr, stringForm) {
+    if (is.False(is.String(inner), is.Node(inner))) is.Object(inner) ? attributes = inner : inner = is.Func(inner) ? inner() : '';
+    let newEl = dom(doc.createElement(name));
+    newEl.html(inner);
+    if (is.Object(attributes)) forEach(attributes, (val, attr) => newEl.setAttr(attr, val));
+    if (is.String(attributes)) attributes.split('&').forEach(attr => def(attr.split('=')[1]) ? newEl.setAttr(attr.split('=')[0], attr.split('=')[1]) : newEl.setAttr(attr.split('=')[0], ''));
+    if (is.Object(extraAttr)) forEach(extraAttr, (val, attr) => newEl.setAttr(attr, val));
+    if (is.Bool(extraAttr)) stringForm = extraAttr;
+    if (stringForm === true) newEl = newEl.outerHTML;
+    return newEl;
   }
 
   function domNodeList(elements) {
@@ -680,10 +717,10 @@
      */
     element.html = function (val, position) {
         let el = this,
-          input = is.Input(el),
-          hv = def(val);
-        if (hv) input ? el.value = val : el.innerHTML = val;
-        return hv ? el : input ? el.value : el.innerHTML;
+          input = is.Input(el);
+        if (is.Node(val)) val = val.outerHTML;
+        if (def(val)) input ? el.value = val : el.innerHTML = val;
+        return def(val) ? el : input ? el.value : el.innerHTML;
       }
       /**
        * changes or returns the textContent value of a Node
@@ -693,6 +730,7 @@
     element.text = function (val) {
         let el = this,
           input = is.Input(el);
+        if (is.Node(val)) val = val.outerHTML;
         if (def(val)) input ? el.value = val : el.textContent = val;
         return def(val) ? this : input ? el.value : el.textContent;
       }
@@ -829,14 +867,12 @@
      * @param {function=} death - called on removal of the attribute , arguments  = (mutation, observer, element)
      */
     element.CustomAttribute = function (name, handle, death) {
-        element[name + "_observer"] = new MutationObserver(mutations => {
-          mutations.forEach(mut => {
-            if (mut.type === 'attributes' && mut['attributeName'] === name) {
-              if (element.hasAttr(name)) handle(element.getAttr(name), element, mut);
-              else if (is.Func(death)) death(mut, element[name + "_observer"], element);
-            }
-          });
-        });
+        element[name + "_observer"] = new MutationObserver(muts => muts.forEach(mut => {
+          if (mut.type === 'attributes' && mut['attributeName'] === name) {
+            if (element.hasAttr(name)) handle(element.getAttr(name), element, mut);
+            else if (is.Func(death)) death(mut, element[name + "_observer"], element);
+          }
+        }));
         element[name + "_observer"].observe(element, {
           attributes: true
         });
@@ -855,7 +891,7 @@
      * gets all the elements siblings within it's parentNode
      * @memberof dom
      */
-    element.getSiblings = () => Craft.omitFrom(toArr(element.parentNode.childNodes), element);
+    element.getSiblings = () => Craft.omit(toArr(element.parentNode.childNodes), element);
     /**
      * gets all the element's dimentions (width,height,left,top,bottom,right)
      * @memberof dom
@@ -867,9 +903,9 @@
      * @param {string|number=} pixel value to set
      */
     element.Width = function (pixels) {
-        let haspixels = def(pixels);
-        if (haspixels) this.style.width = pixels;
-        return haspixels ? this : this.getRect().width;
+        let dp = def(pixels);
+        if (dp) this.style.width = pixels;
+        return dp ? this : this.getRect().width;
       }
       /**
        * sets or gets the element's pixel height
@@ -877,8 +913,9 @@
        * @param {string|number=} pixel value to set
        */
     element.Height = function (pixels) {
-        if (def(pixels)) this.style.height = pixels;
-        return def(pixels) ? this : this.getRect().height;
+        let dp = def(pixels);
+        if (dp) this.style.height = pixels;
+        return dp ? this : this.getRect().height;
       }
       /**
        * move the element using either css transforms or plain css possitioning
@@ -914,11 +951,11 @@
     element.queryAll = selector => queryAll(selector, element);
 
     if (is.Input(element)) {
-      element.SyncInput = (obj, key) => element['InputSync'] = On(element).Input(e => Craft.setDeep(obj, key, element.html()));
+      element.SyncInput = (obj, key) => element[sI] = On(element).Input(e => Craft.setDeep(obj, key, element.value));
       element.disconectInputSync = () => {
-        if (def(element['InputSync'])) {
-          element['InputSync'].Off();
-          delete element['InputSync'];
+        if (def(element[sI])) {
+          element[sI].Off();
+          delete element[sI];
         }
       }
     }
@@ -935,12 +972,18 @@
    * @param {Node|NodeList|string=} element - optional Node, NodeList or CSS Selector that will be affected by the methods returned
    * @param {Node|string=} within - optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
    */
-  root.dom = (element, within) => {
-    if (is.String(element)) element = queryAll(element, within);
-    if (is.NodeList(element)) {
-      if (element.length === 1) element = element[0];
-      else return domNodeList(element);
+  root.dom = (element, within, one) => {
+    if (within === true) {
+      one = within;
+      within = null;
     }
+    if (one !== true) {
+      if (is.String(element)) element = queryAll(element, within);
+      if (is.NodeList(element)) {
+        if (element.length === 1) element = element[0];
+        else return domNodeList(element);
+      }
+    } else if (is.String(element)) element = query(element, within);
     if (is.Node(element)) return element['hasDOMmethods'] !== true ? domManip(element) : element;
     return Craft.dom;
   }
@@ -985,7 +1028,7 @@
       },
       setDeep(obj, prop, value, returnObj) {
         if (is.Arr(prop) && prop.length === 1) prop = prop[0];
-        if (is.String(prop) && !hasdot(prop)) value !== "_DELETE_" ? obj[prop] = value : delete obj[prop];
+        if (is.String(prop) && !prop.includes('.')) value !== "_DELETE_" ? obj[prop] = value : delete obj[prop];
         else {
           if (is.String(prop)) prop = prop.split(".");
           let e = prop.shift();
@@ -1017,124 +1060,111 @@
         })));
         return hostobj;
       },
-      cloneArr: arr => arr.slice(0),
+      cloneArr: arr => Array(...arr),
       clone: val => is.Object(val) ? Object.create(val) : val.slice(0),
       omitFrom(Arr, ...values) {
-        if (values.length === 1) {
-          let temp = [],
-            string = is.String(Arr);
-          if (is.Arraylike(Arr)) Arr = toArr(Arr)
-          for (let i = 0, index = Arr.indexOf(values[0]); i < Arr.length; i++)
-            if (i !== index) temp.push(Arr[i]);
-          return string ? temp.join('') : temp;
-        }
-        values.forEach(val => Arr = Craft.omitFrom(Arr, val));
-        return Arr;
-      },
-      omit(obj, val) {
-        if (is.Arraylike(obj)) obj = Craft.omitFrom(obj, i);
-        if (is.Object(obj) && obj !== val) forEach(obj, (prop, key) => {
-          if (val === key || val === prop) delete obj[key];
+        let string = is.String(Arr);
+        Arr = (is.Arraylike(Arr) ? toArr(Arr) : Arr).filter(e => {
+          if (!values.some(v => is.eq(v, e))) return e;
         });
-        return obj;
+        return string ? Arr.join('') : Arr;
+      },
+      omit(val, ...values) {
+        if (is.Arraylike(val)) val = Craft.omitFrom(val, ...values);
+        if (is.Object(val) && !values.some(v => v === val)) forEach(val, (prop, key) => {
+          if (values.some(v => is.eq(v, prop) || is.eq(v, key))) delete val[key];
+        });
+        return val;
       },
       dom: {
-        element: make_element,
+        element: craftElement,
         /**
          * creates a div element with the options provided
          * @memberof dom
          * @param {string} sets innerHTML of the div
          * @param {string|Object=} sets div attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
-         * @param {Boolean=} should the div be a plain String or a Node defaults to string
          */
-        div: (inner, attr, node) => Craft.dom.element('div', inner, attr, node),
+        div: (inner, attr) => craftElement('div', inner, attr),
         /**
          * creates a span element with the options provided
          * @memberof dom
          * @param {string} sets innerHTML of the span
          * @param {string|Object=} sets span attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
-         * @param {Boolean=} should the span be a plain String or a Node defaults to string
          */
-        span: (inner, attr, node) => Craft.dom.element('span', inner, attr, node || true),
+        span: (inner, attr) => craftElement('span', inner, attr),
         /**
          * creates a label element with the options provided
          * @memberof dom
          * @param {string} sets innerHTML of the label
          * @param {string|Object=} sets label attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
-         * @param {Boolean=} should the label be a plain String or a Node defaults to string
          */
-        label: (inner, attr, node) => Craft.dom.element('label', inner, attr, node || true),
+        label: (inner, attr) => craftElement('label', inner, attr),
         /**
          * creates a p (paragraph) element with the options provided
          * @memberof dom
          * @param {string} sets innerHTML of the p
          * @param {string|Object=} sets p attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
-         * @param {Boolean=} should the p be a plain String or a Node defaults to string
          */
-        p: (inner, attr, node) => Craft.dom.element('p', inner, attr, node),
+        p: (inner, attr) => craftElement('p', inner, attr),
         /**
          * creates an img element with the options provided
          * @memberof dom
          * @param {string} sets src of the img
          * @param {string} sets alt of the img
          * @param {string|Object=} sets p attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
-         * @param {Boolean=} should the p be a plain String or a Node defaults to string
          */
-        img: (src, alt, attr, node) => Craft.dom.element('img', '', attr, node, {
+        img: (src, alt, attr) => craftElement('img', '', attr, {
           src: src,
           alt: alt
         }),
-        input(type, attributes) {
-          let input = doc.createElement('input');
-          input.type = type || 'text';
-          if (is.Object(attributes)) forEach(attributes, (val, attr) => input.setAttribute(attr, val));
-          if (is.String(attributes)) attributes.split('&').forEach(attr => def(attr.split('=')[1]) ? input.setAttribute(attr.split('=')[0], attr.split('=')[1]) : input.setAttribute(attr.split('=')[0], ''));
-          return input;
-        },
-        ul(items, attr, node) {
+        input: (type, attributes) => craftElement('input', '', attributes, {
+          type: type || 'text'
+        }),
+        ul(items, attr) {
           let list = ``;
           if (is.Arr(items)) items.forEach(item => {
-            if (is.String(item)) list += Craft.dom.element('li', item);
-            else if (is.Object(items)) list += Craft.dom.element('li', item.inner, item.attr);
+            if (is.String(item)) list += craftElement('li', item).outerHTML;
+            else if (is.Object(items)) list += craftElement('li', item.inner, item.attr).outerHTML;
           });
-          return Craft.dom.element('ul', list, attr, node)
+          return craftElement('ul', list, attr)
         },
         ol(items, attr, node) {
           let list = ``;
           if (is.Arr(items)) items.forEach(item => {
-            if (is.String(item)) list += Craft.dom.element('li', item);
-            if (is.Object(items)) list += Craft.dom.element('li', item.inner, item.attr);
+            if (is.String(item)) list += craftElement('li', item).outerHTML;
+            if (is.Object(items)) list += craftElement('li', item.inner, item.attr).outerHTML;
           });
-          return Craft.dom.element('ol', list, attr, node)
+          return craftElement('ol', list, attr, node)
         },
-        h: (level, inner, attr, node) => Craft.dom.element('h' + level, inner, attr, node),
-        a: (link, inner, attr, node) => Craft.dom.element('a', inner, attr, node, {
+        h: (level, inner, attr, node) => craftElement('h' + level, inner, attr, node),
+        a: (link, inner, attr, node) => craftElement('a', inner, attr, node, {
           href: link
         }),
         script(code, attr, defer) {
-          let script = Craft.dom.element('script', code, attr, true, {
-            type: 'text/javascript'
+          let script = craftElement('script', '', attr, {
+            type: 'text/javascript',
+            src: Craft.URLfrom(code)
           });
           script.defer = defer !== false;
           return script;
         },
-        table(rows, attr, node) {
-          if (!is.Arr(rows)) return is.String(rows) ? Craft.dom.element('table', rows, attr, node) : Craft.dom.element('table', '', attr, node);
+        table(rows, attr) {
+          if (!is.Arr(rows)) return (is.String(rows) ? craftElement('table', rows, attr, node) : craftElement('table', '', attr, node)).outerHTML;
           if (!rows.every(o => is.Object(o))) throw new TypeError('dom.table -> rows : all entries need to be objects');
           let tableInner = ``;
           forEach(rows, row => forEach(row, (val, key) => {
-            let row = `<tr>`;
+            let row = ``;
             if (key === 'cell' || key === 'td' || key === 'data') {
               if (is.String(val)) row += `<td>${val}</td>`;
-              if (is.Object(val)) row += Craft.dom.element('tr', val.inner, val.attr)
+              if (is.Object(val)) row += craftElement('tr', val.inner, val.attr).outerHTML
             } else if (key === 'head' || key === 'th') {
               if (is.String(val)) row += `<th>${val}</th>`;
-              if (is.Object(val)) row += Craft.dom.element('th', val.inner, val.attr)
+              if (is.Object(val)) row += craftElement('th', val.inner, val.attr).outerHTML
             }
-            row += '</tr>'
-            tableInner += row;
+            row += ''
+            tableInner += craftElement('tr', row).outerHTML;
           }));
-          return Craft.dom.element('table', tableInner, attr, node);
+          return craftElement('table', tableInner, attr);
         },
       },
       CurrentBrowser: {
@@ -1213,10 +1243,10 @@
           },
           setTitle: title => doc.title = title,
           setView(selector, view, position) {
-            dom(selector).html(view, position)
+            dom(selector, true).html(view, position)
           },
           fetchView(selector, src, cache, position) {
-            let vh = dom(selector),
+            let vh = dom(selector, true),
               srcpre = (`Cr:${src}`),
               view = localStorage.getItem(srcpre);
             if (!def(vh.element)) return;
@@ -1345,7 +1375,7 @@
           } catch (e2) {}
         }
       },
-      curry: fn => createFn(fn, [], fn.length),
+      curry: fn => makeFn(fn, [], fn.length),
       after(n, func) {
         !is.Func(func) && is.Func(n) ? func = n : console.error("after: no function");
         n = Number.isFinite(n = +n) ? n : 0;
@@ -1452,10 +1482,7 @@
         months: (n, daysInMonth) => n * Craft.millis.days((daysInMonth || 30)),
         years: (n) => n * Craft.millis.days(365),
       },
-      Scope: {},
-      TemplateBinds: {},
       WebComponents: [],
-      ReadyFunctions: [],
       tabActive: true,
       toArr: toArr,
       toInt: toInt,
@@ -1526,18 +1553,15 @@
       }),
       WhenScrolledTo: Scroll => new Promise((pass, fail) => Once('scroll', e => pageYOffset >= Scroll || pageYOffset <= Scroll ? pass(e) : fail(e))),
       /**
-       * set functions that executes when the DOM and WebComponents are finished loading
+       * returns a promise when the DOM and WebComponents are all finished loading
        * @param {function} func - function to execute when the DOM and webcomponents are ready
        */
       get WhenReady() {
         return new Promise((pass, fail) => {
-          if (Ready) {
-            pass(Craft.Scope);
-            return;
-          }
+          if (Ready) return pass();
           let check = setInterval(() => {
             if (Ready) {
-              pass(Craft.Scope);
+              pass();
               clearInterval(check);
             }
           }, 30);
@@ -1545,7 +1569,7 @@
             clearInterval(check);
             if (!Ready) fail('loading took too long loaded with errors :(');
           }, 5500);
-        })
+        });
       },
       poll: (test, interval, timeout) => new Promise((pass, fail) => {
         if (!def(timeout)) interval = timeout;
@@ -1598,10 +1622,7 @@
       createWebComponent(webcomponent, src) {
         webcomponent = JSON.parse(webcomponent);
         CrafterStyles.textComponent += webcomponent.css;
-        head.appendChild(dom().script('', {
-          src: Craft.URLfrom(webcomponent.js + `\nCraft.WebComponents.push('${src}')`),
-          webcomponent: webcomponent.name
-        }, true));
+        head.appendChild(dom().script(webcomponent.js + `\nCraft.WebComponents.push('${src}')`, `webcomponent=${webcomponent.name}`));
       },
       /**
        * method for creating custom elements configuring their lifecycle's and inheritance
@@ -1619,7 +1640,7 @@
        */
       newComponent(tag, config) {
         if (!def(config)) throw new Error(tag + ' : config undefined');
-        let element = Object.create(HTMLElement.prototype),
+        let element = Craft.clone(HTMLElement.prototype),
           settings = {};
 
         forEach(config, (prop, key) => {
@@ -1632,20 +1653,21 @@
         });
 
         settings['prototype'] = element;
-        doc.registerElement(tag, settings)
+        doc.registerElement(tag, settings);
       },
       SyncInput(input, obj, key) {
         if (is.String(input)) input = query(input);
-        if (is.Input(input)) input['InputSync'] = On(input).Input(e => Craft.setDeep(obj, key, input.value));
+        if (is.Input(input)) input[sI] = On(input).Input(e => Craft.setDeep(obj, key, input.value));
       },
       disconectInputSync(input) {
         if (is.String(input)) input = query(input);
-        if (is.Node(input) && def(input['InputSync'])) {
-          input['InputSync'].Off();
-          delete input['InputSync'];
+        if (is.Node(input) && def(input[sI])) {
+          input[sI].Off();
+          delete input[sI];
         }
       },
   };
+  root.CraftScope = Craft.observable({});
 
   On('blur', e => {
     Craft.tabActive = false;
@@ -1655,42 +1677,7 @@
     forEach(Craft.TemplateBinds, val => val.applyValues());
   });
 
-  let firstRun = 0;
-  On('animationstart', doc, e => {
-    if (e.animationName === 'NodeInserted' && is.Node(e.target)) {
-      let element = e.target,
-        mnp = dom(element);
-      if (mnp.hasAttr('bind')) {
-        let manage = () => {
-          firstRun++;
-          try {
-            let bind = mnp.getAttr('bind'),
-              cutbind = cutdot(bind),
-              prop = cutbind[cutbind.length - 1],
-              obj = Craft.getDeep(root, Craft.omitFrom(cutbind, prop).join('.')),
-              val = Craft.getDeep(root, bind);
-
-            def(val) ? mnp.html(val) : Craft.setDeep(obj, prop, mnp.html());
-
-            if (bind.includes('.')) obj.listen = (o, n, v) => n == prop ? mnp.html(v) : null;
-
-            if (is.Input(mnp)) mnp.SyncInput(obj, prop);
-          } catch (e) {
-            console.log(e);
-            console.warn('could not bind : ', element);
-          }
-        }
-        if (firstRun === 0) setTimeout(() => Craft.WhenReady.then(manage), 250);
-        else Craft.WhenReady.then(manage);
-      }
-      if (mnp.hasAttr('link')) On(element).Click(e => {
-        let nt = mnp.getAttr('link');
-        nil(nt) ? open(nt) : Craft.router.open(nt);
-      });
-    }
-  });
-
-  Craft.curry.to = Craft.curry((arity, fn) => createFn(fn, [], arity));
+  Craft.curry.to = Craft.curry((arity, fn) => makeFn(fn, [], arity));
   Craft.curry.adaptTo = Craft.curry((num, fn) => Craft.curry.to(num, (context, ...args) => fn.apply(null, args.slice(1).concat(context))));
   Craft.curry.adapt = fn => Craft.curry.adaptTo(fn.length, fn);
   Craft.loader.removeAll(true);
@@ -1701,7 +1688,6 @@
       Craft.mouse.over = e.target;
     }
   });
-
 
   Craft.newComponent(fw, {
     inserted() {
@@ -1717,25 +1703,23 @@
           }
           if (nil(wc)) fetch(src).then(res => res.json().then(webcomponent => {
             CrafterStyles.innerHTML += webcomponent.css;
-            head.appendChild(dom().script('', {
-              src: Craft.URLfrom(webcomponent.js + `\nCraft.WebComponents.push('${src}')`),
-              webcomponent: webcomponent.name
-            }, true));
+            head.appendChild(dom().script(webcomponent.js + `\nCraft.WebComponents.push('${src}')`, `webcomponent=${webcomponent.name}`));
             if (el.getAttr(cc) == 'true') localStorage.setItem(src, JSON.stringify(webcomponent));
           })).catch(err => console.error(err + ': could not load ' + w))
         }
+        el.removeAfter(3500);
       }
-      Craft.WhenReady.then(() => this.remove());
     }
   });
 
   Once('DOMContentLoaded', () => {
     Craft.router.links.forEach(link => link());
-    if (Craft.WebComponents.length === queryAll(fw).length) {
-      Ready = true;
-      Craft.Ready = Ready;
-    } else Craft.poll(() => Craft.WebComponents.length === queryAll(fw).length, 35, 5035)
-      .then(() => Ready = true).catch(() => {
+    Craft.WebComponents.length === queryAll(fw).length ? Ready = true :
+      Craft.poll(() => Craft.WebComponents.length === queryAll(fw).length, 35, 5035)
+      .then(() => {
+        Ready = true
+        setTimeout(() => queryEach('[bind],[tooltip],[ripple],[movable],[link]', manageCustomAttributes), 50);
+      }).catch(() => {
         Ready = true;
         console.warn('loading webcomponents took too long loaded with errors :( \t');
       });
