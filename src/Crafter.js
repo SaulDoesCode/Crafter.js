@@ -34,44 +34,35 @@
   function manageCustomAttributes(element) {
     let mnp = dom(element);
     if (mnp.hasAttr('bind')) {
-      let manage = () => {
-        try {
-          let bind = mnp.getAttr('bind'),
-            cutbind = cutdot(bind),
-            prop = cutbind[cutbind.length - 1],
-            obj = Craft.getDeep(root, Craft.omitFrom(cutbind, prop).join('.')) || CraftScope,
-            val = Craft.getDeep(obj, cutbind.length > 1 ? Craft.omit(cutbind, cutbind[0]).join('.') : prop);
-          def(val) ? mnp.html(val) : Craft.setDeep(obj, prop, mnp.html());
+      try {
+        let bind = mnp.getAttr('bind'),
+          cutbind = cutdot(bind),
+          prop = cutbind[cutbind.length - 1],
+          obj = Craft.getDeep(root, Craft.omitFrom(cutbind, prop).join('.')) || CraftScope,
+          val = Craft.getDeep(obj, cutbind.length > 1 ? Craft.omit(cutbind, cutbind[0]).join('.') : prop);
 
-          if (def(Object.getOwnPropertyDescriptor(obj, 'listen'))) obj.listen = (o, n, v) => {
-            if (n == prop) mnp.html(v);
-          }
+        def(val) ? mnp.html(val) : Craft.setDeep(obj, prop, mnp.html());
 
-          if (is.Input(mnp)) mnp.SyncInput(obj, prop);
-        } catch (e) {
-          console.warn("couldn't bind :", mnp);
+        if (def(Object.getOwnPropertyDescriptor(obj, 'listen'))) obj.listen = (o, n, v) => {
+          if (n == prop) mnp.html(v);
         }
+        if (is.Input(mnp)) mnp.SyncInput(obj, prop);
+      } catch (e) {
+        console.warn("couldn't bind :", mnp);
       }
-      Ready ? manage() : Craft.WhenReady.then(manage);
     }
-    if (mnp.hasAttr('link')) On(mnp).Click(e => {
-      let link = mnp.getAttr('link');
-      (mnp.hasAttr('newtab') ? open : Craft.router.open)(link);
-    });
+    if (mnp.hasAttr('link')) On(mnp).Click(e => (mnp.hasAttr('newtab') ? open : Craft.router.open)(mnp.getAttr('link')));
     def(Craft.WidgetWatchers) ? Craft.WidgetWatchers(mnp) :
       Craft.WhenReady.then(() => setTimeout(() => {
         if (def(Craft.WidgetWatchers)) Craft.WidgetWatchers(mnp);
       }, 200));
   }
 
-  let domwatcher = new MutationObserver(muts => muts.forEach(mut => {
-
+  new MutationObserver(muts => muts.forEach(mut => {
     if (mut.type === 'attributes') {
       if (['tooltip', 'bind', 'movable', 'ripple', 'link'].some(el => el === mut.attributeName) && is.Node(mut.target)) manageCustomAttributes(mut.target);
     }
-
-  }));
-  domwatcher.observe(doc.documentElement, {
+  })).observe(doc.documentElement, {
     attributes: true,
     childlist: true,
     subtree: true
@@ -571,17 +562,15 @@
      */
   function forEach(iterable, func) {
     if (!is.empty(iterable) && is.Func(func)) {
+      let i = 0;
       if (is.Arraylike(iterable) && !localStorage) {
-        for (let i = 0; i < iterable.length; i++) func(iterable[i], i);
+        for (; i < iterable.length; i++) func(iterable[i], i);
       } else if (is.int(iterable)) {
-        iterable = Number(iterable)
-        for (; 0 < iterable; iterable--) func(iterable);
-      } else {
-        for (let i in iterable) {
+        iterable = toInt(iterable);
+        for (; i < iterable; iterable--) func(iterable);
+      } else
+        for (i in iterable)
           if (iterable.hasOwnProperty(i)) func(iterable[i], i);
-        }
-      }
-
     }
   }
 
@@ -643,11 +632,8 @@
    * @returns Off - when On is defined as a variable "var x = On(...)" it allows you to access all the EventHandler interfaces Off,Once,On
    */
   root.On = function (EventType, Target, element, func) {
-    let args = toArr(arguments),
-      types = args.length < 3 && !args.some(i => is.Func(i));
-
     return is.Func(Target) ? new EventHandler(EventType, root, Target).On() :
-      types ? EventTypes(EventType, Target) :
+      types = arguments.length < 3 && !toArr(arguments).some(i => is.Func(i)) ? EventTypes(EventType, Target) :
       is.Func(element) ? new EventHandler(EventType, Target, element).On() :
       new EventHandler(EventType, Target, func, element).On();
   }
@@ -660,19 +646,15 @@
    * @returns On,Off,Once - when Once is defined as a variable "var x = Once(...)" it allows you to access all the EventHandler interfaces Off,Once,On
    */
   root.Once = function (EventType, Target, element, func) {
-    let args = toArr(arguments),
-      types = args.length < 3 && !args.some(i => is.Func(i));
-
     return is.Func(Target) ? new EventHandler(EventType, root, Target).Once() :
-      types ? EventTypes(EventType, Target, 'Once') :
+      arguments.length < 3 && !toArr(arguments).some(i => is.Func(i)) ? EventTypes(EventType, Target, 'Once') :
       is.Func(element) ? new EventHandler(EventType, Target, element).Once() :
       new EventHandler(EventType, Target, func, element).Once();
   }
 
   function craftElement(name, inner, attributes, extraAttr, stringForm) {
     if (is.False(is.String(inner), is.Node(inner))) is.Object(inner) ? attributes = inner : inner = is.Func(inner) ? inner() : '';
-    let newEl = dom(doc.createElement(name));
-    newEl.html(inner);
+    let newEl = dom(doc.createElement(name)).html(inner);
     if (is.Object(attributes)) forEach(attributes, (val, attr) => newEl.setAttr(attr, val));
     if (is.String(attributes)) attributes.split('&').forEach(attr => def(attr.split('=')[1]) ? newEl.setAttr(attr.split('=')[0], attr.split('=')[1]) : newEl.setAttr(attr.split('=')[0], ''));
     if (is.Object(extraAttr)) forEach(extraAttr, (val, attr) => newEl.setAttr(attr, val));
@@ -811,7 +793,7 @@
        * @param {...string} name of the class to strip
        */
     element.stripClass = function () {
-        toArr(arguments).forEach(Class => this.classList.remove(Class));
+        forEach(arguments, Class => this.classList.remove(Class));
         return this;
       }
       /**
@@ -820,7 +802,7 @@
        * @param {...string} name of the Attribute/s to strip
        */
     element.stripAttr = function () {
-        toArr(arguments).forEach(attr => this.removeAttribute(attr));
+        forEach(arguments, attr => this.removeAttribute(attr));
         return this;
       }
       /**
@@ -1051,7 +1033,7 @@
         }
       },
       concatObjects(hostobj) {
-        forEach(hostobj, o => Craft.omitFrom(toArr(arguments), hostobj).forEach(obj => forEach(obj, (prop, key) => {
+        forEach(hostobj, o => Craft.omitFrom(arguments, hostobj).forEach(obj => forEach(obj, (prop, key) => {
           if (key in hostobj) {
             if (is.Arr(hostobj[key])) {
               if (!hostobj[key].includes(prop)) hostobj[key].push(prop);
@@ -1203,7 +1185,7 @@
        */
       Import() {
         let promises = [];
-        toArr(arguments).forEach(arg => arg.test === false ? Craft.loader.remove(arg.css || arg.script) : promises.push(Craft.loader.fetchImport({
+        forEach(arguments, arg => arg.test === false ? Craft.loader.remove(arg.css || arg.script) : promises.push(Craft.loader.fetchImport({
           url: arg.css || arg.script,
           type: arg.css ? 'css' : 'script',
           exec: arg.execute !== false,
@@ -1386,15 +1368,14 @@
       debounce(wait, func, immediate) {
         let timeout;
         return function () {
-          let args = arguments,
-            later = () => {
+          let later = () => {
               timeout = null;
-              if (!immediate) func.apply(this, args);
+              if (!immediate) func.apply(this, arguments);
             },
             callNow = immediate && !timeout;
           clearTimeout(timeout);
           timeout = setTimeout(later, wait);
-          if (callNow) func.apply(this, args);
+          if (callNow) func.apply(this, arguments);
         };
       },
       throttle(wait, func, options) {
@@ -1457,7 +1438,7 @@
       },
       type() {
         let types = [];
-        toArr(arguments).forEach(arg => types.push(typeof arg));
+        forEach(arguments, arg => types.push(typeof arg));
         return types.length < 2 ? types[0] : types;
       },
       toggle: bool => !bool,
@@ -1667,7 +1648,8 @@
         }
       },
   };
-  root.CraftScope = Craft.observable({});
+
+  if (!def(root.CraftScope)) root.CraftScope = Craft.observable({});
 
   On('blur', e => {
     Craft.tabActive = false;
@@ -1705,7 +1687,7 @@
             CrafterStyles.innerHTML += webcomponent.css;
             head.appendChild(dom().script(webcomponent.js + `\nCraft.WebComponents.push('${src}')`, `webcomponent=${webcomponent.name}`));
             if (el.getAttr(cc) == 'true') localStorage.setItem(src, JSON.stringify(webcomponent));
-          })).catch(err => console.error(err + ': could not load ' + w))
+          })).catch(err => console.error(err + " couldn't load " + w))
         }
         el.removeAfter(3500);
       }
@@ -1718,17 +1700,17 @@
       Craft.poll(() => Craft.WebComponents.length === queryAll(fw).length, 35, 5035)
       .then(() => {
         Ready = true
-        setTimeout(() => queryEach('[bind],[tooltip],[ripple],[movable],[link]', manageCustomAttributes), 50);
       }).catch(() => {
         Ready = true;
-        console.warn('loading webcomponents took too long loaded with errors :( \t');
+        console.warn('loading took too long loaded with errors :(');
       });
   });
+
+  Craft.WhenReady.then(() => setTimeout(() => queryEach('[bind],[tooltip],[ripple],[movable],[link]', manageCustomAttributes), 100));
 
   On('hashchange', e => {
     Craft.router.handlers.forEach(handler => (location.hash === handler.link || location === handler.link) ? handler.func(location.hash) : null);
   });
 
   root.forEach = forEach;
-  root.EventHandler = EventHandler;
 })(document, self);

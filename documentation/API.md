@@ -44,10 +44,8 @@ creates a div element with the options provided
 
 -   `sets` **string** innerHTML of the div
 -   `sets` **[string or Object]** div attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
--   `should` **[Boolean]** the div be a plain String or a Node defaults to string
 -   `inner`  
 -   `attr`  
--   `node`  
 
 # getRect
 
@@ -105,11 +103,9 @@ creates an img element with the options provided
 -   `sets` **string** src of the img
 -   `sets` **string** alt of the img
 -   `sets` **[string or Object]** p attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
--   `should` **[Boolean]** the p be a plain String or a Node defaults to string
 -   `src`  
 -   `alt`  
 -   `attr`  
--   `node`  
 
 # label
 
@@ -119,10 +115,8 @@ creates a label element with the options provided
 
 -   `sets` **string** innerHTML of the label
 -   `sets` **[string or Object]** label attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
--   `should` **[Boolean]** the label be a plain String or a Node defaults to string
 -   `inner`  
 -   `attr`  
--   `node`  
 
 # On
 
@@ -144,10 +138,8 @@ creates a p (paragraph) element with the options provided
 
 -   `sets` **string** innerHTML of the p
 -   `sets` **[string or Object]** p attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
--   `should` **[Boolean]** the p be a plain String or a Node defaults to string
 -   `inner`  
 -   `attr`  
--   `node`  
 
 # prepend
 
@@ -208,10 +200,8 @@ creates a span element with the options provided
 
 -   `sets` **string** innerHTML of the span
 -   `sets` **[string or Object]** span attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
--   `should` **[Boolean]** the span be a plain String or a Node defaults to string
 -   `inner`  
 -   `attr`  
--   `node`  
 
 # stripAttr
 
@@ -622,7 +612,7 @@ Test if something is a String
 
 -   `args`  value/values to test
 
-## symbol
+## Symbol
 
 Determine if a variable is a Symbol
 
@@ -805,7 +795,7 @@ converts Objects or URL variable strings to a FormData object
 
 ## WhenReady
 
-set functions that executes when the DOM and WebComponents are finished loading
+returns a promise when the DOM and WebComponents are all finished loading
 
 **Parameters**
 
@@ -820,6 +810,7 @@ in the absence of parameters the function will return methods for created elemen
 
 -   `element` **[Node or NodeList or string]** optional Node, NodeList or CSS Selector that will be affected by the methods returned
 -   `within` **[Node or string]** optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
+-   `one`  
 
 # On
 
@@ -877,14 +868,42 @@ Easy way to loop through Nodes in the DOM using a CSS Selector or a NodeList
 -   `element` **[Node or string]** Optional Node or CSS selector to search within insead of document
 -   `func` **function** function called on each iteration -> "function( Element , index ) {...}"
 
-# QueryOrNodetoNodeArray
+# EventHandler
 
-Converts any Query/QueryAll to an Array of Nodes even if there is only one Node , this is error proof when no arguments are present it returns an empty array
+Event Handling Class
 
 **Parameters**
 
--   `val` **Node or NodeList or Array or String** pass either a CSS Selector string , Node/NodeList or Array of Nodes
--   `within` **Node or NodeList or Array or String** pass either a CSS Selector string , Node/NodeList or Array of Nodes to search for val in
+-   `EventType` **string** set the type of event to listen for example "click" or "scroll"
+-   `Target` **Node or NodeList or window or document** the Event Listener's target , can also be a NodeList to listen on multiple Nodes
+-   `Func` **function** Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
+-   `Within`  
+-   `args` **...Any** extra optional arguments/parameters to pass to the handler function
+
+Returns **** Interface On,Off,Once
+
+## ChangeType
+
+Change the Event type to listen for
+{string} type - the name of the event to listen for
+
+**Parameters**
+
+-   `type`  
+
+## Off
+
+De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
+can still optionally be re-activated with On again
+
+## On
+
+Activates the EventHandler to start listening for the EventType on the Target/Targets
+
+## Once
+
+Once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
+the Handler function will be called only Once
 
 # css
 
@@ -934,34 +953,6 @@ Toggles an attribute on element , optionally add value when toggle is adding att
 -   `val` **string** value to set attribute to
 -   `returnState` **[boolean]** optionally return a bool witht the toggle state otherwise returns the element
 
-# EventHandler
-
-Event Handling Class
-
-**Parameters**
-
--   `EventType` **string** set the type of event to listen for example "click" or "scroll"
--   `Target` **Node or NodeList or window or document** the Event Listener's target , can also be a NodeList to listen on multiple Nodes
--   `Func` **function** Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
--   `Within`  
--   `args` **...Any** extra optional arguments/parameters to pass to the handler function
-
-Returns **** Interface On,Off,Once
-
-## Off
-
-De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
-can still optionally be re-activated with On again
-
-## On
-
-Activates the EventHandler to start listening for the EventType on the Target/Targets
-
-## Once
-
-Once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
-the Handler function will be called only Once
-
 # forEach
 
 Easy way to loop through Collections and Objects
@@ -979,6 +970,15 @@ Checks wether a Node is in the NodeList with either a refference to the Node or 
 
 -   `Node` **Node or string** or CSS selector
 -   `selector`  
+
+# NodeOrQuerytoArr
+
+Converts any Query/QueryAll to an Array of Nodes even if there is only one Node , this is error proof when no arguments are present it returns an empty array
+
+**Parameters**
+
+-   `val` **Node or NodeList or Array or String** pass either a CSS Selector string , Node/NodeList or Array of Nodes
+-   `within` **Node or NodeList or Array or String** pass either a CSS Selector string , Node/NodeList or Array of Nodes to search for val in
 
 # On
 
