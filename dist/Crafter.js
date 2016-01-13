@@ -51,31 +51,27 @@ function _typeof(obj) {
     function manageCustomAttributes(element) {
         var mnp = dom(element);
         if (mnp.hasAttr('bind')) {
-            var manage = function manage() {
-                try {
-                    (function() {
-                        var bind = mnp.getAttr('bind'),
-                            cutbind = cutdot(bind),
-                            prop = cutbind[cutbind.length - 1],
-                            obj = Craft.getDeep(root, Craft.omitFrom(cutbind, prop).join('.')) || CraftScope,
-                            val = Craft.getDeep(obj, cutbind.length > 1 ? Craft.omit(cutbind, cutbind[0]).join('.') : prop);
-                        def(val) ? mnp.html(val) : Craft.setDeep(obj, prop, mnp.html());
+            try {
+                (function() {
+                    var bind = mnp.getAttr('bind'),
+                        cutbind = cutdot(bind),
+                        prop = cutbind[cutbind.length - 1],
+                        obj = Craft.getDeep(root, Craft.omitFrom(cutbind, prop).join('.')) || CraftScope,
+                        val = Craft.getDeep(obj, cutbind.length > 1 ? Craft.omit(cutbind, cutbind[0]).join('.') : prop);
 
-                        if (def(Object.getOwnPropertyDescriptor(obj, 'listen'))) obj.listen = function(o, n, v) {
-                            if (n == prop) mnp.html(v);
-                        };
+                    def(val) ? mnp.html(val) : Craft.setDeep(obj, prop, mnp.html());
 
-                        if (is.Input(mnp)) mnp.SyncInput(obj, prop);
-                    })();
-                } catch (e) {
-                    console.warn("couldn't bind :", mnp);
-                }
-            };
-            Ready ? manage() : Craft.WhenReady.then(manage);
+                    if (def(Object.getOwnPropertyDescriptor(obj, 'listen'))) obj.listen = function(o, n, v) {
+                        if (n == prop) mnp.html(v);
+                    };
+                    if (is.Input(mnp)) mnp.SyncInput(obj, prop);
+                })();
+            } catch (e) {
+                console.warn("couldn't bind :", mnp);
+            }
         }
         if (mnp.hasAttr('link')) On(mnp).Click(function(e) {
-            var link = mnp.getAttr('link');
-            (mnp.hasAttr('newtab') ? open : Craft.router.open)(link);
+            return (mnp.hasAttr('newtab') ? open : Craft.router.open)(mnp.getAttr('link'));
         });
         def(Craft.WidgetWatchers) ? Craft.WidgetWatchers(mnp) : Craft.WhenReady.then(function() {
             return setTimeout(function() {
@@ -84,17 +80,15 @@ function _typeof(obj) {
         });
     }
 
-    var domwatcher = new MutationObserver(function(muts) {
+    new MutationObserver(function(muts) {
         return muts.forEach(function(mut) {
-
             if (mut.type === 'attributes') {
                 if (['tooltip', 'bind', 'movable', 'ripple', 'link'].some(function(el) {
                         return el === mut.attributeName;
                     }) && is.Node(mut.target)) manageCustomAttributes(mut.target);
             }
         });
-    });
-    domwatcher.observe(doc.documentElement, {
+    }).observe(doc.documentElement, {
         attributes: true,
         childlist: true,
         subtree: true
@@ -774,20 +768,20 @@ function _typeof(obj) {
      */
     function forEach(iterable, func) {
         if (!is.empty(iterable) && is.Func(func)) {
+            var _i = 0;
             if (is.Arraylike(iterable) && !localStorage) {
-                for (var _i = 0; _i < iterable.length; _i++) {
+                for (; _i < iterable.length; _i++) {
                     func(iterable[_i], _i);
                 }
             } else if (is.int(iterable)) {
-                iterable = Number(iterable);
-                for (; 0 < iterable; iterable--) {
+                iterable = toInt(iterable);
+                for (; _i < iterable; iterable--) {
                     func(iterable);
                 }
-            } else {
-                for (var _i2 in iterable) {
-                    if (iterable.hasOwnProperty(_i2)) func(iterable[_i2], _i2);
+            } else
+                for (_i in iterable) {
+                    if (iterable.hasOwnProperty(_i)) func(iterable[_i], _i);
                 }
-            }
         }
     }
 
@@ -879,12 +873,9 @@ function _typeof(obj) {
      * @returns Off - when On is defined as a variable "var x = On(...)" it allows you to access all the EventHandler interfaces Off,Once,On
      */
     root.On = function(EventType, Target, element, func) {
-        var args = toArr(arguments),
-            types = args.length < 3 && !args.some(function(i) {
-                return is.Func(i);
-            });
-
-        return is.Func(Target) ? new EventHandler(EventType, root, Target).On() : types ? EventTypes(EventType, Target) : is.Func(element) ? new EventHandler(EventType, Target, element).On() : new EventHandler(EventType, Target, func, element).On();
+        return is.Func(Target) ? new EventHandler(EventType, root, Target).On() : types = arguments.length < 3 && !toArr(arguments).some(function(i) {
+            return is.Func(i);
+        }) ? EventTypes(EventType, Target) : is.Func(element) ? new EventHandler(EventType, Target, element).On() : new EventHandler(EventType, Target, func, element).On();
     };
 
     /**
@@ -895,18 +886,14 @@ function _typeof(obj) {
      * @returns On,Off,Once - when Once is defined as a variable "var x = Once(...)" it allows you to access all the EventHandler interfaces Off,Once,On
      */
     root.Once = function(EventType, Target, element, func) {
-        var args = toArr(arguments),
-            types = args.length < 3 && !args.some(function(i) {
-                return is.Func(i);
-            });
-
-        return is.Func(Target) ? new EventHandler(EventType, root, Target).Once() : types ? EventTypes(EventType, Target, 'Once') : is.Func(element) ? new EventHandler(EventType, Target, element).Once() : new EventHandler(EventType, Target, func, element).Once();
+        return is.Func(Target) ? new EventHandler(EventType, root, Target).Once() : arguments.length < 3 && !toArr(arguments).some(function(i) {
+            return is.Func(i);
+        }) ? EventTypes(EventType, Target, 'Once') : is.Func(element) ? new EventHandler(EventType, Target, element).Once() : new EventHandler(EventType, Target, func, element).Once();
     };
 
     function craftElement(name, inner, attributes, extraAttr, stringForm) {
         if (is.False(is.String(inner), is.Node(inner))) is.Object(inner) ? attributes = inner : inner = is.Func(inner) ? inner() : '';
-        var newEl = dom(doc.createElement(name));
-        newEl.html(inner);
+        var newEl = dom(doc.createElement(name)).html(inner);
         if (is.Object(attributes)) forEach(attributes, function(val, attr) {
             return newEl.setAttr(attr, val);
         });
@@ -1080,7 +1067,7 @@ function _typeof(obj) {
         element.stripClass = function() {
             var _this4 = this;
 
-            toArr(arguments).forEach(function(Class) {
+            forEach(arguments, function(Class) {
                 return _this4.classList.remove(Class);
             });
             return this;
@@ -1093,7 +1080,7 @@ function _typeof(obj) {
         element.stripAttr = function() {
             var _this5 = this;
 
-            toArr(arguments).forEach(function(attr) {
+            forEach(arguments, function(attr) {
                 return _this5.removeAttribute(attr);
             });
             return this;
@@ -1333,8 +1320,8 @@ function _typeof(obj) {
             keychain = keychain.replace(/^\./, '');
             var a = keychain.split('.');
             try {
-                for (var _i3 = 0; _i3 < a.length; ++_i3) {
-                    a[_i3] in obj ? obj = obj[a[_i3]] : obj = undefined;
+                for (var _i2 = 0; _i2 < a.length; ++_i2) {
+                    a[_i2] in obj ? obj = obj[a[_i2]] : obj = undefined;
                 }
             } catch (e) {
                 return undefined;
@@ -1371,7 +1358,7 @@ function _typeof(obj) {
             var _arguments = arguments;
 
             forEach(hostobj, function(o) {
-                return Craft.omitFrom(toArr(_arguments), hostobj).forEach(function(obj) {
+                return Craft.omitFrom(_arguments, hostobj).forEach(function(obj) {
                     return forEach(obj, function(prop, key) {
                         if (key in hostobj) {
                             if (is.Arr(hostobj[key])) {
@@ -1573,8 +1560,8 @@ function _typeof(obj) {
                 return localStorage.removeItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key);
             },
             removeAll: function removeAll(expired) {
-                for (var _i4 in localStorage) {
-                    if (!expired || Craft.loader.get(_i4).expire <= +new Date()) Craft.loader.remove(_i4);
+                for (var _i3 in localStorage) {
+                    if (!expired || Craft.loader.get(_i3).expire <= +new Date()) Craft.loader.remove(_i3);
                 }
             }
         },
@@ -1587,7 +1574,7 @@ function _typeof(obj) {
          */
         Import: function Import() {
             var promises = [];
-            toArr(arguments).forEach(function(arg) {
+            forEach(arguments, function(arg) {
                 return arg.test === false ? Craft.loader.remove(arg.css || arg.script) : promises.push(Craft.loader.fetchImport({
                     url: arg.css || arg.script,
                     type: arg.css ? 'css' : 'script',
@@ -1669,8 +1656,8 @@ function _typeof(obj) {
                 }) : vh.html(view, position);
             },
             clearViews: function clearViews() {
-                for (var _i5 in localStorage) {
-                    localStorage.removeItem(localStorage.key(_i5).includes("Cr:"));
+                for (var _i4 in localStorage) {
+                    localStorage.removeItem(localStorage.key(_i4).includes("Cr:"));
                 }
             }
         },
@@ -1836,16 +1823,16 @@ function _typeof(obj) {
             var timeout = undefined;
             return function() {
                 var _this9 = this,
-                    args = arguments,
+                    _arguments2 = arguments,
                     later = function later() {
                         timeout = null;
-                        if (!immediate) func.apply(_this9, args);
+                        if (!immediate) func.apply(_this9, _arguments2);
                     },
                     callNow = immediate && !timeout;
 
                 clearTimeout(timeout);
                 timeout = setTimeout(later, wait);
-                if (callNow) func.apply(this, args);
+                if (callNow) func.apply(this, arguments);
             };
         },
         throttle: function throttle(wait, func, options) {
@@ -1903,8 +1890,8 @@ function _typeof(obj) {
         OverrideFunction: function OverrideFunction(funcName, Func, ContextObject) {
             var func = funcName.split(".").pop(),
                 ns = funcName.split(".");
-            for (var _i6 = 0; _i6 < ns.length; _i6++) {
-                ContextObject = ContextObject[ns[_i6]];
+            for (var _i5 = 0; _i5 < ns.length; _i5++) {
+                ContextObject = ContextObject[ns[_i5]];
             }
             ContextObject[func] = Func;
         },
@@ -1915,14 +1902,14 @@ function _typeof(obj) {
             return -1;
         },
         indexOfDate: function indexOfDate(Collection, date) {
-            for (var _i7 = 0; _i7 < Collection.length; _i7++) {
-                if (+Collection[_i7] === +date) return _i7;
+            for (var _i6 = 0; _i6 < Collection.length; _i6++) {
+                if (+Collection[_i6] === +date) return _i6;
             }
             return -1;
         },
         type: function type() {
             var types = [];
-            toArr(arguments).forEach(function(arg) {
+            forEach(arguments, function(arg) {
                 return types.push(typeof arg === 'undefined' ? 'undefined' : _typeof(arg));
             });
             return types.length < 2 ? types[0] : types;
@@ -2189,7 +2176,8 @@ function _typeof(obj) {
             }
         }
     };
-    root.CraftScope = Craft.observable({});
+
+    if (!def(root.CraftScope)) root.CraftScope = Craft.observable({});
 
     On('blur', function(e) {
         Craft.tabActive = false;
@@ -2247,7 +2235,7 @@ function _typeof(obj) {
                                 if (el.getAttr(cc) == 'true') localStorage.setItem(src, JSON.stringify(webcomponent));
                             });
                         }).catch(function(err) {
-                            return console.error(err + ': could not load ' + w);
+                            return console.error(err + " couldn't load " + w);
                         });
                     }
                     el.removeAfter(3500);
@@ -2264,13 +2252,16 @@ function _typeof(obj) {
             return Craft.WebComponents.length === queryAll(fw).length;
         }, 35, 5035).then(function() {
             Ready = true;
-            setTimeout(function() {
-                return queryEach('[bind],[tooltip],[ripple],[movable],[link]', manageCustomAttributes);
-            }, 50);
         }).catch(function() {
             Ready = true;
-            console.warn('loading webcomponents took too long loaded with errors :( \t');
+            console.warn('loading took too long loaded with errors :(');
         });
+    });
+
+    Craft.WhenReady.then(function() {
+        return setTimeout(function() {
+            return queryEach('[bind],[tooltip],[ripple],[movable],[link]', manageCustomAttributes);
+        }, 100);
     });
 
     On('hashchange', function(e) {
@@ -2280,5 +2271,4 @@ function _typeof(obj) {
     });
 
     root.forEach = forEach;
-    root.EventHandler = EventHandler;
 })(document, self);
