@@ -96,8 +96,8 @@ Create a new Custom Element using the Craft.newComponent method
 
 ```javascript
 
-// Craft.observer creates a reactive object
-var News = Craft.observer({
+// Craft.observer creates an observable object
+var News = Craft.observable({
   Headline : 'New Headline , this Just in...'
 });
 // The Changes will be instantly reflected in the DOM
@@ -135,7 +135,7 @@ Binds on `input` and `textarea` will set the property when the value changes
     console.log(Ws.recieve);
 
     // Create an Observer to Bind to
-    var MessageScope = Craft.observer({
+    var MessageScope = Craft.observable({
       msg : ''
     });
 
