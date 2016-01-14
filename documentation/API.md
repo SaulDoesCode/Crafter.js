@@ -717,12 +717,17 @@ Part of Crafter.js's own WebComponent format (.wc) it takes a json object that c
 **Parameters**
 
 -   `webcomponent` **string** JSON string from Crafter.js's (.wc) WebComponent format
+-   `wc`  
 -   `src`  
 
 ## GenUID
 
 similar to Craft.randomString in that it generates a unique string , in this case a Unique ID with random alphanumeric strings separated by hyphens
 example 0ebf-c7d2-ef81-2667-08ef-4cde
+
+**Parameters**
+
+-   `len` **[number]** optional length of uid sections
 
 ## Import
 
@@ -738,10 +743,10 @@ method for creating custom elements configuring their lifecycle's and inheritanc
 the config Object has 5 distinct options ( created , inserted , destroyed , attr and extends )
 Craft.newComponent('custom-element',{
 // note : inside each lifecycle method the "this" is a reference to the element being created -> this === element
-   created : function () { ... }, // this method gets called when the custom-element is first instanciated
-   inserted : function () { ... }, // this method gets called when the custom-element is first inserted into the DOM
-   destroyed : function () { ... }, // this method gets called when the custom-element removed from the DOM (AKA. destroyed)
-   attr : function (attributeChangedName , oldValue , newValue) { ... }, // attr method gets called when attributes are changed on the element
+   created() { ... }, // this method gets called when the custom-element is first instanciated
+   inserted() { ... }, // this method gets called when the custom-element is first inserted into the DOM
+   destroyed() { ... }, // this method gets called when the custom-element removed from the DOM (AKA. destroyed)
+   attr(attributeChangedName , oldValue , newValue) { ... }, // attr method gets called when attributes are changed on the element
    extends : 'button' //tagName of element being inherited from should you want to
 });
 
@@ -922,6 +927,15 @@ Define a Handler for a Custom Attribute on the element
 -   `name` **string** what you call the attribute
 -   `handle` **function** called on creation and changes, arguments  = (value, element, mutation)
 -   `death` **[function]** called on removal of the attribute , arguments  = (mutation, observer, element)
+
+# getAttr
+
+Gets the value of an attribute , shortened alias for element.getAttribute
+{string} attr - name of attribute to get
+
+**Parameters**
+
+-   `attr`  
 
 # move
 

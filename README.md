@@ -16,8 +16,8 @@ Crafter.js is still very W.I.P , so tread carefully
 - Type assertion methods
 - JSON based WebComponent format (.wc)
 - Streamlined Custom Element Creation
+- Custom Attribute Definition and Handling
 - Useful custom attributes
-- Templating within craft-template and for-each elements
 - Web Components
 - WebSocket wrapper for ease of use
 - Form Validation
@@ -34,7 +34,8 @@ Crafter.js is still very W.I.P , so tread carefully
 ### Crafter Code Example
 
 ```javascript
-  Craft.WhenReady().then(() => {
+  // WhenReady returns a promise when the DOM and WebComponents has loaded
+  Craft.WhenReady.then(() => {
 
     queryEach('.menu-items',element => On('click',element,ev => dom('.page-view').append(dom().span('Hello!')));
     // or same thing differently
@@ -46,10 +47,10 @@ Crafter.js is still very W.I.P , so tread carefully
     // add attributes with an object { title : 'x' , id : 'mydiv' }
     dom().div('New div',{ class : 'page-element'}) // -> `<div class="page-element">New div</div>`
 
-    // for less common elements or custom elements use Craft.make_element
+    // for less common elements or custom elements use dom().element
     // you could also add attributes URI style
 
-    Craft.make_element('aside','text to go inside','id=asidecontent&class=side-content',true)
+    dom().element('aside','text to go inside','id=asidecontent&class=side-content');
     // -> <aside id="aside2" class="side-content"> text to go inside </aside>
 
   })
@@ -67,7 +68,7 @@ Create a new Custom Element using the Craft.newComponent method
     inserted() {
       // when the news-element is insterted fill it with content
       dom(this)
-      .prepend( dom().h(3, this.news.headline) )
+      .prepend( dom().h(3, this.news.headline) /* -> <h3>News Headling...</h3> */ )
       .append( dom().div(this.news.article) );
 
     },
@@ -90,27 +91,28 @@ Create a new Custom Element using the Craft.newComponent method
 #### Data Binding
 
 ```html
-<header bind='HeaderText'> </header>
+<header bind='News.Headline'></header>
 ```
 
 ```javascript
-// The Changes will be instantly reflected
-Craft.newBind('HeaderText','New Headline , this Just in...');
-// Changes will also be reflected
-Craft.setBind('HeaderText','New information, data-binding is a thing');
-// You can also optionally add a chance handler function
-Craft.newBind('HeaderText','New Headline , this Just in...', (oldVal,newVal) => {
+
+// Craft.observer creates a reactive object
+var News = Craft.observer({
+  Headline : 'New Headline , this Just in...'
+});
+// The Changes will be instantly reflected in the DOM
+News.Headline = 'New information, data-binding is a thing';
+
+// You can also optionally add change listeners for a specific property or properties
+News.addListener('Headline',(object,key,value) => {
   if(!Craft.tabActive) Craft.router.setTitle(document.title + '(1)');
 });
 ```
-should a bind not exist and Crafter.js sees a view-bind / input-bind the bind will be created
-and the Value or innerHTML of the element will become the initial the Bind value.
-
-You can bind `<input>` and `<textarea>` elements with the input-bind attribute,
-this is useful for forms and validation
+If a bind does not exist it gets bound as a property of the gobal CraftScope
+Binds on `input` and `textarea` will set the property when the value changes
 
 ```html
-<textarea bind="truestory">  
+<textarea bind="truestory">
   All Changes gets reflected instantly
 </textarea>
 
