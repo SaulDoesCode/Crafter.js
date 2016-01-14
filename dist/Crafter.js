@@ -1757,7 +1757,8 @@ function _typeof(obj) {
                         if (!is.Func(func['BindListener'])) throw Error('BindListener is not a function');
                         listner.node = func;
                         listner.fn = func['BindListener'];
-                    }
+                    } else if (is.Func(func)) listner.fn = func;
+                    else throw new Error('no function');
                     obj.listeners.push(listner);
                 },
                 enumerable: false
