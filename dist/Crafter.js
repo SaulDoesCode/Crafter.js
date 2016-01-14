@@ -1770,7 +1770,7 @@ function _typeof(obj) {
                     },
                     set: function set(target, key, value, reciever) {
                         target.listeners.forEach(function(l) {
-                            if (l.prop === '*' || l.prop === key) l.fn(target, key, value);
+                            if (l.prop === '*' || l.prop === key) l.fn(target, key, value, !(key in target));
                         });
                         return Reflect.set(target, key, value);
                     }
@@ -1780,12 +1780,14 @@ function _typeof(obj) {
                     Object.observe(obj, function(changes) {
                         return changes.forEach(function(change) {
                             if (change.type === 'add' || change.type === 'update') obj.listeners.forEach(function(l) {
-                                if (l.prop === '*' || l.prop === change.name) l.fn(obj, change.name, obj[change.name]);
+                                if (l.prop === '*' || l.prop === change.name) l.fn(obj, change.name, obj[change.name], change.type === 'add');
                             });
                         });
                     });
                     return obj;
-                } catch (e2) {}
+                } catch (e2) {
+                    console.warn('Your Browser is Old Update it');
+                }
             }
         },
 
@@ -2044,6 +2046,17 @@ function _typeof(obj) {
                 }, 5500);
             });
         },
+        model: function model(name, func) {
+            if (is.Func(func) && is.String(name)) {
+                if (!def(Craft.Models[name])) {
+                    Craft.Models[name] = {
+                        func: func,
+                        scope: Craft.observable({})
+                    };
+                }
+            }
+        },
+
         poll: function poll(test, interval, timeout) {
             return new Promise(function(pass, fail) {
                 if (!def(timeout)) interval = timeout;
@@ -2166,6 +2179,15 @@ function _typeof(obj) {
         return Craft.tabActive = true;
     });
 
+    Craft.Models = Craft.observable({});
+
+    Craft.Models.addListener(function(o, key, model, New) {
+        console.log(New);
+        if (New) Ready ? model.func(model.scope) : Craft.WhenReady.then(function() {
+            return model.func(model.scope);
+        });
+    });
+
     Craft.curry.to = Craft.curry(function(arity, fn) {
         return makeFn(fn, [], arity);
     });
@@ -2242,7 +2264,7 @@ function _typeof(obj) {
                 var bind = mnp.getAttr('bind'),
                     cutbind = cutdot(bind),
                     prop = cutbind[cutbind.length - 1],
-                    obj = Craft.getDeep(root, Craft.omitFrom(cutbind, prop).join('.')) || CraftScope,
+                    obj = def(Craft.Models[cutbind[0]]) ? Craft.Models[cutbind[0]].scope : Craft.getDeep(root, Craft.omitFrom(cutbind, prop).join('.')) || CraftScope,
                     val = Craft.getDeep(obj, cutbind.length > 1 ? Craft.omit(cutbind, cutbind[0]).join('.') : prop);
 
                 def(val) ? mnp.html(val) : Craft.setDeep(obj, prop, mnp.html());
@@ -2283,9 +2305,9 @@ function _typeof(obj) {
     });
 
     Craft.WhenReady.then(function() {
-        return setTimeout(function() {
+        setTimeout(function() {
             return queryEach('[bind],[tooltip],[ripple],[movable],[link]', manageCustomAttributes);
-        }, 80);
+        }, 120);
     });
 
     On('hashchange', function(e) {

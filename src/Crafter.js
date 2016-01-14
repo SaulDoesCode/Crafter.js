@@ -1317,7 +1317,7 @@
               if (!is.Func(func['BindListener'])) throw Error('BindListener is not a function');
               listner.node = func;
               listner.fn = func['BindListener'];
-            } else if(is.Func(func)) listner.fn = func;
+            } else if (is.Func(func)) listner.fn = func;
             else throw new Error('no function');
             obj.listeners.push(listner);
           },
@@ -1330,7 +1330,7 @@
             },
             set: function (target, key, value, reciever) {
               target.listeners.forEach(l => {
-                if (l.prop === '*' || l.prop === key) l.fn(target, key, value);
+                if (l.prop === '*' || l.prop === key) l.fn(target, key, value, !(key in target));
               });
               return Reflect.set(target, key, value);
             }
@@ -1339,11 +1339,13 @@
           try {
             Object.observe(obj, changes => changes.forEach(change => {
               if (change.type === 'add' || change.type === 'update') obj.listeners.forEach(l => {
-                if (l.prop === '*' || l.prop === change.name) l.fn(obj, change.name, obj[change.name]);
+                if (l.prop === '*' || l.prop === change.name) l.fn(obj, change.name, obj[change.name],change.type === 'add');
               });
             }));
             return obj;
-          } catch (e2) {}
+          } catch (e2) {
+            console.warn('Your Browser is Old Update it');
+          }
         }
       },
       curry: fn => makeFn(fn, [], fn.length),
@@ -1541,6 +1543,16 @@
           }, 5500);
         });
       },
+      model(name, func) {
+        if (is.Func(func) && is.String(name)) {
+          if (!def(Craft.Models[name])) {
+            Craft.Models[name] = {
+              func: func,
+              scope: Craft.observable({})
+            }
+          }
+        }
+      },
       poll: (test, interval, timeout) => new Promise((pass, fail) => {
         if (!def(timeout)) interval = timeout;
         let bool = is.Bool(test) && test === true;
@@ -1643,6 +1655,13 @@
   On('blur', e => Craft.tabActive = false);
   On('focus', e => Craft.tabActive = true);
 
+  Craft.Models = Craft.observable({});
+
+  Craft.Models.addListener((o, key, model,New) => {
+    console.log(New);
+    if(New) Ready ? model.func(model.scope) : Craft.WhenReady.then(() => model.func(model.scope));
+  });
+
   Craft.curry.to = Craft.curry((arity, fn) => makeFn(fn, [], arity));
   Craft.curry.adaptTo = Craft.curry((num, fn) => Craft.curry.to(num, (context, ...args) => fn.apply(null, args.slice(1).concat(context))));
   Craft.curry.adapt = fn => Craft.curry.adaptTo(fn.length, fn);
@@ -1696,7 +1715,7 @@
         let bind = mnp.getAttr('bind'),
           cutbind = cutdot(bind),
           prop = cutbind[cutbind.length - 1],
-          obj = Craft.getDeep(root, Craft.omitFrom(cutbind, prop).join('.')) || CraftScope,
+          obj = def(Craft.Models[cutbind[0]]) ? Craft.Models[cutbind[0]].scope : Craft.getDeep(root, Craft.omitFrom(cutbind, prop).join('.')) || CraftScope,
           val = Craft.getDeep(obj, cutbind.length > 1 ? Craft.omit(cutbind, cutbind[0]).join('.') : prop);
 
         def(val) ? mnp.html(val) : Craft.setDeep(obj, prop, mnp.html());
@@ -1727,8 +1746,9 @@
     subtree: true
   });
 
-
-  Craft.WhenReady.then(() => setTimeout(() => queryEach('[bind],[tooltip],[ripple],[movable],[link]', manageCustomAttributes), 80));
+  Craft.WhenReady.then(() => {
+    setTimeout(() => queryEach('[bind],[tooltip],[ripple],[movable],[link]', manageCustomAttributes), 120)
+  });
 
   On('hashchange', e => {
     Craft.router.handlers.forEach(handler => (location.hash === handler.link || location === handler.link) ? handler.func(location.hash) : null);
