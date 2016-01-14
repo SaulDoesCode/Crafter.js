@@ -31,43 +31,6 @@
   CrafterStyles.setAttribute('crafterstyles', '');
   head.appendChild(CrafterStyles);
 
-  function manageCustomAttributes(element) {
-    let mnp = dom(element);
-    if (mnp.hasAttr('bind')) {
-      try {
-        let bind = mnp.getAttr('bind'),
-          cutbind = cutdot(bind),
-          prop = cutbind[cutbind.length - 1],
-          obj = Craft.getDeep(root, Craft.omitFrom(cutbind, prop).join('.')) || CraftScope,
-          val = Craft.getDeep(obj, cutbind.length > 1 ? Craft.omit(cutbind, cutbind[0]).join('.') : prop);
-
-        def(val) ? mnp.html(val) : Craft.setDeep(obj, prop, mnp.html());
-
-        if (def(Object.getOwnPropertyDescriptor(obj, 'listen'))) obj.listen = (o, n, v) => {
-          if (n == prop) mnp.html(v);
-        }
-        if (is.Input(mnp)) mnp.SyncInput(obj, prop);
-      } catch (e) {
-        console.warn("couldn't bind :", mnp);
-      }
-    }
-    if (mnp.hasAttr('link')) On(mnp).Click(e => (mnp.hasAttr('newtab') ? open : Craft.router.open)(mnp.getAttr('link')));
-    def(Craft.WidgetWatchers) ? Craft.WidgetWatchers(mnp) :
-      Craft.WhenReady.then(() => setTimeout(() => {
-        if (def(Craft.WidgetWatchers)) Craft.WidgetWatchers(mnp);
-      }, 200));
-  }
-
-  new MutationObserver(muts => muts.forEach(mut => {
-    if (mut.type === 'attributes') {
-      if (['tooltip', 'bind', 'movable', 'ripple', 'link'].some(el => el === mut.attributeName) && is.Node(mut.target)) manageCustomAttributes(mut.target);
-    }
-  })).observe(doc.documentElement, {
-    attributes: true,
-    childlist: true,
-    subtree: true
-  });
-
   function toInt(val) {
     let num = Number(val);
     if (isNaN(num)) return 0;
@@ -633,7 +596,7 @@
    */
   root.On = function (EventType, Target, element, func) {
     return is.Func(Target) ? new EventHandler(EventType, root, Target).On() :
-      types = arguments.length < 3 && !toArr(arguments).some(i => is.Func(i)) ? EventTypes(EventType, Target) :
+      arguments.length < 3 && !toArr(arguments).some(i => is.Func(i)) ? EventTypes(EventType, Target) :
       is.Func(element) ? new EventHandler(EventType, Target, element).On() :
       new EventHandler(EventType, Target, func, element).On();
   }
@@ -834,12 +797,17 @@
        * @param {string} Value of the Attribute to add/set
        */
     element.setAttr = function (attr, val) {
-      if (!def(val)) {
-        if (is.Object(attr)) forEach(attr, (value, attr) => this.setAttribute(attr, value));
-        else if (is.String(attr)) attr.split('&').forEach(attr => def(attr.split('=')[1]) ? this.setAttribute(attr.split('=')[0], attr.split('=')[1]) : this.setAttribute(attr.split('=')[0], ''));
-      } else this.setAttribute(attr, val || '');
-      return this;
-    }
+        if (!def(val)) {
+          if (is.Object(attr)) forEach(attr, (value, attr) => this.setAttribute(attr, value));
+          else if (is.String(attr)) attr.split('&').forEach(attr => def(attr.split('=')[1]) ? this.setAttribute(attr.split('=')[0], attr.split('=')[1]) : this.setAttribute(attr.split('=')[0], ''));
+        } else this.setAttribute(attr, val || '');
+        return this;
+      }
+      /**
+       * Gets the value of an attribute , shortened alias for element.getAttribute
+       * {string} attr - name of attribute to get
+       */
+
     element.getAttr = attr => element.getAttribute(attr);
 
     /**
@@ -910,8 +878,10 @@
     element.move = function (x, y, transform, position, chainable) {
         if (is.Bool(position)) chainable = position;
         if (is.String(transform)) position = transfrom;
-        transform === true ? this.style.transform = `translateX(${x}px) translateY(${y}px)` : this.css({
-          position: is.String(position) ? position : '',
+        if (is.String(position)) this.style.position = position;
+        this.css(!!transform ? {
+          transform: `translateX(${x}px) translateY(${y}px)`
+        } : {
           left: x + 'px',
           top: y + 'px'
         });
@@ -1324,17 +1294,22 @@
           enumerable: false,
         });
         Object.defineProperty(obj, 'removeListener', {
-          value: function (fn) {
-            if (is.Func(fn) && obj.listeners.includes(fn)) obj.listeners = Craft.omitFrom(obj.listeners, fn);
-          },
+          value: fn => obj.listeners = obj.listeners.filter(l => {
+            if (l.fn !== fn) return l;
+          }),
           enumerable: false,
         });
-        Object.defineProperty(obj, 'listen', {
-          get: function () {
-            return obj.listeners[obj.listeners - 1];
-          },
-          set: function (func) {
-            if (is.Func(func)) obj.listeners.push(func);
+        Object.defineProperty(obj, 'addListener', {
+          value: function (func, prop) {
+            let listner = {
+              prop: is.String(prop) ? prop : '*',
+            }
+            if (is.Node(func)) {
+              if (!is.Func(func['BindListener'])) throw Error('BindListener is not a function');
+              listner.node = func;
+              listner.fn = func['BindListener'];
+            }
+            obj.listeners.push(listner);
           },
           enumerable: false,
         });
@@ -1344,14 +1319,18 @@
               return Reflect.get(target, key);
             },
             set: function (target, key, value, reciever) {
-              target.listeners.forEach(fn => fn(target, key, value));
+              target.listeners.forEach(l => {
+                if (l.prop === '*' || l.prop === key) l.fn(target, key, value);
+              });
               return Reflect.set(target, key, value);
             }
           });
         } catch (e) {
           try {
             Object.observe(obj, changes => changes.forEach(change => {
-              if (change.type === 'add' || change.type === 'update') obj.listeners.forEach(fn => fn(obj, change.name, obj[change.name]));
+              if (change.type === 'add' || change.type === 'update') obj.listeners.forEach(l => {
+                if (l.prop === '*' || l.prop === change.name) l.fn(obj, change.name, obj[change.name]);
+              });
             }));
             return obj;
           } catch (e2) {}
@@ -1629,8 +1608,7 @@
           else if (key === 'inserted') element.attachedCallback = prop;
           else if (key === 'destroyed') element.detachedCallback = prop;
           else if (key === 'attr') element.attributeChangedCallback = prop;
-          else if (key === 'extends') settings.extends = prop;
-          else Object.defineProperty(element, key, Object.getOwnPropertyDescriptor(config, key));
+          else key === 'extends' ? settings.extends = prop : Object.defineProperty(element, key, Object.getOwnPropertyDescriptor(config, key));
         });
 
         settings['prototype'] = element;
@@ -1651,13 +1629,8 @@
 
   if (!def(root.CraftScope)) root.CraftScope = Craft.observable({});
 
-  On('blur', e => {
-    Craft.tabActive = false;
-  });
-  On('focus', e => {
-    Craft.tabActive = true;
-    forEach(Craft.TemplateBinds, val => val.applyValues());
-  });
+  On('blur', e => Craft.tabActive = false);
+  On('focus', e => Craft.tabActive = true);
 
   Craft.curry.to = Craft.curry((arity, fn) => makeFn(fn, [], arity));
   Craft.curry.adaptTo = Craft.curry((num, fn) => Craft.curry.to(num, (context, ...args) => fn.apply(null, args.slice(1).concat(context))));
@@ -1687,7 +1660,7 @@
             CrafterStyles.innerHTML += webcomponent.css;
             head.appendChild(dom().script(webcomponent.js + `\nCraft.WebComponents.push('${src}')`, `webcomponent=${webcomponent.name}`));
             if (el.getAttr(cc) == 'true') localStorage.setItem(src, JSON.stringify(webcomponent));
-          })).catch(err => console.error(err + " couldn't load " + w))
+          })).catch(err => console.error(err + " couldn't load " + w));
         }
         el.removeAfter(3500);
       }
@@ -1706,7 +1679,48 @@
       });
   });
 
-  Craft.WhenReady.then(() => setTimeout(() => queryEach('[bind],[tooltip],[ripple],[movable],[link]', manageCustomAttributes), 100));
+
+  function manageCustomAttributes(element) {
+    let mnp = dom(element);
+    if (mnp.hasAttr('bind')) {
+      try {
+        let bind = mnp.getAttr('bind'),
+          cutbind = cutdot(bind),
+          prop = cutbind[cutbind.length - 1],
+          obj = Craft.getDeep(root, Craft.omitFrom(cutbind, prop).join('.')) || CraftScope,
+          val = Craft.getDeep(obj, cutbind.length > 1 ? Craft.omit(cutbind, cutbind[0]).join('.') : prop);
+
+        def(val) ? mnp.html(val) : Craft.setDeep(obj, prop, mnp.html());
+
+        if (def(Object.getOwnPropertyDescriptor(obj, 'addListener')) && !is.Func(mnp['BindListener'])) {
+          mnp.BindListener = (o, n, v) => mnp.html(v);
+          obj.addListener(mnp, prop);
+        }
+        if (is.Input(mnp)) mnp.SyncInput(obj, prop);
+      } catch (e) {
+        console.log(e);
+        console.warn("couldn't bind :", mnp);
+      }
+    }
+    if (mnp.hasAttr('link')) On(mnp).Click(e => (mnp.hasAttr('newtab') ? open : Craft.router.open)(mnp.getAttr('link')));
+    def(Craft.WidgetWatchers) ? Craft.WidgetWatchers(mnp) :
+      Craft.WhenReady.then(() => setTimeout(() => {
+        if (def(Craft.WidgetWatchers)) Craft.WidgetWatchers(mnp);
+      }, 200));
+  }
+
+  Craft.DomObserver = new MutationObserver(muts => muts.forEach(mut => {
+    if (mut.type === 'attributes') {
+      if (['tooltip', 'bind', 'movable', 'ripple', 'link'].some(el => el === mut.attributeName) && is.Node(mut.target)) manageCustomAttributes(mut.target);
+    }
+  })).observe(doc.documentElement, {
+    attributes: true,
+    childlist: true,
+    subtree: true
+  });
+
+
+  Craft.WhenReady.then(() => setTimeout(() => queryEach('[bind],[tooltip],[ripple],[movable],[link]', manageCustomAttributes), 80));
 
   On('hashchange', e => {
     Craft.router.handlers.forEach(handler => (location.hash === handler.link || location === handler.link) ? handler.func(location.hash) : null);

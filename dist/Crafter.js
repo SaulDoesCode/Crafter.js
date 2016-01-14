@@ -48,52 +48,6 @@ function _typeof(obj) {
     CrafterStyles.setAttribute('crafterstyles', '');
     head.appendChild(CrafterStyles);
 
-    function manageCustomAttributes(element) {
-        var mnp = dom(element);
-        if (mnp.hasAttr('bind')) {
-            try {
-                (function() {
-                    var bind = mnp.getAttr('bind'),
-                        cutbind = cutdot(bind),
-                        prop = cutbind[cutbind.length - 1],
-                        obj = Craft.getDeep(root, Craft.omitFrom(cutbind, prop).join('.')) || CraftScope,
-                        val = Craft.getDeep(obj, cutbind.length > 1 ? Craft.omit(cutbind, cutbind[0]).join('.') : prop);
-
-                    def(val) ? mnp.html(val) : Craft.setDeep(obj, prop, mnp.html());
-
-                    if (def(Object.getOwnPropertyDescriptor(obj, 'listen'))) obj.listen = function(o, n, v) {
-                        if (n == prop) mnp.html(v);
-                    };
-                    if (is.Input(mnp)) mnp.SyncInput(obj, prop);
-                })();
-            } catch (e) {
-                console.warn("couldn't bind :", mnp);
-            }
-        }
-        if (mnp.hasAttr('link')) On(mnp).Click(function(e) {
-            return (mnp.hasAttr('newtab') ? open : Craft.router.open)(mnp.getAttr('link'));
-        });
-        def(Craft.WidgetWatchers) ? Craft.WidgetWatchers(mnp) : Craft.WhenReady.then(function() {
-            return setTimeout(function() {
-                if (def(Craft.WidgetWatchers)) Craft.WidgetWatchers(mnp);
-            }, 200);
-        });
-    }
-
-    new MutationObserver(function(muts) {
-        return muts.forEach(function(mut) {
-            if (mut.type === 'attributes') {
-                if (['tooltip', 'bind', 'movable', 'ripple', 'link'].some(function(el) {
-                        return el === mut.attributeName;
-                    }) && is.Node(mut.target)) manageCustomAttributes(mut.target);
-            }
-        });
-    }).observe(doc.documentElement, {
-        attributes: true,
-        childlist: true,
-        subtree: true
-    });
-
     function toInt(val) {
         var num = Number(val);
         if (isNaN(num)) return 0;
@@ -873,7 +827,7 @@ function _typeof(obj) {
      * @returns Off - when On is defined as a variable "var x = On(...)" it allows you to access all the EventHandler interfaces Off,Once,On
      */
     root.On = function(EventType, Target, element, func) {
-        return is.Func(Target) ? new EventHandler(EventType, root, Target).On() : types = arguments.length < 3 && !toArr(arguments).some(function(i) {
+        return is.Func(Target) ? new EventHandler(EventType, root, Target).On() : arguments.length < 3 && !toArr(arguments).some(function(i) {
             return is.Func(i);
         }) ? EventTypes(EventType, Target) : is.Func(element) ? new EventHandler(EventType, Target, element).On() : new EventHandler(EventType, Target, func, element).On();
     };
@@ -1137,6 +1091,11 @@ function _typeof(obj) {
             } else this.setAttribute(attr, val || '');
             return this;
         };
+        /**
+         * Gets the value of an attribute , shortened alias for element.getAttribute
+         * {string} attr - name of attribute to get
+         */
+
         element.getAttr = function(attr) {
             return element.getAttribute(attr);
         };
@@ -1217,8 +1176,10 @@ function _typeof(obj) {
         element.move = function(x, y, transform, position, chainable) {
             if (is.Bool(position)) chainable = position;
             if (is.String(transform)) position = transfrom;
-            transform === true ? this.style.transform = 'translateX(' + x + 'px) translateY(' + y + 'px)' : this.css({
-                position: is.String(position) ? position : '',
+            if (is.String(position)) this.style.position = position;
+            this.css(!!transform ? {
+                transform: 'translateX(' + x + 'px) translateY(' + y + 'px)'
+            } : {
                 left: x + 'px',
                 top: y + 'px'
             });
@@ -1701,7 +1662,7 @@ function _typeof(obj) {
         Socket: function Socket(address, protocols) {
             if (!address.includes('ws://') || !address.includes('wss://')) address = (location.protocol === 'http:' ? 'ws://' : 'wss://') + address;
             if (is.URL(address)) {
-                var _ret2 = (function() {
+                var _ret = (function() {
 
                     var Options = {
                         socket: null,
@@ -1760,7 +1721,7 @@ function _typeof(obj) {
                     };
                 })();
 
-                if ((typeof _ret2 === 'undefined' ? 'undefined' : _typeof(_ret2)) === "object") return _ret2.v;
+                if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
             }
         },
         observable: function observable(obj) {
@@ -1770,16 +1731,23 @@ function _typeof(obj) {
             });
             Object.defineProperty(obj, 'removeListener', {
                 value: function value(fn) {
-                    if (is.Func(fn) && obj.listeners.includes(fn)) obj.listeners = Craft.omitFrom(obj.listeners, fn);
+                    return obj.listeners = obj.listeners.filter(function(l) {
+                        if (l.fn !== fn) return l;
+                    });
                 },
                 enumerable: false
             });
-            Object.defineProperty(obj, 'listen', {
-                get: function get() {
-                    return obj.listeners[obj.listeners - 1];
-                },
-                set: function set(func) {
-                    if (is.Func(func)) obj.listeners.push(func);
+            Object.defineProperty(obj, 'addListener', {
+                value: function value(func, prop) {
+                    var listner = {
+                        prop: is.String(prop) ? prop : '*'
+                    };
+                    if (is.Node(func)) {
+                        if (!is.Func(func['BindListener'])) throw Error('BindListener is not a function');
+                        listner.node = func;
+                        listner.fn = func['BindListener'];
+                    }
+                    obj.listeners.push(listner);
                 },
                 enumerable: false
             });
@@ -1789,8 +1757,8 @@ function _typeof(obj) {
                         return Reflect.get(target, key);
                     },
                     set: function set(target, key, value, reciever) {
-                        target.listeners.forEach(function(fn) {
-                            return fn(target, key, value);
+                        target.listeners.forEach(function(l) {
+                            if (l.prop === '*' || l.prop === key) l.fn(target, key, value);
                         });
                         return Reflect.set(target, key, value);
                     }
@@ -1799,8 +1767,8 @@ function _typeof(obj) {
                 try {
                     Object.observe(obj, function(changes) {
                         return changes.forEach(function(change) {
-                            if (change.type === 'add' || change.type === 'update') obj.listeners.forEach(function(fn) {
-                                return fn(obj, change.name, obj[change.name]);
+                            if (change.type === 'add' || change.type === 'update') obj.listeners.forEach(function(l) {
+                                if (l.prop === '*' || l.prop === change.name) l.fn(obj, change.name, obj[change.name]);
                             });
                         });
                     });
@@ -2155,8 +2123,7 @@ function _typeof(obj) {
                 else if (key === 'inserted') element.attachedCallback = prop;
                 else if (key === 'destroyed') element.detachedCallback = prop;
                 else if (key === 'attr') element.attributeChangedCallback = prop;
-                else if (key === 'extends') settings.extends = prop;
-                else Object.defineProperty(element, key, Object.getOwnPropertyDescriptor(config, key));
+                else key === 'extends' ? settings.extends = prop : Object.defineProperty(element, key, Object.getOwnPropertyDescriptor(config, key));
             });
 
             settings['prototype'] = element;
@@ -2180,13 +2147,10 @@ function _typeof(obj) {
     if (!def(root.CraftScope)) root.CraftScope = Craft.observable({});
 
     On('blur', function(e) {
-        Craft.tabActive = false;
+        return Craft.tabActive = false;
     });
     On('focus', function(e) {
-        Craft.tabActive = true;
-        forEach(Craft.TemplateBinds, function(val) {
-            return val.applyValues();
-        });
+        return Craft.tabActive = true;
     });
 
     Craft.curry.to = Craft.curry(function(arity, fn) {
@@ -2258,10 +2222,58 @@ function _typeof(obj) {
         });
     });
 
+    function manageCustomAttributes(element) {
+        var mnp = dom(element);
+        if (mnp.hasAttr('bind')) {
+            try {
+                var bind = mnp.getAttr('bind'),
+                    cutbind = cutdot(bind),
+                    prop = cutbind[cutbind.length - 1],
+                    obj = Craft.getDeep(root, Craft.omitFrom(cutbind, prop).join('.')) || CraftScope,
+                    val = Craft.getDeep(obj, cutbind.length > 1 ? Craft.omit(cutbind, cutbind[0]).join('.') : prop);
+
+                def(val) ? mnp.html(val) : Craft.setDeep(obj, prop, mnp.html());
+
+                if (def(Object.getOwnPropertyDescriptor(obj, 'addListener')) && !is.Func(mnp['BindListener'])) {
+                    mnp.BindListener = function(o, n, v) {
+                        return mnp.html(v);
+                    };
+                    obj.addListener(mnp, prop);
+                }
+                if (is.Input(mnp)) mnp.SyncInput(obj, prop);
+            } catch (e) {
+                console.log(e);
+                console.warn("couldn't bind :", mnp);
+            }
+        }
+        if (mnp.hasAttr('link')) On(mnp).Click(function(e) {
+            return (mnp.hasAttr('newtab') ? open : Craft.router.open)(mnp.getAttr('link'));
+        });
+        def(Craft.WidgetWatchers) ? Craft.WidgetWatchers(mnp) : Craft.WhenReady.then(function() {
+            return setTimeout(function() {
+                if (def(Craft.WidgetWatchers)) Craft.WidgetWatchers(mnp);
+            }, 200);
+        });
+    }
+
+    Craft.DomObserver = new MutationObserver(function(muts) {
+        return muts.forEach(function(mut) {
+            if (mut.type === 'attributes') {
+                if (['tooltip', 'bind', 'movable', 'ripple', 'link'].some(function(el) {
+                        return el === mut.attributeName;
+                    }) && is.Node(mut.target)) manageCustomAttributes(mut.target);
+            }
+        });
+    }).observe(doc.documentElement, {
+        attributes: true,
+        childlist: true,
+        subtree: true
+    });
+
     Craft.WhenReady.then(function() {
         return setTimeout(function() {
             return queryEach('[bind],[tooltip],[ripple],[movable],[link]', manageCustomAttributes);
-        }, 100);
+        }, 80);
     });
 
     On('hashchange', function(e) {
