@@ -120,6 +120,39 @@ Binds on `input` and `textarea` will set the property when the value changes
   All Changes gets reflected instantly
 </article>
 ```
+#### Websocket example
+
+```javascript
+
+    // Craft a new socket , note the ws:// or wss:// is optional
+    let Websocket = Craft.Socket('192.168.10.108:3000/socket');
+
+    Websocket.send = 'Hello'; // send via assignment
+    // add a reciever function
+    Ws.recieve = message => console.log(message);
+
+    /// to get the last message recieved
+    console.log(Ws.recieve);
+
+    // Create an Observer to Bind to
+    var MessageScope = Craft.observer({
+      msg : ''
+    });
+
+    /// add another reciever to see output in DOM.
+    Ws.recieve = message => MessageScope.msg = message;
+
+    // Sync the value of the Input to the WebSocket
+    dom("input").SyncInput(Websocket,'send');
+
+```
+
+Display the Websocket messages in the dom
+``` html
+  <div bind='MessageScope.msg'> </div>
+
+  <input type='text'>
+```
 
 #### TODO
 - DOCUMENTATION!!!
