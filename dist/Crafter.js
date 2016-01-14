@@ -1276,6 +1276,13 @@ function _typeof(obj) {
             }
             return true;
         },
+        array: function array(len, val) {
+            var arr = [];
+            forEach(len, function(i) {
+                return arr.push(is.Func(val) ? val() : val);
+            });
+            return arr;
+        },
         getDeep: function getDeep(obj, keychain) {
             keychain = keychain.replace(/\[(\w+)\]/g, '.$1');
             keychain = keychain.replace(/^\./, '');
@@ -1738,7 +1745,11 @@ function _typeof(obj) {
                 enumerable: false
             });
             Object.defineProperty(obj, 'addListener', {
-                value: function value(func, prop) {
+                value: function value(prop, func) {
+                    if (is.Func(prop) || is.Node(prop)) {
+                        func = prop;
+                        prop = '*';
+                    }
                     var listner = {
                         prop: is.String(prop) ? prop : '*'
                     };
@@ -2060,8 +2071,8 @@ function _typeof(obj) {
          */
         strongPassword: function strongPassword(pass, length, caps, number, reasons) {
             if (pass.length <= length - 1) return reasons ? 'Password too short' : false;
-            if (caps === true && Craft.hasCapitals(pass) === false) return reasons ? 'Password should contain Capital letters' : false;
-            if (number === true && /\d/g.test(pass) === false) return reasons ? 'Password should contain a number' : false;
+            if (caps === true && Craft.hasCapitals(pass) === false) return reasons ? 'Password should have a Capital letter' : false;
+            if (number === true && /\d/g.test(pass) === false) return reasons ? 'Password should have a number' : false;
 
             for (var _len6 = arguments.length, includeChars = Array(_len6 > 5 ? _len6 - 5 : 0), _key6 = 5; _key6 < _len6; _key6++) {
                 includeChars[_key6 - 5] = arguments[_key6];
@@ -2085,18 +2096,19 @@ function _typeof(obj) {
         /**
          * similar to Craft.randomString in that it generates a unique string , in this case a Unique ID with random alphanumeric strings separated by hyphens
          * example 0ebf-c7d2-ef81-2667-08ef-4cde
+         * @param {number=} len - optional length of uid sections
          */
-        GenUID: function GenUID() {
-            return Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString() + '-' + Craft.randomString();
+        GenUID: function GenUID(len) {
+            return Craft.array(len || 6, Craft.randomString).join('-');
         },
         /**
          * Part of Crafter.js's own WebComponent format (.wc) it takes a json object that contains .css and .js values then imports and executes them
          * @param {string} webcomponent - JSON string from Crafter.js's (.wc) WebComponent format
          */
-        createWebComponent: function createWebComponent(webcomponent, src) {
-            webcomponent = JSON.parse(webcomponent);
-            CrafterStyles.textComponent += webcomponent.css;
-            head.appendChild(dom().script(webcomponent.js + ('\nCraft.WebComponents.push(\'' + src + '\')'), 'webcomponent=' + webcomponent.name));
+        createWebComponent: function createWebComponent(wc, src) {
+            wc = JSON.parse(wc);
+            CrafterStyles.textComponent += wc.css;
+            head.appendChild(dom().script(wc.js + ('\nCraft.WebComponents.push(\'' + src + '\')'), w + '=' + wc.name));
         },
 
         /**
@@ -2104,10 +2116,10 @@ function _typeof(obj) {
          * the config Object has 5 distinct options ( created , inserted , destroyed , attr and extends )
          * Craft.newComponent('custom-element',{
          * // note : inside each lifecycle method the "this" is a reference to the element being created -> this === element
-         *    created : function () { ... }, // this method gets called when the custom-element is first instanciated
-         *    inserted : function () { ... }, // this method gets called when the custom-element is first inserted into the DOM
-         *    destroyed : function () { ... }, // this method gets called when the custom-element removed from the DOM (AKA. destroyed)
-         *    attr : function (attributeChangedName , oldValue , newValue) { ... }, // attr method gets called when attributes are changed on the element
+         *    created() { ... }, // this method gets called when the custom-element is first instanciated
+         *    inserted() { ... }, // this method gets called when the custom-element is first inserted into the DOM
+         *    destroyed() { ... }, // this method gets called when the custom-element removed from the DOM (AKA. destroyed)
+         *    attr(attributeChangedName , oldValue , newValue) { ... }, // attr method gets called when attributes are changed on the element
          *    extends : 'button' //tagName of element being inherited from should you want to
          * });
          * @param {string} tag - a hyphenated custom HTML tagname for the new element -> "custom-element"
@@ -2215,7 +2227,7 @@ function _typeof(obj) {
         Craft.WebComponents.length === queryAll(fw).length ? Ready = true : Craft.poll(function() {
             return Craft.WebComponents.length === queryAll(fw).length;
         }, 35, 5035).then(function() {
-            Ready = true;
+            return Ready = true;
         }).catch(function() {
             Ready = true;
             console.warn('loading took too long loaded with errors :(');
@@ -2238,11 +2250,10 @@ function _typeof(obj) {
                     mnp.BindListener = function(o, n, v) {
                         return mnp.html(v);
                     };
-                    obj.addListener(mnp, prop);
+                    obj.addListener(prop, mnp);
                 }
                 if (is.Input(mnp)) mnp.SyncInput(obj, prop);
             } catch (e) {
-                console.log(e);
                 console.warn("couldn't bind :", mnp);
             }
         }
