@@ -1,6 +1,7 @@
 Craft.newComponent('crafter-navbar', {
   inserted() {
-      let tempVal, el = dom(this),selected = 0;
+      let tempVal, el = dom(this),
+        selected = 0;
 
       this.navItems = el.queryAll('navbar-item');
       this.selected = selected + 1;
@@ -18,8 +19,8 @@ Craft.newComponent('crafter-navbar', {
       if (!el.hasAttr('direction')) el.setAttr('direction', 'left');
       this.setActive(selected);
 
-      this.Click = el.On('click',e => {
-        if (is.Node(e.target) && e.target.tagName === 'NAVBAR-ITEM') selected = Array.from(this.navItems).indexOf(e.target);
+      this.Click = el.On('click', e => {
+        if (is.Node(e.target) && e.target.tagName === 'NAVBAR-ITEM') selected = Craft.toArr(this.navItems).indexOf(e.target);
         checkStates();
       });
 
@@ -36,15 +37,17 @@ Craft.newComponent('crafter-navbar', {
       forEach(this.navItems, el => el.navIndex = Array.from(this.navItems).indexOf(el));
     },
     setActive(select) {
-      let el = this , selected = query('[selected]',el);
+      let el = this,
+        selected = query('[selected]', el);
       if (selected !== null) selected.removeAttribute('selected');
       this.navItems[select].setAttribute('selected', '');
     },
     attr(attrName, oldVal, newVal) {
       let el = dom(this);
       if (attrName === 'select' && el.hasAttr('select')) {
-        if (Number.isNaN(newVal) || Number.isInteger(Number(newVal)) === false) console.warn('crafter-navbar - the selected attribute is not a valid number defaulting to 1');
-        else if (this.selected !== Number(newVal) && (Number(newVal) >= (this.navItems.length + 1) === false) && (Number(newVal) <= (this.navItems.length + 1) === false)) this.selected = Number(newVal);
+        let num = Number(newVal);
+        if (!is.int(newVal)) console.warn('crafter-navbar - the selected attribute is not an integer defaulting to 1');
+        else if (this.selected !== num && (num >= (this.navItems.length + 1) === false) && (num <= (this.navItems.length + 1) === false)) this.selected = num;
         else console.warn("crafter-navbar - selected attribute out of range");
       } else if (attrName === 'direction' && !el.hasAttr('direction')) el.setAttr('direction', 'left');
     },

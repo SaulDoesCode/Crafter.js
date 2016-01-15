@@ -38,6 +38,9 @@ function _typeof(obj) {
         fw = 'fetch-' + w,
         sI = 'Isync',
         head = doc.head,
+        Locs = function Locs() {
+            return [location.hash, location.href, location.pathname];
+        },
         CrafterStyles = doc.createElement('style'),
         ua = navigator.userAgent,
         tem = undefined,
@@ -62,17 +65,9 @@ function _typeof(obj) {
     function toArr(val) {
         return Array.prototype.slice.call(val);
     }
-    // ta = TestArgs : convert arguments to array then tests them
-    function ta(args, test) {
-        return args.length !== 0 && toArr(args).every(test);
-    }
 
     function type(obj, str) {
         return toString.call(obj) === str;
-    }
-
-    function isT(val, str) {
-        return (typeof val === 'undefined' ? 'undefined' : _typeof(val)) === str;
     }
 
     function doInvok(fn, argsArr, totalArity) {
@@ -95,19 +90,27 @@ function _typeof(obj) {
                     a[_key] = arguments[_key];
                 }
 
-                return doInvok(fn, args.concat(toArr(arguments)));
+                return doInvok(fn, args.concat(a));
             };
         })(fn, args, remainingArity);
     }
 
     function def() {
-        return ta(arguments, function(o) {
-            return !isT(o, 'undefined');
+        for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+            args[_key2] = arguments[_key2];
+        }
+
+        return args.length && args.every(function(o) {
+            return typeof o !== 'undefined';
         });
     }
 
     function nil() {
-        return ta(arguments, function(o) {
+        for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+            args[_key3] = arguments[_key3];
+        }
+
+        return args.length && args.every(function(o) {
             return o === null;
         });
     }
@@ -122,40 +125,55 @@ function _typeof(obj) {
          * Test if something is a boolean type
          * @param val - value to test
          */
-
         Bool: function Bool() {
-            return ta(arguments, function(o) {
+            for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+                args[_key4] = arguments[_key4];
+            }
+
+            return args.length && args.every(function(o) {
                 return typeof o === 'boolean';
             });
         },
-
         /**
          * Test if something is a String
          * @param args - value/values to test
          */
         String: function String() {
-            return ta(arguments, function(o) {
-                return isT(o, 'string');
+            for (var _len5 = arguments.length, args = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+                args[_key5] = arguments[_key5];
+            }
+
+            return args.length && args.every(function(o) {
+                return typeof o === 'string';
             });
         },
-
         /**
          * Test if something is an Array
          * @param args - value/values to test
          */
         Arr: function Arr() {
-            return ta(arguments, function(o) {
-                return Array.isArray(o);
-            });
-        },
+            for (var _len6 = arguments.length, args = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+                args[_key6] = arguments[_key6];
+            }
 
+            return args.length && args.every(Array.isArray);
+        },
+        /**
+         * Array.isArray alias for convenience and performance when only one argument is present
+         * @param {*} val - value to test
+         */
+        Array: Array.isArray,
         /**
          * Test if something is an Array-Like
          * @param args - value/values to test
          */
         Arraylike: function Arraylike() {
             try {
-                return ta(arguments, function(o) {
+                for (var _len7 = arguments.length, args = Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
+                    args[_key7] = arguments[_key7];
+                }
+
+                return args.length && args.every(function(o) {
                     return def(o.length);
                 });
             } catch (e) {}
@@ -180,11 +198,14 @@ function _typeof(obj) {
          * @param args - value/values to test
          */
         Null: function Null() {
-            return ta(arguments, function(o) {
+            for (var _len8 = arguments.length, args = Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
+                args[_key8] = arguments[_key8];
+            }
+
+            return args.length && args.every(function(o) {
                 return o === null;
             });
         },
-
         /**
          * Determine whether a variable is a DOM Node
          * @param args - value/values to test
@@ -200,58 +221,83 @@ function _typeof(obj) {
 
             return Node;
         })(function() {
-            return ta(arguments, function(o) {
+            for (var _len9 = arguments.length, args = Array(_len9), _key9 = 0; _key9 < _len9; _key9++) {
+                args[_key9] = arguments[_key9];
+            }
+
+            return args.length && args.every(function(o) {
                 return o instanceof Node;
             });
         }),
-
         /**
          * Test an element's tagname
          * @param {Node} element - node to test
          * @param {string} tag - tag to test node for
          */
         Tag: function Tag(element, tag) {
-            return element instanceof Node && element.tagName === tag.toUpperCase();
+            return is.Node(element) ? element.tagName === tag.toUpperCase() : false;
         },
-
         /**
          * Determine whether a variable is a DOM NodeList or Collection of Nodes
          * @param args - value/values to test
          */
-        NodeList: function NodeList() {
-            return ta(arguments, function(nl) {
-                return is.Arraylike(nl) ? ta(nl, function(n) {
+        NodeList: (function(_NodeList) {
+            function NodeList() {
+                return _NodeList.apply(this, arguments);
+            }
+
+            NodeList.toString = function() {
+                return _NodeList.toString();
+            };
+
+            return NodeList;
+        })(function() {
+            for (var _len10 = arguments.length, args = Array(_len10), _key10 = 0; _key10 < _len10; _key10++) {
+                args[_key10] = arguments[_key10];
+            }
+
+            return args.length && args.every(function(nl) {
+                return nl instanceof NodeList || is.Arraylike(nl) ? nl.length && toArr(nl).every(function(n) {
                     return n instanceof Node;
                 }) : false;
             });
-        },
-
+        }),
         /**
          * Determine if a variable is a Number
          * @param {...*} args - value/values to test
          */
         Num: function Num() {
-            return ta(arguments, function(o) {
+            for (var _len11 = arguments.length, args = Array(_len11), _key11 = 0; _key11 < _len11; _key11++) {
+                args[_key11] = arguments[_key11];
+            }
+
+            return args.length && args.every(function(o) {
                 return !isNaN(Number(o));
             });
         },
-
         /**
          * Determine if a variable is an Object
          * @param args - value/values to test
          */
         Object: function Object() {
-            return ta(arguments, function(o) {
-                return type(o, '[object Object]');
+            for (var _len12 = arguments.length, args = Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
+                args[_key12] = arguments[_key12];
+            }
+
+            return args.length && args.every(function(o) {
+                return toString.call(o) === '[object Object]';
             });
         },
-
         /**
          * Determine if a sring is JSON
          * @param args - value/values to test
          */
         Json: function Json() {
-            return ta(arguments, function(str) {
+            for (var _len13 = arguments.length, args = Array(_len13), _key13 = 0; _key13 < _len13; _key13++) {
+                args[_key13] = arguments[_key13];
+            }
+
+            return args.length && args.every(function(str) {
                 try {
                     JSON.parse(str);
                     return !0;
@@ -265,111 +311,144 @@ function _typeof(obj) {
          * @param args - value/values to test
          */
         Element: function Element() {
-            return ta(arguments, function(o) {
+            for (var _len14 = arguments.length, args = Array(_len14), _key14 = 0; _key14 < _len14; _key14++) {
+                args[_key14] = arguments[_key14];
+            }
+
+            return args.length && args.every(function(o) {
                 return type(o, '[object HTMLElement]');
             });
         },
-
         /**
          * Determine if a variable is a File Object
          * @param args - value/values to test
          */
         File: function File() {
-            return ta(arguments, function(o) {
+            for (var _len15 = arguments.length, args = Array(_len15), _key15 = 0; _key15 < _len15; _key15++) {
+                args[_key15] = arguments[_key15];
+            }
+
+            return args.length && args.every(function(o) {
                 return type(o, '[object File]');
             });
         },
-
         /**
          * Determine if a variable is of a FormData type
          * @param args - value/values to test
          */
         FormData: function FormData() {
-            return ta(arguments, function(o) {
+            for (var _len16 = arguments.length, args = Array(_len16), _key16 = 0; _key16 < _len16; _key16++) {
+                args[_key16] = arguments[_key16];
+            }
+
+            return args.length && args.every(function(o) {
                 return type(o, '[object FormData]');
             });
         },
-
         /**
          * Determine if a variable is a Map
          * @param args - value/values to test
          */
         Map: function Map() {
-            return ta(arguments, function(o) {
+            for (var _len17 = arguments.length, args = Array(_len17), _key17 = 0; _key17 < _len17; _key17++) {
+                args[_key17] = arguments[_key17];
+            }
+
+            return args.length && args.every(function(o) {
                 return type(o, '[object Map]');
             });
         },
-
         /**
          * Determine if a variable is a function
          * @param args - value/values to test
          */
         Func: function Func() {
-            return ta(arguments, function(o) {
+            for (var _len18 = arguments.length, args = Array(_len18), _key18 = 0; _key18 < _len18; _key18++) {
+                args[_key18] = arguments[_key18];
+            }
+
+            return args.length && args.every(function(o) {
                 return typeof o === 'function';
             });
         },
-
         /**
          * Determine if a variable/s are true
          * @param args - value/values to test
          */
         True: function True() {
-            return ta(arguments, function(o) {
+            for (var _len19 = arguments.length, args = Array(_len19), _key19 = 0; _key19 < _len19; _key19++) {
+                args[_key19] = arguments[_key19];
+            }
+
+            return args.length && args.every(function(o) {
                 return o === true;
             });
         },
-
         /**
          * Determine if a variable/s are false
          * @param args - value/values to test
          */
         False: function False() {
-            return ta(arguments, function(o) {
+            for (var _len20 = arguments.length, args = Array(_len20), _key20 = 0; _key20 < _len20; _key20++) {
+                args[_key20] = arguments[_key20];
+            }
+
+            return args.length && args.every(function(o) {
                 return o !== true;
             });
         },
-
         /**
          * Determine if a variable is of Blob type
          * @param obj - variable to test
          */
         Blob: function Blob() {
-            return ta(arguments, function(o) {
+            for (var _len21 = arguments.length, args = Array(_len21), _key21 = 0; _key21 < _len21; _key21++) {
+                args[_key21] = arguments[_key21];
+            }
+
+            return args.length && args.every(function(o) {
                 return type(o, '[object Blob]');
             });
         },
-
         /**
          * Determine if a variable is a Regular Expression
          * @param obj - variable to test
          */
         RegExp: function RegExp() {
-            return ta(arguments, function(o) {
+            for (var _len22 = arguments.length, args = Array(_len22), _key22 = 0; _key22 < _len22; _key22++) {
+                args[_key22] = arguments[_key22];
+            }
+
+            return args.length && args.every(function(o) {
                 return type(o, '[object RegExp]');
             });
         },
-
         /**
          * Determine if a variable is a Date type
          * @param {...*} variable to test
          */
         Date: function Date() {
-            return ta(arguments, function(o) {
+            for (var _len23 = arguments.length, args = Array(_len23), _key23 = 0; _key23 < _len23; _key23++) {
+                args[_key23] = arguments[_key23];
+            }
+
+            return args.length && args.every(function(o) {
                 return type(o, '[object Date]');
             });
         },
-
         /**
          * Determine if a variable is a Set
          * @param obj - variable to test
          */
         Set: function Set() {
-            return ta(arguments, function(o) {
+            for (var _len24 = arguments.length, args = Array(_len24), _key24 = 0; _key24 < _len24; _key24++) {
+                args[_key24] = arguments[_key24];
+            }
+
+            return args.length && args.every(function(o) {
                 return type(o, '[object Set]');
             });
         },
-
         Args: function Args(val) {
             return !nil(val) && type(val, '[object Arguments]');
         },
@@ -569,6 +648,13 @@ function _typeof(obj) {
         negative: function negative(val) {
             return is.Num(val) && val < 0;
         },
+        neither: function neither(value) {
+            var args = toArr(arguments).slice(1);
+            return args.every(function(val) {
+                return value !== val;
+            });
+        },
+
         /**
          * Determines if two variables are equal
          * @param a - first value to compare
@@ -652,16 +738,13 @@ function _typeof(obj) {
      * @param {...*} args - extra optional arguments/parameters to pass to the handler function
      * @returns Interface On,Off,Once
      */
-    function EventHandler(EventType, Target, Func, Within) {
-        for (var _len2 = arguments.length, args = Array(_len2 > 4 ? _len2 - 4 : 0), _key2 = 4; _key2 < _len2; _key2++) {
-            args[_key2 - 4] = arguments[_key2];
-        }
-
+    function EventHandler(EventType, Target, func, Within) {
         this.EventType = EventType || 'click';
         this.Target = Target !== root && Target !== doc ? NodeOrQuerytoArr(Target, Within) : [Target];
         this.FuncWrapper = function(e) {
-            return Func(e, e.srcElement, args);
+            return func(e, e.srcElement);
         };
+        if (EventType.includes(',')) this.EventType = EventType.split(',');
     }
     /**
      * Activates the EventHandler to start listening for the EventType on the Target/Targets
@@ -669,18 +752,23 @@ function _typeof(obj) {
     EventHandler.prototype.On = function() {
         var _this = this;
 
-        this.Target.forEach(function(target) {
+        is.Arr(this.EventType) ? this.Target.forEach(function(target) {
+            return _this.EventType.forEach(function(evt) {
+                return target.addEventListener(evt, _this.FuncWrapper);
+            });
+        }) : this.Target.forEach(function(target) {
             return target.addEventListener(_this.EventType, _this.FuncWrapper);
         });
         return this;
     };
     /**
      * Change the Event type to listen for
-     * {string} type - the name of the event to listen for
+     * {string} type - the name of the event/s to listen for
      */
     EventHandler.prototype.ChangeType = function(type) {
+        //  have you tried turning it on and off again? - THE IT CROWD
         this.Off();
-        this.EventType = type;
+        this.EventType = type.includes(',') ? type.split(',') : type;
         this.On();
         return this;
     };
@@ -691,7 +779,11 @@ function _typeof(obj) {
     EventHandler.prototype.Off = function() {
         var _this2 = this;
 
-        this.Target.forEach(function(target) {
+        is.Arr(this.EventType) ? this.Target.forEach(function(target) {
+            return _this2.EventType.forEach(function(evt) {
+                return target.removeEventListener(evt, _this2.FuncWrapper);
+            });
+        }) : this.Target.forEach(function(target) {
             return target.removeEventListener(_this2.EventType, _this2.FuncWrapper);
         });
         return this;
@@ -701,18 +793,34 @@ function _typeof(obj) {
      * the Handler function will be called only Once
      */
     EventHandler.prototype.Once = function() {
-        var func = this.FuncWrapper,
-            target = this.Target,
-            etype = this.EventType,
-            listenOnce = function listenOnce(e) {
+        var _this3 = this,
+            func = this.FuncWrapper,
+            target = this.Target;
+
+        if (is.Arr(this.EventType)) this.EventType.forEach(function(etype) {
+            var listenOnce = function listenOnce(e) {
                 func(e);
                 target.forEach(function(t) {
                     return t.removeEventListener(etype, listenOnce);
                 });
             };
-        target.forEach(function(t) {
-            return t.addEventListener(etype, listenOnce);
+            target.forEach(function(t) {
+                return t.addEventListener(etype, listenOnce);
+            });
         });
+        else {
+            (function() {
+                var listenOnce = function listenOnce(e) {
+                    func(e);
+                    target.forEach(function(t) {
+                        return t.removeEventListener(_this3.EventType, listenOnce);
+                    });
+                };
+                target.forEach(function(t) {
+                    return t.addEventListener(_this3.EventType, listenOnce);
+                });
+            })();
+        }
         return this;
     };
     /**
@@ -756,17 +864,21 @@ function _typeof(obj) {
      */
     root.queryAll = function(selector, element) {
         if (is.String(element)) element = query(element);
-        return is.Node(element) ? element.querySelectorAll(selector) : doc.querySelectorAll(selector);
+        var list = is.Node(element) ? element.querySelectorAll(selector) : doc.querySelectorAll(selector);
+        return nil(list) ? list : toArr(list);
     };
     /**
      * Easy way to loop through Nodes in the DOM using a CSS Selector or a NodeList
-     * @param {string|NodeList} selector - CSS selector to query the DOM Nodes with or NodeList to iterate through
+     * @param {string|NodeList|Node} selector - CSS selector to query the DOM Nodes with or NodeList to iterate through
      * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
      * @param {function} func - function called on each iteration -> "function( Element , index ) {...}"
+     * @param {boolean=} returnList - should queryEach also return the list of nodes
      */
-    root.queryEach = function(selector, element, func) {
+    root.queryEach = function(selector, element, func, returnList) {
         if (is.Func(element)) func = element;
-        forEach(NodeOrQuerytoArr(selector, element), func);
+        var list = NodeOrQuerytoArr(selector, element);
+        forEach(list, func);
+        if (returnList) return list;
     };
 
     function EventTypes(Target, within, listen) {
@@ -815,6 +927,26 @@ function _typeof(obj) {
             },
             Scroll: function Scroll(fn) {
                 return etype('scroll', fn);
+            },
+            Enter: function Enter(fn) {
+                return etype('keydown', function(e, srcElement) {
+                    if (event.which == 13 || event.keyCode == 13) fn(e, srcElement);
+                });
+            },
+            Escape: function Escape(fn) {
+                return etype('keydown', function(e, srcElement) {
+                    if (event.which == 27 || event.keyCode == 27) fn(e, srcElement);
+                });
+            },
+            Delete: function Delete(fn) {
+                return etype('keydown', function(e, srcElement) {
+                    if (event.which == 46 || event.keyCode == 46) fn(e, srcElement);
+                });
+            },
+            Space: function Space(fn) {
+                return etype('keydown', function(e, srcElement) {
+                    if (event.which == 32 || event.keyCode == 32) fn(e, srcElement);
+                });
             }
         };
     }
@@ -846,17 +978,10 @@ function _typeof(obj) {
     };
 
     function craftElement(name, inner, attributes, extraAttr, stringForm) {
-        if (is.False(is.String(inner), is.Node(inner))) is.Object(inner) ? attributes = inner : inner = is.Func(inner) ? inner() : '';
+        if (is.False(is.String(inner), is.Node(inner), is.Num(inner))) is.Object(inner) ? attributes = inner : inner = is.Func(inner) ? inner() : '';
         var newEl = dom(doc.createElement(name)).html(inner);
-        if (is.Object(attributes)) forEach(attributes, function(val, attr) {
-            return newEl.setAttr(attr, val);
-        });
-        if (is.String(attributes)) attributes.split('&').forEach(function(attr) {
-            return def(attr.split('=')[1]) ? newEl.setAttr(attr.split('=')[0], attr.split('=')[1]) : newEl.setAttr(attr.split('=')[0], '');
-        });
-        if (is.Object(extraAttr)) forEach(extraAttr, function(val, attr) {
-            return newEl.setAttr(attr, val);
-        });
+        if (is.Object(attributes) || is.String(attributes)) newEl.setAttr(attributes);
+        if (def(extraAttr)) newEl.setAttr(extraAttr);
         if (is.Bool(extraAttr)) stringForm = extraAttr;
         if (stringForm === true) newEl = newEl.outerHTML;
         return newEl;
@@ -904,9 +1029,53 @@ function _typeof(obj) {
                         return el.style[key] = prop;
                     });
                 }) : console.error('styles unefined');
-            }
+            },
 
+            addClass: function addClass(Class) {
+                return forEach(elements, function(el) {
+                    return el.classList.add(Class);
+                });
+            },
+            stripClass: function stripClass(Class) {
+                return forEach(elements, function(el) {
+                    return el.classList.remove(Class);
+                });
+            },
+            toggleClass: function toggleClass(Class, state) {
+                return forEach(elements, function(el) {
+                    return (is.Bool(state) ? state : el.classList.contains(Class)) ? el.classList.remove(Class) : el.classList.add(Class);
+                });
+            },
+            append: function append() {
+                forEach(arguments, function(val) {
+                    return forEach(elements, function(el) {
+                        return el.appendChild((is.Node(val) ? val : docfragFromString(val)).cloneNode(true));
+                    });
+                });
+                return this;
+            },
+            prepend: function prepend() {
+                forEach(arguments, function(val) {
+                    return forEach(elements, function(el) {
+                        return el.insertBefore((is.Node(val) ? val : docfragFromString(val)).cloneNode(true), el.firstChild);
+                    });
+                });
+                return this;
+            }
         };
+    }
+
+    function setInner(type, el, args) {
+        type = is.Input(el) ? 'value' : type;
+        if (is.empty(args)) return el[type];
+        if (args.length === 1) {
+            args = args[0];
+            el[type] = '';
+            is.Node(args) ? el.append(args) : el[type] = args;
+        } else el[type] = args.map(function(el) {
+            return is.Node(el) ? el.outerHTML : el;
+        }).join('');
+        return el;
     }
 
     function domManip(element, within) {
@@ -917,24 +1086,25 @@ function _typeof(obj) {
          * @memberof dom
          * @param {string=} sets the innerHTML value or when undefined gets the innerHTML value
          */
-        element.html = function(val, position) {
-            var el = this,
-                input = is.Input(el);
-            if (is.Node(val)) val = val.outerHTML;
-            if (def(val)) input ? el.value = val : el.innerHTML = val;
-            return def(val) ? el : input ? el.value : el.innerHTML;
+        element.html = function() {
+            for (var _len25 = arguments.length, args = Array(_len25), _key25 = 0; _key25 < _len25; _key25++) {
+                args[_key25] = arguments[_key25];
+            }
+
+            return setInner('innerHTML', element, args);
         };
+
         /**
          * changes or returns the textContent value of a Node
          * @memberof dom
          * @param {string=} sets the textContent value or when undefined gets the textContent value
          */
-        element.text = function(val) {
-            var el = this,
-                input = is.Input(el);
-            if (is.Node(val)) val = val.outerHTML;
-            if (def(val)) input ? el.value = val : el.textContent = val;
-            return def(val) ? this : input ? el.value : el.textContent;
+        element.text = function() {
+            for (var _len26 = arguments.length, args = Array(_len26), _key26 = 0; _key26 < _len26; _key26++) {
+                args[_key26] = arguments[_key26];
+            }
+
+            return setInner('textContent', element, args);
         };
         /**
          * replaces a Node with another node provided as a parameter/argument
@@ -951,8 +1121,8 @@ function _typeof(obj) {
          * @param {Node|string} CSS selector or Node to append the this.element to
          */
         element.appendTo = function(val, within) {
-            if (is.String(val)) val = def(within) ? query(val, within) : query(val);
-            if (is.Node(val)) val.appendChild(this.element);
+            if (is.String(val)) val = query(val, within);
+            if (is.Node(val)) val.appendChild(this);
             return this;
         };
         /**
@@ -960,8 +1130,14 @@ function _typeof(obj) {
          * @memberof dom
          * @param {Node|string} String or Node to append to the this.element
          */
-        element.append = function(val) {
-            this.appendChild(is.Node(val) ? val : docfragFromString(val));
+        element.append = function() {
+            for (var _len27 = arguments.length, args = Array(_len27), _key27 = 0; _key27 < _len27; _key27++) {
+                args[_key27] = arguments[_key27];
+            }
+
+            args.forEach(function(val) {
+                return element.appendChild(is.Node(val) ? val : docfragFromString(val));
+            });
             return this;
         };
         /**
@@ -989,20 +1165,24 @@ function _typeof(obj) {
          * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
          */
         element.css = function(styles) {
-            var _this3 = this;
+            var _this4 = this;
 
             def(styles) ? forEach(styles, function(prop, key) {
-                return _this3.style[key] = prop;
+                return _this4.style[key] = prop;
             }) : console.error('Styles Object undefined');
             return this;
         };
         /**
          * check if the element has got a specific CSS class
          * @memberof dom
-         * @param {string} name of the class to check for
+         * @param {...string} name of the class to check for
          */
-        element.gotClass = function(Class) {
-            return this.classList.contains(Class);
+        element.gotClass = function() {
+            var _this5 = this;
+
+            return toArr(arguments).every(function(Class) {
+                return _this5.classList.contains(Class);
+            });
         };
         /**
          * Add a CSS class to the element
@@ -1010,7 +1190,11 @@ function _typeof(obj) {
          * @param {string} name of the class to add
          */
         element.addClass = function(Class) {
-            this.classList.add(Class);
+            var _this6 = this;
+
+            forEach(arguments, function(Class) {
+                return _this6.classList.add(Class);
+            });
             return this;
         };
         /**
@@ -1019,11 +1203,22 @@ function _typeof(obj) {
          * @param {...string} name of the class to strip
          */
         element.stripClass = function() {
-            var _this4 = this;
+            var _this7 = this;
 
             forEach(arguments, function(Class) {
-                return _this4.classList.remove(Class);
+                return _this7.classList.remove(Class);
             });
+            return this;
+        };
+        /**
+         * Toggle a CSS class to the element
+         * @memberof dom
+         * @param {string} name of the class to add
+         * @param {boolean=} state - optionally toggle class either on or off with bool
+         */
+        element.toggleClass = function(Class, state) {
+            if (!is.Bool(state)) state = this.gotClass(Class);
+            state ? this.stripClass(Class) : this.addClass(Class);
             return this;
         };
         /**
@@ -1032,10 +1227,10 @@ function _typeof(obj) {
          * @param {...string} name of the Attribute/s to strip
          */
         element.stripAttr = function() {
-            var _this5 = this;
+            var _this8 = this;
 
             forEach(arguments, function(attr) {
-                return _this5.removeAttribute(attr);
+                return _this8.removeAttribute(attr);
             });
             return this;
         };
@@ -1046,19 +1241,19 @@ function _typeof(obj) {
          * @param {...string} names of attributes to check for
          */
         element.hasAttr = function(attr) {
-            var _this6 = this;
+            var _this9 = this;
 
             if (is.String(attr)) return this.hasAttribute(attr);
 
-            for (var _len3 = arguments.length, attributes = Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
-                attributes[_key3 - 1] = arguments[_key3];
+            for (var _len28 = arguments.length, attributes = Array(_len28 > 1 ? _len28 - 1 : 0), _key28 = 1; _key28 < _len28; _key28++) {
+                attributes[_key28 - 1] = arguments[_key28];
             }
 
             if (attr === false) return attributes.every(function(a) {
-                return _this6.hasAttribute(a);
+                return _this9.hasAttribute(a);
             });
             if (attr === true) return attributes.some(function(a) {
-                return _this6.hasAttribute(a);
+                return _this9.hasAttribute(a);
             });
         };
         /**
@@ -1079,14 +1274,14 @@ function _typeof(obj) {
          * @param {string} Value of the Attribute to add/set
          */
         element.setAttr = function(attr, val) {
-            var _this7 = this;
+            var _this10 = this;
 
             if (!def(val)) {
-                if (is.Object(attr)) forEach(attr, function(value, attr) {
-                    return _this7.setAttribute(attr, value);
+                if (is.Object(attr)) forEach(attr, function(value, Attr) {
+                    return _this10.setAttribute(Attr, value);
                 });
-                else if (is.String(attr)) attr.split('&').forEach(function(attr) {
-                    return def(attr.split('=')[1]) ? _this7.setAttribute(attr.split('=')[0], attr.split('=')[1]) : _this7.setAttribute(attr.split('=')[0], '');
+                else if (is.String(attr)) attr.split('&').forEach(function(Attr) {
+                    return def(Attr.split('=')[1]) ? _this10.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : _this10.setAttribute(Attr.split('=')[0], '');
                 });
             } else this.setAttribute(attr, val || '');
             return this;
@@ -1095,30 +1290,19 @@ function _typeof(obj) {
          * Gets the value of an attribute , shortened alias for element.getAttribute
          * {string} attr - name of attribute to get
          */
-
         element.getAttr = function(attr) {
             return element.getAttribute(attr);
         };
 
-        /**
-         * Define a Handler for a Custom Attribute on the element
-         * @param {string} name - what you call the attribute
-         * @param {function} handle - called on creation and changes, arguments  = (value, element, mutation)
-         * @param {function=} death - called on removal of the attribute , arguments  = (mutation, observer, element)
-         */
-        element.CustomAttribute = function(name, handle, death) {
-            element[name + "_observer"] = new MutationObserver(function(muts) {
-                return muts.forEach(function(mut) {
-                    if (mut.type === 'attributes' && mut['attributeName'] === name) {
-                        if (element.hasAttr(name)) handle(element.getAttr(name), element, mut);
-                        else if (is.Func(death)) death(mut, element[name + "_observer"], element);
-                    }
-                });
+        element.hide = function() {
+            element.css({
+                display: 'none'
             });
-            element[name + "_observer"].observe(element, {
-                attributes: true
+        };
+        element.show = function() {
+            element.css({
+                display: ''
             });
-            return this;
         };
         /**
          * Remove the element after a time in milliseconds
@@ -1207,7 +1391,7 @@ function _typeof(obj) {
         if (is.Input(element)) {
             element.SyncInput = function(obj, key) {
                 return element[sI] = On(element).Input(function(e) {
-                    return Craft.setDeep(obj, key, element.value);
+                    return Craft.setDeep(obj, key, element.html());
                 });
             };
             element.disconectInputSync = function() {
@@ -1254,13 +1438,22 @@ function _typeof(obj) {
          * @param {Array} arr - array to be converted
          */
 
-        ArrtoObj: function ArrtoObj(arr) {
-            var i = undefined,
-                NewObject = {};
-            for (i in arr) {
-                if (def(arr[i])) NewObject[i] = arr[i];
-            }
-            return NewObject;
+        arrDiff: function arrDiff(arr, newArr, func) {
+            var added = newArr.filter(function(item) {
+                    if (!arr.includes(item)) return item;
+                }),
+                removed = arr.filter(function(item) {
+                    if (!newArr.includes(item)) return item;
+                }),
+                diff = Craft.omit(added.concat(removed), undefined);
+            if (is.Func(func)) func(arr, newArr, added, removed, diff);
+            else return {
+                arr: arr,
+                newArr: newArr,
+                diff: diff,
+                added: added,
+                removed: removed
+            };
         },
 
         /**
@@ -1286,25 +1479,25 @@ function _typeof(obj) {
         getDeep: function getDeep(obj, keychain) {
             keychain = keychain.replace(/\[(\w+)\]/g, '.$1');
             keychain = keychain.replace(/^\./, '');
-            var a = keychain.split('.');
             try {
-                for (var _i2 = 0; _i2 < a.length; ++_i2) {
+                for (var _i2 = 0, a = keychain.split('.'); _i2 < a.length; ++_i2) {
                     a[_i2] in obj ? obj = obj[a[_i2]] : obj = undefined;
                 }
-            } catch (e) {
-                return undefined;
-            }
+            } catch (e) {}
             return obj;
         },
-        setDeep: function setDeep(obj, prop, value, returnObj) {
-            if (is.Arr(prop) && prop.length === 1) prop = prop[0];
-            if (is.String(prop) && !prop.includes('.')) value !== "_DELETE_" ? obj[prop] = value : delete obj[prop];
-            else {
-                if (is.String(prop)) prop = prop.split(".");
-                var e = prop.shift();
-                if (!is.Object(obj[e])) obj[e] = {};
-                Craft.setDeep(obj[e], prop, value);
+        setDeep: function setDeep(obj, path, value, returnObj) {
+            path = path.split('.');
+            var temp = obj;
+            for (var _i3 = 0, n; _i3 < path.length - 1; _i3++) {
+                n = path[_i3];
+                if (n in temp) temp = temp[n];
+                else {
+                    temp[n] = {};
+                    temp = temp[n];
+                }
             }
+            temp[path[path.length - 1]] = value;
             if (returnObj === true) return obj;
         },
         forEachDeep: function forEachDeep(object, fn, path) {
@@ -1346,8 +1539,8 @@ function _typeof(obj) {
             return is.Object(val) ? Object.create(val) : val.slice(0);
         },
         omitFrom: function omitFrom(Arr) {
-            for (var _len4 = arguments.length, values = Array(_len4 > 1 ? _len4 - 1 : 0), _key4 = 1; _key4 < _len4; _key4++) {
-                values[_key4 - 1] = arguments[_key4];
+            for (var _len29 = arguments.length, values = Array(_len29 > 1 ? _len29 - 1 : 0), _key29 = 1; _key29 < _len29; _key29++) {
+                values[_key29 - 1] = arguments[_key29];
             }
 
             var string = is.String(Arr);
@@ -1361,8 +1554,8 @@ function _typeof(obj) {
         omit: function omit(val) {
             var _Craft;
 
-            for (var _len5 = arguments.length, values = Array(_len5 > 1 ? _len5 - 1 : 0), _key5 = 1; _key5 < _len5; _key5++) {
-                values[_key5 - 1] = arguments[_key5];
+            for (var _len30 = arguments.length, values = Array(_len30 > 1 ? _len30 - 1 : 0), _key30 = 1; _key30 < _len30; _key30++) {
+                values[_key30 - 1] = arguments[_key30];
             }
 
             if (is.Arraylike(val)) val = (_Craft = Craft).omitFrom.apply(_Craft, [val].concat(values));
@@ -1428,32 +1621,41 @@ function _typeof(obj) {
                 });
             },
             input: function input(type, attributes) {
+                if (is.Object(type)) {
+                    attributes = type;
+                    type = 'text';
+                }
                 return craftElement('input', '', attributes, {
                     type: type || 'text'
                 });
             },
-            ul: function ul(items, attr) {
+
+            button: function button(inner, attr) {
+                return craftElement('button', inner, attr);
+            },
+            list: function list(type, items, attr) {
                 var list = '';
-                if (is.Arr(items)) items.forEach(function(item) {
+                if (is.Arrylike(items)) items.forEach(function(item) {
                     if (is.String(item)) list += craftElement('li', item).outerHTML;
                     else if (is.Object(items)) list += craftElement('li', item.inner, item.attr).outerHTML;
                 });
-                return craftElement('ul', list, attr);
-            },
-            ol: function ol(items, attr, node) {
-                var list = '';
-                if (is.Arr(items)) items.forEach(function(item) {
-                    if (is.String(item)) list += craftElement('li', item).outerHTML;
-                    if (is.Object(items)) list += craftElement('li', item.inner, item.attr).outerHTML;
-                });
-                return craftElement('ol', list, attr, node);
+                return craftElement(type, list, attr);
             },
 
+            ul: function ul(items, attr) {
+                return Craft.dom.list('ul', items, attr);
+            },
+            ol: function ol(items, attr) {
+                return Craft.dom.list('ol', items, attr);
+            },
+            li: function li(inner, attr) {
+                return craftElement('li', inner, attr);
+            },
             h: function h(level, inner, attr, node) {
-                return craftElement('h' + level, inner, attr, node);
+                return craftElement('h' + level, inner, attr);
             },
             a: function a(link, inner, attr, node) {
-                return craftElement('a', inner, attr, node, {
+                return craftElement('a', inner, attr, {
                     href: link
                 });
             },
@@ -1469,7 +1671,7 @@ function _typeof(obj) {
                 if (!is.Arr(rows)) return (is.String(rows) ? craftElement('table', rows, attr, node) : craftElement('table', '', attr, node)).outerHTML;
                 if (!rows.every(function(o) {
                         return is.Object(o);
-                    })) throw new TypeError('dom.table -> rows : all entries need to be objects');
+                    })) throw new TypeError('dom.table -> rows : needs to be all objects');
                 var tableInner = '';
                 forEach(rows, function(row) {
                     return forEach(row, function(val, key) {
@@ -1528,8 +1730,8 @@ function _typeof(obj) {
                 return localStorage.removeItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key);
             },
             removeAll: function removeAll(expired) {
-                for (var _i3 in localStorage) {
-                    if (!expired || Craft.loader.get(_i3).expire <= +new Date()) Craft.loader.remove(_i3);
+                for (var _i4 in localStorage) {
+                    if (!expired || Craft.loader.get(_i4).expire <= +new Date()) Craft.loader.remove(_i4);
                 }
             }
         },
@@ -1572,10 +1774,14 @@ function _typeof(obj) {
             },
             handle: function handle(route, func) {
                 if (is.String(route)) {
-                    if (location.href.includes(route)) func(route);
+                    if (Locs().some(function(l) {
+                            return l === route;
+                        })) func(route);
                     Craft.router.addHandle(route, func);
                 } else if (is.Arr(route)) route.forEach(function(link) {
-                    if (location.href.includes(link)) func(link);
+                    if (Locs().some(function(l) {
+                            return l === link;
+                        })) func(link);
                     Craft.router.addHandle(link, func);
                 });
             },
@@ -1624,8 +1830,8 @@ function _typeof(obj) {
                 }) : vh.html(view, position);
             },
             clearViews: function clearViews() {
-                for (var _i4 in localStorage) {
-                    localStorage.removeItem(localStorage.key(_i4).includes("Cr:"));
+                for (var _i5 in localStorage) {
+                    localStorage.removeItem(localStorage.key(_i5).includes("Cr:"));
                 }
             }
         },
@@ -1669,7 +1875,7 @@ function _typeof(obj) {
         Socket: function Socket(address, protocols) {
             if (!address.includes('ws://') || !address.includes('wss://')) address = (location.protocol === 'http:' ? 'ws://' : 'wss://') + address;
             if (is.URL(address)) {
-                var _ret = (function() {
+                var _ret2 = (function() {
 
                     var Options = {
                         socket: null,
@@ -1677,14 +1883,14 @@ function _typeof(obj) {
                         recievers: [],
                         message: '',
                         set send(msg) {
-                            var _this8 = this;
+                            var _this11 = this;
 
                             if (this.socket['readyState'] === 1) this.socket.send(is.Object(msg) ? JSON.stringify(msg) : msg);
                             else {
                                 (function() {
                                     var poll = setInterval(function() {
-                                        if (_this8.socket['readyState'] === 1) {
-                                            _this8.socket.send(is.Object(msg) ? JSON.stringify(msg) : msg);
+                                        if (_this11.socket['readyState'] === 1) {
+                                            _this11.socket.send(is.Object(msg) ? JSON.stringify(msg) : msg);
                                             clearInterval(poll);
                                         }
                                     }, 20);
@@ -1728,7 +1934,7 @@ function _typeof(obj) {
                     };
                 })();
 
-                if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
+                if ((typeof _ret2 === 'undefined' ? 'undefined' : _typeof(_ret2)) === "object") return _ret2.v;
             }
         },
         observable: function observable(obj) {
@@ -1804,11 +2010,11 @@ function _typeof(obj) {
         debounce: function debounce(wait, func, immediate) {
             var timeout = undefined;
             return function() {
-                var _this9 = this,
+                var _this12 = this,
                     _arguments2 = arguments,
                     later = function later() {
                         timeout = null;
-                        if (!immediate) func.apply(_this9, _arguments2);
+                        if (!immediate) func.apply(_this12, _arguments2);
                     },
                     callNow = immediate && !timeout;
 
@@ -1872,8 +2078,8 @@ function _typeof(obj) {
         OverrideFunction: function OverrideFunction(funcName, Func, ContextObject) {
             var func = funcName.split(".").pop(),
                 ns = funcName.split(".");
-            for (var _i5 = 0; _i5 < ns.length; _i5++) {
-                ContextObject = ContextObject[ns[_i5]];
+            for (var _i6 = 0; _i6 < ns.length; _i6++) {
+                ContextObject = ContextObject[ns[_i6]];
             }
             ContextObject[func] = Func;
         },
@@ -1884,8 +2090,8 @@ function _typeof(obj) {
             return -1;
         },
         indexOfDate: function indexOfDate(Collection, date) {
-            for (var _i6 = 0; _i6 < Collection.length; _i6++) {
-                if (+Collection[_i6] === +date) return _i6;
+            for (var _i7 = 0; _i7 < Collection.length; _i7++) {
+                if (+Collection[_i7] === +date) return _i7;
             }
             return -1;
         },
@@ -1936,6 +2142,7 @@ function _typeof(obj) {
             }
         },
         WebComponents: [],
+        CustomAttributes: [],
         tabActive: true,
         toArr: toArr,
         toInt: toInt,
@@ -2001,6 +2208,21 @@ function _typeof(obj) {
             });
             return formData;
         },
+        CSSRule: function CSSRule(selector, rules, index, sheet) {
+            if (is.Object(rules)) {
+                var temp = '';
+                forEach(rules, function(val, key) {
+                    return temp += key + ': ' + (val.includes(';') ? val : val + ';\n');
+                });
+                rules = temp;
+            }
+            console.log(rules);
+            if (!sheet) sheet = CrafterStyles.sheet;
+            sheet.insertRule(selector + "{" + rules + "}", index);
+        },
+        revokeCSSRule: function revokeCSSRule(index) {
+            if (is.int(index)) CrafterStyles.sheet.deleteRule(index);
+        },
 
         URLfrom: function URLfrom(text) {
             return URL.createObjectURL(new Blob([text]));
@@ -2048,12 +2270,44 @@ function _typeof(obj) {
         },
         model: function model(name, func) {
             if (is.Func(func) && is.String(name)) {
-                if (!def(Craft.Models[name])) {
-                    Craft.Models[name] = {
-                        func: func,
-                        scope: Craft.observable({})
+                if (!def(Craft.Models[name])) Craft.Models[name] = {
+                    func: func,
+                    scope: Craft.observable({})
+                };
+            }
+        },
+        fromModel: function fromModel(key, val) {
+            var cutkey = cutdot(key);
+            if (def(Craft.Models[cutkey[0]])) {
+                var _type = (def(val) ? 'set' : 'get') + 'Deep';
+                return cutkey.length === 1 && !def(val) ? Craft.Models[cutkey[0]].scope : Craft[_type](Craft.Models[cutkey[0]].scope, Craft.omit(cutkey, cutkey[0]).join('.'), val);
+            }
+        },
+        customAttribute: function customAttribute(name, handle) {
+            if (is.Func(handle)) {
+                (function() {
+                    var apply = function apply() {
+                        queryEach('[' + name + ']', function(el) {
+                            el = el.hasDOMmethods ? el : dom(el);
+                            if (el.hasAttr(name)) {
+                                if (!is.Array(el.customAttr)) el.customAttr = [];
+                                if (!el.customAttr.includes(name)) {
+                                    el.customAttr.push(name);
+                                    handle(el, el.getAttr(name));
+                                }
+                            }
+                        });
                     };
-                }
+
+                    Craft.CustomAttributes.push({
+                        name: name,
+                        handle: handle
+                    });
+
+                    Ready ? apply() : Craft.WhenReady.then(function() {
+                        return setTimeout(apply, 80);
+                    });
+                })();
             }
         },
 
@@ -2088,11 +2342,11 @@ function _typeof(obj) {
             if (caps === true && Craft.hasCapitals(pass) === false) return reasons ? 'Password should have a Capital letter' : false;
             if (number === true && /\d/g.test(pass) === false) return reasons ? 'Password should have a number' : false;
 
-            for (var _len6 = arguments.length, includeChars = Array(_len6 > 5 ? _len6 - 5 : 0), _key6 = 5; _key6 < _len6; _key6++) {
-                includeChars[_key6 - 5] = arguments[_key6];
+            for (var _len31 = arguments.length, includeChars = Array(_len31 > 5 ? _len31 - 5 : 0), _key31 = 5; _key31 < _len31; _key31++) {
+                includeChars[_key31 - 5] = arguments[_key31];
             }
 
-            if (includeChars.length !== 0) {
+            if (includeChars.length) {
                 var hasChars = true,
                     reason = includeChars.join();
                 includeChars.forEach(function(ch) {
@@ -2170,19 +2424,18 @@ function _typeof(obj) {
         }
     };
 
-    if (!def(root.CraftScope)) root.CraftScope = Craft.observable({});
+    root.CraftScope = Craft.observable({});
 
     On('blur', function(e) {
-        return Craft.tabActive = false;
+        return Craft.tabActive = !1;
     });
     On('focus', function(e) {
-        return Craft.tabActive = true;
+        return Craft.tabActive = !0;
     });
 
     Craft.Models = Craft.observable({});
 
     Craft.Models.addListener(function(o, key, model, New) {
-        console.log(New);
         if (New) Ready ? model.func(model.scope) : Craft.WhenReady.then(function() {
             return model.func(model.scope);
         });
@@ -2193,8 +2446,8 @@ function _typeof(obj) {
     });
     Craft.curry.adaptTo = Craft.curry(function(num, fn) {
         return Craft.curry.to(num, function(context) {
-            for (var _len7 = arguments.length, args = Array(_len7 > 1 ? _len7 - 1 : 0), _key7 = 1; _key7 < _len7; _key7++) {
-                args[_key7 - 1] = arguments[_key7];
+            for (var _len32 = arguments.length, args = Array(_len32 > 1 ? _len32 - 1 : 0), _key32 = 1; _key32 < _len32; _key32++) {
+                args[_key32 - 1] = arguments[_key32];
             }
 
             return fn.apply(null, args.slice(1).concat(context));
@@ -2214,13 +2467,13 @@ function _typeof(obj) {
 
     Craft.newComponent(fw, {
         inserted: function inserted() {
-            var _this10 = this,
+            var _this13 = this,
                 src = this.getAttribute('src');
 
             if (!nil(src)) {
                 (function() {
                     var wc = null,
-                        el = dom(_this10),
+                        el = dom(_this13),
                         cc = 'cache-component';
                     if (!Craft.WebComponents.includes(src)) {
                         if (el.hasAttr(cc)) {
@@ -2243,6 +2496,72 @@ function _typeof(obj) {
         }
     });
 
+    Craft.customAttribute('link', function(el, link) {
+        return On(el).Click(function(e) {
+            return (el.hasAttr('newtab') ? open : Craft.router.open)(link);
+        });
+    });
+
+    Craft.customAttribute('bind', function(el, bind) {
+        try {
+            var cutbind = cutdot(bind),
+                prop = cutbind[cutbind.length - 1],
+                obj = def(Craft.Models[cutbind[0]]) ? Craft.Models[cutbind[0]].scope : Craft.getDeep(root, Craft.omitFrom(cutbind, prop).join('.')) || CraftScope,
+                val = Craft.getDeep(obj, cutbind.length > 1 ? Craft.omit(cutbind, cutbind[0]).join('.') : prop);
+
+            def(val) ? el.html(val) : Craft.setDeep(obj, prop, el.html());
+
+            if (def(Object.getOwnPropertyDescriptor(obj, 'addListener')) && !is.Func(el['BindListener'])) {
+                el.BindListener = function(o, n, v) {
+                    return el.html(v);
+                };
+                obj.addListener(prop, el);
+            }
+            if (is.Input(el)) el.SyncInput(obj, Craft.omitFrom(cutbind, cutbind[0]).join('.'));
+        } catch (e) {
+            console.log(e);
+            console.warn("couldn't bind :", el);
+        }
+    });
+
+    function manageAttr(el) {
+        el = el.hasDOMmethods ? el : dom(el);
+        for (var _i8 = 0, attr; _i8 < Craft.CustomAttributes.length; _i8++) {
+            attr = Craft.CustomAttributes[_i8];
+            if (el.hasAttr(attr.name)) {
+                if (!is.Array(el.customAttr)) el.customAttr = [];
+                if (!el.customAttr.includes(attr.name)) {
+                    el.customAttr.push(attr.name);
+                    attr.handle(el, el.getAttr(attr.name));
+                }
+                break;
+            }
+        }
+    }
+
+    function attrCheck() {
+        Craft.CustomAttributes.forEach(function(attr) {
+            queryAll('[' + attr.name + ']').forEach(function(el) {
+                el = el.hasDOMmethods ? el : dom(el);
+                if (el.hasAttr(attr.name)) {
+                    if (!is.Array(el.customAttr)) el.customAttr = [];
+                    if (!el.customAttr.includes(attr.name)) {
+                        el.customAttr.push(attr.name);
+                        attr.handle(el, el.getAttr(attr.name));
+                    }
+                }
+            });
+        });
+    }
+
+    function handleHash() {
+        Craft.router.handlers.forEach(function(handle) {
+            if (Locs().some(function(l) {
+                    return l === handle.link;
+                })) handle.func(location.hash);
+        });
+    }
+
     Once('DOMContentLoaded', function() {
         Craft.router.links.forEach(function(link) {
             return link();
@@ -2250,71 +2569,27 @@ function _typeof(obj) {
         Craft.WebComponents.length === queryAll(fw).length ? Ready = true : Craft.poll(function() {
             return Craft.WebComponents.length === queryAll(fw).length;
         }, 35, 5035).then(function() {
-            return Ready = true;
+            Ready = true;
+            Craft.DomObserver = new MutationObserver(function(muts) {
+                return muts.forEach(function(mut, i) {
+                    forEach(mut.addedNodes, function(el) {
+                        if (el['hasAttribute']) manageAttr(el);
+                    });
+                    manageAttr(mut.target);
+                });
+            });
+            Craft.DomObserver.observe(doc.body, {
+                attributes: true,
+                childList: true,
+                subtree: true
+            });
         }).catch(function() {
             Ready = true;
             console.warn('loading took too long loaded with errors :(');
         });
     });
 
-    function manageCustomAttributes(element) {
-        var mnp = dom(element);
-        if (mnp.hasAttr('bind')) {
-            try {
-                var bind = mnp.getAttr('bind'),
-                    cutbind = cutdot(bind),
-                    prop = cutbind[cutbind.length - 1],
-                    obj = def(Craft.Models[cutbind[0]]) ? Craft.Models[cutbind[0]].scope : Craft.getDeep(root, Craft.omitFrom(cutbind, prop).join('.')) || CraftScope,
-                    val = Craft.getDeep(obj, cutbind.length > 1 ? Craft.omit(cutbind, cutbind[0]).join('.') : prop);
-
-                def(val) ? mnp.html(val) : Craft.setDeep(obj, prop, mnp.html());
-
-                if (def(Object.getOwnPropertyDescriptor(obj, 'addListener')) && !is.Func(mnp['BindListener'])) {
-                    mnp.BindListener = function(o, n, v) {
-                        return mnp.html(v);
-                    };
-                    obj.addListener(prop, mnp);
-                }
-                if (is.Input(mnp)) mnp.SyncInput(obj, prop);
-            } catch (e) {
-                console.warn("couldn't bind :", mnp);
-            }
-        }
-        if (mnp.hasAttr('link')) On(mnp).Click(function(e) {
-            return (mnp.hasAttr('newtab') ? open : Craft.router.open)(mnp.getAttr('link'));
-        });
-        def(Craft.WidgetWatchers) ? Craft.WidgetWatchers(mnp) : Craft.WhenReady.then(function() {
-            return setTimeout(function() {
-                if (def(Craft.WidgetWatchers)) Craft.WidgetWatchers(mnp);
-            }, 200);
-        });
-    }
-
-    Craft.DomObserver = new MutationObserver(function(muts) {
-        return muts.forEach(function(mut) {
-            if (mut.type === 'attributes') {
-                if (['tooltip', 'bind', 'movable', 'ripple', 'link'].some(function(el) {
-                        return el === mut.attributeName;
-                    }) && is.Node(mut.target)) manageCustomAttributes(mut.target);
-            }
-        });
-    }).observe(doc.documentElement, {
-        attributes: true,
-        childlist: true,
-        subtree: true
-    });
-
-    Craft.WhenReady.then(function() {
-        setTimeout(function() {
-            return queryEach('[bind],[tooltip],[ripple],[movable],[link]', manageCustomAttributes);
-        }, 120);
-    });
-
-    On('hashchange', function(e) {
-        Craft.router.handlers.forEach(function(handler) {
-            return location.hash === handler.link || location === handler.link ? handler.func(location.hash) : null;
-        });
-    });
+    On('hashchange', handleHash);
 
     root.forEach = forEach;
 })(document, self);

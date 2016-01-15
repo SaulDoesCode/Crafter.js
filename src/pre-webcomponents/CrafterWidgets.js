@@ -1,8 +1,9 @@
 "use strict";
 ((doc, root) => {
+  Craft.dom.ripple = (attr) => dom().element('ripple-effect','',attr);
 
-  Craft.ripple = (SelectorOrNode, options) => queryEach(SelectorOrNode, element => On(element).Mousedown(e => {
-    let ripple = dom().element('ripple-effect', '', options);
+  Craft.ripple = (selector, options) => queryEach(selector, element => On(element).Mousedown(e => {
+    let ripple = dom().ripple(options);
     ripple.Rx = e.clientX;
     ripple.Ry = e.clientY;
     element.appendChild(ripple);
@@ -12,9 +13,10 @@
     inserted() {
       let ripple = dom(this),
         color, timing = ripple.hasAttr("timing") ? ripple.getAttr("timing") : 1600,
-        rect = this.parentNode.getBoundingClientRect(),
+        rect = dom(this.parentNode).getRect(),
         diameter = Math.max(rect.width, rect.height);
       if (ripple.parentNode.hasAttribute("ripple")) color = ripple.parentNode.getAttr("ripple");
+      else if (ripple.parentNode.hasAttribute("color-accent")) color = ripple.parentNode.getAttr("color-accent");
       else if (ripple.hasAttr("color-accent")) color = ripple.getAttr("color-accent");
       else if (ripple.hasAttr("color")) color = ripple.getAttr("color");
 
@@ -96,7 +98,7 @@
       Show(Show, ev) {
         if (is.Def(ev)) ev.preventDefault();
         let el = dom(this);
-        Show ? el.addClass('context-menu-active').move((ev.clientX + 5), (ev.clientY + 5),true) : el.stripClass('context-menu-active');
+        Show ? el.addClass('context-menu-active').move((ev.clientX + 5), (ev.clientY + 5), true) : el.stripClass('context-menu-active');
       }
   });
 
@@ -154,7 +156,7 @@
   });
 
   Craft.newComponent('grid-host', {
-    extends : 'div'
+    extends: 'div'
   });
 
   Craft.newComponent('text-collapser', {
@@ -163,8 +165,7 @@
           txt = el.html();
         el.html("");
 
-        el.append(dom().label(el.getAttr('summary'), 'class=indicator'));
-        el.append(dom().label(txt, 'class=text'));
+        el.append(dom().label(el.getAttr('summary'), 'class=indicator')).append(dom().label(txt, 'class=text'));
 
         Object.defineProperty(this, 'open', {
           get: () => el.hasAttr('open'),
@@ -189,8 +190,16 @@
   Craft.newComponent('material-input', {
     inserted() {
         let el = dom(this),
-          input = dom(dom().input());
+          input = dom().input();
         el.html("");
+
+        Object.defineProperty(this, 'value', {
+          set: val => {
+            input.text(val);
+            input.value.length > 0 || input.value == ' ' ? input.addClass('inputhastext') : input.stripClass('inputhastext');
+          },
+          get: () => input.value
+        });
 
         if (el.hasAttr("type")) {
           if (el.getAttr("type") !== "submit" && el.getAttr("type") !== "button" && el.getAttr("type") !== "range") {
@@ -246,14 +255,6 @@
             else if (input.hasAttr(i) && !el.hasAttr(i)) input.stripAttr(i, newVal);
           }
         });
-      },
-      set value(val) {
-        let input = dom('input', this);
-        input.text(val);
-        input.value.length > 0 || input.value == ' ' ? input.addClass('inputhastext') : input.stripClass('inputhastext');
-      },
-      get value() {
-        return query('input', this).value;
       }
   });
 
@@ -287,8 +288,9 @@
 
       },
       attr(name) {
-        if (name === "checked" && this.hasAttribute("checked")) this.CheckGroup(this);
-        else if ((name === "name" || name === "label") && (this.hasAttribute("name") || this.hasAttribute("label"))) this.name = this.getAttribute("name") || this.getAttribute("label");
+        let element = dom(this);
+        if (name === "checked" && element.hasAttr("checked")) element.CheckGroup(element);
+        else if ((name === "name" || name === "label") && (element.hasAttr("name") || element.hasAttr("label"))) this.name = element.getAttr("name") || element.getAttr("label");
       }
   });
 
@@ -297,96 +299,101 @@
     if (e.target.parentNode.tagName !== 'CONTEXT-MENU' && e.target.tagName !== 'SECTION') ContextMenus.forEach(el => el.Show());
   });
 
-  Craft.WidgetWatchers = element => {
-    if (element.hasAttr('ripple')) Craft.ripple(element);
-    if (element.hasAttr('tooltip')) {
-      queryEach(`[owner="${element.parentNode.tagName}${element.tagName}${element.className}"]`, el => {
-        if (is.Def(el.TooltipOwnerObserver)) el.TooltipOwnerObserver.disconnect();
-        if (is.Def(el.EventListeners)) el.EventListeners.forEach(ev => ev.Off());
-        el.remove();
-      });
-      let show = false,
+  Craft.customAttribute('ripple',(el,color) => {
+    if (!is.Array(el.customAttr)) el.customAttr = [];
+    if (!el.customAttr.includes('ripple')) el.customAttr.push('ripple');
+    Craft.ripple(el,'ripple='+color);
+  });
+
+  Craft.customAttribute('tooltip', (element, val) => {
+    queryEach(`[owner="${element.parentNode.tagName}${element.tagName}${element.className}"]`, el => {
+      if (is.Def(el.TooltipOwnerObserver)) el.TooltipOwnerObserver.disconnect();
+      if (is.Def(el.EventListeners)) el.EventListeners.forEach(ev => ev.Off());
+      el.remove();
+    });
+    let show = false,
       tooltip = dom().span('', `direction=${element.hasAttr('tooltip-direction') ? element.getAttr('tooltip-direction') : 'right'}&class=craft-tooltip`);
 
-      tooltip.EventListeners = [];
-      tooltip.textContent = element.getAttr('tooltip');
-      tooltip.setAttribute('owner', `${element.parentNode.tagName}${element.tagName}${element.className}`);
-      if (element.hasAttr('ripple')) tooltip.style.borderColor = element.getAttr('ripple');
-      if (element.hasAttr('color-accent')) tooltip.style.borderColor = element.getAttr('color-accent');
+    tooltip.EventListeners = [];
+    tooltip.textContent = element.getAttr('tooltip');
+    tooltip.setAttribute('owner', `${element.parentNode.tagName}${element.tagName}${element.className}`);
+    if (element.hasAttr('ripple')) tooltip.style.borderColor = element.getAttr('ripple');
+    if (element.hasAttr('color-accent')) tooltip.style.borderColor = element.getAttr('color-accent');
 
-      let moveTooltip = () => {
-        let movecheck = setInterval(() => {
-          Craft.mouse.observe(show);
-          show ? dom(tooltip).move(Craft.mouse.x, Craft.mouse.y) : clearInterval(movecheck);
-        }, 5);
-      }
+    let moveTooltip = () => {
+      let movecheck = setInterval(() => {
+        Craft.mouse.observe(show);
+        show ? dom(tooltip).move(Craft.mouse.x, Craft.mouse.y) : clearInterval(movecheck);
+      }, 5);
+    }
 
-      tooltip.EventListeners.push(On(element).Mouseenter(ev => {
-        show = true;
-        moveTooltip();
-        if (ev.target !== element || ev.target.parentNode !== element) {
-          tooltip.style.display = show ? 'block' : 'none';
-          setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
-        } else {
-          if (element.hasAttr('tooltip-delay')) setTimeout(() => {
-            tooltip.style.display = show ? 'block' : 'none';
-            setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
-          }, parseInt(element.getAttr('tooltip-delay')));
-          else {
-            tooltip.style.display = show ? 'block' : 'none';
-            setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
-          }
-        }
-      }));
-      tooltip.EventListeners.push(On(element).Mouseleave(ev => {
-        show = false;
+    tooltip.EventListeners.push(On(element).Mouseenter(ev => {
+      show = true;
+      moveTooltip();
+      if (ev.target !== element || ev.target.parentNode !== element) {
         tooltip.style.display = show ? 'block' : 'none';
         setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
-      }));
+      } else {
+        if (element.hasAttr('tooltip-delay')) setTimeout(() => {
+          tooltip.style.display = show ? 'block' : 'none';
+          setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
+        }, parseInt(element.getAttr('tooltip-delay')));
+        else {
+          tooltip.style.display = show ? 'block' : 'none';
+          setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
+        }
+      }
+    }));
+    tooltip.EventListeners.push(On(element).Mouseleave(ev => {
+      show = false;
+      tooltip.style.display = show ? 'block' : 'none';
+      setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
+    }));
 
-      tooltip.hostObserver = new MutationObserver(mutations => {
-        mutations.forEach(mut => {
-          if (mut.type === 'attributes') {
-            if (mut.attributeName === 'tooltip' && element.hasAttr('tooltip')) {
-              tooltip.innerHTML = element.getAttr('tooltip');
-            } else if (mut.attributeName === 'tooltip-delay' && element.hasAttr('tooltip-delay')) {
-              setTimeout(() => {
-                tooltip.style.display = show ? 'block' : 'none';
-                setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
-              }, parseInt(element.getAttr('tooltip-delay')));
-            } else if (mut.attributeName === 'tooltip-direction' && element.hasAttr('tooltip-direction')) {
-              tooltip.setAttribute('direction', element.getAttr('tooltip-direction'));
-            } else if (!element.hasAttr('tooltip')) {
-              if (is.Def(tooltip.hostObserver)) tooltip.hostObserver.disconnect();
-              if (is.Def(tooltip.EventListeners)) tooltip.EventListeners.forEach(ev => ev.Off());
-              tooltip.remove();
-            }
+    tooltip.hostObserver = new MutationObserver(mutations => {
+      mutations.forEach(mut => {
+        if (mut.type === 'attributes') {
+          if (mut.attributeName === 'tooltip' && element.hasAttr('tooltip')) {
+            tooltip.innerHTML = element.getAttr('tooltip');
+          } else if (mut.attributeName === 'tooltip-delay' && element.hasAttr('tooltip-delay')) {
+            setTimeout(() => {
+              tooltip.style.display = show ? 'block' : 'none';
+              setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
+            }, parseInt(element.getAttr('tooltip-delay')));
+          } else if (mut.attributeName === 'tooltip-direction' && element.hasAttr('tooltip-direction')) {
+            tooltip.setAttribute('direction', element.getAttr('tooltip-direction'));
+          } else if (!element.hasAttr('tooltip')) {
+            if (is.Def(tooltip.hostObserver)) tooltip.hostObserver.disconnect();
+            if (is.Def(tooltip.EventListeners)) tooltip.EventListeners.forEach(ev => ev.Off());
+            tooltip.remove();
           }
-        });
+        }
       });
-      tooltip.hostObserver.observe(element, {
-        attributes: true
-      });
+    });
+    tooltip.hostObserver.observe(element, {
+      attributes: true
+    });
 
-      doc.body.appendChild(tooltip);
-    }
-    if (element.hasAttr('movable')) {
-      element.style.position = 'absolute';
-      let move, rect,
-        movable = false,
-        movehandle = query('[movehandle]', element);
+    doc.body.appendChild(tooltip);
+  });
 
-      On(movehandle === null ? element : movehandle).Mousedown(e => {
-        movable = true;
-        rect = element.getBoundingClientRect();
-        move = setInterval(() => {
-          Craft.mouse.observe(movable);
-          movable ? dom(element).move(Craft.mouse.x - e.clientX + rect.left, Craft.mouse.y - e.clientY + rect.top) : clearInterval(move);
-        }, 5);
-      });
+  Craft.customAttribute('movable', element => {
+    element.style.position = 'absolute';
+    let move, rect,
+      movable = false,
+      movehandle = query('[movehandle]', element);
 
-      On(doc).Mouseup(e => movable = false);
-    }
-  }
+    On(movehandle === null ? element : movehandle).Mousedown(e => {
+      movable = true;
+      rect = element.getBoundingClientRect();
+      move = setInterval(() => {
+        Craft.mouse.observe(movable);
+        movable ? dom(element).move(Craft.mouse.x - e.clientX + rect.left, Craft.mouse.y - e.clientY + rect.top) : clearInterval(move);
+      }, 5);
+    });
 
-})(document, window);
+    On(doc).Mouseup(e => movable = false);
+  })
+
+
+})(document, self);

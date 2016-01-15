@@ -16,10 +16,10 @@
         });
       },
       setToggler(selector, func) {
-        let s = dom(this);
+        let s = this;
         if (is.Def(func)) {
           s.func = func;
-          s.func(!s.hasAttr('hidden'));
+          s.func(!s.hasAttribute('hidden'));
         }
         s.onToggleClick = On(selector).Click(e => s.toggle());
       },
@@ -49,11 +49,18 @@
 
   Craft.newComponent('sidebar-heading', {
     inserted() {
-        let el = this;
-        if (el.hasAttribute('ripple')) el.color = el.getAttribute('ripple');
-        if (el.hasAttribute('color-accent')) el.color = el.getAttribute('color-accent');
+        let el = dom(this);
+        if (el.hasAttr('ripple')) {
+          el.color = el.getAttr('ripple');
+          if (!is.Array(el.customAttr)) el.customAttr = [];
+          if (!el.customAttr.includes('ripple')) {
+            el.customAttr.push('ripple');
+            Craft.ripple(el);
+          }
+        }
+        if (el.hasAttr('color-accent')) el.color = el.getAttr('color-accent');
         setTimeout(() => {
-          let icon = query('sidebar-icon', el);
+          let icon = el.query('sidebar-icon');
           if (icon !== null) icon.style.color = el.color;
           if (el.textContent.length > 40) el.style.height = 'auto';
         }, 40);
@@ -70,12 +77,13 @@
         if (el.hasAttr('color-accent')) el.color = el.getAttr('color-accent');
         el.style.borderColor = el.color;
         if (query('sidebar-icon', el) !== null) query('sidebar-icon', el).style.color = el.color;
-        el.Onclick = On('click', el, e => el.hasAttr('selected') ? el.removeAttr('selected') : setTimeout(() => el.setAttr('selected', ''), 50));
+        el.Onclick = On('click', el, e => el.hasAttr('selected') ? el.stripAttr('selected') : setTimeout(() => el.setAttr('selected'), 50));
       },
       attr(attrName, oldVal, newVal) {
         if (attrName === 'ripple' || attrName === 'color-accent') this.color = newVal;
         this.style.borderColor = this.color;
-        if (query('sidebar-icon', this) !== null) query('sidebar-icon', this).style.color = this.color;
+        let sb = query('sidebar-icon', this);
+        if (sb !== null) sb.style.color = this.color;
       },
       destroyed() {
         this.Onclick.Off();
