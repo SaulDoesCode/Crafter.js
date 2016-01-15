@@ -1765,7 +1765,7 @@
         el.BindListener = (o, n, v) => el.html(v);
         obj.addListener(prop, el);
       }
-      if (is.Input(el)) el.SyncInput(obj, Craft.omitFrom(cutbind, cutbind[0]).join('.'));
+      if (is.Input(el)) el.SyncInput(obj,cutbind.length === 1 ? cutbind[0] : Craft.omitFrom(cutbind, cutbind[0]).join('.'));
     } catch (e) {
       console.log(e);
       console.warn("couldn't bind :", el);
