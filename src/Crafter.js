@@ -3,9 +3,9 @@
  *  @author Saul van der Walt - https://github.com/SaulDoesCode/
  *  @license MIT
  */
-"use strict ";
 
 ((doc, root) => {
+  "use strict ";
 
   let RegExps = {
       email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
@@ -22,7 +22,7 @@
     fw = 'fetch-' + w,
     sI = 'Isync',
     head = doc.head,
-    Locs = () => [location.hash, location.href, location.pathname],
+    Locs = (test) => [location.hash, location.href, location.pathname].some(test),
     CrafterStyles = doc.createElement('style'),
     ua = navigator.userAgent,
     tem, _br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
@@ -32,17 +32,16 @@
   CrafterStyles.setAttribute('crafterstyles', '');
   head.appendChild(CrafterStyles);
 
-  function toInt(val) {
-    let num = Number(val);
+  function toInt(num) {
+    num = Number(num);
     if (isNaN(num)) return 0;
     if (num === 0 || !isFinite(num)) return num;
     return (num > 0 ? 1 : -1) * Math.floor(Math.abs(num));
   }
 
 
-  function docfragFromString(html) {
-    return doc.createRange().createContextualFragment(html);
-  }
+  root.docfragFromString = html => doc.createRange().createContextualFragment(html);
+
 
   function toArr(val) {
     return Array.prototype.slice.call(val);
@@ -53,8 +52,8 @@
   }
 
   function doInvok(fn, argsArr, totalArity) {
-    argsArr = argsArr.length > totalArity ? argsArr.slice(0, totalArity) : argsArr;
-    return argsArr.length === totalArity ? fn.apply(null, argsArr) : makeFn(fn, argsArr, totalArity);
+    if (argsArr.length > totalArity) argsArr = argsArr.slice(0, totalArity);
+    return argsArr.length == totalArity ? fn.apply(null, argsArr) : makeFn(fn, argsArr, totalArity);
   }
 
   function makeFn(fn, Args, totalArity) {
@@ -62,10 +61,10 @@
     return is.Between(remainingArity, 10, 0) ? function () {
       let args = toArr(arguments);
       return doInvok(fn, Args.concat(args), totalArity);
-    } : (function (fn, args, arity) {
+    } : ((fn, args, arity) => {
       let a = [];
       forEach(arity, (v, i) => a.push('a' + i.toString()));
-      return (...a) => doInvok(fn, args.concat(a));
+      return (...args) => doInvok(fn, args.concat(a));
     })(fn, args, remainingArity);
   }
 
@@ -472,33 +471,34 @@
      * the Handler function will be called only Once
      */
   EventHandler.prototype.Once = function () {
-      let func = this.FuncWrapper,
-        target = this.Target;
-      if (is.Arr(this.EventType)) this.EventType.forEach(etype => {
-        let listenOnce = e => {
-          func(e);
-          target.forEach(t => t.removeEventListener(etype, listenOnce));
-        }
-        target.forEach(t => t.addEventListener(etype, listenOnce));
-      });
-      else {
-        let listenOnce = e => {
-          func(e);
-          target.forEach(t => t.removeEventListener(this.EventType, listenOnce));
-        }
-        target.forEach(t => t.addEventListener(this.EventType, listenOnce));
+    let func = this.FuncWrapper,
+      target = this.Target;
+    if (is.Arr(this.EventType)) this.EventType.forEach(etype => {
+      let listenOnce = e => {
+        func(e);
+        target.forEach(t => t.removeEventListener(etype, listenOnce));
       }
-      return this;
+      target.forEach(t => t.addEventListener(etype, listenOnce));
+    });
+    else {
+      let listenOnce = e => {
+        func(e);
+        target.forEach(t => t.removeEventListener(this.EventType, listenOnce));
+      }
+      target.forEach(t => t.addEventListener(this.EventType, listenOnce));
     }
-    /**
-     * Easy way to loop through Collections and Objects
-     * @param {Array|Object|NodeList} iterable - any collection that is either an Object or has a .length value
-     * @param {function} func - function called on each iteration -> "function( value , indexOrKey ) {...}"
-     */
+    return this;
+  }
+
+  /**
+   * Easy way to loop through Collections and Objects
+   * @param {Array|Object|NodeList} iterable - any collection that is either an Object or has a .length value
+   * @param {function} func - function called on each iteration -> "function( value , indexOrKey ) {...}"
+   */
   function forEach(iterable, func) {
     if (!is.empty(iterable) && is.Func(func)) {
       let i = 0;
-      if (is.Arraylike(iterable) && !localStorage) {
+      if (is.Array(iterable) || is.Arraylike(iterable) && !localStorage) {
         for (; i < iterable.length; i++) func(iterable[i], i);
       } else if (is.int(iterable)) {
         iterable = toInt(iterable);
@@ -604,8 +604,9 @@
   }
 
   function craftElement(name, inner, attributes, extraAttr, stringForm) {
-    if (is.False(is.String(inner), is.Node(inner), is.Num(inner))) is.Object(inner) ? attributes = inner : inner = is.Func(inner) ? inner() : '';
-    let newEl = dom(doc.createElement(name)).html(inner);
+    if (is.False(is.String(inner), is.Node(inner), is.Num(inner), is.Array(inner))) is.Object(inner) ? attributes = inner : inner = is.Func(inner) ? inner() : '';
+    let newEl = dom(doc.createElement(name));
+    is.Array(inner) ? newEl.html(...inner) : newEl.html(inner);
     if (is.Object(attributes) || is.String(attributes)) newEl.setAttr(attributes);
     if (def(extraAttr)) newEl.setAttr(extraAttr);
     if (is.Bool(extraAttr)) stringForm = extraAttr;
@@ -647,41 +648,56 @@
         forEach(arguments, val => forEach(elements, el => el.insertBefore((is.Node(val) ? val : docfragFromString(val)).cloneNode(true), el.firstChild)));
         return this;
       },
+      hide() {
+        this.css({
+          display: 'none'
+        });
+      },
+      show() {
+        this.css({
+          display: ''
+        });
+      },
     }
   }
 
-  function setInner(type, el, args) {
+  function Inner(type, el, args) {
     type = is.Input(el) ? 'value' : type;
     if (is.empty(args)) return el[type];
     if (args.length === 1) {
       args = args[0];
       el[type] = '';
       is.Node(args) ? el.append(args) : el[type] = args;
-    } else el[type] = args.map(el => is.Node(el) ? el.outerHTML : el).join('');
-    return el;
+    } else el[type] = args.map(val => is.Node(val) ? val.outerHTML : val).join('');
+    if (is.Node(el)) return el;
   }
 
   function domManip(element, within) {
-    if (is.String(element)) def(within) ? element = query(element, within) : element = query(element);
+    if (is.String(element)) element = query(element, within);
+    if(element.hasDOMmethods === true) return element;
     element.hasDOMmethods = true;
     /**
      * changes or returns the innerHTML value of a Node
      * @memberof dom
      * @param {string=} sets the innerHTML value or when undefined gets the innerHTML value
      */
-    element.html = (...args) => setInner('innerHTML', element, args);
+    element.html = function () {
+      return Inner('innerHTML', element, toArr(arguments));
+    }
 
     /**
      * changes or returns the textContent value of a Node
      * @memberof dom
      * @param {string=} sets the textContent value or when undefined gets the textContent value
      */
-    element.text = (...args) => setInner('textContent', element, args);
-    /**
-     * replaces a Node with another node provided as a parameter/argument
-     * @memberof dom
-     * @param {Node} Node to replace with
-     */
+    element.Text = function () {
+        return Inner('textContent', element, toArr(arguments));
+      }
+      /**
+       * replaces a Node with another node provided as a parameter/argument
+       * @memberof dom
+       * @param {Node} Node to replace with
+       */
     element.replace = function (val) {
         this.parentNode.replaceChild(val, this);
         return this;
@@ -744,7 +760,7 @@
        * @memberof dom
        * @param {string} name of the class to add
        */
-    element.addClass = function (Class) {
+    element.addClass = function () {
         forEach(arguments, Class => this.classList.add(Class));
         return this;
       }
@@ -775,7 +791,7 @@
        */
     element.stripAttr = function () {
         forEach(arguments, attr => this.removeAttribute(attr));
-        return this;
+        return element;
       }
       /**
        * checks if the element has a specific Attribute or Attributes
@@ -807,31 +823,31 @@
        */
     element.setAttr = function (attr, val) {
         if (!def(val)) {
-          if (is.Object(attr)) forEach(attr, (value, Attr) => this.setAttribute(Attr, value));
-          else if (is.String(attr)) attr.split('&').forEach(Attr => def(Attr.split('=')[1]) ? this.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : this.setAttribute(Attr.split('=')[0], ''));
-        } else this.setAttribute(attr, val || '');
+          if (is.String(attr)) {
+            attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(Attr => def(Attr.split('=')[1]) ? this.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : this.setAttribute(Attr.split('=')[0], '')) :
+              this.setAttribute(attr, '');
+          } else if (is.Object(attr)) forEach(attr, (value, Attr) => this.setAttribute(Attr, value));
+        } else this.setAttribute(attr, val);
         return this;
       }
       /**
-       * Gets the value of an attribute , shortened alias for element.getAttribute
+       * Gets the value of an attribute , short alias for element.getAttribute
        * {string} attr - name of attribute to get
        */
-    element.getAttr = attr => element.getAttribute(attr);
+    element.getAttr = element.getAttribute;
 
-    element.hide = function () {
-      element.css({
-        display: 'none'
-      });
-    }
-    element.show = function () {
-        element.css({
-          display: ''
-        });
-      }
-      /**
-       * Remove the element after a time in milliseconds
-       * @param {number=} time - time to wait before self destructing the element
-       */
+    element.hide = () => element.css({
+      display: 'none'
+    });
+
+    element.show = () => element.css({
+      display: ''
+    });
+
+    /**
+     * Remove the element after a time in milliseconds
+     * @param {number=} time - time to wait before self destructing the element
+     */
     element.removeAfter = time => {
       setTimeout(() => element.remove(), time || 5000);
       return element;
@@ -846,7 +862,7 @@
      * gets all the element's dimentions (width,height,left,top,bottom,right)
      * @memberof dom
      */
-    element.getRect = () => element.getBoundingClientRect();
+    element.getRect = element.getBoundingClientRect;
     /**
      * sets or gets the element's pixel width
      * @memberof dom
@@ -903,7 +919,7 @@
     element.queryAll = selector => queryAll(selector, element);
 
     if (is.Input(element)) {
-      element.SyncInput = (obj, key) => element[sI] = On(element).Input(e => Craft.setDeep(obj, key, element.html()));
+      element.SyncInput = (obj, key) => element[sI] = On(element).Input(e => Craft.setDeep(obj, key, element.value));
       element.disconectInputSync = () => {
         if (def(element[sI])) {
           element[sI].Off();
@@ -911,7 +927,20 @@
         }
       }
     }
-
+    element.observe = function (func, options) {
+      this.MutObserver = new MutationObserver(muts => muts.forEach(mut => func(mut, mut.type, mut.target, mut.addedNodes, mut.removedNodes)));
+      this.MutObserver.observe(this, options || {
+        attributes: true,
+        childList: true,
+        subtree: true
+      });
+    }
+    element.unobserve = function () {
+      if (def(this['MutObserver'])) {
+        this.MutObserver.disconnect();
+        delete this.MutObserver;
+      }
+    }
 
     return element;
   }
@@ -1013,32 +1042,37 @@
           if (object.hasOwnProperty(key)) val = object[key];
           currentPath = path;
           nestable = false;
-          is.Arr(object) ? currentPath += `[${key}]` : !currentPath ? currentPath = key : currentPath += '.' + key;
+          is.Array(object) ? currentPath += `[${key}]` : !currentPath ? currentPath = key : currentPath += '.' + key;
           nestable = fn(val, key, object, currentPath) !== false;
           if (nestable && (is.Arr(val) || is.Object(val))) Craft.forEachDeep(val, fn, currentPath);
         }
       },
-      concatObjects(hostobj) {
-        forEach(hostobj, o => Craft.omitFrom(arguments, hostobj).forEach(obj => forEach(obj, (prop, key) => {
-          if (key in hostobj) {
-            if (is.Arr(hostobj[key])) {
-              if (!hostobj[key].includes(prop)) hostobj[key].push(prop);
-            } else if (prop !== hostobj[key]) hostobj[key] = [prop, hostobj[key]];
-          } else hostobj[key] = prop;
-        })));
-        return hostobj;
+      concatObjects(host) {
+        for (let obj of Craft.omit(arguments, host)) forEach(Object.keys(obj), key => Object.defineProperty(host, key, Object.getOwnPropertyDescriptor(obj, key)));
+        return host;
       },
       cloneArr: arr => Array(...arr),
-      clone: val => is.Object(val) ? Object.create(val) : val.slice(0),
-      omitFrom(Arr, ...values) {
-        let string = is.String(Arr);
-        Arr = (is.Arraylike(Arr) ? toArr(Arr) : Arr).filter(e => {
-          if (!values.some(v => is.eq(v, e))) return e;
-        });
-        return string ? Arr.join('') : Arr;
+      clone: val => is.Object(val) ? Object.create(val) : Array(val),
+      omitFrom(Arr) {
+        let string = is.String(Arr),
+          values = toArr(arguments).slice(1);
+        string ? forEach(values, e => {
+            let replace = () => {
+              if (Arr.includes(e)) {
+                Arr = Arr.replace(e, '');
+                if (Arr.includes(e)) replace();
+              }
+            }
+            replace();
+          }) :
+          Arr = (is.Arraylike(Arr) && !string ? toArr(Arr) : Arr).filter(e => {
+            if (!values.some(v => is.eq(v, e))) return e;
+          });
+        return Arr;
       },
-      omit(val, ...values) {
-        if (is.Arraylike(val)) val = Craft.omitFrom(val, ...values);
+      omit(val) {
+        if (is.Arraylike(val)) val = Craft.omitFrom(...arguments);
+        let values = toArr(arguments).slice(1);
         if (is.Object(val) && !values.some(v => v === val)) forEach(val, (prop, key) => {
           if (values.some(v => is.eq(v, prop) || is.eq(v, key))) delete val[key];
         });
@@ -1097,7 +1131,7 @@
         button: (inner, attr) => craftElement('button', inner, attr),
         list(type, items, attr) {
           let list = ``;
-          if (is.Arrylike(items)) items.forEach(item => {
+          if (is.Arrylike(items)) forEach(items, item => {
             if (is.String(item)) list += craftElement('li', item).outerHTML;
             else if (is.Object(items)) list += craftElement('li', item.inner, item.attr).outerHTML;
           });
@@ -1106,8 +1140,8 @@
         ul: (items, attr) => Craft.dom.list('ul', items, attr),
         ol: (items, attr) => Craft.dom.list('ol', items, attr),
         li: (inner, attr) => craftElement('li', inner, attr),
-        h: (level, inner, attr, node) => craftElement('h' + level, inner, attr),
-        a: (link, inner, attr, node) => craftElement('a', inner, attr, {
+        h: (level, inner, attr) => craftElement('h' + level, inner, attr),
+        a: (link, inner, attr) => craftElement('a', inner, attr, {
           href: link
         }),
         script(code, attr, defer) {
@@ -1118,23 +1152,13 @@
           script.defer = defer !== false;
           return script;
         },
-        table(rows, attr) {
-          if (!is.Arr(rows)) return (is.String(rows) ? craftElement('table', rows, attr, node) : craftElement('table', '', attr, node)).outerHTML;
-          if (!rows.every(o => is.Object(o))) throw new TypeError('dom.table -> rows : needs to be all objects');
-          let tableInner = ``;
-          forEach(rows, row => forEach(row, (val, key) => {
-            let row = ``;
-            if (key === 'cell' || key === 'td' || key === 'data') {
-              if (is.String(val)) row += `<td>${val}</td>`;
-              if (is.Object(val)) row += craftElement('tr', val.inner, val.attr).outerHTML
-            } else if (key === 'head' || key === 'th') {
-              if (is.String(val)) row += `<th>${val}</th>`;
-              if (is.Object(val)) row += craftElement('th', val.inner, val.attr).outerHTML
-            }
-            row += ''
-            tableInner += craftElement('tr', row).outerHTML;
-          }));
-          return craftElement('table', tableInner, attr);
+        td: (inner, attr) => craftElement('td', inner, attr),
+        th: (inner, attr) => craftElement('th', inner, attr),
+        tr: (inner, attr) => craftElement('tr', inner, attr),
+        table: (rows, attr) => craftElement('table', rows, attr),
+        SafeHTML(html, node) {
+          html = html.replace(/<script[^>]*?>.*?<\/script>/gi, '').replace(/<style[^>]*?>.*?<\/style>/gi, '').replace(/<![\s\S]*?--[ \t\n\r]*>/gi, '');
+          return !node ? html : docfragFromString(html);
         },
       },
       CurrentBrowser: {
@@ -1198,10 +1222,10 @@
           },
           handle(route, func) {
             if (is.String(route)) {
-              if (Locs().some(l => l === route)) func(route);
+              if (Locs(l => l === route)) func(route);
               Craft.router.addHandle(route, func);
             } else if (is.Arr(route)) route.forEach(link => {
-              if (Locs().some(l => l === link)) func(link);
+              if (Locs(l => l === link)) func(link);
               Craft.router.addHandle(link, func);
             });
           },
@@ -1260,9 +1284,13 @@
        * @param {Array=} protocols - the protocols to pass to the WebSocket Connection
        */
       Socket(address, protocols) {
-        if (!address.includes('ws://') || !address.includes('wss://')) address = (location.protocol === 'http:' ? 'ws://' : 'wss://') + address;
+        if (!is.URL(address)) {
+          let match = address.match(/^(\/.*?)?$/);
+          if(is.empty(match)) throw new Error('invalid url');
+          address = location.host + match[0];
+        }
+        if (!address.includes('ws://')) address = (location.protocol === 'http:' ? 'ws://' : 'wss://') + address;
         if (is.URL(address)) {
-
           let Options = {
             socket: null,
             open: false,
@@ -1290,18 +1318,25 @@
               this.socket.close();
             },
             reopen() {
-              if (this.open === false) this.socket = is.Def(protocols) ? new WebSocket(address) : new WebSocket(address, protocols);
+              if (this.open === false) this.socket = protocols ? new WebSocket(address, protocols) : new WebSocket(address);
+              socket.onopen = e => Options.open = !0;
+              socket.onclose = e => Options.open = !1;
+              socket.onmessage = e => {
+                Options.message = e.data;
+                forEach(Options.recievers,fn => fn(e.data, e));
+              }
             }
           }
+          let socket = protocols ? new WebSocket(address, protocols) : new WebSocket(address);
+          socket.onopen = e => Options.open = !0;
 
-          Options.socket = is.Def(protocols) ? new WebSocket(address) : new WebSocket(address, protocols);
-          Options.socket.onopen = e => Options.open = true;
-          Options.socket.onclose = e => Options.open = false;
+          socket.onclose = e => Options.open = !1;
 
-          Options.socket.onmessage = e => {
+          socket.onmessage = e => {
             Options.message = e.data;
-            Options.recievers.forEach(fn => fn(e.data, e));
+            forEach(Options.recievers,fn => fn(e.data, e));
           }
+          Options.socket = socket;
 
           return Options;
         }
@@ -1472,7 +1507,23 @@
       tabActive: true,
       toArr: toArr,
       toInt: toInt,
-      RegExps: RegExps,
+      /**
+       * Tail Call Optimization for recursive functional functions
+       * @param fn - function that uses recursion inside
+       */
+      tco(fn) {
+        let active, nextArgs;
+        return function () {
+          let result;
+          nextArgs = arguments;
+          if (!active) {
+            active = !0;
+            while (nextArgs) result = fn.apply(this, [nextArgs, nextArgs = null][0]);
+            active = !1;
+          }
+          return result;
+        }
+      },
       mouse: {
         x: 0,
         y: 0,
@@ -1591,8 +1642,9 @@
             name: name,
             handle: handle
           });
+
           function apply() {
-            queryEach(`[${name}]`,el => {
+            queryEach(`[${name}]`, el => {
               el = el.hasDOMmethods ? el : dom(el);
               if (el.hasAttr(name)) {
                 if (!is.Array(el.customAttr)) el.customAttr = [];
@@ -1629,16 +1681,15 @@
        * @param {Boolean} reasons - should the function return a short string explaining the reason exept when it's a pass then it gives a bool;
        * @param {...string} includeChars - every extra argument should be a string containing a character you want the password to include
        */
-      strongPassword(pass, length, caps, number, reasons, ...includeChars) {
+      strongPassword(pass, length, caps, number, reasons) {
+        let includeChars = toArr(arguments).slice(5);
         if (pass.length <= length - 1) return reasons ? 'Password too short' : false;
         if (caps === true && Craft.hasCapitals(pass) === false) return reasons ? 'Password should have a Capital letter' : false;
         if (number === true && /\d/g.test(pass) === false) return reasons ? 'Password should have a number' : false;
         if (includeChars.length) {
           let hasChars = true,
             reason = includeChars.join();
-          includeChars.forEach(ch => {
-            if (!pass.includes(ch)) hasChars = false;
-          });
+          forEach(includeChars, ch => hasChars = pass.includes(ch));
           if (!hasChars) return reasons ? '' : false
         }
         return true;
@@ -1676,7 +1727,7 @@
        */
       newComponent(tag, config) {
         if (!def(config)) throw new Error(tag + ' : config undefined');
-        let element = Craft.clone(HTMLElement.prototype),
+        let element = Object.create(HTMLElement.prototype),
           settings = {};
 
         forEach(config, (prop, key) => {
@@ -1702,6 +1753,13 @@
         }
       },
   };
+
+  Craft.ForEach = Craft.tco((collection, func, i = 0) => {
+    if (collection.length !== i) {
+      func(collection[i], i);
+      ForEach(collection, func, i + 1);
+    }
+  });
 
   root.CraftScope = Craft.observable({});
 
@@ -1740,7 +1798,7 @@
           }
           if (nil(wc)) fetch(src).then(res => res.json().then(webcomponent => {
             CrafterStyles.innerHTML += webcomponent.css;
-            head.appendChild(dom().script(webcomponent.js + `\nCraft.WebComponents.push('${src}')`, `webcomponent=${webcomponent.name}`));
+            head.appendChild(dom().script(webcomponent.js + `\nCraft.WebComponents.push('${src}')`, w + `=${webcomponent.name}`));
             if (el.getAttr(cc) == 'true') localStorage.setItem(src, JSON.stringify(webcomponent));
           })).catch(err => console.error(err + " couldn't load " + w));
         }
@@ -1756,7 +1814,7 @@
     try {
       let cutbind = cutdot(bind),
         prop = cutbind[cutbind.length - 1],
-        obj = def(Craft.Models[cutbind[0]]) ? Craft.Models[cutbind[0]].scope : Craft.getDeep(root, Craft.omitFrom(cutbind, prop).join('.')) || CraftScope,
+        obj = def(Craft.Models[cutbind[0]]) ? Craft.Models[cutbind[0]].scope : Craft.getDeep(root, Craft.omit(cutbind, prop).join('.')) || CraftScope,
         val = Craft.getDeep(obj, cutbind.length > 1 ? Craft.omit(cutbind, cutbind[0]).join('.') : prop);
 
       def(val) ? el.html(val) : Craft.setDeep(obj, prop, el.html());
@@ -1765,7 +1823,7 @@
         el.BindListener = (o, n, v) => el.html(v);
         obj.addListener(prop, el);
       }
-      if (is.Input(el)) el.SyncInput(obj,cutbind.length === 1 ? cutbind[0] : Craft.omitFrom(cutbind, cutbind[0]).join('.'));
+      if (is.Input(el)) el.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : Craft.omit(cutbind, cutbind[0]).join('.'));
     } catch (e) {
       console.log(e);
       console.warn("couldn't bind :", el);
@@ -1773,9 +1831,8 @@
   });
 
   function manageAttr(el) {
-    el = el.hasDOMmethods ? el : dom(el);
-    for (let i = 0, attr; i < Craft.CustomAttributes.length; i++) {
-      attr = Craft.CustomAttributes[i];
+    dom(el);
+    for (let attr of Craft.CustomAttributes) {
       if (el.hasAttr(attr.name)) {
         if (!is.Array(el.customAttr)) el.customAttr = [];
         if (!el.customAttr.includes(attr.name)) {
@@ -1787,26 +1844,6 @@
     }
   }
 
-  function attrCheck() {
-    Craft.CustomAttributes.forEach(attr => {
-      queryAll(`[${attr.name}]`).forEach(el => {
-        el = el.hasDOMmethods ? el : dom(el);
-        if (el.hasAttr(attr.name)) {
-          if (!is.Array(el.customAttr)) el.customAttr = [];
-          if (!el.customAttr.includes(attr.name)) {
-            el.customAttr.push(attr.name);
-            attr.handle(el, el.getAttr(attr.name));
-          }
-        }
-      });
-    });
-  }
-
-  function handleHash() {
-    Craft.router.handlers.forEach(handle => {
-      if (Locs().some(l => l === handle.link)) handle.func(location.hash);
-    });
-  }
 
   Once('DOMContentLoaded', () => {
     Craft.router.links.forEach(link => link());
@@ -1814,12 +1851,14 @@
       Craft.poll(() => Craft.WebComponents.length === queryAll(fw).length, 35, 5035)
       .then(() => {
         Ready = true;
-        Craft.DomObserver = new MutationObserver(muts => muts.forEach((mut, i) => {
-          forEach(mut.addedNodes, el => {
-            if (el['hasAttribute']) manageAttr(el);
-          });
-          manageAttr(mut.target);
-        }));
+        Craft.DomObserver = new MutationObserver(muts => {
+          for (let mut of muts) {
+            forEach(mut.addedNodes, el => {
+              if (def(el['hasAttribute'])) manageAttr(el);
+            });
+            manageAttr(mut.target);
+          }
+        });
         Craft.DomObserver.observe(doc.body, {
           attributes: true,
           childList: true,
@@ -1831,7 +1870,10 @@
       });
   });
 
-  On('hashchange', handleHash);
+  On('hashchange',() => {
+    for (let handle of Craft.router.handlers)
+      if (Locs(l => l === handle.link)) handle.func(location.hash);
+  });
 
   root.forEach = forEach;
 })(document, self);

@@ -1,3 +1,4 @@
+"use strict";
 ((doc, root) => {
 
   Craft.newComponent('crafter-tabs', {

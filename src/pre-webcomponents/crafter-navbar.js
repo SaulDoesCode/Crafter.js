@@ -34,7 +34,7 @@ Craft.newComponent('crafter-navbar', {
         checkStates();
       });
 
-      forEach(this.navItems, el => el.navIndex = Array.from(this.navItems).indexOf(el));
+      forEach(this.navItems, el => el.navIndex = Craft.toArr(this.navItems).indexOf(el));
     },
     setActive(select) {
       let el = this,

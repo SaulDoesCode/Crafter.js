@@ -1,10 +1,4 @@
 'use strict';
-/**
- *  @overview Crafter.js , minimalist front-end library
- *  @author Saul van der Walt - https://github.com/SaulDoesCode/
- *  @license MIT
- */
-"use strict ";
 
 function _toConsumableArray(arr) {
     if (Array.isArray(arr)) {
@@ -21,7 +15,14 @@ function _typeof(obj) {
     return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj;
 }
 
+/**
+ *  @overview Crafter.js , minimalist front-end library
+ *  @author Saul van der Walt - https://github.com/SaulDoesCode/
+ *  @license MIT
+ */
+
 (function(doc, root) {
+    "use strict ";
 
     var RegExps = {
             email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
@@ -38,8 +39,8 @@ function _typeof(obj) {
         fw = 'fetch-' + w,
         sI = 'Isync',
         head = doc.head,
-        Locs = function Locs() {
-            return [location.hash, location.href, location.pathname];
+        Locs = function Locs(test) {
+            return [location.hash, location.href, location.pathname].some(test);
         },
         CrafterStyles = doc.createElement('style'),
         ua = navigator.userAgent,
@@ -51,16 +52,16 @@ function _typeof(obj) {
     CrafterStyles.setAttribute('crafterstyles', '');
     head.appendChild(CrafterStyles);
 
-    function toInt(val) {
-        var num = Number(val);
+    function toInt(num) {
+        num = Number(num);
         if (isNaN(num)) return 0;
         if (num === 0 || !isFinite(num)) return num;
         return (num > 0 ? 1 : -1) * Math.floor(Math.abs(num));
     }
 
-    function docfragFromString(html) {
+    root.docfragFromString = function(html) {
         return doc.createRange().createContextualFragment(html);
-    }
+    };
 
     function toArr(val) {
         return Array.prototype.slice.call(val);
@@ -71,8 +72,8 @@ function _typeof(obj) {
     }
 
     function doInvok(fn, argsArr, totalArity) {
-        argsArr = argsArr.length > totalArity ? argsArr.slice(0, totalArity) : argsArr;
-        return argsArr.length === totalArity ? fn.apply(null, argsArr) : makeFn(fn, argsArr, totalArity);
+        if (argsArr.length > totalArity) argsArr = argsArr.slice(0, totalArity);
+        return argsArr.length == totalArity ? fn.apply(null, argsArr) : makeFn(fn, argsArr, totalArity);
     }
 
     function makeFn(fn, Args, totalArity) {
@@ -86,8 +87,8 @@ function _typeof(obj) {
                 return a.push('a' + i.toString());
             });
             return function() {
-                for (var _len = arguments.length, a = Array(_len), _key = 0; _key < _len; _key++) {
-                    a[_key] = arguments[_key];
+                for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+                    args[_key] = arguments[_key];
                 }
 
                 return doInvok(fn, args.concat(a));
@@ -823,6 +824,7 @@ function _typeof(obj) {
         }
         return this;
     };
+
     /**
      * Easy way to loop through Collections and Objects
      * @param {Array|Object|NodeList} iterable - any collection that is either an Object or has a .length value
@@ -831,7 +833,7 @@ function _typeof(obj) {
     function forEach(iterable, func) {
         if (!is.empty(iterable) && is.Func(func)) {
             var _i = 0;
-            if (is.Arraylike(iterable) && !localStorage) {
+            if (is.Array(iterable) || is.Arraylike(iterable) && !localStorage) {
                 for (; _i < iterable.length; _i++) {
                     func(iterable[_i], _i);
                 }
@@ -978,8 +980,11 @@ function _typeof(obj) {
     };
 
     function craftElement(name, inner, attributes, extraAttr, stringForm) {
-        if (is.False(is.String(inner), is.Node(inner), is.Num(inner))) is.Object(inner) ? attributes = inner : inner = is.Func(inner) ? inner() : '';
-        var newEl = dom(doc.createElement(name)).html(inner);
+        var _newEl;
+
+        if (is.False(is.String(inner), is.Node(inner), is.Num(inner), is.Array(inner))) is.Object(inner) ? attributes = inner : inner = is.Func(inner) ? inner() : '';
+        var newEl = dom(doc.createElement(name));
+        is.Array(inner) ? (_newEl = newEl).html.apply(_newEl, _toConsumableArray(inner)) : newEl.html(inner);
         if (is.Object(attributes) || is.String(attributes)) newEl.setAttr(attributes);
         if (def(extraAttr)) newEl.setAttr(extraAttr);
         if (is.Bool(extraAttr)) stringForm = extraAttr;
@@ -1061,25 +1066,36 @@ function _typeof(obj) {
                     });
                 });
                 return this;
+            },
+            hide: function hide() {
+                this.css({
+                    display: 'none'
+                });
+            },
+            show: function show() {
+                this.css({
+                    display: ''
+                });
             }
         };
     }
 
-    function setInner(type, el, args) {
+    function Inner(type, el, args) {
         type = is.Input(el) ? 'value' : type;
         if (is.empty(args)) return el[type];
         if (args.length === 1) {
             args = args[0];
             el[type] = '';
             is.Node(args) ? el.append(args) : el[type] = args;
-        } else el[type] = args.map(function(el) {
-            return is.Node(el) ? el.outerHTML : el;
+        } else el[type] = args.map(function(val) {
+            return is.Node(val) ? val.outerHTML : val;
         }).join('');
-        return el;
+        if (is.Node(el)) return el;
     }
 
     function domManip(element, within) {
-        if (is.String(element)) def(within) ? element = query(element, within) : element = query(element);
+        if (is.String(element)) element = query(element, within);
+        if (element.hasDOMmethods === true) return element;
         element.hasDOMmethods = true;
         /**
          * changes or returns the innerHTML value of a Node
@@ -1087,11 +1103,7 @@ function _typeof(obj) {
          * @param {string=} sets the innerHTML value or when undefined gets the innerHTML value
          */
         element.html = function() {
-            for (var _len25 = arguments.length, args = Array(_len25), _key25 = 0; _key25 < _len25; _key25++) {
-                args[_key25] = arguments[_key25];
-            }
-
-            return setInner('innerHTML', element, args);
+            return Inner('innerHTML', element, toArr(arguments));
         };
 
         /**
@@ -1099,12 +1111,8 @@ function _typeof(obj) {
          * @memberof dom
          * @param {string=} sets the textContent value or when undefined gets the textContent value
          */
-        element.text = function() {
-            for (var _len26 = arguments.length, args = Array(_len26), _key26 = 0; _key26 < _len26; _key26++) {
-                args[_key26] = arguments[_key26];
-            }
-
-            return setInner('textContent', element, args);
+        element.Text = function() {
+            return Inner('textContent', element, toArr(arguments));
         };
         /**
          * replaces a Node with another node provided as a parameter/argument
@@ -1131,8 +1139,8 @@ function _typeof(obj) {
          * @param {Node|string} String or Node to append to the this.element
          */
         element.append = function() {
-            for (var _len27 = arguments.length, args = Array(_len27), _key27 = 0; _key27 < _len27; _key27++) {
-                args[_key27] = arguments[_key27];
+            for (var _len25 = arguments.length, args = Array(_len25), _key25 = 0; _key25 < _len25; _key25++) {
+                args[_key25] = arguments[_key25];
             }
 
             args.forEach(function(val) {
@@ -1189,7 +1197,7 @@ function _typeof(obj) {
          * @memberof dom
          * @param {string} name of the class to add
          */
-        element.addClass = function(Class) {
+        element.addClass = function() {
             var _this6 = this;
 
             forEach(arguments, function(Class) {
@@ -1232,7 +1240,7 @@ function _typeof(obj) {
             forEach(arguments, function(attr) {
                 return _this8.removeAttribute(attr);
             });
-            return this;
+            return element;
         };
         /**
          * checks if the element has a specific Attribute or Attributes
@@ -1245,8 +1253,8 @@ function _typeof(obj) {
 
             if (is.String(attr)) return this.hasAttribute(attr);
 
-            for (var _len28 = arguments.length, attributes = Array(_len28 > 1 ? _len28 - 1 : 0), _key28 = 1; _key28 < _len28; _key28++) {
-                attributes[_key28 - 1] = arguments[_key28];
+            for (var _len26 = arguments.length, attributes = Array(_len26 > 1 ? _len26 - 1 : 0), _key26 = 1; _key26 < _len26; _key26++) {
+                attributes[_key26 - 1] = arguments[_key26];
             }
 
             if (attr === false) return attributes.every(function(a) {
@@ -1277,33 +1285,34 @@ function _typeof(obj) {
             var _this10 = this;
 
             if (!def(val)) {
-                if (is.Object(attr)) forEach(attr, function(value, Attr) {
+                if (is.String(attr)) {
+                    attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(function(Attr) {
+                        return def(Attr.split('=')[1]) ? _this10.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : _this10.setAttribute(Attr.split('=')[0], '');
+                    }) : this.setAttribute(attr, '');
+                } else if (is.Object(attr)) forEach(attr, function(value, Attr) {
                     return _this10.setAttribute(Attr, value);
                 });
-                else if (is.String(attr)) attr.split('&').forEach(function(Attr) {
-                    return def(Attr.split('=')[1]) ? _this10.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : _this10.setAttribute(Attr.split('=')[0], '');
-                });
-            } else this.setAttribute(attr, val || '');
+            } else this.setAttribute(attr, val);
             return this;
         };
         /**
-         * Gets the value of an attribute , shortened alias for element.getAttribute
+         * Gets the value of an attribute , short alias for element.getAttribute
          * {string} attr - name of attribute to get
          */
-        element.getAttr = function(attr) {
-            return element.getAttribute(attr);
-        };
+        element.getAttr = element.getAttribute;
 
         element.hide = function() {
-            element.css({
+            return element.css({
                 display: 'none'
             });
         };
+
         element.show = function() {
-            element.css({
+            return element.css({
                 display: ''
             });
         };
+
         /**
          * Remove the element after a time in milliseconds
          * @param {number=} time - time to wait before self destructing the element
@@ -1326,9 +1335,7 @@ function _typeof(obj) {
          * gets all the element's dimentions (width,height,left,top,bottom,right)
          * @memberof dom
          */
-        element.getRect = function() {
-            return element.getBoundingClientRect();
-        };
+        element.getRect = element.getBoundingClientRect;
         /**
          * sets or gets the element's pixel width
          * @memberof dom
@@ -1391,7 +1398,7 @@ function _typeof(obj) {
         if (is.Input(element)) {
             element.SyncInput = function(obj, key) {
                 return element[sI] = On(element).Input(function(e) {
-                    return Craft.setDeep(obj, key, element.html());
+                    return Craft.setDeep(obj, key, element.value);
                 });
             };
             element.disconectInputSync = function() {
@@ -1401,6 +1408,24 @@ function _typeof(obj) {
                 }
             };
         }
+        element.observe = function(func, options) {
+            this.MutObserver = new MutationObserver(function(muts) {
+                return muts.forEach(function(mut) {
+                    return func(mut, mut.type, mut.target, mut.addedNodes, mut.removedNodes);
+                });
+            });
+            this.MutObserver.observe(this, options || {
+                attributes: true,
+                childList: true,
+                subtree: true
+            });
+        };
+        element.unobserve = function() {
+            if (def(this['MutObserver'])) {
+                this.MutObserver.disconnect();
+                delete this.MutObserver;
+            }
+        };
 
         return element;
     }
@@ -1510,55 +1535,74 @@ function _typeof(obj) {
                 if (object.hasOwnProperty(key)) val = object[key];
                 currentPath = path;
                 nestable = false;
-                is.Arr(object) ? currentPath += '[' + key + ']' : !currentPath ? currentPath = key : currentPath += '.' + key;
+                is.Array(object) ? currentPath += '[' + key + ']' : !currentPath ? currentPath = key : currentPath += '.' + key;
                 nestable = fn(val, key, object, currentPath) !== false;
                 if (nestable && (is.Arr(val) || is.Object(val))) Craft.forEachDeep(val, fn, currentPath);
             }
         },
-        concatObjects: function concatObjects(hostobj) {
-            var _arguments = arguments;
+        concatObjects: function concatObjects(host) {
+            var _iteratorNormalCompletion = true,
+                _didIteratorError = false,
+                _iteratorError = undefined;
 
-            forEach(hostobj, function(o) {
-                return Craft.omitFrom(_arguments, hostobj).forEach(function(obj) {
-                    return forEach(obj, function(prop, key) {
-                        if (key in hostobj) {
-                            if (is.Arr(hostobj[key])) {
-                                if (!hostobj[key].includes(prop)) hostobj[key].push(prop);
-                            } else if (prop !== hostobj[key]) hostobj[key] = [prop, hostobj[key]];
-                        } else hostobj[key] = prop;
+            try {
+                var _loop = function _loop() {
+                    var obj = _step.value;
+                    forEach(Object.keys(obj), function(key) {
+                        return Object.defineProperty(host, key, Object.getOwnPropertyDescriptor(obj, key));
                     });
-                });
-            });
-            return hostobj;
+                };
+
+                for (var _iterator = Craft.omit(arguments, host)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                    _loop();
+                }
+            } catch (err) {
+                _didIteratorError = true;
+                _iteratorError = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion && _iterator.return) {
+                        _iterator.return();
+                    }
+                } finally {
+                    if (_didIteratorError) {
+                        throw _iteratorError;
+                    }
+                }
+            }
+
+            return host;
         },
 
         cloneArr: function cloneArr(arr) {
             return Array.apply(undefined, _toConsumableArray(arr));
         },
         clone: function clone(val) {
-            return is.Object(val) ? Object.create(val) : val.slice(0);
+            return is.Object(val) ? Object.create(val) : Array(val);
         },
         omitFrom: function omitFrom(Arr) {
-            for (var _len29 = arguments.length, values = Array(_len29 > 1 ? _len29 - 1 : 0), _key29 = 1; _key29 < _len29; _key29++) {
-                values[_key29 - 1] = arguments[_key29];
-            }
-
-            var string = is.String(Arr);
-            Arr = (is.Arraylike(Arr) ? toArr(Arr) : Arr).filter(function(e) {
+            var string = is.String(Arr),
+                values = toArr(arguments).slice(1);
+            string ? forEach(values, function(e) {
+                var replace = function replace() {
+                    if (Arr.includes(e)) {
+                        Arr = Arr.replace(e, '');
+                        if (Arr.includes(e)) replace();
+                    }
+                };
+                replace();
+            }) : Arr = (is.Arraylike(Arr) && !string ? toArr(Arr) : Arr).filter(function(e) {
                 if (!values.some(function(v) {
                         return is.eq(v, e);
                     })) return e;
             });
-            return string ? Arr.join('') : Arr;
+            return Arr;
         },
         omit: function omit(val) {
             var _Craft;
 
-            for (var _len30 = arguments.length, values = Array(_len30 > 1 ? _len30 - 1 : 0), _key30 = 1; _key30 < _len30; _key30++) {
-                values[_key30 - 1] = arguments[_key30];
-            }
-
-            if (is.Arraylike(val)) val = (_Craft = Craft).omitFrom.apply(_Craft, [val].concat(values));
+            if (is.Arraylike(val)) val = (_Craft = Craft).omitFrom.apply(_Craft, arguments);
+            var values = toArr(arguments).slice(1);
             if (is.Object(val) && !values.some(function(v) {
                     return v === val;
                 })) forEach(val, function(prop, key) {
@@ -1635,7 +1679,7 @@ function _typeof(obj) {
             },
             list: function list(type, items, attr) {
                 var list = '';
-                if (is.Arrylike(items)) items.forEach(function(item) {
+                if (is.Arrylike(items)) forEach(items, function(item) {
                     if (is.String(item)) list += craftElement('li', item).outerHTML;
                     else if (is.Object(items)) list += craftElement('li', item.inner, item.attr).outerHTML;
                 });
@@ -1651,10 +1695,10 @@ function _typeof(obj) {
             li: function li(inner, attr) {
                 return craftElement('li', inner, attr);
             },
-            h: function h(level, inner, attr, node) {
+            h: function h(level, inner, attr) {
                 return craftElement('h' + level, inner, attr);
             },
-            a: function a(link, inner, attr, node) {
+            a: function a(link, inner, attr) {
                 return craftElement('a', inner, attr, {
                     href: link
                 });
@@ -1667,27 +1711,22 @@ function _typeof(obj) {
                 script.defer = defer !== false;
                 return script;
             },
+
+            td: function td(inner, attr) {
+                return craftElement('td', inner, attr);
+            },
+            th: function th(inner, attr) {
+                return craftElement('th', inner, attr);
+            },
+            tr: function tr(inner, attr) {
+                return craftElement('tr', inner, attr);
+            },
             table: function table(rows, attr) {
-                if (!is.Arr(rows)) return (is.String(rows) ? craftElement('table', rows, attr, node) : craftElement('table', '', attr, node)).outerHTML;
-                if (!rows.every(function(o) {
-                        return is.Object(o);
-                    })) throw new TypeError('dom.table -> rows : needs to be all objects');
-                var tableInner = '';
-                forEach(rows, function(row) {
-                    return forEach(row, function(val, key) {
-                        var row = '';
-                        if (key === 'cell' || key === 'td' || key === 'data') {
-                            if (is.String(val)) row += '<td>' + val + '</td>';
-                            if (is.Object(val)) row += craftElement('tr', val.inner, val.attr).outerHTML;
-                        } else if (key === 'head' || key === 'th') {
-                            if (is.String(val)) row += '<th>' + val + '</th>';
-                            if (is.Object(val)) row += craftElement('th', val.inner, val.attr).outerHTML;
-                        }
-                        row += '';
-                        tableInner += craftElement('tr', row).outerHTML;
-                    });
-                });
-                return craftElement('table', tableInner, attr);
+                return craftElement('table', rows, attr);
+            },
+            SafeHTML: function SafeHTML(html, node) {
+                html = html.replace(/<script[^>]*?>.*?<\/script>/gi, '').replace(/<style[^>]*?>.*?<\/style>/gi, '').replace(/<![\s\S]*?--[ \t\n\r]*>/gi, '');
+                return !node ? html : docfragFromString(html);
             }
         },
         CurrentBrowser: {
@@ -1774,12 +1813,12 @@ function _typeof(obj) {
             },
             handle: function handle(route, func) {
                 if (is.String(route)) {
-                    if (Locs().some(function(l) {
+                    if (Locs(function(l) {
                             return l === route;
                         })) func(route);
                     Craft.router.addHandle(route, func);
                 } else if (is.Arr(route)) route.forEach(function(link) {
-                    if (Locs().some(function(l) {
+                    if (Locs(function(l) {
                             return l === link;
                         })) func(link);
                     Craft.router.addHandle(link, func);
@@ -1873,68 +1912,86 @@ function _typeof(obj) {
          * @param {Array=} protocols - the protocols to pass to the WebSocket Connection
          */
         Socket: function Socket(address, protocols) {
-            if (!address.includes('ws://') || !address.includes('wss://')) address = (location.protocol === 'http:' ? 'ws://' : 'wss://') + address;
+            if (!is.URL(address)) {
+                var match = address.match(/^(\/.*?)?$/);
+                if (is.empty(match)) throw new Error('invalid url');
+                address = location.host + match[0];
+            }
+            if (!address.includes('ws://')) address = (location.protocol === 'http:' ? 'ws://' : 'wss://') + address;
             if (is.URL(address)) {
-                var _ret2 = (function() {
-
+                var _ret3 = (function() {
                     var Options = {
-                        socket: null,
-                        open: false,
-                        recievers: [],
-                        message: '',
-                        set send(msg) {
-                            var _this11 = this;
+                            socket: null,
+                            open: false,
+                            recievers: [],
+                            message: '',
+                            set send(msg) {
+                                var _this11 = this;
 
-                            if (this.socket['readyState'] === 1) this.socket.send(is.Object(msg) ? JSON.stringify(msg) : msg);
-                            else {
-                                (function() {
-                                    var poll = setInterval(function() {
-                                        if (_this11.socket['readyState'] === 1) {
-                                            _this11.socket.send(is.Object(msg) ? JSON.stringify(msg) : msg);
-                                            clearInterval(poll);
-                                        }
-                                    }, 20);
-                                    setTimeout(function() {
-                                        return clearInterval(poll);
-                                    }, 2000);
-                                })();
+                                if (this.socket['readyState'] === 1) this.socket.send(is.Object(msg) ? JSON.stringify(msg) : msg);
+                                else {
+                                    (function() {
+                                        var poll = setInterval(function() {
+                                            if (_this11.socket['readyState'] === 1) {
+                                                _this11.socket.send(is.Object(msg) ? JSON.stringify(msg) : msg);
+                                                clearInterval(poll);
+                                            }
+                                        }, 20);
+                                        setTimeout(function() {
+                                            return clearInterval(poll);
+                                        }, 2000);
+                                    })();
+                                }
+                            },
+                            set recieve(func) {
+                                if (is.Func(func)) this.recievers.push(func);
+                            },
+                            get recieve() {
+                                return this.message;
+                            },
+                            close: function close() {
+                                this.socket.close();
+                            },
+                            reopen: function reopen() {
+                                if (this.open === false) this.socket = protocols ? new WebSocket(address, protocols) : new WebSocket(address);
+                                socket.onopen = function(e) {
+                                    return Options.open = !0;
+                                };
+                                socket.onclose = function(e) {
+                                    return Options.open = !1;
+                                };
+                                socket.onmessage = function(e) {
+                                    Options.message = e.data;
+                                    forEach(Options.recievers, function(fn) {
+                                        return fn(e.data, e);
+                                    });
+                                };
                             }
                         },
-                        set recieve(func) {
-                            if (is.Func(func)) this.recievers.push(func);
-                        },
-                        get recieve() {
-                            return this.message;
-                        },
-                        close: function close() {
-                            this.socket.close();
-                        },
-                        reopen: function reopen() {
-                            if (this.open === false) this.socket = is.Def(protocols) ? new WebSocket(address) : new WebSocket(address, protocols);
-                        }
+                        socket = protocols ? new WebSocket(address, protocols) : new WebSocket(address);
+
+                    socket.onopen = function(e) {
+                        return Options.open = !0;
                     };
 
-                    Options.socket = is.Def(protocols) ? new WebSocket(address) : new WebSocket(address, protocols);
-                    Options.socket.onopen = function(e) {
-                        return Options.open = true;
-                    };
-                    Options.socket.onclose = function(e) {
-                        return Options.open = false;
+                    socket.onclose = function(e) {
+                        return Options.open = !1;
                     };
 
-                    Options.socket.onmessage = function(e) {
+                    socket.onmessage = function(e) {
                         Options.message = e.data;
-                        Options.recievers.forEach(function(fn) {
+                        forEach(Options.recievers, function(fn) {
                             return fn(e.data, e);
                         });
                     };
+                    Options.socket = socket;
 
                     return {
                         v: Options
                     };
                 })();
 
-                if ((typeof _ret2 === 'undefined' ? 'undefined' : _typeof(_ret2)) === "object") return _ret2.v;
+                if ((typeof _ret3 === 'undefined' ? 'undefined' : _typeof(_ret3)) === "object") return _ret3.v;
             }
         },
         observable: function observable(obj) {
@@ -2011,10 +2068,10 @@ function _typeof(obj) {
             var timeout = undefined;
             return function() {
                 var _this12 = this,
-                    _arguments2 = arguments,
+                    _arguments = arguments,
                     later = function later() {
                         timeout = null;
-                        if (!immediate) func.apply(_this12, _arguments2);
+                        if (!immediate) func.apply(_this12, _arguments);
                     },
                     callNow = immediate && !timeout;
 
@@ -2146,7 +2203,27 @@ function _typeof(obj) {
         tabActive: true,
         toArr: toArr,
         toInt: toInt,
-        RegExps: RegExps,
+        /**
+         * Tail Call Optimization for recursive functional functions
+         * @param fn - function that uses recursion inside
+         */
+        tco: function tco(fn) {
+            var active = undefined,
+                nextArgs = undefined;
+            return function() {
+                var result = undefined;
+                nextArgs = arguments;
+                if (!active) {
+                    active = !0;
+                    while (nextArgs) {
+                        result = fn.apply(this, [nextArgs, nextArgs = null][0]);
+                    }
+                    active = !1;
+                }
+                return result;
+            };
+        },
+
         mouse: {
             x: 0,
             y: 0,
@@ -2338,19 +2415,15 @@ function _typeof(obj) {
          * @param {...string} includeChars - every extra argument should be a string containing a character you want the password to include
          */
         strongPassword: function strongPassword(pass, length, caps, number, reasons) {
+            var includeChars = toArr(arguments).slice(5);
             if (pass.length <= length - 1) return reasons ? 'Password too short' : false;
             if (caps === true && Craft.hasCapitals(pass) === false) return reasons ? 'Password should have a Capital letter' : false;
             if (number === true && /\d/g.test(pass) === false) return reasons ? 'Password should have a number' : false;
-
-            for (var _len31 = arguments.length, includeChars = Array(_len31 > 5 ? _len31 - 5 : 0), _key31 = 5; _key31 < _len31; _key31++) {
-                includeChars[_key31 - 5] = arguments[_key31];
-            }
-
             if (includeChars.length) {
                 var hasChars = true,
                     reason = includeChars.join();
-                includeChars.forEach(function(ch) {
-                    if (!pass.includes(ch)) hasChars = false;
+                forEach(includeChars, function(ch) {
+                    return hasChars = pass.includes(ch);
                 });
                 if (!hasChars) return reasons ? '' : false;
             }
@@ -2395,7 +2468,7 @@ function _typeof(obj) {
          */
         newComponent: function newComponent(tag, config) {
             if (!def(config)) throw new Error(tag + ' : config undefined');
-            var element = Craft.clone(HTMLElement.prototype),
+            var element = Object.create(HTMLElement.prototype),
                 settings = {};
 
             forEach(config, function(prop, key) {
@@ -2424,6 +2497,15 @@ function _typeof(obj) {
         }
     };
 
+    Craft.ForEach = Craft.tco(function(collection, func) {
+        var i = arguments.length <= 2 || arguments[2] === undefined ? 0 : arguments[2];
+
+        if (collection.length !== i) {
+            func(collection[i], i);
+            ForEach(collection, func, i + 1);
+        }
+    });
+
     root.CraftScope = Craft.observable({});
 
     On('blur', function(e) {
@@ -2446,8 +2528,8 @@ function _typeof(obj) {
     });
     Craft.curry.adaptTo = Craft.curry(function(num, fn) {
         return Craft.curry.to(num, function(context) {
-            for (var _len32 = arguments.length, args = Array(_len32 > 1 ? _len32 - 1 : 0), _key32 = 1; _key32 < _len32; _key32++) {
-                args[_key32 - 1] = arguments[_key32];
+            for (var _len27 = arguments.length, args = Array(_len27 > 1 ? _len27 - 1 : 0), _key27 = 1; _key27 < _len27; _key27++) {
+                args[_key27 - 1] = arguments[_key27];
             }
 
             return fn.apply(null, args.slice(1).concat(context));
@@ -2483,7 +2565,7 @@ function _typeof(obj) {
                         if (nil(wc)) fetch(src).then(function(res) {
                             return res.json().then(function(webcomponent) {
                                 CrafterStyles.innerHTML += webcomponent.css;
-                                head.appendChild(dom().script(webcomponent.js + ('\nCraft.WebComponents.push(\'' + src + '\')'), 'webcomponent=' + webcomponent.name));
+                                head.appendChild(dom().script(webcomponent.js + ('\nCraft.WebComponents.push(\'' + src + '\')'), w + ('=' + webcomponent.name)));
                                 if (el.getAttr(cc) == 'true') localStorage.setItem(src, JSON.stringify(webcomponent));
                             });
                         }).catch(function(err) {
@@ -2506,18 +2588,18 @@ function _typeof(obj) {
         try {
             var cutbind = cutdot(bind),
                 prop = cutbind[cutbind.length - 1],
-                obj = def(Craft.Models[cutbind[0]]) ? Craft.Models[cutbind[0]].scope : Craft.getDeep(root, Craft.omitFrom(cutbind, prop).join('.')) || CraftScope,
-                val = Craft.getDeep(obj, cutbind.length > 1 ? Craft.omit(cutbind, cutbind[0]).join('.') : prop);
+                _obj = def(Craft.Models[cutbind[0]]) ? Craft.Models[cutbind[0]].scope : Craft.getDeep(root, Craft.omit(cutbind, prop).join('.')) || CraftScope,
+                val = Craft.getDeep(_obj, cutbind.length > 1 ? Craft.omit(cutbind, cutbind[0]).join('.') : prop);
 
-            def(val) ? el.html(val) : Craft.setDeep(obj, prop, el.html());
+            def(val) ? el.html(val) : Craft.setDeep(_obj, prop, el.html());
 
-            if (def(Object.getOwnPropertyDescriptor(obj, 'addListener')) && !is.Func(el['BindListener'])) {
+            if (def(Object.getOwnPropertyDescriptor(_obj, 'addListener')) && !is.Func(el['BindListener'])) {
                 el.BindListener = function(o, n, v) {
                     return el.html(v);
                 };
-                obj.addListener(prop, el);
+                _obj.addListener(prop, el);
             }
-            if (is.Input(el)) el.SyncInput(obj, cutbind.length === 1 ? cutbind[0] : Craft.omitFrom(cutbind, cutbind[0]).join('.'));
+            if (is.Input(el)) el.SyncInput(_obj, cutbind.length == 1 ? cutbind[0] : Craft.omit(cutbind, cutbind[0]).join('.'));
         } catch (e) {
             console.log(e);
             console.warn("couldn't bind :", el);
@@ -2525,41 +2607,38 @@ function _typeof(obj) {
     });
 
     function manageAttr(el) {
-        el = el.hasDOMmethods ? el : dom(el);
-        for (var _i8 = 0, attr; _i8 < Craft.CustomAttributes.length; _i8++) {
-            attr = Craft.CustomAttributes[_i8];
-            if (el.hasAttr(attr.name)) {
-                if (!is.Array(el.customAttr)) el.customAttr = [];
-                if (!el.customAttr.includes(attr.name)) {
-                    el.customAttr.push(attr.name);
-                    attr.handle(el, el.getAttr(attr.name));
-                }
-                break;
-            }
-        }
-    }
+        dom(el);
+        var _iteratorNormalCompletion2 = true,
+            _didIteratorError2 = false,
+            _iteratorError2 = undefined;
 
-    function attrCheck() {
-        Craft.CustomAttributes.forEach(function(attr) {
-            queryAll('[' + attr.name + ']').forEach(function(el) {
-                el = el.hasDOMmethods ? el : dom(el);
+        try {
+            for (var _iterator2 = Craft.CustomAttributes[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+                var attr = _step2.value;
+
                 if (el.hasAttr(attr.name)) {
                     if (!is.Array(el.customAttr)) el.customAttr = [];
                     if (!el.customAttr.includes(attr.name)) {
                         el.customAttr.push(attr.name);
                         attr.handle(el, el.getAttr(attr.name));
                     }
+                    break;
                 }
-            });
-        });
-    }
-
-    function handleHash() {
-        Craft.router.handlers.forEach(function(handle) {
-            if (Locs().some(function(l) {
-                    return l === handle.link;
-                })) handle.func(location.hash);
-        });
+            }
+        } catch (err) {
+            _didIteratorError2 = true;
+            _iteratorError2 = err;
+        } finally {
+            try {
+                if (!_iteratorNormalCompletion2 && _iterator2.return) {
+                    _iterator2.return();
+                }
+            } finally {
+                if (_didIteratorError2) {
+                    throw _iteratorError2;
+                }
+            }
+        }
     }
 
     Once('DOMContentLoaded', function() {
@@ -2571,12 +2650,33 @@ function _typeof(obj) {
         }, 35, 5035).then(function() {
             Ready = true;
             Craft.DomObserver = new MutationObserver(function(muts) {
-                return muts.forEach(function(mut, i) {
-                    forEach(mut.addedNodes, function(el) {
-                        if (el['hasAttribute']) manageAttr(el);
-                    });
-                    manageAttr(mut.target);
-                });
+                var _iteratorNormalCompletion3 = true,
+                    _didIteratorError3 = false,
+                    _iteratorError3 = undefined;
+
+                try {
+                    for (var _iterator3 = muts[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+                        var mut = _step3.value;
+
+                        forEach(mut.addedNodes, function(el) {
+                            if (def(el['hasAttribute'])) manageAttr(el);
+                        });
+                        manageAttr(mut.target);
+                    }
+                } catch (err) {
+                    _didIteratorError3 = true;
+                    _iteratorError3 = err;
+                } finally {
+                    try {
+                        if (!_iteratorNormalCompletion3 && _iterator3.return) {
+                            _iterator3.return();
+                        }
+                    } finally {
+                        if (_didIteratorError3) {
+                            throw _iteratorError3;
+                        }
+                    }
+                }
             });
             Craft.DomObserver.observe(doc.body, {
                 attributes: true,
@@ -2589,7 +2689,38 @@ function _typeof(obj) {
         });
     });
 
-    On('hashchange', handleHash);
+    On('hashchange', function() {
+        var _iteratorNormalCompletion4 = true,
+            _didIteratorError4 = false,
+            _iteratorError4 = undefined;
+
+        try {
+            var _loop2 = function _loop2() {
+                var handle = _step4.value;
+
+                if (Locs(function(l) {
+                        return l === handle.link;
+                    })) handle.func(location.hash);
+            };
+
+            for (var _iterator4 = Craft.router.handlers[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+                _loop2();
+            }
+        } catch (err) {
+            _didIteratorError4 = true;
+            _iteratorError4 = err;
+        } finally {
+            try {
+                if (!_iteratorNormalCompletion4 && _iterator4.return) {
+                    _iterator4.return();
+                }
+            } finally {
+                if (_didIteratorError4) {
+                    throw _iteratorError4;
+                }
+            }
+        }
+    });
 
     root.forEach = forEach;
 })(document, self);

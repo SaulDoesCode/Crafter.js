@@ -195,7 +195,7 @@
 
         Object.defineProperty(this, 'value', {
           set: val => {
-            input.text(val);
+            input.Text(val);
             input.value.length > 0 || input.value == ' ' ? input.addClass('inputhastext') : input.stripClass('inputhastext');
           },
           get: () => input.value
