@@ -1,5 +1,3 @@
-# 
-
 # addClass
 
 Add a CSS class to the element
@@ -7,7 +5,6 @@ Add a CSS class to the element
 **Parameters**
 
 -   `name` **string** of the class to add
--   `Class`  
 
 # append
 
@@ -16,7 +13,7 @@ append text or a Node to the element
 **Parameters**
 
 -   `String` **Node or string** or Node to append to the this.element
--   `val`  
+-   `args` **...** 
 
 # appendTo
 
@@ -61,8 +58,7 @@ check if the element has got a specific CSS class
 
 **Parameters**
 
--   `name` **string** of the class to check for
--   `Class`  
+-   `name` **...string** of the class to check for
 
 # hasAttr
 
@@ -91,8 +87,6 @@ changes or returns the innerHTML value of a Node
 **Parameters**
 
 -   `sets` **[string]** the innerHTML value or when undefined gets the innerHTML value
--   `val`  
--   `position`  
 
 # img
 
@@ -219,14 +213,23 @@ removes a specific CSS class from the element
 
 -   `name` **...string** of the class to strip
 
-# text
+# Text
 
 changes or returns the textContent value of a Node
 
 **Parameters**
 
 -   `sets` **[string]** the textContent value or when undefined gets the textContent value
--   `val`  
+
+# toggleClass
+
+Toggle a CSS class to the element
+
+**Parameters**
+
+-   `name` **string** of the class to add
+-   `Class`  
+-   `state` **[boolean]** optionally toggle class either on or off with bool
 
 # Width
 
@@ -240,6 +243,10 @@ sets or gets the element's pixel width
 # is
 
 is - Type Testing / Assertion
+
+**Parameters**
+
+-   `args` **...** 
 
 ## Alphanumeric
 
@@ -255,7 +262,15 @@ Test if something is an Array
 
 **Parameters**
 
--   `args`  value/values to test
+-   `args` **...** value/values to test
+
+## Array
+
+Array.isArray alias for convenience and performance when only one argument is present
+
+**Parameters**
+
+-   `val` **Any** value to test
 
 ## Arraylike
 
@@ -263,7 +278,7 @@ Test if something is an Array-Like
 
 **Parameters**
 
--   `args`  value/values to test
+-   `args` **...** value/values to test
 
 ## Between
 
@@ -284,6 +299,7 @@ Determine if a variable is of Blob type
 **Parameters**
 
 -   `obj`  variable to test
+-   `args` **...** 
 
 ## Bool
 
@@ -292,6 +308,7 @@ Test if something is a boolean type
 **Parameters**
 
 -   `val`  value to test
+-   `args` **...** 
 
 ## bt
 
@@ -318,6 +335,7 @@ Determine if a variable is a Date type
 **Parameters**
 
 -   `variable` **...Any** to test
+-   `args` **...** 
 
 ## dateString
 
@@ -341,7 +359,7 @@ Determine if a variable is a HTMLElement
 
 **Parameters**
 
--   `args`  value/values to test
+-   `args` **...** value/values to test
 
 ## Email
 
@@ -382,7 +400,7 @@ Determine if a variable/s are false
 
 **Parameters**
 
--   `args`  value/values to test
+-   `args` **...** value/values to test
 
 ## File
 
@@ -390,7 +408,7 @@ Determine if a variable is a File Object
 
 **Parameters**
 
--   `args`  value/values to test
+-   `args` **...** value/values to test
 
 ## FormData
 
@@ -398,7 +416,7 @@ Determine if a variable is of a FormData type
 
 **Parameters**
 
--   `args`  value/values to test
+-   `args` **...** value/values to test
 
 ## Func
 
@@ -406,7 +424,7 @@ Determine if a variable is a function
 
 **Parameters**
 
--   `args`  value/values to test
+-   `args` **...** value/values to test
 
 ## future
 
@@ -471,7 +489,7 @@ Determine if a sring is JSON
 
 **Parameters**
 
--   `args`  value/values to test
+-   `args` **...** value/values to test
 
 ## Lowercase
 
@@ -506,7 +524,7 @@ Determine if a variable is a Map
 
 **Parameters**
 
--   `args`  value/values to test
+-   `args` **...** value/values to test
 
 ## Native
 
@@ -530,7 +548,7 @@ Determine whether a variable is a DOM Node
 
 **Parameters**
 
--   `args`  value/values to test
+-   `args` **...** value/values to test
 
 ## NodeList
 
@@ -538,7 +556,7 @@ Determine whether a variable is a DOM NodeList or Collection of Nodes
 
 **Parameters**
 
--   `args`  value/values to test
+-   `args` **...** value/values to test
 
 ## Null
 
@@ -546,7 +564,7 @@ Determine whether a variable is null
 
 **Parameters**
 
--   `args`  value/values to test
+-   `args` **...** value/values to test
 
 ## Num
 
@@ -562,7 +580,7 @@ Determine if a variable is an Object
 
 **Parameters**
 
--   `args`  value/values to test
+-   `args` **...** value/values to test
 
 ## odd
 
@@ -595,6 +613,7 @@ Determine if a variable is a Regular Expression
 **Parameters**
 
 -   `obj`  variable to test
+-   `args` **...** 
 
 ## Set
 
@@ -603,6 +622,7 @@ Determine if a variable is a Set
 **Parameters**
 
 -   `obj`  variable to test
+-   `args` **...** 
 
 ## String
 
@@ -610,7 +630,7 @@ Test if something is a String
 
 **Parameters**
 
--   `args`  value/values to test
+-   `args` **...** value/values to test
 
 ## Symbol
 
@@ -659,7 +679,7 @@ Determine if a variable/s are true
 
 **Parameters**
 
--   `args`  value/values to test
+-   `args` **...** value/values to test
 
 ## Undef
 
@@ -701,14 +721,18 @@ Craft is Crafter.js's Core containing most functionality.
 **Parameters**
 
 -   `arr`  
+-   `newArr`  
+-   `func`  
 
-## ArrtoObj
+## arrDiff
 
 Converts an Array to an Object
 
 **Parameters**
 
 -   `arr` **Array** array to be converted
+-   `newArr`  
+-   `func`  
 
 ## createWebComponent
 
@@ -790,6 +814,14 @@ Usefull method for validating passwords , example Craft.strongPassword('#MyFancy
 -   `reasons` **Boolean** should the function return a short string explaining the reason exept when it's a pass then it gives a bool;
 -   `includeChars` **...string** every extra argument should be a string containing a character you want the password to include
 
+## tco
+
+Tail Call Optimization for recursive functional functions
+
+**Parameters**
+
+-   `fn`  function that uses recursion inside
+
 ## toFormData
 
 converts Objects or URL variable strings to a FormData object
@@ -869,9 +901,10 @@ Easy way to loop through Nodes in the DOM using a CSS Selector or a NodeList
 
 **Parameters**
 
--   `selector` **string or NodeList** CSS selector to query the DOM Nodes with or NodeList to iterate through
+-   `selector` **string or NodeList or Node** CSS selector to query the DOM Nodes with or NodeList to iterate through
 -   `element` **[Node or string]** Optional Node or CSS selector to search within insead of document
 -   `func` **function** function called on each iteration -> "function( Element , index ) {...}"
+-   `returnList` **[boolean]** should queryEach also return the list of nodes
 
 # EventHandler
 
@@ -882,15 +915,16 @@ Event Handling Class
 -   `EventType` **string** set the type of event to listen for example "click" or "scroll"
 -   `Target` **Node or NodeList or window or document** the Event Listener's target , can also be a NodeList to listen on multiple Nodes
 -   `Func` **function** Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
--   `Within`  
 -   `args` **...Any** extra optional arguments/parameters to pass to the handler function
+-   `func`  
+-   `Within`  
 
 Returns **** Interface On,Off,Once
 
 ## ChangeType
 
 Change the Event type to listen for
-{string} type - the name of the event to listen for
+{string} type - the name of the event/s to listen for
 
 **Parameters**
 
@@ -918,24 +952,21 @@ add CSS style rules to NodeList
 
 -   `styles` **object** should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
 
-# CustomAttribute
+# doc
 
-Define a Handler for a Custom Attribute on the element
+# forEach
+
+Easy way to loop through Collections and Objects
 
 **Parameters**
 
--   `name` **string** what you call the attribute
--   `handle` **function** called on creation and changes, arguments  = (value, element, mutation)
--   `death` **[function]** called on removal of the attribute , arguments  = (mutation, observer, element)
+-   `iterable` **Array or Object or NodeList** any collection that is either an Object or has a .length value
+-   `func` **function** function called on each iteration -> "function( value , indexOrKey ) {...}"
 
 # getAttr
 
-Gets the value of an attribute , shortened alias for element.getAttribute
+Gets the value of an attribute , short alias for element.getAttribute
 {string} attr - name of attribute to get
-
-**Parameters**
-
--   `attr`  
 
 # move
 
@@ -966,15 +997,6 @@ Toggles an attribute on element , optionally add value when toggle is adding att
 -   `name` **string** name of the attribute to toggle
 -   `val` **string** value to set attribute to
 -   `returnState` **[boolean]** optionally return a bool witht the toggle state otherwise returns the element
-
-# forEach
-
-Easy way to loop through Collections and Objects
-
-**Parameters**
-
--   `iterable` **Array or Object or NodeList** any collection that is either an Object or has a .length value
--   `func` **function** function called on each iteration -> "function( value , indexOrKey ) {...}"
 
 # includes
 
