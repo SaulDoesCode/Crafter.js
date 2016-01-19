@@ -44,7 +44,7 @@
 
 
   function toArr(val) {
-    return Array.prototype.slice.call(val);
+    return [...val];
   }
 
   function type(obj, str) {
@@ -68,13 +68,16 @@
     })(fn, args, remainingArity);
   }
 
-  function def(...args) {
-    return args.length && args.every(o => typeof o !== 'undefined');
+  // tests arguments with Array.prototype.every;
+  function ta(test) {
+    return function () {
+      return arguments.length && Array.prototype.every.call(arguments, test);
+    }
   }
 
-  function nil(...args) {
-    return args.length && args.every(o => o === null);
-  }
+  let def = ta(o => typeof o !== 'undefined'),
+    nil = ta(o => o === null);
+
 
   function cutdot(str) {
     return str.split('.');
@@ -86,17 +89,17 @@
      * Test if something is a boolean type
      * @param val - value to test
      */
-    Bool: (...args) => args.length && args.every(o => typeof o === 'boolean'),
+    Bool: ta(o => typeof o === 'boolean'),
     /**
      * Test if something is a String
      * @param args - value/values to test
      */
-    String: (...args) => args.length && args.every(o => typeof o === 'string'),
+    String: ta(o => typeof o === 'string'),
     /**
      * Test if something is an Array
      * @param args - value/values to test
      */
-    Arr: (...args) => args.length && args.every(Array.isArray),
+    Arr: ta(Array.isArray),
     /**
      * Array.isArray alias for convenience and performance when only one argument is present
      * @param {*} val - value to test
@@ -106,12 +109,12 @@
      * Test if something is an Array-Like
      * @param args - value/values to test
      */
-    Arraylike(...args) {
+    Arraylike: ta(o => {
       try {
-        return args.length && args.every(o => def(o.length));
+        return def(o.length)
       } catch (e) {}
       return false;
-    },
+    }),
     /**
      * Determine whether a variable is undefined
      * @param args - value/values to test
@@ -128,12 +131,12 @@
      * Determine whether a variable is null
      * @param args - value/values to test
      */
-    Null: (...args) => args.length && args.every(o => o === null),
+    Null: ta(o => o === null),
     /**
      * Determine whether a variable is a DOM Node
      * @param args - value/values to test
      */
-    Node: (...args) => args.length && args.every(o => o instanceof Node),
+    Node: ta(o => o instanceof Node),
     /**
      * Test an element's tagname
      * @param {Node} element - node to test
@@ -144,92 +147,90 @@
      * Determine whether a variable is a DOM NodeList or Collection of Nodes
      * @param args - value/values to test
      */
-    NodeList: (...args) => args.length && args.every(nl => nl instanceof NodeList || is.Arraylike(nl) ? nl.length && toArr(nl).every(n => n instanceof Node) : false),
+    NodeList: ta(nl => nl instanceof NodeList || is.Arraylike(nl) ? ta(n => n instanceof Node).apply(null, nl) : false),
     /**
      * Determine if a variable is a Number
      * @param {...*} args - value/values to test
      */
-    Num: (...args) => args.length && args.every(o => !isNaN(Number(o))),
+    Num: ta(o => !isNaN(Number(o))),
     /**
      * Determine if a variable is an Object
      * @param args - value/values to test
      */
-    Object: (...args) => args.length && args.every(o => toString.call(o) === '[object Object]'),
+    Object: ta(o => toString.call(o) === '[object Object]'),
     /**
      * Determine if a sring is JSON
      * @param args - value/values to test
      */
-    Json(...args) {
-      return args.length && args.every(str => {
-        try {
-          JSON.parse(str);
-          return !0;
-        } catch (e) {}
-        return !1;
-      });
-    },
+    Json: ta(str => {
+      try {
+        JSON.parse(str);
+        return !0;
+      } catch (e) {}
+      return !1;
+    }),
     /**
      * Determine if a variable is a HTMLElement
      * @param args - value/values to test
      */
-    Element: (...args) => args.length && args.every(o => type(o, '[object HTMLElement]')),
+    Element: ta(o => type(o, '[object HTMLElement]')),
     /**
      * Determine if a variable is a File Object
      * @param args - value/values to test
      */
-    File: (...args) => args.length && args.every(o => type(o, '[object File]')),
+    File: ta(o => type(o, '[object File]')),
     /**
      * Determine if a variable is of a FormData type
      * @param args - value/values to test
      */
-    FormData: (...args) => args.length && args.every(o => type(o, '[object FormData]')),
+    FormData: ta(o => type(o, '[object FormData]')),
     /**
      * Determine if a variable is a Map
      * @param args - value/values to test
      */
-    Map: (...args) => args.length && args.every(o => type(o, '[object Map]')),
+    Map: ta(o => type(o, '[object Map]')),
     /**
      * Determine if a variable is a function
      * @param args - value/values to test
      */
-    Func: (...args) => args.length && args.every(o => typeof o === 'function'),
+    Func: ta(o => typeof o === 'function'),
     /**
      * Determine if a variable/s are true
      * @param args - value/values to test
      */
-    True: (...args) => args.length && args.every(o => o === true),
+    True: ta(o => o === true),
     /**
      * Determine if a variable/s are false
      * @param args - value/values to test
      */
-    False: (...args) => args.length && args.every(o => o !== true),
+    False: ta(o => o !== true),
     /**
      * Determine if a variable is of Blob type
      * @param obj - variable to test
      */
-    Blob: (...args) => args.length && args.every(o => type(o, '[object Blob]')),
+    Blob: ta(o => type(o, '[object Blob]')),
     /**
      * Determine if a variable is a Regular Expression
      * @param obj - variable to test
      */
-    RegExp: (...args) => args.length && args.every(o => type(o, '[object RegExp]')),
+    RegExp: ta(o => type(o, '[object RegExp]')),
     /**
      * Determine if a variable is a Date type
      * @param {...*} variable to test
      */
-    Date: (...args) => args.length && args.every(o => type(o, '[object Date]')),
+    Date: ta(o => type(o, '[object Date]')),
     /**
      * Determine if a variable is a Set
      * @param obj - variable to test
      */
-    Set: (...args) => args.length && args.every(o => type(o, '[object Set]')),
+    Set: ta(o => type(o, '[object Set]')),
     Args: val => !nil(val) && type(val, '[object Arguments]'),
     /**
      * Determine if a variable is a Symbol
      * @param obj - variable to test
      */
-    Symbol: obj => type(obj, '[object Symbol]'),
-    char: val => is.String(val) && val.length === 1,
+    Symbol: ta(obj => type(obj, '[object Symbol]')),
+    char: ta(val => is.String(val) && val.length === 1),
     space: val => is.char(val) && (val.charCodeAt(0) > 8 && val.charCodeAt(0) < 14) || val.charCodeAt(0) === 32,
     /**
      * Determine if a String is UPPERCASE
@@ -312,7 +313,12 @@
      * Determines if a date is in the past
      * @param obj - Date to test
      */
-    past: obj => is.Date(obj) && obj.getTime() < new Date().getTime(),
+    past(obj) {
+      try {
+        if (!is.Date(obj)) obj = is.String(obj) ? new Date(is.Num(obj) ? Number(obj) : obj) : new Date(obj);
+      } catch (e) {}
+      return is.Date(obj) && obj.getTime() < new Date().getTime();
+    },
     /**
      * Determines if a date is in the future
      * @param obj - Date to test
@@ -362,8 +368,7 @@
      */
     negative: val => is.Num(val) && val < 0,
     neither(value) {
-      let args = toArr(arguments).slice(1);
-      return args.every(val => value !== val);
+      return toArr(arguments).slice(1).every(val => value !== val);
     },
     /**
      * Determines if two variables are equal
@@ -399,9 +404,7 @@
      * Determine if a given collection or string is empty
      * @param {Object|Array|string} val - value to test if empty
      */
-    empty(val) {
-      return Craft.len(val) === 0 || val === ''
-    },
+    empty: ta(val => Craft.len(val) === 0 || val === ''),
     /**
      * Test if something is a Native JavaScript feature
      * @param val - value to test
@@ -419,8 +422,7 @@
    * @param {Node|NodeList|Array|String} within - pass either a CSS Selector string , Node/NodeList or Array of Nodes to search for val in
    */
   function NodeOrQuerytoArr(val, within) {
-    if (is.String(val) && (is.String(within) || is.Node(within))) val = queryAll(val, within);
-    else if (is.String(val)) val = queryAll(val)
+    if (is.String(val)) val = queryAll(val, within);
     return is.Node(val) ? [val] : is.NodeList(val) ? toArr(val) : [];
   }
 
@@ -432,62 +434,65 @@
    * @param {...*} args - extra optional arguments/parameters to pass to the handler function
    * @returns Interface On,Off,Once
    */
-  function EventHandler(EventType, Target, func, Within) {
-    this.EventType = EventType || 'click';
-    this.Target = (Target !== root && Target !== doc) ? NodeOrQuerytoArr(Target, Within) : [Target];
-    this.FuncWrapper = e => func(e, e.srcElement);
-    if (EventType.includes(',')) this.EventType = EventType.split(',');
-  }
-  /**
-   * Activates the EventHandler to start listening for the EventType on the Target/Targets
-   */
-  EventHandler.prototype.On = function () {
-      is.Arr(this.EventType) ? this.Target.forEach(target => this.EventType.forEach(evt => target.addEventListener(evt, this.FuncWrapper))) :
-        this.Target.forEach(target => target.addEventListener(this.EventType, this.FuncWrapper));
-      return this;
-    }
-    /**
-     * Change the Event type to listen for
-     * {string} type - the name of the event/s to listen for
-     */
-  EventHandler.prototype.ChangeType = function (type) {
-      //  have you tried turning it on and off again? - THE IT CROWD
-      this.Off();
-      this.EventType = type.includes(',') ? type.split(',') : type;
-      this.On();
-      return this;
-    }
-    /**
-     * De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
-     * can still optionally be re-activated with On again
-     */
-  EventHandler.prototype.Off = function () {
-      is.Arr(this.EventType) ? this.Target.forEach(target => this.EventType.forEach(evt => target.removeEventListener(evt, this.FuncWrapper))) :
-        this.Target.forEach(target => target.removeEventListener(this.EventType, this.FuncWrapper));
-      return this;
-    }
-    /**
-     * Once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
-     * the Handler function will be called only Once
-     */
-  EventHandler.prototype.Once = function () {
-    let func = this.FuncWrapper,
-      target = this.Target;
-    if (is.Arr(this.EventType)) this.EventType.forEach(etype => {
-      let listenOnce = e => {
-        func(e);
-        target.forEach(t => t.removeEventListener(etype, listenOnce));
+  class EventHandler {
+
+    constructor(EventType, Target, func, Within) {
+        this.EventType = EventType || 'click';
+        this.Target = (Target !== root && Target !== doc) ? NodeOrQuerytoArr(Target, Within) : [Target];
+        this.FuncWrapper = e => func(e, e.srcElement);
+        if (is.String(EventType) && EventType.includes(',')) this.EventType = EventType.split(',');
       }
-      target.forEach(t => t.addEventListener(etype, listenOnce));
-    });
-    else {
-      let listenOnce = e => {
-        func(e);
-        target.forEach(t => t.removeEventListener(this.EventType, listenOnce));
+      /**
+       * Activates the EventHandler to start listening for the EventType on the Target/Targets
+       */
+    get On() {
+        is.Arr(this.EventType) ? forEach(this.Target, target => this.EventType.forEach(evt => target.addEventListener(evt, this.FuncWrapper))) :
+          this.Target.forEach(target => target.addEventListener(this.EventType, this.FuncWrapper));
+        return this;
       }
-      target.forEach(t => t.addEventListener(this.EventType, listenOnce));
+      /**
+       * Change the Event type to listen for
+       * {string} type - the name of the event/s to listen for
+       */
+    Type(type) {
+        //  have you tried turning it on and off again? - THE IT CROWD
+        this.Off;
+        this.EventType = type.includes(',') ? type.split(',') : type;
+        this.On;
+        return this;
+      }
+      /**
+       * De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
+       * can still optionally be re-activated with On again
+       */
+    get Off() {
+        is.Arr(this.EventType) ? forEach(this.Target, target => this.EventType.forEach(evt => target.removeEventListener(evt, this.FuncWrapper))) :
+          this.Target.forEach(target => target.removeEventListener(this.EventType, this.FuncWrapper));
+        return this;
+      }
+      /**
+       * Once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
+       * the Handler function will be called only Once
+       */
+    get Once() {
+      let func = this.FuncWrapper,
+        target = this.Target;
+      if (is.Arr(this.EventType)) forEach(this.EventType, etype => {
+        let listenOnce = e => {
+          func(e);
+          forEach(target, t => t.removeEventListener(etype, listenOnce));
+        }
+        forEach(target, t => t.addEventListener(etype, listenOnce));
+      });
+      else {
+        let listenOnce = e => {
+          func(e);
+          forEach(target, t => t.removeEventListener(this.EventType, listenOnce));
+        }
+        forEach(target, t => t.addEventListener(this.EventType, listenOnce));
+      }
+      return this;
     }
-    return this;
   }
 
   /**
@@ -544,7 +549,7 @@
   }
 
   function EventTypes(Target, within, listen) {
-    let etype = (type, fn) => new EventHandler(type, Target, fn, within)[listen || 'On']();
+    let etype = (type, fn) => new EventHandler(type, Target, fn, within)[listen || 'On'];
     return {
       Click: fn => etype('click', fn),
       Input: fn => etype('input', fn),
@@ -583,10 +588,11 @@
    * @returns Off - when On is defined as a variable "var x = On(...)" it allows you to access all the EventHandler interfaces Off,Once,On
    */
   root.On = function (EventType, Target, element, func) {
-    return is.Func(Target) ? new EventHandler(EventType, root, Target).On() :
-      arguments.length < 3 && !toArr(arguments).some(i => is.Func(i)) ? EventTypes(EventType, Target) :
-      is.Func(element) ? new EventHandler(EventType, Target, element).On() :
-      new EventHandler(EventType, Target, func, element).On();
+    let args = toArr(arguments);
+    return is.Func(Target) ? new EventHandler(EventType, root, Target).On :
+      args.length < 3 && !args.some(i => is.Func(i)) ? EventTypes(EventType, Target) :
+      is.Func(element) ? new EventHandler(EventType, Target, element).On :
+      new EventHandler(EventType, Target, func, element).On;
   }
 
   /**
@@ -597,10 +603,11 @@
    * @returns On,Off,Once - when Once is defined as a variable "var x = Once(...)" it allows you to access all the EventHandler interfaces Off,Once,On
    */
   root.Once = function (EventType, Target, element, func) {
-    return is.Func(Target) ? new EventHandler(EventType, root, Target).Once() :
-      arguments.length < 3 && !toArr(arguments).some(i => is.Func(i)) ? EventTypes(EventType, Target, 'Once') :
-      is.Func(element) ? new EventHandler(EventType, Target, element).Once() :
-      new EventHandler(EventType, Target, func, element).Once();
+    let args = toArr(arguments);
+    return is.Func(Target) ? new EventHandler(EventType, root, Target).Once :
+      args.length < 3 && !args.some(i => is.Func(i)) ? EventTypes(EventType, Target, 'Once') :
+      is.Func(element) ? new EventHandler(EventType, Target, element).Once :
+      new EventHandler(EventType, Target, func, element).Once;
   }
 
   function craftElement(name, inner, attributes, extraAttr, stringForm) {
@@ -663,18 +670,14 @@
 
   function Inner(type, el, args) {
     type = is.Input(el) ? 'value' : type;
-    if (is.empty(args)) return el[type];
-    if (args.length === 1) {
-      args = args[0];
-      el[type] = '';
-      is.Node(args) ? el.append(args) : el[type] = args;
-    } else el[type] = args.map(val => is.Node(val) ? val.outerHTML : val).join('');
+    if (args.length === 0) return el[type];
+    args.length === 1 ? is.Node(args[0]) ? el.append(args[0]) : el[type] = args[0] : el[type] = args.map(val => is.Node(val) ? val.outerHTML : val).join('');
     if (is.Node(el)) return el;
   }
 
   function domManip(element, within) {
     if (is.String(element)) element = query(element, within);
-    if(element.hasDOMmethods === true) return element;
+    if (element.hasDOMmethods === true) return element;
     element.hasDOMmethods = true;
     /**
      * changes or returns the innerHTML value of a Node
@@ -691,7 +694,7 @@
      * @param {string=} sets the textContent value or when undefined gets the textContent value
      */
     element.Text = function () {
-        return Inner('textContent', element, toArr(arguments));
+        return Inner('textContent', this, toArr(arguments));
       }
       /**
        * replaces a Node with another node provided as a parameter/argument
@@ -717,8 +720,8 @@
        * @memberof dom
        * @param {Node|string} String or Node to append to the this.element
        */
-    element.append = function (...args) {
-        args.forEach(val => element.appendChild(is.Node(val) ? val : docfragFromString(val)));
+    element.append = function () {
+        forEach(arguments, val => this.appendChild(is.Node(val) ? val : docfragFromString(val)));
         return this;
       }
       /**
@@ -726,8 +729,8 @@
        * @memberof dom
        * @param {Node|string} String or Node to prepend to the this.element
        */
-    element.prepend = function (val) {
-        this.insertBefore(is.Node(val) ? val : docfragFromString(val), this.firstChild);
+    element.prepend = function () {
+        forEach(arguments, val => this.insertBefore(is.Node(val) ? val : docfragFromString(val), this.firstChild));
         return this;
       }
       /**
@@ -738,13 +741,41 @@
        * @returns handler (Off,Once,On)
        */
     element.On = (eventType, func) => On(eventType, element, func);
+
+    element.Click = (fn, listen) => root[listen ? 'Once' : 'On']('click', element, fn);
+    element.Input = (fn, listen) => root[listen ? 'Once' : 'On']('input', element, func);
+    element.DoubleClick = (fn, listen) => root[listen ? 'Once' : 'On']('dblclick', element, func);
+    element.Focus = (fn, listen) => root[listen ? 'Once' : 'On']('focus', element, func);
+    element.Blur = (fn, listen) => root[listen ? 'Once' : 'On']('blur', element, func);
+    element.Keydown = (fn, listen) => root[listen ? 'Once' : 'On']('keydown', element, func);
+    element.Mousemove = (fn, listen) => root[listen ? 'Once' : 'On']('mousemove', element, func);
+    element.Mousedown = (fn, listen) => root[listen ? 'Once' : 'On']('mousedown', element, func);
+    element.Mouseup = (fn, listen) => root[listen ? 'Once' : 'On']('mouseup', element, func);
+    element.Mouseover = (fn, listen) => root[listen ? 'Once' : 'On']('mouseover', element, func);
+    element.Mouseout = (fn, listen) => root[listen ? 'Once' : 'On']('mouseout', element, func);
+    element.Mouseenter = (fn, listen) => root[listen ? 'Once' : 'On']('mouseenter', element, func);
+    element.Mouseleave = (fn, listen) => root[listen ? 'Once' : 'On']('mouseleave', element, func);
+    element.Scroll = (fn, listen) => root[listen ? 'Once' : 'On']('scroll', element, func);
+    element.Enter = (fn, listen) => root[listen ? 'Once' : 'On']('keydown', element, (e, srcElement) => {
+        if (event.which == 13 || event.keyCode == 13) fn(e, srcElement);
+      }),
+      element.Escape = (fn, listen) => root[listen ? 'Once' : 'On']('keydown', element, (e, srcElement) => {
+        if (event.which == 27 || event.keyCode == 27) fn(e, srcElement);
+      });
+    element.Delete = (fn, listen) => root[listen ? 'Once' : 'On']('keydown', element, (e, srcElement) => {
+      if (event.which == 46 || event.keyCode == 46) fn(e, srcElement);
+    });
+    element.Space = (fn, listen) => root[listen ? 'Once' : 'On']('keydown', element, (e, srcElement) => {
+      if (event.which == 32 || event.keyCode == 32) fn(e, srcElement);
+    });
     /**
      * add CSS style rules to the Element or NodeList
      * @memberof dom
      * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
      */
     element.css = function (styles) {
-        def(styles) ? forEach(styles, (prop, key) => this.style[key] = prop) : console.error('Styles Object undefined');
+        if (styles == undefined) throw new Error('Style properties undefined')
+        for (let style in styles) this.style[style] = styles[style];
         return this;
       }
       /**
@@ -799,10 +830,10 @@
        * @param {string|boolean} name of the Attribute or if true checks that it has some (||) of the attributes or if false checks that it has all of the attributes (&&)
        * @param {...string} names of attributes to check for
        */
-    element.hasAttr = function (attr, ...attributes) {
+    element.hasAttr = function (attr) {
         if (is.String(attr)) return this.hasAttribute(attr);
-        if (attr === false) return attributes.every(a => this.hasAttribute(a));
-        if (attr === true) return attributes.some(a => this.hasAttribute(a));
+        if (attr === false) return toArr(arguments).slice(0).every(a => this.hasAttribute(a));
+        if (attr === true) return toArr(arguments).slice(0).some(a => this.hasAttribute(a));
       }
       /**
        * Toggles an attribute on element , optionally add value when toggle is adding attribute
@@ -857,7 +888,7 @@
      * gets all the elements siblings within it's parentNode
      * @memberof dom
      */
-    element.getSiblings = () => Craft.omit(toArr(element.parentNode.childNodes), element);
+    element.getSiblings = () => Craft.omit(element.parentNode.childNodes, element);
     /**
      * gets all the element's dimentions (width,height,left,top,bottom,right)
      * @memberof dom
@@ -1051,8 +1082,7 @@
         for (let obj of Craft.omit(arguments, host)) forEach(Object.keys(obj), key => Object.defineProperty(host, key, Object.getOwnPropertyDescriptor(obj, key)));
         return host;
       },
-      cloneArr: arr => Array(...arr),
-      clone: val => is.Object(val) ? Object.create(val) : Array(val),
+      clone: val => is.Object(val) ? Object.create(val) : toArr(val),
       omitFrom(Arr) {
         let string = is.String(Arr),
           values = toArr(arguments).slice(1);
@@ -1065,13 +1095,13 @@
             }
             replace();
           }) :
-          Arr = (is.Arraylike(Arr) && !string ? toArr(Arr) : Arr).filter(e => {
+          Arr = (is.Array(Arr) && !string ? Arr : toArr(Arr)).filter(e => {
             if (!values.some(v => is.eq(v, e))) return e;
           });
         return Arr;
       },
       omit(val) {
-        if (is.Arraylike(val)) val = Craft.omitFrom(...arguments);
+        if (is.Arraylike(val)) val = Craft.omitFrom.apply(this, arguments);
         let values = toArr(arguments).slice(1);
         if (is.Object(val) && !values.some(v => v === val)) forEach(val, (prop, key) => {
           if (values.some(v => is.eq(v, prop) || is.eq(v, key))) delete val[key];
@@ -1175,7 +1205,7 @@
           return new Promise((success, failed) => fetch(obj.url).then(res => res.text().then(data => {
             obj.data = data;
             obj.stamp = now;
-            obj.expire = now + ((obj.expire || 4000) * 60 * 60 * 1000);
+            obj.expire = now + Craft.millis.hours(obj.expire || 400);
             if (obj.cache) localStorage.setItem(Craft.loader.pre + obj.key, JSON.stringify(obj));
             success(obj);
           })).catch(err => failed(`error importing -> ${err}`)));
@@ -1185,7 +1215,7 @@
         remove: key => localStorage.removeItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key),
         removeAll(expired) {
           for (let i in localStorage)
-            if (!expired || Craft.loader.get(i).expire <= +new Date()) Craft.loader.remove(i)
+            if (!expired || is.past(Craft.loader.get(i).expire)) Craft.loader.remove(i)
         },
       },
       /**
@@ -1286,7 +1316,7 @@
       Socket(address, protocols) {
         if (!is.URL(address)) {
           let match = address.match(/^(\/.*?)?$/);
-          if(is.empty(match)) throw new Error('invalid url');
+          if (is.empty(match)) throw new Error('invalid url');
           address = location.host + match[0];
         }
         if (!address.includes('ws://')) address = (location.protocol === 'http:' ? 'ws://' : 'wss://') + address;
@@ -1323,7 +1353,7 @@
               socket.onclose = e => Options.open = !1;
               socket.onmessage = e => {
                 Options.message = e.data;
-                forEach(Options.recievers,fn => fn(e.data, e));
+                forEach(Options.recievers, fn => fn(e.data, e));
               }
             }
           }
@@ -1334,7 +1364,7 @@
 
           socket.onmessage = e => {
             Options.message = e.data;
-            forEach(Options.recievers,fn => fn(e.data, e));
+            forEach(Options.recievers, fn => fn(e.data, e));
           }
           Options.socket = socket;
 
@@ -1499,6 +1529,7 @@
         minutes: n => (n || 1) * 60000,
         hours: n => (n || 1) * 60000 * 60,
         days: n => (n || 1) * 60000 * 60 * 24,
+        weeks: n => (n || 1) * Craft.millis.days(7),
         months: (n, daysInMonth) => n * Craft.millis.days((daysInMonth || 30)),
         years: (n) => n * Craft.millis.days(365),
       },
@@ -1532,7 +1563,7 @@
         observe(val) {
           if (is.Bool(val)) {
             Craft.mouse.track = val;
-            Craft.mouse.track ? Craft.mouse.eventhandler.On() : Craft.mouse.eventhandler.Off();
+            Craft.mouse.track ? Craft.mouse.eventhandler.On : Craft.mouse.eventhandler.Off;
           } else return Craft.mouse.track;
         },
       },
@@ -1588,13 +1619,10 @@
           forEach(rules, (val, key) => temp += key + ': ' + (val.includes(';') ? val : val + ';\n'));
           rules = temp;
         }
-        console.log(rules);
         if (!sheet) sheet = CrafterStyles.sheet;
         sheet.insertRule(selector + "{" + rules + "}", index);
       },
-      revokeCSSRule(index) {
-        if (is.int(index)) CrafterStyles.sheet.deleteRule(index);
-      },
+      revokeCSSRule: (index, sheet) => (sheet || CrafterStyles).sheet.deleteRule(index),
       URLfrom: text => URL.createObjectURL(new Blob([text])),
       OnScroll: (element, func) => is.Func(func) ? On('scroll', element, e => func(e.deltaY < 1, e)) : console.error('no function'),
       OnResize: func => is.Func(func) ? Craft.ResizeHandlers.add(func) : console.error("Craft.OnResize -> no function"),
@@ -1800,7 +1828,9 @@
             CrafterStyles.innerHTML += webcomponent.css;
             head.appendChild(dom().script(webcomponent.js + `\nCraft.WebComponents.push('${src}')`, w + `=${webcomponent.name}`));
             if (el.getAttr(cc) == 'true') localStorage.setItem(src, JSON.stringify(webcomponent));
-          })).catch(err => console.error(err + " couldn't load " + w));
+          })).catch(err => {
+            throw new Error(err + " couldn't load " + w);
+          });
         }
         el.removeAfter(3500);
       }
@@ -1832,7 +1862,8 @@
 
   function manageAttr(el) {
     dom(el);
-    for (let attr of Craft.CustomAttributes) {
+    for (let i = 0, attr; i < Craft.CustomAttributes.length; i++) {
+      attr = Craft.CustomAttributes[i];
       if (el.hasAttr(attr.name)) {
         if (!is.Array(el.customAttr)) el.customAttr = [];
         if (!el.customAttr.includes(attr.name)) {
@@ -1851,14 +1882,12 @@
       Craft.poll(() => Craft.WebComponents.length === queryAll(fw).length, 35, 5035)
       .then(() => {
         Ready = true;
-        Craft.DomObserver = new MutationObserver(muts => {
-          for (let mut of muts) {
-            forEach(mut.addedNodes, el => {
-              if (def(el['hasAttribute'])) manageAttr(el);
-            });
-            manageAttr(mut.target);
-          }
-        });
+        Craft.DomObserver = new MutationObserver(muts => forEach(muts, mut => {
+          forEach(mut.addedNodes, el => {
+            if (def(el['hasAttribute'])) manageAttr(el);
+          });
+          manageAttr(mut.target);
+        }));
         Craft.DomObserver.observe(doc.body, {
           attributes: true,
           childList: true,
@@ -1870,9 +1899,11 @@
       });
   });
 
-  On('hashchange',() => {
-    for (let handle of Craft.router.handlers)
+  On('hashchange', () => {
+    forEach(Craft.router.handlers, handle => {
       if (Locs(l => l === handle.link)) handle.func(location.hash);
+    });
+
   });
 
   root.forEach = forEach;

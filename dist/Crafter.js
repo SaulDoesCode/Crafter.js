@@ -1,5 +1,32 @@
 'use strict';
 
+var _createClass = (function() {
+    function defineProperties(target, props) {
+        for (var i = 0; i < props.length; i++) {
+            var descriptor = props[i];
+            descriptor.enumerable = descriptor.enumerable || false;
+            descriptor.configurable = true;
+            if ("value" in descriptor) descriptor.writable = true;
+            Object.defineProperty(target, descriptor.key, descriptor);
+        }
+    }
+    return function(Constructor, protoProps, staticProps) {
+        if (protoProps) defineProperties(Constructor.prototype, protoProps);
+        if (staticProps) defineProperties(Constructor, staticProps);
+        return Constructor;
+    };
+})();
+
+function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+        throw new TypeError("Cannot call a class as a function");
+    }
+}
+
+function _typeof(obj) {
+    return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj;
+}
+
 function _toConsumableArray(arr) {
     if (Array.isArray(arr)) {
         for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) {
@@ -9,10 +36,6 @@ function _toConsumableArray(arr) {
     } else {
         return Array.from(arr);
     }
-}
-
-function _typeof(obj) {
-    return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj;
 }
 
 /**
@@ -64,7 +87,7 @@ function _typeof(obj) {
     };
 
     function toArr(val) {
-        return Array.prototype.slice.call(val);
+        return [].concat(_toConsumableArray(val));
     }
 
     function type(obj, str) {
@@ -96,25 +119,19 @@ function _typeof(obj) {
         })(fn, args, remainingArity);
     }
 
-    function def() {
-        for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-            args[_key2] = arguments[_key2];
-        }
-
-        return args.length && args.every(function(o) {
-            return typeof o !== 'undefined';
-        });
+    // tests arguments with Array.prototype.every;
+    function ta(test) {
+        return function() {
+            return arguments.length && Array.prototype.every.call(arguments, test);
+        };
     }
 
-    function nil() {
-        for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-            args[_key3] = arguments[_key3];
-        }
-
-        return args.length && args.every(function(o) {
+    var def = ta(function(o) {
+            return typeof o !== 'undefined';
+        }),
+        nil = ta(function(o) {
             return o === null;
         });
-    }
 
     function cutdot(str) {
         return str.split('.');
@@ -126,39 +143,21 @@ function _typeof(obj) {
          * Test if something is a boolean type
          * @param val - value to test
          */
-        Bool: function Bool() {
-            for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-                args[_key4] = arguments[_key4];
-            }
-
-            return args.length && args.every(function(o) {
-                return typeof o === 'boolean';
-            });
-        },
+        Bool: ta(function(o) {
+            return typeof o === 'boolean';
+        }),
         /**
          * Test if something is a String
          * @param args - value/values to test
          */
-        String: function String() {
-            for (var _len5 = arguments.length, args = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-                args[_key5] = arguments[_key5];
-            }
-
-            return args.length && args.every(function(o) {
-                return typeof o === 'string';
-            });
-        },
+        String: ta(function(o) {
+            return typeof o === 'string';
+        }),
         /**
          * Test if something is an Array
          * @param args - value/values to test
          */
-        Arr: function Arr() {
-            for (var _len6 = arguments.length, args = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
-                args[_key6] = arguments[_key6];
-            }
-
-            return args.length && args.every(Array.isArray);
-        },
+        Arr: ta(Array.isArray),
         /**
          * Array.isArray alias for convenience and performance when only one argument is present
          * @param {*} val - value to test
@@ -168,19 +167,12 @@ function _typeof(obj) {
          * Test if something is an Array-Like
          * @param args - value/values to test
          */
-        Arraylike: function Arraylike() {
+        Arraylike: ta(function(o) {
             try {
-                for (var _len7 = arguments.length, args = Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
-                    args[_key7] = arguments[_key7];
-                }
-
-                return args.length && args.every(function(o) {
-                    return def(o.length);
-                });
+                return def(o.length);
             } catch (e) {}
             return false;
-        },
-
+        }),
         /**
          * Determine whether a variable is undefined
          * @param args - value/values to test
@@ -198,37 +190,15 @@ function _typeof(obj) {
          * Determine whether a variable is null
          * @param args - value/values to test
          */
-        Null: function Null() {
-            for (var _len8 = arguments.length, args = Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
-                args[_key8] = arguments[_key8];
-            }
-
-            return args.length && args.every(function(o) {
-                return o === null;
-            });
-        },
+        Null: ta(function(o) {
+            return o === null;
+        }),
         /**
          * Determine whether a variable is a DOM Node
          * @param args - value/values to test
          */
-        Node: (function(_Node) {
-            function Node() {
-                return _Node.apply(this, arguments);
-            }
-
-            Node.toString = function() {
-                return _Node.toString();
-            };
-
-            return Node;
-        })(function() {
-            for (var _len9 = arguments.length, args = Array(_len9), _key9 = 0; _key9 < _len9; _key9++) {
-                args[_key9] = arguments[_key9];
-            }
-
-            return args.length && args.every(function(o) {
-                return o instanceof Node;
-            });
+        Node: ta(function(o) {
+            return o instanceof Node;
         }),
         /**
          * Test an element's tagname
@@ -242,214 +212,113 @@ function _typeof(obj) {
          * Determine whether a variable is a DOM NodeList or Collection of Nodes
          * @param args - value/values to test
          */
-        NodeList: (function(_NodeList) {
-            function NodeList() {
-                return _NodeList.apply(this, arguments);
-            }
-
-            NodeList.toString = function() {
-                return _NodeList.toString();
-            };
-
-            return NodeList;
-        })(function() {
-            for (var _len10 = arguments.length, args = Array(_len10), _key10 = 0; _key10 < _len10; _key10++) {
-                args[_key10] = arguments[_key10];
-            }
-
-            return args.length && args.every(function(nl) {
-                return nl instanceof NodeList || is.Arraylike(nl) ? nl.length && toArr(nl).every(function(n) {
-                    return n instanceof Node;
-                }) : false;
-            });
+        NodeList: ta(function(nl) {
+            return nl instanceof NodeList || is.Arraylike(nl) ? ta(function(n) {
+                return n instanceof Node;
+            }).apply(null, nl) : false;
         }),
         /**
          * Determine if a variable is a Number
          * @param {...*} args - value/values to test
          */
-        Num: function Num() {
-            for (var _len11 = arguments.length, args = Array(_len11), _key11 = 0; _key11 < _len11; _key11++) {
-                args[_key11] = arguments[_key11];
-            }
-
-            return args.length && args.every(function(o) {
-                return !isNaN(Number(o));
-            });
-        },
+        Num: ta(function(o) {
+            return !isNaN(Number(o));
+        }),
         /**
          * Determine if a variable is an Object
          * @param args - value/values to test
          */
-        Object: function Object() {
-            for (var _len12 = arguments.length, args = Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
-                args[_key12] = arguments[_key12];
-            }
-
-            return args.length && args.every(function(o) {
-                return toString.call(o) === '[object Object]';
-            });
-        },
+        Object: ta(function(o) {
+            return toString.call(o) === '[object Object]';
+        }),
         /**
          * Determine if a sring is JSON
          * @param args - value/values to test
          */
-        Json: function Json() {
-            for (var _len13 = arguments.length, args = Array(_len13), _key13 = 0; _key13 < _len13; _key13++) {
-                args[_key13] = arguments[_key13];
-            }
-
-            return args.length && args.every(function(str) {
-                try {
-                    JSON.parse(str);
-                    return !0;
-                } catch (e) {}
-                return !1;
-            });
-        },
-
+        Json: ta(function(str) {
+            try {
+                JSON.parse(str);
+                return !0;
+            } catch (e) {}
+            return !1;
+        }),
         /**
          * Determine if a variable is a HTMLElement
          * @param args - value/values to test
          */
-        Element: function Element() {
-            for (var _len14 = arguments.length, args = Array(_len14), _key14 = 0; _key14 < _len14; _key14++) {
-                args[_key14] = arguments[_key14];
-            }
-
-            return args.length && args.every(function(o) {
-                return type(o, '[object HTMLElement]');
-            });
-        },
+        Element: ta(function(o) {
+            return type(o, '[object HTMLElement]');
+        }),
         /**
          * Determine if a variable is a File Object
          * @param args - value/values to test
          */
-        File: function File() {
-            for (var _len15 = arguments.length, args = Array(_len15), _key15 = 0; _key15 < _len15; _key15++) {
-                args[_key15] = arguments[_key15];
-            }
-
-            return args.length && args.every(function(o) {
-                return type(o, '[object File]');
-            });
-        },
+        File: ta(function(o) {
+            return type(o, '[object File]');
+        }),
         /**
          * Determine if a variable is of a FormData type
          * @param args - value/values to test
          */
-        FormData: function FormData() {
-            for (var _len16 = arguments.length, args = Array(_len16), _key16 = 0; _key16 < _len16; _key16++) {
-                args[_key16] = arguments[_key16];
-            }
-
-            return args.length && args.every(function(o) {
-                return type(o, '[object FormData]');
-            });
-        },
+        FormData: ta(function(o) {
+            return type(o, '[object FormData]');
+        }),
         /**
          * Determine if a variable is a Map
          * @param args - value/values to test
          */
-        Map: function Map() {
-            for (var _len17 = arguments.length, args = Array(_len17), _key17 = 0; _key17 < _len17; _key17++) {
-                args[_key17] = arguments[_key17];
-            }
-
-            return args.length && args.every(function(o) {
-                return type(o, '[object Map]');
-            });
-        },
+        Map: ta(function(o) {
+            return type(o, '[object Map]');
+        }),
         /**
          * Determine if a variable is a function
          * @param args - value/values to test
          */
-        Func: function Func() {
-            for (var _len18 = arguments.length, args = Array(_len18), _key18 = 0; _key18 < _len18; _key18++) {
-                args[_key18] = arguments[_key18];
-            }
-
-            return args.length && args.every(function(o) {
-                return typeof o === 'function';
-            });
-        },
+        Func: ta(function(o) {
+            return typeof o === 'function';
+        }),
         /**
          * Determine if a variable/s are true
          * @param args - value/values to test
          */
-        True: function True() {
-            for (var _len19 = arguments.length, args = Array(_len19), _key19 = 0; _key19 < _len19; _key19++) {
-                args[_key19] = arguments[_key19];
-            }
-
-            return args.length && args.every(function(o) {
-                return o === true;
-            });
-        },
+        True: ta(function(o) {
+            return o === true;
+        }),
         /**
          * Determine if a variable/s are false
          * @param args - value/values to test
          */
-        False: function False() {
-            for (var _len20 = arguments.length, args = Array(_len20), _key20 = 0; _key20 < _len20; _key20++) {
-                args[_key20] = arguments[_key20];
-            }
-
-            return args.length && args.every(function(o) {
-                return o !== true;
-            });
-        },
+        False: ta(function(o) {
+            return o !== true;
+        }),
         /**
          * Determine if a variable is of Blob type
          * @param obj - variable to test
          */
-        Blob: function Blob() {
-            for (var _len21 = arguments.length, args = Array(_len21), _key21 = 0; _key21 < _len21; _key21++) {
-                args[_key21] = arguments[_key21];
-            }
-
-            return args.length && args.every(function(o) {
-                return type(o, '[object Blob]');
-            });
-        },
+        Blob: ta(function(o) {
+            return type(o, '[object Blob]');
+        }),
         /**
          * Determine if a variable is a Regular Expression
          * @param obj - variable to test
          */
-        RegExp: function RegExp() {
-            for (var _len22 = arguments.length, args = Array(_len22), _key22 = 0; _key22 < _len22; _key22++) {
-                args[_key22] = arguments[_key22];
-            }
-
-            return args.length && args.every(function(o) {
-                return type(o, '[object RegExp]');
-            });
-        },
+        RegExp: ta(function(o) {
+            return type(o, '[object RegExp]');
+        }),
         /**
          * Determine if a variable is a Date type
          * @param {...*} variable to test
          */
-        Date: function Date() {
-            for (var _len23 = arguments.length, args = Array(_len23), _key23 = 0; _key23 < _len23; _key23++) {
-                args[_key23] = arguments[_key23];
-            }
-
-            return args.length && args.every(function(o) {
-                return type(o, '[object Date]');
-            });
-        },
+        Date: ta(function(o) {
+            return type(o, '[object Date]');
+        }),
         /**
          * Determine if a variable is a Set
          * @param obj - variable to test
          */
-        Set: function Set() {
-            for (var _len24 = arguments.length, args = Array(_len24), _key24 = 0; _key24 < _len24; _key24++) {
-                args[_key24] = arguments[_key24];
-            }
-
-            return args.length && args.every(function(o) {
-                return type(o, '[object Set]');
-            });
-        },
+        Set: ta(function(o) {
+            return type(o, '[object Set]');
+        }),
         Args: function Args(val) {
             return !nil(val) && type(val, '[object Arguments]');
         },
@@ -457,12 +326,12 @@ function _typeof(obj) {
          * Determine if a variable is a Symbol
          * @param obj - variable to test
          */
-        Symbol: function Symbol(obj) {
+        Symbol: ta(function(obj) {
             return type(obj, '[object Symbol]');
-        },
-        char: function char(val) {
+        }),
+        char: ta(function(val) {
             return is.String(val) && val.length === 1;
-        },
+        }),
         space: function space(val) {
             return is.char(val) && val.charCodeAt(0) > 8 && val.charCodeAt(0) < 14 || val.charCodeAt(0) === 32;
         },
@@ -581,8 +450,12 @@ function _typeof(obj) {
          * @param obj - Date to test
          */
         past: function past(obj) {
+            try {
+                if (!is.Date(obj)) obj = is.String(obj) ? new Date(is.Num(obj) ? Number(obj) : obj) : new Date(obj);
+            } catch (e) {}
             return is.Date(obj) && obj.getTime() < new Date().getTime();
         },
+
         /**
          * Determines if a date is in the future
          * @param obj - Date to test
@@ -650,8 +523,7 @@ function _typeof(obj) {
             return is.Num(val) && val < 0;
         },
         neither: function neither(value) {
-            var args = toArr(arguments).slice(1);
-            return args.every(function(val) {
+            return toArr(arguments).slice(1).every(function(val) {
                 return value !== val;
             });
         },
@@ -700,10 +572,9 @@ function _typeof(obj) {
          * Determine if a given collection or string is empty
          * @param {Object|Array|string} val - value to test if empty
          */
-        empty: function empty(val) {
+        empty: ta(function(val) {
             return Craft.len(val) === 0 || val === '';
-        },
-
+        }),
         /**
          * Test if something is a Native JavaScript feature
          * @param val - value to test
@@ -726,8 +597,7 @@ function _typeof(obj) {
      * @param {Node|NodeList|Array|String} within - pass either a CSS Selector string , Node/NodeList or Array of Nodes to search for val in
      */
     function NodeOrQuerytoArr(val, within) {
-        if (is.String(val) && (is.String(within) || is.Node(within))) val = queryAll(val, within);
-        else if (is.String(val)) val = queryAll(val);
+        if (is.String(val)) val = queryAll(val, within);
         return is.Node(val) ? [val] : is.NodeList(val) ? toArr(val) : [];
     }
 
@@ -739,97 +609,118 @@ function _typeof(obj) {
      * @param {...*} args - extra optional arguments/parameters to pass to the handler function
      * @returns Interface On,Off,Once
      */
-    function EventHandler(EventType, Target, func, Within) {
-        this.EventType = EventType || 'click';
-        this.Target = Target !== root && Target !== doc ? NodeOrQuerytoArr(Target, Within) : [Target];
-        this.FuncWrapper = function(e) {
-            return func(e, e.srcElement);
-        };
-        if (EventType.includes(',')) this.EventType = EventType.split(',');
-    }
-    /**
-     * Activates the EventHandler to start listening for the EventType on the Target/Targets
-     */
-    EventHandler.prototype.On = function() {
-        var _this = this;
 
-        is.Arr(this.EventType) ? this.Target.forEach(function(target) {
-            return _this.EventType.forEach(function(evt) {
-                return target.addEventListener(evt, _this.FuncWrapper);
-            });
-        }) : this.Target.forEach(function(target) {
-            return target.addEventListener(_this.EventType, _this.FuncWrapper);
-        });
-        return this;
-    };
-    /**
-     * Change the Event type to listen for
-     * {string} type - the name of the event/s to listen for
-     */
-    EventHandler.prototype.ChangeType = function(type) {
-        //  have you tried turning it on and off again? - THE IT CROWD
-        this.Off();
-        this.EventType = type.includes(',') ? type.split(',') : type;
-        this.On();
-        return this;
-    };
-    /**
-     * De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
-     * can still optionally be re-activated with On again
-     */
-    EventHandler.prototype.Off = function() {
-        var _this2 = this;
+    var EventHandler = (function() {
+        function EventHandler(EventType, Target, func, Within) {
+            _classCallCheck(this, EventHandler);
 
-        is.Arr(this.EventType) ? this.Target.forEach(function(target) {
-            return _this2.EventType.forEach(function(evt) {
-                return target.removeEventListener(evt, _this2.FuncWrapper);
-            });
-        }) : this.Target.forEach(function(target) {
-            return target.removeEventListener(_this2.EventType, _this2.FuncWrapper);
-        });
-        return this;
-    };
-    /**
-     * Once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
-     * the Handler function will be called only Once
-     */
-    EventHandler.prototype.Once = function() {
-        var _this3 = this,
-            func = this.FuncWrapper,
-            target = this.Target;
-
-        if (is.Arr(this.EventType)) this.EventType.forEach(function(etype) {
-            var listenOnce = function listenOnce(e) {
-                func(e);
-                target.forEach(function(t) {
-                    return t.removeEventListener(etype, listenOnce);
-                });
+            this.EventType = EventType || 'click';
+            this.Target = Target !== root && Target !== doc ? NodeOrQuerytoArr(Target, Within) : [Target];
+            this.FuncWrapper = function(e) {
+                return func(e, e.srcElement);
             };
-            target.forEach(function(t) {
-                return t.addEventListener(etype, listenOnce);
-            });
-        });
-        else {
-            (function() {
-                var listenOnce = function listenOnce(e) {
-                    func(e);
-                    target.forEach(function(t) {
-                        return t.removeEventListener(_this3.EventType, listenOnce);
-                    });
-                };
-                target.forEach(function(t) {
-                    return t.addEventListener(_this3.EventType, listenOnce);
-                });
-            })();
+            if (is.String(EventType) && EventType.includes(',')) this.EventType = EventType.split(',');
         }
-        return this;
-    };
+        /**
+         * Activates the EventHandler to start listening for the EventType on the Target/Targets
+         */
+
+        _createClass(EventHandler, [{
+            key: 'Type',
+
+            /**
+             * Change the Event type to listen for
+             * {string} type - the name of the event/s to listen for
+             */
+            value: function Type(type) {
+                    //  have you tried turning it on and off again? - THE IT CROWD
+                    this.Off;
+                    this.EventType = type.includes(',') ? type.split(',') : type;
+                    this.On;
+                    return this;
+                }
+                /**
+                 * De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
+                 * can still optionally be re-activated with On again
+                 */
+
+        }, {
+            key: 'On',
+            get: function get() {
+                var _this = this;
+
+                is.Arr(this.EventType) ? forEach(this.Target, function(target) {
+                    return _this.EventType.forEach(function(evt) {
+                        return target.addEventListener(evt, _this.FuncWrapper);
+                    });
+                }) : this.Target.forEach(function(target) {
+                    return target.addEventListener(_this.EventType, _this.FuncWrapper);
+                });
+                return this;
+            }
+        }, {
+            key: 'Off',
+            get: function get() {
+                    var _this2 = this;
+
+                    is.Arr(this.EventType) ? forEach(this.Target, function(target) {
+                        return _this2.EventType.forEach(function(evt) {
+                            return target.removeEventListener(evt, _this2.FuncWrapper);
+                        });
+                    }) : this.Target.forEach(function(target) {
+                        return target.removeEventListener(_this2.EventType, _this2.FuncWrapper);
+                    });
+                    return this;
+                }
+                /**
+                 * Once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
+                 * the Handler function will be called only Once
+                 */
+
+        }, {
+            key: 'Once',
+            get: function get() {
+                var _this3 = this,
+                    func = this.FuncWrapper,
+                    target = this.Target;
+
+                if (is.Arr(this.EventType)) forEach(this.EventType, function(etype) {
+                    var listenOnce = function listenOnce(e) {
+                        func(e);
+                        forEach(target, function(t) {
+                            return t.removeEventListener(etype, listenOnce);
+                        });
+                    };
+                    forEach(target, function(t) {
+                        return t.addEventListener(etype, listenOnce);
+                    });
+                });
+                else {
+                    (function() {
+                        var listenOnce = function listenOnce(e) {
+                            func(e);
+                            forEach(target, function(t) {
+                                return t.removeEventListener(_this3.EventType, listenOnce);
+                            });
+                        };
+                        forEach(target, function(t) {
+                            return t.addEventListener(_this3.EventType, listenOnce);
+                        });
+                    })();
+                }
+                return this;
+            }
+        }]);
+
+        return EventHandler;
+    })();
 
     /**
      * Easy way to loop through Collections and Objects
      * @param {Array|Object|NodeList} iterable - any collection that is either an Object or has a .length value
      * @param {function} func - function called on each iteration -> "function( value , indexOrKey ) {...}"
      */
+
     function forEach(iterable, func) {
         if (!is.empty(iterable) && is.Func(func)) {
             var _i = 0;
@@ -885,7 +776,7 @@ function _typeof(obj) {
 
     function EventTypes(Target, within, listen) {
         var etype = function etype(type, fn) {
-            return new EventHandler(type, Target, fn, within)[listen || 'On']();
+            return new EventHandler(type, Target, fn, within)[listen || 'On'];
         };
         return {
             Click: function Click(fn) {
@@ -961,9 +852,10 @@ function _typeof(obj) {
      * @returns Off - when On is defined as a variable "var x = On(...)" it allows you to access all the EventHandler interfaces Off,Once,On
      */
     root.On = function(EventType, Target, element, func) {
-        return is.Func(Target) ? new EventHandler(EventType, root, Target).On() : arguments.length < 3 && !toArr(arguments).some(function(i) {
+        var args = toArr(arguments);
+        return is.Func(Target) ? new EventHandler(EventType, root, Target).On : args.length < 3 && !args.some(function(i) {
             return is.Func(i);
-        }) ? EventTypes(EventType, Target) : is.Func(element) ? new EventHandler(EventType, Target, element).On() : new EventHandler(EventType, Target, func, element).On();
+        }) ? EventTypes(EventType, Target) : is.Func(element) ? new EventHandler(EventType, Target, element).On : new EventHandler(EventType, Target, func, element).On;
     };
 
     /**
@@ -974,9 +866,10 @@ function _typeof(obj) {
      * @returns On,Off,Once - when Once is defined as a variable "var x = Once(...)" it allows you to access all the EventHandler interfaces Off,Once,On
      */
     root.Once = function(EventType, Target, element, func) {
-        return is.Func(Target) ? new EventHandler(EventType, root, Target).Once() : arguments.length < 3 && !toArr(arguments).some(function(i) {
+        var args = toArr(arguments);
+        return is.Func(Target) ? new EventHandler(EventType, root, Target).Once : args.length < 3 && !args.some(function(i) {
             return is.Func(i);
-        }) ? EventTypes(EventType, Target, 'Once') : is.Func(element) ? new EventHandler(EventType, Target, element).Once() : new EventHandler(EventType, Target, func, element).Once();
+        }) ? EventTypes(EventType, Target, 'Once') : is.Func(element) ? new EventHandler(EventType, Target, element).Once : new EventHandler(EventType, Target, func, element).Once;
     };
 
     function craftElement(name, inner, attributes, extraAttr, stringForm) {
@@ -1082,12 +975,8 @@ function _typeof(obj) {
 
     function Inner(type, el, args) {
         type = is.Input(el) ? 'value' : type;
-        if (is.empty(args)) return el[type];
-        if (args.length === 1) {
-            args = args[0];
-            el[type] = '';
-            is.Node(args) ? el.append(args) : el[type] = args;
-        } else el[type] = args.map(function(val) {
+        if (args.length === 0) return el[type];
+        args.length === 1 ? is.Node(args[0]) ? el.append(args[0]) : el[type] = args[0] : el[type] = args.map(function(val) {
             return is.Node(val) ? val.outerHTML : val;
         }).join('');
         if (is.Node(el)) return el;
@@ -1112,7 +1001,7 @@ function _typeof(obj) {
          * @param {string=} sets the textContent value or when undefined gets the textContent value
          */
         element.Text = function() {
-            return Inner('textContent', element, toArr(arguments));
+            return Inner('textContent', this, toArr(arguments));
         };
         /**
          * replaces a Node with another node provided as a parameter/argument
@@ -1139,12 +1028,10 @@ function _typeof(obj) {
          * @param {Node|string} String or Node to append to the this.element
          */
         element.append = function() {
-            for (var _len25 = arguments.length, args = Array(_len25), _key25 = 0; _key25 < _len25; _key25++) {
-                args[_key25] = arguments[_key25];
-            }
+            var _this4 = this;
 
-            args.forEach(function(val) {
-                return element.appendChild(is.Node(val) ? val : docfragFromString(val));
+            forEach(arguments, function(val) {
+                return _this4.appendChild(is.Node(val) ? val : docfragFromString(val));
             });
             return this;
         };
@@ -1153,8 +1040,12 @@ function _typeof(obj) {
          * @memberof dom
          * @param {Node|string} String or Node to prepend to the this.element
          */
-        element.prepend = function(val) {
-            this.insertBefore(is.Node(val) ? val : docfragFromString(val), this.firstChild);
+        element.prepend = function() {
+            var _this5 = this;
+
+            forEach(arguments, function(val) {
+                return _this5.insertBefore(is.Node(val) ? val : docfragFromString(val), _this5.firstChild);
+            });
             return this;
         };
         /**
@@ -1167,17 +1058,78 @@ function _typeof(obj) {
         element.On = function(eventType, func) {
             return On(eventType, element, func);
         };
+
+        element.Click = function(fn, listen) {
+            return root[listen ? 'Once' : 'On']('click', element, fn);
+        };
+        element.Input = function(fn, listen) {
+            return root[listen ? 'Once' : 'On']('input', element, func);
+        };
+        element.DoubleClick = function(fn, listen) {
+            return root[listen ? 'Once' : 'On']('dblclick', element, func);
+        };
+        element.Focus = function(fn, listen) {
+            return root[listen ? 'Once' : 'On']('focus', element, func);
+        };
+        element.Blur = function(fn, listen) {
+            return root[listen ? 'Once' : 'On']('blur', element, func);
+        };
+        element.Keydown = function(fn, listen) {
+            return root[listen ? 'Once' : 'On']('keydown', element, func);
+        };
+        element.Mousemove = function(fn, listen) {
+            return root[listen ? 'Once' : 'On']('mousemove', element, func);
+        };
+        element.Mousedown = function(fn, listen) {
+            return root[listen ? 'Once' : 'On']('mousedown', element, func);
+        };
+        element.Mouseup = function(fn, listen) {
+            return root[listen ? 'Once' : 'On']('mouseup', element, func);
+        };
+        element.Mouseover = function(fn, listen) {
+            return root[listen ? 'Once' : 'On']('mouseover', element, func);
+        };
+        element.Mouseout = function(fn, listen) {
+            return root[listen ? 'Once' : 'On']('mouseout', element, func);
+        };
+        element.Mouseenter = function(fn, listen) {
+            return root[listen ? 'Once' : 'On']('mouseenter', element, func);
+        };
+        element.Mouseleave = function(fn, listen) {
+            return root[listen ? 'Once' : 'On']('mouseleave', element, func);
+        };
+        element.Scroll = function(fn, listen) {
+            return root[listen ? 'Once' : 'On']('scroll', element, func);
+        };
+        element.Enter = function(fn, listen) {
+            return root[listen ? 'Once' : 'On']('keydown', element, function(e, srcElement) {
+                if (event.which == 13 || event.keyCode == 13) fn(e, srcElement);
+            });
+        }, element.Escape = function(fn, listen) {
+            return root[listen ? 'Once' : 'On']('keydown', element, function(e, srcElement) {
+                if (event.which == 27 || event.keyCode == 27) fn(e, srcElement);
+            });
+        };
+        element.Delete = function(fn, listen) {
+            return root[listen ? 'Once' : 'On']('keydown', element, function(e, srcElement) {
+                if (event.which == 46 || event.keyCode == 46) fn(e, srcElement);
+            });
+        };
+        element.Space = function(fn, listen) {
+            return root[listen ? 'Once' : 'On']('keydown', element, function(e, srcElement) {
+                if (event.which == 32 || event.keyCode == 32) fn(e, srcElement);
+            });
+        };
         /**
          * add CSS style rules to the Element or NodeList
          * @memberof dom
          * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
          */
         element.css = function(styles) {
-            var _this4 = this;
-
-            def(styles) ? forEach(styles, function(prop, key) {
-                return _this4.style[key] = prop;
-            }) : console.error('Styles Object undefined');
+            if (styles == undefined) throw new Error('Style properties undefined');
+            for (var style in styles) {
+                this.style[style] = styles[style];
+            }
             return this;
         };
         /**
@@ -1186,10 +1138,10 @@ function _typeof(obj) {
          * @param {...string} name of the class to check for
          */
         element.gotClass = function() {
-            var _this5 = this;
+            var _this6 = this;
 
             return toArr(arguments).every(function(Class) {
-                return _this5.classList.contains(Class);
+                return _this6.classList.contains(Class);
             });
         };
         /**
@@ -1198,10 +1150,10 @@ function _typeof(obj) {
          * @param {string} name of the class to add
          */
         element.addClass = function() {
-            var _this6 = this;
+            var _this7 = this;
 
             forEach(arguments, function(Class) {
-                return _this6.classList.add(Class);
+                return _this7.classList.add(Class);
             });
             return this;
         };
@@ -1211,10 +1163,10 @@ function _typeof(obj) {
          * @param {...string} name of the class to strip
          */
         element.stripClass = function() {
-            var _this7 = this;
+            var _this8 = this;
 
             forEach(arguments, function(Class) {
-                return _this7.classList.remove(Class);
+                return _this8.classList.remove(Class);
             });
             return this;
         };
@@ -1235,10 +1187,10 @@ function _typeof(obj) {
          * @param {...string} name of the Attribute/s to strip
          */
         element.stripAttr = function() {
-            var _this8 = this;
+            var _this9 = this;
 
             forEach(arguments, function(attr) {
-                return _this8.removeAttribute(attr);
+                return _this9.removeAttribute(attr);
             });
             return element;
         };
@@ -1249,19 +1201,14 @@ function _typeof(obj) {
          * @param {...string} names of attributes to check for
          */
         element.hasAttr = function(attr) {
-            var _this9 = this;
+            var _this10 = this;
 
             if (is.String(attr)) return this.hasAttribute(attr);
-
-            for (var _len26 = arguments.length, attributes = Array(_len26 > 1 ? _len26 - 1 : 0), _key26 = 1; _key26 < _len26; _key26++) {
-                attributes[_key26 - 1] = arguments[_key26];
-            }
-
-            if (attr === false) return attributes.every(function(a) {
-                return _this9.hasAttribute(a);
+            if (attr === false) return toArr(arguments).slice(0).every(function(a) {
+                return _this10.hasAttribute(a);
             });
-            if (attr === true) return attributes.some(function(a) {
-                return _this9.hasAttribute(a);
+            if (attr === true) return toArr(arguments).slice(0).some(function(a) {
+                return _this10.hasAttribute(a);
             });
         };
         /**
@@ -1282,15 +1229,15 @@ function _typeof(obj) {
          * @param {string} Value of the Attribute to add/set
          */
         element.setAttr = function(attr, val) {
-            var _this10 = this;
+            var _this11 = this;
 
             if (!def(val)) {
                 if (is.String(attr)) {
                     attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(function(Attr) {
-                        return def(Attr.split('=')[1]) ? _this10.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : _this10.setAttribute(Attr.split('=')[0], '');
+                        return def(Attr.split('=')[1]) ? _this11.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : _this11.setAttribute(Attr.split('=')[0], '');
                     }) : this.setAttribute(attr, '');
                 } else if (is.Object(attr)) forEach(attr, function(value, Attr) {
-                    return _this10.setAttribute(Attr, value);
+                    return _this11.setAttribute(Attr, value);
                 });
             } else this.setAttribute(attr, val);
             return this;
@@ -1329,7 +1276,7 @@ function _typeof(obj) {
          * @memberof dom
          */
         element.getSiblings = function() {
-            return Craft.omit(toArr(element.parentNode.childNodes), element);
+            return Craft.omit(element.parentNode.childNodes, element);
         };
         /**
          * gets all the element's dimentions (width,height,left,top,bottom,right)
@@ -1574,11 +1521,8 @@ function _typeof(obj) {
             return host;
         },
 
-        cloneArr: function cloneArr(arr) {
-            return Array.apply(undefined, _toConsumableArray(arr));
-        },
         clone: function clone(val) {
-            return is.Object(val) ? Object.create(val) : Array(val);
+            return is.Object(val) ? Object.create(val) : toArr(val);
         },
         omitFrom: function omitFrom(Arr) {
             var string = is.String(Arr),
@@ -1591,7 +1535,7 @@ function _typeof(obj) {
                     }
                 };
                 replace();
-            }) : Arr = (is.Arraylike(Arr) && !string ? toArr(Arr) : Arr).filter(function(e) {
+            }) : Arr = (is.Array(Arr) && !string ? Arr : toArr(Arr)).filter(function(e) {
                 if (!values.some(function(v) {
                         return is.eq(v, e);
                     })) return e;
@@ -1599,9 +1543,7 @@ function _typeof(obj) {
             return Arr;
         },
         omit: function omit(val) {
-            var _Craft;
-
-            if (is.Arraylike(val)) val = (_Craft = Craft).omitFrom.apply(_Craft, arguments);
+            if (is.Arraylike(val)) val = Craft.omitFrom.apply(this, arguments);
             var values = toArr(arguments).slice(1);
             if (is.Object(val) && !values.some(function(v) {
                     return v === val;
@@ -1749,7 +1691,7 @@ function _typeof(obj) {
                         return res.text().then(function(data) {
                             obj.data = data;
                             obj.stamp = now;
-                            obj.expire = now + (obj.expire || 4000) * 60 * 60 * 1000;
+                            obj.expire = now + Craft.millis.hours(obj.expire || 400);
                             if (obj.cache) localStorage.setItem(Craft.loader.pre + obj.key, JSON.stringify(obj));
                             success(obj);
                         });
@@ -1770,7 +1712,7 @@ function _typeof(obj) {
             },
             removeAll: function removeAll(expired) {
                 for (var _i4 in localStorage) {
-                    if (!expired || Craft.loader.get(_i4).expire <= +new Date()) Craft.loader.remove(_i4);
+                    if (!expired || is.past(Craft.loader.get(_i4).expire)) Craft.loader.remove(_i4);
                 }
             }
         },
@@ -1926,14 +1868,14 @@ function _typeof(obj) {
                             recievers: [],
                             message: '',
                             set send(msg) {
-                                var _this11 = this;
+                                var _this12 = this;
 
                                 if (this.socket['readyState'] === 1) this.socket.send(is.Object(msg) ? JSON.stringify(msg) : msg);
                                 else {
                                     (function() {
                                         var poll = setInterval(function() {
-                                            if (_this11.socket['readyState'] === 1) {
-                                                _this11.socket.send(is.Object(msg) ? JSON.stringify(msg) : msg);
+                                            if (_this12.socket['readyState'] === 1) {
+                                                _this12.socket.send(is.Object(msg) ? JSON.stringify(msg) : msg);
                                                 clearInterval(poll);
                                             }
                                         }, 20);
@@ -2067,11 +2009,11 @@ function _typeof(obj) {
         debounce: function debounce(wait, func, immediate) {
             var timeout = undefined;
             return function() {
-                var _this12 = this,
+                var _this13 = this,
                     _arguments = arguments,
                     later = function later() {
                         timeout = null;
-                        if (!immediate) func.apply(_this12, _arguments);
+                        if (!immediate) func.apply(_this13, _arguments);
                     },
                     callNow = immediate && !timeout;
 
@@ -2191,6 +2133,9 @@ function _typeof(obj) {
             days: function days(n) {
                 return (n || 1) * 60000 * 60 * 24;
             },
+            weeks: function weeks(n) {
+                return (n || 1) * Craft.millis.days(7);
+            },
             months: function months(n, daysInMonth) {
                 return n * Craft.millis.days(daysInMonth || 30);
             },
@@ -2232,7 +2177,7 @@ function _typeof(obj) {
             observe: function observe(val) {
                 if (is.Bool(val)) {
                     Craft.mouse.track = val;
-                    Craft.mouse.track ? Craft.mouse.eventhandler.On() : Craft.mouse.eventhandler.Off();
+                    Craft.mouse.track ? Craft.mouse.eventhandler.On : Craft.mouse.eventhandler.Off;
                 } else return Craft.mouse.track;
             }
         },
@@ -2293,14 +2238,13 @@ function _typeof(obj) {
                 });
                 rules = temp;
             }
-            console.log(rules);
             if (!sheet) sheet = CrafterStyles.sheet;
             sheet.insertRule(selector + "{" + rules + "}", index);
         },
-        revokeCSSRule: function revokeCSSRule(index) {
-            if (is.int(index)) CrafterStyles.sheet.deleteRule(index);
-        },
 
+        revokeCSSRule: function revokeCSSRule(index, sheet) {
+            return (sheet || CrafterStyles).sheet.deleteRule(index);
+        },
         URLfrom: function URLfrom(text) {
             return URL.createObjectURL(new Blob([text]));
         },
@@ -2528,8 +2472,8 @@ function _typeof(obj) {
     });
     Craft.curry.adaptTo = Craft.curry(function(num, fn) {
         return Craft.curry.to(num, function(context) {
-            for (var _len27 = arguments.length, args = Array(_len27 > 1 ? _len27 - 1 : 0), _key27 = 1; _key27 < _len27; _key27++) {
-                args[_key27 - 1] = arguments[_key27];
+            for (var _len2 = arguments.length, args = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+                args[_key2 - 1] = arguments[_key2];
             }
 
             return fn.apply(null, args.slice(1).concat(context));
@@ -2549,13 +2493,13 @@ function _typeof(obj) {
 
     Craft.newComponent(fw, {
         inserted: function inserted() {
-            var _this13 = this,
+            var _this14 = this,
                 src = this.getAttribute('src');
 
             if (!nil(src)) {
                 (function() {
                     var wc = null,
-                        el = dom(_this13),
+                        el = dom(_this14),
                         cc = 'cache-component';
                     if (!Craft.WebComponents.includes(src)) {
                         if (el.hasAttr(cc)) {
@@ -2608,35 +2552,15 @@ function _typeof(obj) {
 
     function manageAttr(el) {
         dom(el);
-        var _iteratorNormalCompletion2 = true,
-            _didIteratorError2 = false,
-            _iteratorError2 = undefined;
-
-        try {
-            for (var _iterator2 = Craft.CustomAttributes[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-                var attr = _step2.value;
-
-                if (el.hasAttr(attr.name)) {
-                    if (!is.Array(el.customAttr)) el.customAttr = [];
-                    if (!el.customAttr.includes(attr.name)) {
-                        el.customAttr.push(attr.name);
-                        attr.handle(el, el.getAttr(attr.name));
-                    }
-                    break;
+        for (var _i8 = 0, attr; _i8 < Craft.CustomAttributes.length; _i8++) {
+            attr = Craft.CustomAttributes[_i8];
+            if (el.hasAttr(attr.name)) {
+                if (!is.Array(el.customAttr)) el.customAttr = [];
+                if (!el.customAttr.includes(attr.name)) {
+                    el.customAttr.push(attr.name);
+                    attr.handle(el, el.getAttr(attr.name));
                 }
-            }
-        } catch (err) {
-            _didIteratorError2 = true;
-            _iteratorError2 = err;
-        } finally {
-            try {
-                if (!_iteratorNormalCompletion2 && _iterator2.return) {
-                    _iterator2.return();
-                }
-            } finally {
-                if (_didIteratorError2) {
-                    throw _iteratorError2;
-                }
+                break;
             }
         }
     }
@@ -2650,33 +2574,12 @@ function _typeof(obj) {
         }, 35, 5035).then(function() {
             Ready = true;
             Craft.DomObserver = new MutationObserver(function(muts) {
-                var _iteratorNormalCompletion3 = true,
-                    _didIteratorError3 = false,
-                    _iteratorError3 = undefined;
-
-                try {
-                    for (var _iterator3 = muts[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-                        var mut = _step3.value;
-
-                        forEach(mut.addedNodes, function(el) {
-                            if (def(el['hasAttribute'])) manageAttr(el);
-                        });
-                        manageAttr(mut.target);
-                    }
-                } catch (err) {
-                    _didIteratorError3 = true;
-                    _iteratorError3 = err;
-                } finally {
-                    try {
-                        if (!_iteratorNormalCompletion3 && _iterator3.return) {
-                            _iterator3.return();
-                        }
-                    } finally {
-                        if (_didIteratorError3) {
-                            throw _iteratorError3;
-                        }
-                    }
-                }
+                return forEach(muts, function(mut) {
+                    forEach(mut.addedNodes, function(el) {
+                        if (def(el['hasAttribute'])) manageAttr(el);
+                    });
+                    manageAttr(mut.target);
+                });
             });
             Craft.DomObserver.observe(doc.body, {
                 attributes: true,
@@ -2690,36 +2593,11 @@ function _typeof(obj) {
     });
 
     On('hashchange', function() {
-        var _iteratorNormalCompletion4 = true,
-            _didIteratorError4 = false,
-            _iteratorError4 = undefined;
-
-        try {
-            var _loop2 = function _loop2() {
-                var handle = _step4.value;
-
-                if (Locs(function(l) {
-                        return l === handle.link;
-                    })) handle.func(location.hash);
-            };
-
-            for (var _iterator4 = Craft.router.handlers[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-                _loop2();
-            }
-        } catch (err) {
-            _didIteratorError4 = true;
-            _iteratorError4 = err;
-        } finally {
-            try {
-                if (!_iteratorNormalCompletion4 && _iterator4.return) {
-                    _iterator4.return();
-                }
-            } finally {
-                if (_didIteratorError4) {
-                    throw _iteratorError4;
-                }
-            }
-        }
+        forEach(Craft.router.handlers, function(handle) {
+            if (Locs(function(l) {
+                    return l === handle.link;
+                })) handle.func(location.hash);
+        });
     });
 
     root.forEach = forEach;
