@@ -13,7 +13,6 @@ append text or a Node to the element
 **Parameters**
 
 -   `String` **Node or string** or Node to append to the this.element
--   `args` **...** 
 
 # appendTo
 
@@ -69,7 +68,6 @@ checks if the element has a specific Attribute or Attributes
 -   `name` **string or boolean** of the Attribute or if true checks that it has some (||) of the attributes or if false checks that it has all of the attributes (&&)
 -   `names` **...string** of attributes to check for
 -   `attr`  
--   `attributes` **...** 
 
 # Height
 
@@ -142,7 +140,6 @@ prepend text or a Node to the element
 **Parameters**
 
 -   `String` **Node or string** or Node to prepend to the this.element
--   `val`  
 
 # query
 
@@ -244,10 +241,6 @@ sets or gets the element's pixel width
 
 is - Type Testing / Assertion
 
-**Parameters**
-
--   `args` **...** 
-
 ## Alphanumeric
 
 Determine if a String contains only characters and numbers (alphanumeric)
@@ -256,13 +249,22 @@ Determine if a String contains only characters and numbers (alphanumeric)
 
 -   `str` **string** variable to test
 
+## Args
+
+Determine if a variable is of an arguments type
+
+**Parameters**
+
+-   `obj`  variables to test
+-   `val`  
+
 ## Arr
 
 Test if something is an Array
 
 **Parameters**
 
--   `args` **...** value/values to test
+-   `args`  value/values to test
 
 ## Array
 
@@ -278,7 +280,7 @@ Test if something is an Array-Like
 
 **Parameters**
 
--   `args` **...** value/values to test
+-   `args`  value/values to test
 
 ## Between
 
@@ -299,7 +301,6 @@ Determine if a variable is of Blob type
 **Parameters**
 
 -   `obj`  variable to test
--   `args` **...** 
 
 ## Bool
 
@@ -308,7 +309,6 @@ Test if something is a boolean type
 **Parameters**
 
 -   `val`  value to test
--   `args` **...** 
 
 ## bt
 
@@ -328,6 +328,14 @@ Determines if a number is BIGGER than or equal to another
 -   `val` **Number** value to test
 -   `other` **Number** num to test with value
 
+## char
+
+tests if a value is a single character
+
+**Parameters**
+
+-   `values` **...string** to test
+
 ## Date
 
 Determine if a variable is a Date type
@@ -335,7 +343,6 @@ Determine if a variable is a Date type
 **Parameters**
 
 -   `variable` **...Any** to test
--   `args` **...** 
 
 ## dateString
 
@@ -359,7 +366,7 @@ Determine if a variable is a HTMLElement
 
 **Parameters**
 
--   `args` **...** value/values to test
+-   `args`  value/values to test
 
 ## Email
 
@@ -400,7 +407,7 @@ Determine if a variable/s are false
 
 **Parameters**
 
--   `args` **...** value/values to test
+-   `args`  value/values to test
 
 ## File
 
@@ -408,7 +415,7 @@ Determine if a variable is a File Object
 
 **Parameters**
 
--   `args` **...** value/values to test
+-   `args`  value/values to test
 
 ## FormData
 
@@ -416,7 +423,7 @@ Determine if a variable is of a FormData type
 
 **Parameters**
 
--   `args` **...** value/values to test
+-   `args`  value/values to test
 
 ## Func
 
@@ -424,7 +431,7 @@ Determine if a variable is a function
 
 **Parameters**
 
--   `args` **...** value/values to test
+-   `args`  value/values to test
 
 ## future
 
@@ -450,6 +457,14 @@ Determines whether a String is a HEX-COLOR (#fff123)
 
 -   `HexColor` **string** variable to test
 -   `hexColor`  
+
+## Input
+
+Tests where a dom element is an input of some sort
+
+**Parameters**
+
+-   `element`  
 
 ## int
 
@@ -489,7 +504,7 @@ Determine if a sring is JSON
 
 **Parameters**
 
--   `args` **...** value/values to test
+-   `args`  value/values to test
 
 ## Lowercase
 
@@ -524,7 +539,7 @@ Determine if a variable is a Map
 
 **Parameters**
 
--   `args` **...** value/values to test
+-   `args`  value/values to test
 
 ## Native
 
@@ -542,13 +557,22 @@ checks if a number is positive
 
 -   `val`  variable / value to test
 
+## neither
+
+tests that all parameters following the first are not the same as the first
+
+**Parameters**
+
+-   `value` **Any** inital value to compare all other params with
+-   `arguments` **...Any** to compare with value
+
 ## Node
 
 Determine whether a variable is a DOM Node
 
 **Parameters**
 
--   `args` **...** value/values to test
+-   `args`  value/values to test
 
 ## NodeList
 
@@ -556,7 +580,7 @@ Determine whether a variable is a DOM NodeList or Collection of Nodes
 
 **Parameters**
 
--   `args` **...** value/values to test
+-   `args`  value/values to test
 
 ## Null
 
@@ -564,7 +588,7 @@ Determine whether a variable is null
 
 **Parameters**
 
--   `args` **...** value/values to test
+-   `args`  value/values to test
 
 ## Num
 
@@ -580,7 +604,7 @@ Determine if a variable is an Object
 
 **Parameters**
 
--   `args` **...** value/values to test
+-   `args`  value/values to test
 
 ## odd
 
@@ -613,7 +637,6 @@ Determine if a variable is a Regular Expression
 **Parameters**
 
 -   `obj`  variable to test
--   `args` **...** 
 
 ## Set
 
@@ -622,7 +645,15 @@ Determine if a variable is a Set
 **Parameters**
 
 -   `obj`  variable to test
--   `args` **...** 
+
+## space
+
+tests if a value is a space character
+
+**Parameters**
+
+-   `values` **...string** to test
+-   `val`  
 
 ## String
 
@@ -630,7 +661,7 @@ Test if something is a String
 
 **Parameters**
 
--   `args` **...** value/values to test
+-   `args`  value/values to test
 
 ## Symbol
 
@@ -638,7 +669,7 @@ Determine if a variable is a Symbol
 
 **Parameters**
 
--   `obj`  variable to test
+-   `obj`  variables to test
 
 ## Tag
 
@@ -679,7 +710,7 @@ Determine if a variable/s are true
 
 **Parameters**
 
--   `args` **...** value/values to test
+-   `args`  value/values to test
 
 ## Undef
 
@@ -893,7 +924,7 @@ Easy way to get a DOM NodeList or NodeList within another DOM Node using CSS sel
 **Parameters**
 
 -   `selector` **string** CSS selector to query the DOM Nodes with
--   `element` **[Node or string]** Optional Node or CSS selector to search within insead of document
+-   `element` **[Node or NodeList or string]** Optional Node or CSS selector to search within insead of document
 
 # queryEach
 
@@ -906,6 +937,16 @@ Easy way to loop through Nodes in the DOM using a CSS Selector or a NodeList
 -   `func` **function** function called on each iteration -> "function( Element , index ) {...}"
 -   `returnList` **[boolean]** should queryEach also return the list of nodes
 
+# css
+
+add CSS style rules to NodeList
+
+**Parameters**
+
+-   `styles` **object** should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
+
+# doc
+
 # EventHandler
 
 Event Handling Class
@@ -915,20 +956,10 @@ Event Handling Class
 -   `EventType` **string** set the type of event to listen for example "click" or "scroll"
 -   `Target` **Node or NodeList or window or document** the Event Listener's target , can also be a NodeList to listen on multiple Nodes
 -   `Func` **function** Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
--   `args` **...Any** extra optional arguments/parameters to pass to the handler function
 -   `func`  
 -   `Within`  
 
 Returns **** Interface On,Off,Once
-
-## ChangeType
-
-Change the Event type to listen for
-{string} type - the name of the event/s to listen for
-
-**Parameters**
-
--   `type`  
 
 ## Off
 
@@ -944,15 +975,14 @@ Activates the EventHandler to start listening for the EventType on the Target/Ta
 Once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
 the Handler function will be called only Once
 
-# css
+## Type
 
-add CSS style rules to NodeList
+Change the Event type to listen for
+{string} type - the name of the event/s to listen for
 
 **Parameters**
 
--   `styles` **object** should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
-
-# doc
+-   `type`  
 
 # forEach
 

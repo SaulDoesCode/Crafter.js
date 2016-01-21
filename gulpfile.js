@@ -15,13 +15,13 @@ gulp.task('document', () => {
 
   gulp.src('./src/Crafter.js')
     .pipe(documentation({
-      format: 'json'
+      format: 'md'
     }))
     .pipe(gulp.dest(docs));
 
   gulp.src('./src/Crafter.js')
     .pipe(documentation({
-      format: 'md'
+      format: 'html'
     }))
     .pipe(gulp.dest(docs));
 });

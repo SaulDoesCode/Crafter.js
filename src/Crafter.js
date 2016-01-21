@@ -7,17 +7,7 @@
 ((doc, root) => {
   "use strict ";
 
-  let RegExps = {
-      email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
-      timeString: /^(2[0-3]|[01]?[0-9]):([0-5]?[0-9]):([0-5]?[0-9])$/,
-      dateString: /^(1[0-2]|0?[1-9])\/(3[01]|[12][0-9]|0?[1-9])\/(?:[0-9]{2})?[0-9]{2}$/,
-      hexadecimal: /^[0-9a-fA-F]+$/,
-      hexColor: /^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/,
-      ipv4: /^(?:(?:\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.){3}(?:\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])$/,
-      ipv6: /^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/,
-      ip: /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/
-    },
-    Ready = false,
+  let Ready = false,
     w = 'webcomponent',
     fw = 'fetch-' + w,
     sI = 'Isync',
@@ -33,15 +23,13 @@
   head.appendChild(CrafterStyles);
 
   function toInt(num) {
-    num = Number(num);
+    if (is.String(num)) num = Number(num);
     if (isNaN(num)) return 0;
     if (num === 0 || !isFinite(num)) return num;
     return (num > 0 ? 1 : -1) * Math.floor(Math.abs(num));
   }
 
-
   root.docfragFromString = html => doc.createRange().createContextualFragment(html);
-
 
   function toArr(val) {
     return [...val];
@@ -59,13 +47,18 @@
   function makeFn(fn, Args, totalArity) {
     let remainingArity = totalArity - Args.length;
     return is.Between(remainingArity, 10, 0) ? function () {
-      let args = toArr(arguments);
-      return doInvok(fn, Args.concat(args), totalArity);
+      return doInvok(fn, Args.concat(toArr(arguments)), totalArity);
     } : ((fn, args, arity) => {
       let a = [];
       forEach(arity, (v, i) => a.push('a' + i.toString()));
-      return (...args) => doInvok(fn, args.concat(a));
+      return function () {
+        return doInvok(fn, toArr(arguments).concat(a));
+      }
     })(fn, args, remainingArity);
+  }
+
+  function cutdot(str) {
+    return str.split('.');
   }
 
   // tests arguments with Array.prototype.every;
@@ -76,12 +69,17 @@
   }
 
   let def = ta(o => typeof o !== 'undefined'),
-    nil = ta(o => o === null);
-
-
-  function cutdot(str) {
-    return str.split('.');
-  }
+    nil = ta(o => o === null),
+    RegExps = {
+        email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
+        timeString: /^(2[0-3]|[01]?[0-9]):([0-5]?[0-9]):([0-5]?[0-9])$/,
+        dateString: /^(1[0-2]|0?[1-9])\/(3[01]|[12][0-9]|0?[1-9])\/(?:[0-9]{2})?[0-9]{2}$/,
+        hexadecimal: /^[0-9a-fA-F]+$/,
+        hexColor: /^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/,
+        ipv4: /^(?:(?:\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.){3}(?:\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])$/,
+        ipv6: /^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/,
+        ip: /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/
+      }
 
   /** is - Type Testing / Assertion */
   root.is = {
@@ -224,13 +222,25 @@
      * @param obj - variable to test
      */
     Set: ta(o => type(o, '[object Set]')),
+    /**
+     * Determine if a variable is of an arguments type
+     * @param obj - variables to test
+     */
     Args: val => !nil(val) && type(val, '[object Arguments]'),
     /**
      * Determine if a variable is a Symbol
-     * @param obj - variable to test
+     * @param obj - variables to test
      */
     Symbol: ta(obj => type(obj, '[object Symbol]')),
+    /**
+    * tests if a value is a single character
+    * @param {...string} values to test
+    */
     char: ta(val => is.String(val) && val.length === 1),
+    /**
+    * tests if a value is a space character
+    * @param {...string} values to test
+    */
     space: val => is.char(val) && (val.charCodeAt(0) > 8 && val.charCodeAt(0) < 14) || val.charCodeAt(0) === 32,
     /**
      * Determine if a String is UPPERCASE
@@ -367,6 +377,11 @@
      * @param val - variable / value to test
      */
     negative: val => is.Num(val) && val < 0,
+    /**
+    * tests that all parameters following the first are not the same as the first
+    * @param {*} value - inital value to compare all other params with
+    * @param {...*} arguments to compare with value
+    */
     neither(value) {
       return toArr(arguments).slice(1).every(val => value !== val);
     },
@@ -413,6 +428,10 @@
       let type = typeof val;
       return is.Func(val) ? RegExp('^' + String(Object.prototype.toString).replace(/[.*+?^${}()|[\]\/\\]/g, '\\$&').replace(/toString|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$').test(Function.prototype.toString.call(val)) : (val && type == 'object' && /^\[object .+?Constructor\]$/.test(val.toString)) || false;
     },
+    /**
+    * Tests where a dom element is an input of some sort
+    * @param {Element|Node} - element to test
+    */
     Input: element => ['INPUT', 'TEXTAREA'].some(i => element.tagName === i),
   };
 
@@ -431,7 +450,6 @@
    * @param {string} EventType - set the type of event to listen for example "click" or "scroll"
    * @param {Node|NodeList|window|document} Target - the Event Listener's target , can also be a NodeList to listen on multiple Nodes
    * @param {function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
-   * @param {...*} args - extra optional arguments/parameters to pass to the handler function
    * @returns Interface On,Off,Once
    */
   class EventHandler {
@@ -454,12 +472,15 @@
        * Change the Event type to listen for
        * {string} type - the name of the event/s to listen for
        */
-    Type(type) {
-        //  have you tried turning it on and off again? - THE IT CROWD
-        this.Off;
-        this.EventType = type.includes(',') ? type.split(',') : type;
-        this.On;
-        return this;
+    set Type(type) {
+      //  have you tried turning it on and off again? - THE IT CROWD
+      this.Off;
+      this.EventType = type.includes(',') ? type.split(',') : type;
+      this.On;
+      return this;
+    }
+    get Type() {
+        return this.EventType;
       }
       /**
        * De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
@@ -527,12 +548,22 @@
   /**
    * Easy way to get a DOM NodeList or NodeList within another DOM Node using CSS selectors
    * @param {string} selector - CSS selector to query the DOM Nodes with
-   * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
+   * @param {Node|NodeList|string=} element - Optional Node or CSS selector to search within insead of document
    */
   root.queryAll = (selector, element) => {
-      if (is.String(element)) element = query(element);
-      let list = is.Node(element) ? element.querySelectorAll(selector) : doc.querySelectorAll(selector);
-      return nil(list) ? list : toArr(list);
+      if (is.String(element)) element = queryAll(element);
+      let list;
+      if (Craft.len(element) !== 1 && (is.Array(element) || is.NodeList(element))) {
+        list = [];
+        forEach(element, el => {
+          if (is.String(el)) el = query(el);
+          if (is.Node(el)) {
+            el = queryAll(selector, el);
+            if (is.NodeList(el)) forEach(el, n => list.push(n));
+          }
+        });
+      } else list = is.NodeList(element) ? element[0].querySelectorAll(selector) : is.Node(element) ? element.querySelectorAll(selector) : doc.querySelectorAll(selector);
+      return is.Null(list) ? list : is.Array(list) ? list : toArr(list);
     }
     /**
      * Easy way to loop through Nodes in the DOM using a CSS Selector or a NodeList
@@ -549,7 +580,10 @@
   }
 
   function EventTypes(Target, within, listen) {
-    let etype = (type, fn) => new EventHandler(type, Target, fn, within)[listen || 'On'];
+    let etype = (type, fn) => new EventHandler(type, Target, fn, within)[listen || 'On'],
+      keypress = (fn, keycode) => (e, srcElement) => {
+        if (event.which == keycode || event.keyCode == keycode) fn(e, srcElement);
+      };
     return {
       Click: fn => etype('click', fn),
       Input: fn => etype('input', fn),
@@ -565,18 +599,10 @@
       Mouseenter: fn => etype('mouseenter', fn),
       Mouseleave: fn => etype('mouseleave', fn),
       Scroll: fn => etype('scroll', fn),
-      Enter: fn => etype('keydown', (e, srcElement) => {
-        if (event.which == 13 || event.keyCode == 13) fn(e, srcElement);
-      }),
-      Escape: fn => etype('keydown', (e, srcElement) => {
-        if (event.which == 27 || event.keyCode == 27) fn(e, srcElement);
-      }),
-      Delete: fn => etype('keydown', (e, srcElement) => {
-        if (event.which == 46 || event.keyCode == 46) fn(e, srcElement);
-      }),
-      Space: fn => etype('keydown', (e, srcElement) => {
-        if (event.which == 32 || event.keyCode == 32) fn(e, srcElement);
-      }),
+      Enter: fn => etype('keydown', keypress(fn, 13)),
+      Escape: fn => etype('keydown', keypress(fn, 27)),
+      Delete: fn => etype('keydown', keypress(fn, 46)),
+      Space: fn => etype('keydown', keypress(fn, 32)),
     };
   }
 
@@ -613,9 +639,9 @@
   function craftElement(name, inner, attributes, extraAttr, stringForm) {
     if (is.False(is.String(inner), is.Node(inner), is.Num(inner), is.Array(inner))) is.Object(inner) ? attributes = inner : inner = is.Func(inner) ? inner() : '';
     let newEl = dom(doc.createElement(name));
-    is.Array(inner) ? newEl.html(...inner) : newEl.html(inner);
+    is.Array(inner) ? newEl.html.apply(this,inner) : newEl.html(inner);
     if (is.Object(attributes) || is.String(attributes)) newEl.setAttr(attributes);
-    if (def(extraAttr)) newEl.setAttr(extraAttr);
+    if (is.Def(extraAttr)) newEl.setAttr(extraAttr);
     if (is.Bool(extraAttr)) stringForm = extraAttr;
     if (stringForm === true) newEl = newEl.outerHTML;
     return newEl;
@@ -642,7 +668,7 @@
        * add CSS style rules to NodeList
        * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
        */
-      css: styles => def(styles) ? forEach(elements, el => forEach(styles, (prop, key) => el.style[key] = prop)) : console.error('styles unefined'),
+      css: styles => is.Def(styles) ? forEach(elements, el => forEach(styles, (prop, key) => el.style[key] = prop)) : console.error('styles unefined'),
 
       addClass: (Class) => forEach(elements, el => el.classList.add(Class)),
       stripClass: (Class) => forEach(elements, el => el.classList.remove(Class)),
@@ -668,11 +694,14 @@
     }
   }
 
-  function Inner(type, el, args) {
-    type = is.Input(el) ? 'value' : type;
-    if (args.length === 0) return el[type];
-    args.length === 1 ? is.Node(args[0]) ? el.append(args[0]) : el[type] = args[0] : el[type] = args.map(val => is.Node(val) ? val.outerHTML : val).join('');
-    if (is.Node(el)) return el;
+  function Inner(type, el) {
+    return function () {
+      let args = toArr(arguments);
+      type = is.Input(el) ? 'value' : type;
+      if (args.length === 0) return el[type];
+      args.length === 1 ? is.Node(args[0]) ? el.append(args[0]) : el[type] = args[0] : el[type] = args.map(val => is.Node(val) ? val.outerHTML : val).join('');
+      return el;
+    }
   }
 
   function domManip(element, within) {
@@ -684,18 +713,15 @@
      * @memberof dom
      * @param {string=} sets the innerHTML value or when undefined gets the innerHTML value
      */
-    element.html = function () {
-      return Inner('innerHTML', element, toArr(arguments));
-    }
+    element.html = Inner('innerHTML', element);
+
 
     /**
      * changes or returns the textContent value of a Node
      * @memberof dom
      * @param {string=} sets the textContent value or when undefined gets the textContent value
      */
-    element.Text = function () {
-        return Inner('textContent', this, toArr(arguments));
-      }
+    element.Text = Inner('textContent', element);
       /**
        * replaces a Node with another node provided as a parameter/argument
        * @memberof dom
@@ -853,9 +879,9 @@
        * @param {string} Value of the Attribute to add/set
        */
     element.setAttr = function (attr, val) {
-        if (!def(val)) {
+        if (!is.Def(val)) {
           if (is.String(attr)) {
-            attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(Attr => def(Attr.split('=')[1]) ? this.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : this.setAttribute(Attr.split('=')[0], '')) :
+            attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(Attr => is.Def(Attr.split('=')[1]) ? this.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : this.setAttribute(Attr.split('=')[0], '')) :
               this.setAttribute(attr, '');
           } else if (is.Object(attr)) forEach(attr, (value, Attr) => this.setAttribute(Attr, value));
         } else this.setAttribute(attr, val);
@@ -900,7 +926,7 @@
      * @param {string|number=} pixel value to set
      */
     element.Width = function (pixels) {
-        let dp = def(pixels);
+        let dp = is.Def(pixels);
         if (dp) this.style.width = pixels;
         return dp ? this : this.getRect().width;
       }
@@ -910,7 +936,7 @@
        * @param {string|number=} pixel value to set
        */
     element.Height = function (pixels) {
-        let dp = def(pixels);
+        let dp = is.Def(pixels);
         if (dp) this.style.height = pixels;
         return dp ? this : this.getRect().height;
       }
@@ -952,7 +978,7 @@
     if (is.Input(element)) {
       element.SyncInput = (obj, key) => element[sI] = On(element).Input(e => Craft.setDeep(obj, key, element.value));
       element.disconectInputSync = () => {
-        if (def(element[sI])) {
+        if (is.Def(element[sI])) {
           element[sI].Off();
           delete element[sI];
         }
@@ -967,7 +993,7 @@
       });
     }
     element.unobserve = function () {
-      if (def(this['MutObserver'])) {
+      if (is.Def(this['MutObserver'])) {
         this.MutObserver.disconnect();
         delete this.MutObserver;
       }
@@ -983,20 +1009,21 @@
    * @name dom
    * @param {Node|NodeList|string=} element - optional Node, NodeList or CSS Selector that will be affected by the methods returned
    * @param {Node|string=} within - optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
+   * @param {boolean=} one - even if there are more than one elements matching a selector only return the first one
    */
   root.dom = (element, within, one) => {
     if (within === true) {
       one = within;
       within = null;
     }
-    if (one !== true) {
+    if (!one) {
       if (is.String(element)) element = queryAll(element, within);
       if (is.NodeList(element)) {
         if (element.length === 1) element = element[0];
         else return domNodeList(element);
       }
     } else if (is.String(element)) element = query(element, within);
-    if (is.Node(element)) return element['hasDOMmethods'] !== true ? domManip(element) : element;
+    if (is.Node(element)) return element['hasDOMmethods'] !== !0 ? domManip(element) : element;
     return Craft.dom;
   }
 
@@ -1043,6 +1070,7 @@
         forEach(len, i => arr.push(is.Func(val) ? val() : val));
         return arr;
       },
+      flatten:arr => (is.Arraylike(arr) ? toArr(arr) : is.Array(arr) ? arr : []).reduce((flat, toFlatten) => flat.concat(Array.isArray(toFlatten) ? flatten(toFlatten) : toFlatten), []),
       getDeep(obj, keychain) {
         keychain = keychain.replace(/\[(\w+)\]/g, '.$1');
         keychain = keychain.replace(/^\./, '');
@@ -1063,7 +1091,7 @@
           }
         }
         temp[path[path.length - 1]] = value;
-        if (returnObj === true) return obj;
+        if (!!returnObj) return obj;
       },
       forEachDeep(object, fn, path) {
         path = path || '';
@@ -1074,12 +1102,12 @@
           currentPath = path;
           nestable = false;
           is.Array(object) ? currentPath += `[${key}]` : !currentPath ? currentPath = key : currentPath += '.' + key;
-          nestable = fn(val, key, object, currentPath) !== false;
+          nestable = !!fn(val, key, object, currentPath);
           if (nestable && (is.Arr(val) || is.Object(val))) Craft.forEachDeep(val, fn, currentPath);
         }
       },
       concatObjects(host) {
-        for (let obj of Craft.omit(arguments, host)) forEach(Object.keys(obj), key => Object.defineProperty(host, key, Object.getOwnPropertyDescriptor(obj, key)));
+        forEach(Craft.omit(arguments,host),obj => forEach(Object.keys(obj), key => Object.defineProperty(host, key, Object.getOwnPropertyDescriptor(obj, key))));
         return host;
       },
       clone: val => is.Object(val) ? Object.create(val) : toArr(val),
@@ -1227,17 +1255,17 @@
        */
       Import() {
         let promises = [];
-        forEach(arguments, arg => arg.test === false ? Craft.loader.remove(arg.css || arg.script) : promises.push(Craft.loader.fetchImport({
+        forEach(arguments, arg => !!arg.test ? Craft.loader.remove(arg.css || arg.script) : promises.push(Craft.loader.fetchImport({
           url: arg.css || arg.script,
           type: arg.css ? 'css' : 'script',
-          exec: arg.execute !== false,
-          cache: arg.cache !== false,
+          exec: !!arg.execute,
+          cache: !!arg.cache,
           defer: arg.defer ? 'defer' : null,
           key: arg.key,
           expire: arg.expire
         })));
         return Promise.all(promises).then(src => src.map(obj => {
-          if (obj.exec) obj.type === 'css' ? CrafterStyles.innerHTML += '\n' + obj.data : head.appendChild(dom().script('', {
+          if (obj.exec) obj.type === 'css' ? CrafterStyles.textContent += '\n' + obj.data : head.appendChild(dom().script('', {
             src: Craft.URLfrom(obj.data),
             key: obj.key
           }, obj.defer))
@@ -1248,7 +1276,7 @@
             Craft.router.handlers.push({
               link: link,
               func: func
-            })
+            });
           },
           handle(route, func) {
             if (is.String(route)) {
@@ -1266,16 +1294,16 @@
             newtab ? open(link) : location = link
           },
           setTitle: title => doc.title = title,
-          setView(selector, view, position) {
-            dom(selector, true).html(view, position)
+          setView(selector, view) {
+            dom(selector, !0).html(view)
           },
           fetchView(selector, src, cache, position) {
-            let vh = dom(selector, true),
+            let vh = dom(selector, !0),
               srcpre = (`Cr:${src}`),
               view = localStorage.getItem(srcpre);
-            if (!def(vh.element)) return;
-            nil(view) ? fetch(src).then(res => res.text().then(txt => {
-              if (is.True(cache, nil(view))) localStorage.setItem(srcpre, txt);
+            if (!is.Def(vh.element)) return;
+            is.Null(view) ? fetch(src).then(res => res.text().then(txt => {
+              if (is.True(cache, is.Null(view))) localStorage.setItem(srcpre, txt);
               vh.html(txt, position);
             })).catch(err => console.error("fetchView: " + err)) : vh.html(view, position);
           },
@@ -1323,7 +1351,7 @@
         if (is.URL(address)) {
           let Options = {
             socket: null,
-            open: false,
+            open: !1,
             recievers: [],
             message: '',
             set send(msg) {
@@ -1437,14 +1465,15 @@
       debounce(wait, func, immediate) {
         let timeout;
         return function () {
+          let args = arguments;
           let later = () => {
               timeout = null;
-              if (!immediate) func.apply(this, arguments);
+              if (!immediate) func.apply(this, args);
             },
             callNow = immediate && !timeout;
           clearTimeout(timeout);
           timeout = setTimeout(later, wait);
-          if (callNow) func.apply(this, arguments);
+          if (callNow) func.apply(this, args);
         };
       },
       throttle(wait, func, options) {
@@ -1453,14 +1482,14 @@
           previous = 0;
         if (!options) options = {};
         let later = function () {
-          previous = options.leading === false ? 0 : Date.now();
+          previous = !options.leading ? 0 : Date.now();
           timeout = null;
           result = func.apply(context, args);
           if (!timeout) context = args = null;
         };
         return function () {
           let now = Date.now();
-          if (!previous && options.leading === false) previous = now;
+          if (is.False(previous,options.leading)) previous = now;
           let remaining = wait - (now - previous);
           context = this;
           args = arguments;
@@ -1472,7 +1501,7 @@
             previous = now;
             result = func.apply(context, args);
             if (!timeout) context = args = null;
-          } else if (!timeout && options.trailing === true) timeout = setTimeout(later, remaining);
+          } else if (!timeout && !!options.trailing) timeout = setTimeout(later, remaining);
           return result;
         };
       },
@@ -1486,7 +1515,7 @@
           return res;
         }
       },
-      css: (el, styles) => def(styles) && is.Node(el) ? forEach(styles, (prop, key) => el.style[key] = prop) : console.error('invalid args'),
+      css: (el, styles) => is.Def(styles) && is.Node(el) ? forEach(styles, (prop, key) => el.style[key] = prop) : console.error('invalid args'),
       hasCapitals: string => toArr(string).some(c => is.Uppercase(c)),
       OverrideFunction(funcName, Func, ContextObject) {
         let func = funcName.split(".").pop(),
@@ -1651,7 +1680,7 @@
       },
       model(name, func) {
         if (is.Func(func) && is.String(name)) {
-          if (!def(Craft.Models[name])) Craft.Models[name] = {
+          if (!is.Def(Craft.Models[name])) Craft.Models[name] = {
             func: func,
             scope: Craft.observable({})
           }
@@ -1659,9 +1688,9 @@
       },
       fromModel(key, val) {
         let cutkey = cutdot(key);
-        if (def(Craft.Models[cutkey[0]])) {
-          let type = (def(val) ? 'set' : 'get') + 'Deep';
-          return cutkey.length === 1 && !def(val) ? Craft.Models[cutkey[0]].scope : Craft[type](Craft.Models[cutkey[0]].scope, Craft.omit(cutkey, cutkey[0]).join('.'), val);
+        if (is.Def(Craft.Models[cutkey[0]])) {
+          let type = (is.Def(val) ? 'set' : 'get') + 'Deep';
+          return cutkey.length === 1 && !is.Def(val) ? Craft.Models[cutkey[0]].scope : Craft[type](Craft.Models[cutkey[0]].scope, Craft.omit(cutkey, cutkey[0]).join('.'), val);
         }
       },
       customAttribute(name, handle) {
@@ -1687,7 +1716,7 @@
         }
       },
       poll: (test, interval, timeout) => new Promise((pass, fail) => {
-        if (!def(timeout)) interval = timeout;
+        if (!is.Def(timeout)) interval = timeout;
         let bool = is.Bool(test) && test === true;
         let Interval = setInterval(() => {
           if (bool || (is.Func(test) && test() === true)) {
@@ -1754,7 +1783,7 @@
        * @param {object} config - Object containing all the element's lifecycle methods / extends and attached methods or properties
        */
       newComponent(tag, config) {
-        if (!def(config)) throw new Error(tag + ' : config undefined');
+        if (!is.Def(config)) throw new Error(tag + ' : config undefined');
         let element = Object.create(HTMLElement.prototype),
           settings = {};
 
@@ -1775,7 +1804,7 @@
       },
       disconectInputSync(input) {
         if (is.String(input)) input = query(input);
-        if (is.Node(input) && def(input[sI])) {
+        if (is.Node(input) && is.Def(input[sI])) {
           input[sI].Off();
           delete input[sI];
         }
@@ -1805,7 +1834,7 @@
   Craft.curry.adapt = fn => Craft.curry.adaptTo(fn.length, fn);
   Craft.loader.removeAll(true);
   Craft.mouse.eventhandler = On('mousemove', e => {
-    if (Craft.mouse.track === true) {
+    if (!!Craft.mouse.track) {
       Craft.mouse.x = e.clientX;
       Craft.mouse.y = e.clientY;
       Craft.mouse.over = e.target;
@@ -1815,16 +1844,16 @@
   Craft.newComponent(fw, {
     inserted() {
       let src = this.getAttribute('src');
-      if (!nil(src)) {
+      if (!is.Null(src)) {
         let wc = null,
           el = dom(this),
           cc = 'cache-component';
         if (!Craft.WebComponents.includes(src)) {
           if (el.hasAttr(cc)) {
             wc = localStorage.getItem(src);
-            if (!nil(wc)) Craft.createWebComponent(wc, src);
+            if (!is.Null(wc)) Craft.createWebComponent(wc, src);
           }
-          if (nil(wc)) fetch(src).then(res => res.json().then(webcomponent => {
+          if (is.Null(wc)) fetch(src).then(res => res.json().then(webcomponent => {
             CrafterStyles.innerHTML += webcomponent.css;
             head.appendChild(dom().script(webcomponent.js + `\nCraft.WebComponents.push('${src}')`, w + `=${webcomponent.name}`));
             if (el.getAttr(cc) == 'true') localStorage.setItem(src, JSON.stringify(webcomponent));
@@ -1844,12 +1873,12 @@
     try {
       let cutbind = cutdot(bind),
         prop = cutbind[cutbind.length - 1],
-        obj = def(Craft.Models[cutbind[0]]) ? Craft.Models[cutbind[0]].scope : Craft.getDeep(root, Craft.omit(cutbind, prop).join('.')) || CraftScope,
+        obj = is.Def(Craft.Models[cutbind[0]]) ? Craft.Models[cutbind[0]].scope : Craft.getDeep(root, Craft.omit(cutbind, prop).join('.')) || CraftScope,
         val = Craft.getDeep(obj, cutbind.length > 1 ? Craft.omit(cutbind, cutbind[0]).join('.') : prop);
 
-      def(val) ? el.html(val) : Craft.setDeep(obj, prop, el.html());
+      is.Def(val) ? el.html(val) : Craft.setDeep(obj, prop, el.html());
 
-      if (def(Object.getOwnPropertyDescriptor(obj, 'addListener')) && !is.Func(el['BindListener'])) {
+      if (is.Def(Object.getOwnPropertyDescriptor(obj, 'addListener')) && !is.Func(el['BindListener'])) {
         el.BindListener = (o, n, v) => el.html(v);
         obj.addListener(prop, el);
       }
@@ -1884,7 +1913,7 @@
         Ready = true;
         Craft.DomObserver = new MutationObserver(muts => forEach(muts, mut => {
           forEach(mut.addedNodes, el => {
-            if (def(el['hasAttribute'])) manageAttr(el);
+            if (el['hasAttribute']) manageAttr(el);
           });
           manageAttr(mut.target);
         }));

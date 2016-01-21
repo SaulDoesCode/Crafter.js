@@ -47,17 +47,7 @@ function _toConsumableArray(arr) {
 (function(doc, root) {
     "use strict ";
 
-    var RegExps = {
-            email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
-            timeString: /^(2[0-3]|[01]?[0-9]):([0-5]?[0-9]):([0-5]?[0-9])$/,
-            dateString: /^(1[0-2]|0?[1-9])\/(3[01]|[12][0-9]|0?[1-9])\/(?:[0-9]{2})?[0-9]{2}$/,
-            hexadecimal: /^[0-9a-fA-F]+$/,
-            hexColor: /^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/,
-            ipv4: /^(?:(?:\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.){3}(?:\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])$/,
-            ipv6: /^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/,
-            ip: /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/
-        },
-        Ready = false,
+    var Ready = false,
         w = 'webcomponent',
         fw = 'fetch-' + w,
         sI = 'Isync',
@@ -76,7 +66,7 @@ function _toConsumableArray(arr) {
     head.appendChild(CrafterStyles);
 
     function toInt(num) {
-        num = Number(num);
+        if (is.String(num)) num = Number(num);
         if (isNaN(num)) return 0;
         if (num === 0 || !isFinite(num)) return num;
         return (num > 0 ? 1 : -1) * Math.floor(Math.abs(num));
@@ -102,21 +92,20 @@ function _toConsumableArray(arr) {
     function makeFn(fn, Args, totalArity) {
         var remainingArity = totalArity - Args.length;
         return is.Between(remainingArity, 10, 0) ? function() {
-            var args = toArr(arguments);
-            return doInvok(fn, Args.concat(args), totalArity);
+            return doInvok(fn, Args.concat(toArr(arguments)), totalArity);
         } : (function(fn, args, arity) {
             var a = [];
             forEach(arity, function(v, i) {
                 return a.push('a' + i.toString());
             });
             return function() {
-                for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-                    args[_key] = arguments[_key];
-                }
-
-                return doInvok(fn, args.concat(a));
+                return doInvok(fn, toArr(arguments).concat(a));
             };
         })(fn, args, remainingArity);
+    }
+
+    function cutdot(str) {
+        return str.split('.');
     }
 
     // tests arguments with Array.prototype.every;
@@ -131,11 +120,17 @@ function _toConsumableArray(arr) {
         }),
         nil = ta(function(o) {
             return o === null;
-        });
-
-    function cutdot(str) {
-        return str.split('.');
-    }
+        }),
+        RegExps = {
+            email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
+            timeString: /^(2[0-3]|[01]?[0-9]):([0-5]?[0-9]):([0-5]?[0-9])$/,
+            dateString: /^(1[0-2]|0?[1-9])\/(3[01]|[12][0-9]|0?[1-9])\/(?:[0-9]{2})?[0-9]{2}$/,
+            hexadecimal: /^[0-9a-fA-F]+$/,
+            hexColor: /^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/,
+            ipv4: /^(?:(?:\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.){3}(?:\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])$/,
+            ipv6: /^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/,
+            ip: /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/
+        };
 
     /** is - Type Testing / Assertion */
     root.is = {
@@ -319,19 +314,31 @@ function _toConsumableArray(arr) {
         Set: ta(function(o) {
             return type(o, '[object Set]');
         }),
+        /**
+         * Determine if a variable is of an arguments type
+         * @param obj - variables to test
+         */
         Args: function Args(val) {
             return !nil(val) && type(val, '[object Arguments]');
         },
         /**
          * Determine if a variable is a Symbol
-         * @param obj - variable to test
+         * @param obj - variables to test
          */
         Symbol: ta(function(obj) {
             return type(obj, '[object Symbol]');
         }),
+        /**
+         * tests if a value is a single character
+         * @param {...string} values to test
+         */
         char: ta(function(val) {
             return is.String(val) && val.length === 1;
         }),
+        /**
+         * tests if a value is a space character
+         * @param {...string} values to test
+         */
         space: function space(val) {
             return is.char(val) && val.charCodeAt(0) > 8 && val.charCodeAt(0) < 14 || val.charCodeAt(0) === 32;
         },
@@ -522,6 +529,11 @@ function _toConsumableArray(arr) {
         negative: function negative(val) {
             return is.Num(val) && val < 0;
         },
+        /**
+         * tests that all parameters following the first are not the same as the first
+         * @param {*} value - inital value to compare all other params with
+         * @param {...*} arguments to compare with value
+         */
         neither: function neither(value) {
             return toArr(arguments).slice(1).every(function(val) {
                 return value !== val;
@@ -584,6 +596,10 @@ function _toConsumableArray(arr) {
             return is.Func(val) ? RegExp('^' + String(Object.prototype.toString).replace(/[.*+?^${}()|[\]\/\\]/g, '\\$&').replace(/toString|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$').test(Function.prototype.toString.call(val)) : val && type == 'object' && /^\[object .+?Constructor\]$/.test(val.toString) || false;
         },
 
+        /**
+         * Tests where a dom element is an input of some sort
+         * @param {Element|Node} - element to test
+         */
         Input: function Input(element) {
             return ['INPUT', 'TEXTAREA'].some(function(i) {
                 return element.tagName === i;
@@ -626,38 +642,41 @@ function _toConsumableArray(arr) {
          */
 
         _createClass(EventHandler, [{
-            key: 'Type',
+            key: 'On',
+            get: function get() {
+                    var _this = this;
 
-            /**
-             * Change the Event type to listen for
-             * {string} type - the name of the event/s to listen for
-             */
-            value: function Type(type) {
-                    //  have you tried turning it on and off again? - THE IT CROWD
-                    this.Off;
-                    this.EventType = type.includes(',') ? type.split(',') : type;
-                    this.On;
+                    is.Arr(this.EventType) ? forEach(this.Target, function(target) {
+                        return _this.EventType.forEach(function(evt) {
+                            return target.addEventListener(evt, _this.FuncWrapper);
+                        });
+                    }) : this.Target.forEach(function(target) {
+                        return target.addEventListener(_this.EventType, _this.FuncWrapper);
+                    });
                     return this;
+                }
+                /**
+                 * Change the Event type to listen for
+                 * {string} type - the name of the event/s to listen for
+                 */
+
+        }, {
+            key: 'Type',
+            set: function set(type) {
+                //  have you tried turning it on and off again? - THE IT CROWD
+                this.Off;
+                this.EventType = type.includes(',') ? type.split(',') : type;
+                this.On;
+                return this;
+            },
+            get: function get() {
+                    return this.EventType;
                 }
                 /**
                  * De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
                  * can still optionally be re-activated with On again
                  */
 
-        }, {
-            key: 'On',
-            get: function get() {
-                var _this = this;
-
-                is.Arr(this.EventType) ? forEach(this.Target, function(target) {
-                    return _this.EventType.forEach(function(evt) {
-                        return target.addEventListener(evt, _this.FuncWrapper);
-                    });
-                }) : this.Target.forEach(function(target) {
-                    return target.addEventListener(_this.EventType, _this.FuncWrapper);
-                });
-                return this;
-            }
         }, {
             key: 'Off',
             get: function get() {
@@ -753,12 +772,24 @@ function _toConsumableArray(arr) {
     /**
      * Easy way to get a DOM NodeList or NodeList within another DOM Node using CSS selectors
      * @param {string} selector - CSS selector to query the DOM Nodes with
-     * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
+     * @param {Node|NodeList|string=} element - Optional Node or CSS selector to search within insead of document
      */
     root.queryAll = function(selector, element) {
-        if (is.String(element)) element = query(element);
-        var list = is.Node(element) ? element.querySelectorAll(selector) : doc.querySelectorAll(selector);
-        return nil(list) ? list : toArr(list);
+        if (is.String(element)) element = queryAll(element);
+        var list = undefined;
+        if (Craft.len(element) !== 1 && (is.Array(element) || is.NodeList(element))) {
+            list = [];
+            forEach(element, function(el) {
+                if (is.String(el)) el = query(el);
+                if (is.Node(el)) {
+                    el = queryAll(selector, el);
+                    if (is.NodeList(el)) forEach(el, function(n) {
+                        return list.push(n);
+                    });
+                }
+            });
+        } else list = is.NodeList(element) ? element[0].querySelectorAll(selector) : is.Node(element) ? element.querySelectorAll(selector) : doc.querySelectorAll(selector);
+        return is.Null(list) ? list : is.Array(list) ? list : toArr(list);
     };
     /**
      * Easy way to loop through Nodes in the DOM using a CSS Selector or a NodeList
@@ -776,8 +807,13 @@ function _toConsumableArray(arr) {
 
     function EventTypes(Target, within, listen) {
         var etype = function etype(type, fn) {
-            return new EventHandler(type, Target, fn, within)[listen || 'On'];
-        };
+                return new EventHandler(type, Target, fn, within)[listen || 'On'];
+            },
+            keypress = function keypress(fn, keycode) {
+                return function(e, srcElement) {
+                    if (event.which == keycode || event.keyCode == keycode) fn(e, srcElement);
+                };
+            };
         return {
             Click: function Click(fn) {
                 return etype('click', fn);
@@ -822,24 +858,16 @@ function _toConsumableArray(arr) {
                 return etype('scroll', fn);
             },
             Enter: function Enter(fn) {
-                return etype('keydown', function(e, srcElement) {
-                    if (event.which == 13 || event.keyCode == 13) fn(e, srcElement);
-                });
+                return etype('keydown', keypress(fn, 13));
             },
             Escape: function Escape(fn) {
-                return etype('keydown', function(e, srcElement) {
-                    if (event.which == 27 || event.keyCode == 27) fn(e, srcElement);
-                });
+                return etype('keydown', keypress(fn, 27));
             },
             Delete: function Delete(fn) {
-                return etype('keydown', function(e, srcElement) {
-                    if (event.which == 46 || event.keyCode == 46) fn(e, srcElement);
-                });
+                return etype('keydown', keypress(fn, 46));
             },
             Space: function Space(fn) {
-                return etype('keydown', function(e, srcElement) {
-                    if (event.which == 32 || event.keyCode == 32) fn(e, srcElement);
-                });
+                return etype('keydown', keypress(fn, 32));
             }
         };
     }
@@ -873,13 +901,11 @@ function _toConsumableArray(arr) {
     };
 
     function craftElement(name, inner, attributes, extraAttr, stringForm) {
-        var _newEl;
-
         if (is.False(is.String(inner), is.Node(inner), is.Num(inner), is.Array(inner))) is.Object(inner) ? attributes = inner : inner = is.Func(inner) ? inner() : '';
         var newEl = dom(doc.createElement(name));
-        is.Array(inner) ? (_newEl = newEl).html.apply(_newEl, _toConsumableArray(inner)) : newEl.html(inner);
+        is.Array(inner) ? newEl.html.apply(this, inner) : newEl.html(inner);
         if (is.Object(attributes) || is.String(attributes)) newEl.setAttr(attributes);
-        if (def(extraAttr)) newEl.setAttr(extraAttr);
+        if (is.Def(extraAttr)) newEl.setAttr(extraAttr);
         if (is.Bool(extraAttr)) stringForm = extraAttr;
         if (stringForm === true) newEl = newEl.outerHTML;
         return newEl;
@@ -922,7 +948,7 @@ function _toConsumableArray(arr) {
              * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
              */
             css: function css(styles) {
-                return def(styles) ? forEach(elements, function(el) {
+                return is.Def(styles) ? forEach(elements, function(el) {
                     return forEach(styles, function(prop, key) {
                         return el.style[key] = prop;
                     });
@@ -973,13 +999,16 @@ function _toConsumableArray(arr) {
         };
     }
 
-    function Inner(type, el, args) {
-        type = is.Input(el) ? 'value' : type;
-        if (args.length === 0) return el[type];
-        args.length === 1 ? is.Node(args[0]) ? el.append(args[0]) : el[type] = args[0] : el[type] = args.map(function(val) {
-            return is.Node(val) ? val.outerHTML : val;
-        }).join('');
-        if (is.Node(el)) return el;
+    function Inner(type, el) {
+        return function() {
+            var args = toArr(arguments);
+            type = is.Input(el) ? 'value' : type;
+            if (args.length === 0) return el[type];
+            args.length === 1 ? is.Node(args[0]) ? el.append(args[0]) : el[type] = args[0] : el[type] = args.map(function(val) {
+                return is.Node(val) ? val.outerHTML : val;
+            }).join('');
+            return el;
+        };
     }
 
     function domManip(element, within) {
@@ -991,18 +1020,14 @@ function _toConsumableArray(arr) {
          * @memberof dom
          * @param {string=} sets the innerHTML value or when undefined gets the innerHTML value
          */
-        element.html = function() {
-            return Inner('innerHTML', element, toArr(arguments));
-        };
+        element.html = Inner('innerHTML', element);
 
         /**
          * changes or returns the textContent value of a Node
          * @memberof dom
          * @param {string=} sets the textContent value or when undefined gets the textContent value
          */
-        element.Text = function() {
-            return Inner('textContent', this, toArr(arguments));
-        };
+        element.Text = Inner('textContent', element);
         /**
          * replaces a Node with another node provided as a parameter/argument
          * @memberof dom
@@ -1231,10 +1256,10 @@ function _toConsumableArray(arr) {
         element.setAttr = function(attr, val) {
             var _this11 = this;
 
-            if (!def(val)) {
+            if (!is.Def(val)) {
                 if (is.String(attr)) {
                     attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(function(Attr) {
-                        return def(Attr.split('=')[1]) ? _this11.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : _this11.setAttribute(Attr.split('=')[0], '');
+                        return is.Def(Attr.split('=')[1]) ? _this11.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : _this11.setAttribute(Attr.split('=')[0], '');
                     }) : this.setAttribute(attr, '');
                 } else if (is.Object(attr)) forEach(attr, function(value, Attr) {
                     return _this11.setAttribute(Attr, value);
@@ -1289,7 +1314,7 @@ function _toConsumableArray(arr) {
          * @param {string|number=} pixel value to set
          */
         element.Width = function(pixels) {
-            var dp = def(pixels);
+            var dp = is.Def(pixels);
             if (dp) this.style.width = pixels;
             return dp ? this : this.getRect().width;
         };
@@ -1299,7 +1324,7 @@ function _toConsumableArray(arr) {
          * @param {string|number=} pixel value to set
          */
         element.Height = function(pixels) {
-            var dp = def(pixels);
+            var dp = is.Def(pixels);
             if (dp) this.style.height = pixels;
             return dp ? this : this.getRect().height;
         };
@@ -1349,7 +1374,7 @@ function _toConsumableArray(arr) {
                 });
             };
             element.disconectInputSync = function() {
-                if (def(element[sI])) {
+                if (is.Def(element[sI])) {
                     element[sI].Off();
                     delete element[sI];
                 }
@@ -1368,7 +1393,7 @@ function _toConsumableArray(arr) {
             });
         };
         element.unobserve = function() {
-            if (def(this['MutObserver'])) {
+            if (is.Def(this['MutObserver'])) {
                 this.MutObserver.disconnect();
                 delete this.MutObserver;
             }
@@ -1389,14 +1414,14 @@ function _toConsumableArray(arr) {
             one = within;
             within = null;
         }
-        if (one !== true) {
+        if (!one) {
             if (is.String(element)) element = queryAll(element, within);
             if (is.NodeList(element)) {
                 if (element.length === 1) element = element[0];
                 else return domNodeList(element);
             }
         } else if (is.String(element)) element = query(element, within);
-        if (is.Node(element)) return element['hasDOMmethods'] !== true ? domManip(element) : element;
+        if (is.Node(element)) return element['hasDOMmethods'] !== !0 ? domManip(element) : element;
         return Craft.dom;
     };
 
@@ -1448,6 +1473,22 @@ function _toConsumableArray(arr) {
             });
             return arr;
         },
+
+        flatten: (function(_flatten) {
+            function flatten(_x4) {
+                return _flatten.apply(this, arguments);
+            }
+
+            flatten.toString = function() {
+                return _flatten.toString();
+            };
+
+            return flatten;
+        })(function(arr) {
+            return (is.Arraylike(arr) ? toArr(arr) : is.Array(arr) ? arr : []).reduce(function(flat, toFlatten) {
+                return flat.concat(Array.isArray(toFlatten) ? flatten(toFlatten) : toFlatten);
+            }, []);
+        }),
         getDeep: function getDeep(obj, keychain) {
             keychain = keychain.replace(/\[(\w+)\]/g, '.$1');
             keychain = keychain.replace(/^\./, '');
@@ -1470,7 +1511,7 @@ function _toConsumableArray(arr) {
                 }
             }
             temp[path[path.length - 1]] = value;
-            if (returnObj === true) return obj;
+            if (!!returnObj) return obj;
         },
         forEachDeep: function forEachDeep(object, fn, path) {
             path = path || '';
@@ -1483,41 +1524,16 @@ function _toConsumableArray(arr) {
                 currentPath = path;
                 nestable = false;
                 is.Array(object) ? currentPath += '[' + key + ']' : !currentPath ? currentPath = key : currentPath += '.' + key;
-                nestable = fn(val, key, object, currentPath) !== false;
+                nestable = !!fn(val, key, object, currentPath);
                 if (nestable && (is.Arr(val) || is.Object(val))) Craft.forEachDeep(val, fn, currentPath);
             }
         },
         concatObjects: function concatObjects(host) {
-            var _iteratorNormalCompletion = true,
-                _didIteratorError = false,
-                _iteratorError = undefined;
-
-            try {
-                var _loop = function _loop() {
-                    var obj = _step.value;
-                    forEach(Object.keys(obj), function(key) {
-                        return Object.defineProperty(host, key, Object.getOwnPropertyDescriptor(obj, key));
-                    });
-                };
-
-                for (var _iterator = Craft.omit(arguments, host)[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-                    _loop();
-                }
-            } catch (err) {
-                _didIteratorError = true;
-                _iteratorError = err;
-            } finally {
-                try {
-                    if (!_iteratorNormalCompletion && _iterator.return) {
-                        _iterator.return();
-                    }
-                } finally {
-                    if (_didIteratorError) {
-                        throw _iteratorError;
-                    }
-                }
-            }
-
+            forEach(Craft.omit(arguments, host), function(obj) {
+                return forEach(Object.keys(obj), function(key) {
+                    return Object.defineProperty(host, key, Object.getOwnPropertyDescriptor(obj, key));
+                });
+            });
             return host;
         },
 
@@ -1726,11 +1742,11 @@ function _toConsumableArray(arr) {
         Import: function Import() {
             var promises = [];
             forEach(arguments, function(arg) {
-                return arg.test === false ? Craft.loader.remove(arg.css || arg.script) : promises.push(Craft.loader.fetchImport({
+                return !!arg.test ? Craft.loader.remove(arg.css || arg.script) : promises.push(Craft.loader.fetchImport({
                     url: arg.css || arg.script,
                     type: arg.css ? 'css' : 'script',
-                    exec: arg.execute !== false,
-                    cache: arg.cache !== false,
+                    exec: !!arg.execute,
+                    cache: !!arg.cache,
                     defer: arg.defer ? 'defer' : null,
                     key: arg.key,
                     expire: arg.expire
@@ -1738,7 +1754,7 @@ function _toConsumableArray(arr) {
             });
             return Promise.all(promises).then(function(src) {
                 return src.map(function(obj) {
-                    if (obj.exec) obj.type === 'css' ? CrafterStyles.innerHTML += '\n' + obj.data : head.appendChild(dom().script('', {
+                    if (obj.exec) obj.type === 'css' ? CrafterStyles.textContent += '\n' + obj.data : head.appendChild(dom().script('', {
                         src: Craft.URLfrom(obj.data),
                         key: obj.key
                     }, obj.defer));
@@ -1777,7 +1793,7 @@ function _toConsumableArray(arr) {
                 });
             },
             open: (function(_open) {
-                function open(_x4, _x5) {
+                function open(_x5, _x6) {
                     return _open.apply(this, arguments);
                 }
 
@@ -1793,17 +1809,17 @@ function _toConsumableArray(arr) {
             setTitle: function setTitle(title) {
                 return doc.title = title;
             },
-            setView: function setView(selector, view, position) {
-                dom(selector, true).html(view, position);
+            setView: function setView(selector, view) {
+                dom(selector, !0).html(view);
             },
             fetchView: function fetchView(selector, src, cache, position) {
-                var vh = dom(selector, true),
+                var vh = dom(selector, !0),
                     srcpre = 'Cr:' + src,
                     view = localStorage.getItem(srcpre);
-                if (!def(vh.element)) return;
-                nil(view) ? fetch(src).then(function(res) {
+                if (!is.Def(vh.element)) return;
+                is.Null(view) ? fetch(src).then(function(res) {
                     return res.text().then(function(txt) {
-                        if (is.True(cache, nil(view))) localStorage.setItem(srcpre, txt);
+                        if (is.True(cache, is.Null(view))) localStorage.setItem(srcpre, txt);
                         vh.html(txt, position);
                     });
                 }).catch(function(err) {
@@ -1861,10 +1877,10 @@ function _toConsumableArray(arr) {
             }
             if (!address.includes('ws://')) address = (location.protocol === 'http:' ? 'ws://' : 'wss://') + address;
             if (is.URL(address)) {
-                var _ret3 = (function() {
+                var _ret2 = (function() {
                     var Options = {
                             socket: null,
-                            open: false,
+                            open: !1,
                             recievers: [],
                             message: '',
                             set send(msg) {
@@ -1933,7 +1949,7 @@ function _toConsumableArray(arr) {
                     };
                 })();
 
-                if ((typeof _ret3 === 'undefined' ? 'undefined' : _typeof(_ret3)) === "object") return _ret3.v;
+                if ((typeof _ret2 === 'undefined' ? 'undefined' : _typeof(_ret2)) === "object") return _ret2.v;
             }
         },
         observable: function observable(obj) {
@@ -2010,16 +2026,16 @@ function _toConsumableArray(arr) {
             var timeout = undefined;
             return function() {
                 var _this13 = this,
-                    _arguments = arguments,
+                    args = arguments,
                     later = function later() {
                         timeout = null;
-                        if (!immediate) func.apply(_this13, _arguments);
+                        if (!immediate) func.apply(_this13, args);
                     },
                     callNow = immediate && !timeout;
 
                 clearTimeout(timeout);
                 timeout = setTimeout(later, wait);
-                if (callNow) func.apply(this, arguments);
+                if (callNow) func.apply(this, args);
             };
         },
         throttle: function throttle(wait, func, options) {
@@ -2030,14 +2046,14 @@ function _toConsumableArray(arr) {
                 previous = 0;
             if (!options) options = {};
             var later = function later() {
-                previous = options.leading === false ? 0 : Date.now();
+                previous = !options.leading ? 0 : Date.now();
                 timeout = null;
                 result = func.apply(context, args);
                 if (!timeout) context = args = null;
             };
             return function() {
                 var now = Date.now();
-                if (!previous && options.leading === false) previous = now;
+                if (is.False(previous, options.leading)) previous = now;
                 var remaining = wait - (now - previous);
                 context = this;
                 args = arguments;
@@ -2049,7 +2065,7 @@ function _toConsumableArray(arr) {
                     previous = now;
                     result = func.apply(context, args);
                     if (!timeout) context = args = null;
-                } else if (!timeout && options.trailing === true) timeout = setTimeout(later, remaining);
+                } else if (!timeout && !!options.trailing) timeout = setTimeout(later, remaining);
                 return result;
             };
         },
@@ -2065,7 +2081,7 @@ function _toConsumableArray(arr) {
         },
 
         css: function css(el, styles) {
-            return def(styles) && is.Node(el) ? forEach(styles, function(prop, key) {
+            return is.Def(styles) && is.Node(el) ? forEach(styles, function(prop, key) {
                 return el.style[key] = prop;
             }) : console.error('invalid args');
         },
@@ -2291,7 +2307,7 @@ function _toConsumableArray(arr) {
         },
         model: function model(name, func) {
             if (is.Func(func) && is.String(name)) {
-                if (!def(Craft.Models[name])) Craft.Models[name] = {
+                if (!is.Def(Craft.Models[name])) Craft.Models[name] = {
                     func: func,
                     scope: Craft.observable({})
                 };
@@ -2299,9 +2315,9 @@ function _toConsumableArray(arr) {
         },
         fromModel: function fromModel(key, val) {
             var cutkey = cutdot(key);
-            if (def(Craft.Models[cutkey[0]])) {
-                var _type = (def(val) ? 'set' : 'get') + 'Deep';
-                return cutkey.length === 1 && !def(val) ? Craft.Models[cutkey[0]].scope : Craft[_type](Craft.Models[cutkey[0]].scope, Craft.omit(cutkey, cutkey[0]).join('.'), val);
+            if (is.Def(Craft.Models[cutkey[0]])) {
+                var _type = (is.Def(val) ? 'set' : 'get') + 'Deep';
+                return cutkey.length === 1 && !is.Def(val) ? Craft.Models[cutkey[0]].scope : Craft[_type](Craft.Models[cutkey[0]].scope, Craft.omit(cutkey, cutkey[0]).join('.'), val);
             }
         },
         customAttribute: function customAttribute(name, handle) {
@@ -2334,7 +2350,7 @@ function _toConsumableArray(arr) {
 
         poll: function poll(test, interval, timeout) {
             return new Promise(function(pass, fail) {
-                if (!def(timeout)) interval = timeout;
+                if (!is.Def(timeout)) interval = timeout;
                 var bool = is.Bool(test) && test === true,
                     Interval = setInterval(function() {
                         if (bool || is.Func(test) && test() === true) {
@@ -2411,7 +2427,7 @@ function _toConsumableArray(arr) {
          * @param {object} config - Object containing all the element's lifecycle methods / extends and attached methods or properties
          */
         newComponent: function newComponent(tag, config) {
-            if (!def(config)) throw new Error(tag + ' : config undefined');
+            if (!is.Def(config)) throw new Error(tag + ' : config undefined');
             var element = Object.create(HTMLElement.prototype),
                 settings = {};
 
@@ -2434,7 +2450,7 @@ function _toConsumableArray(arr) {
         },
         disconectInputSync: function disconectInputSync(input) {
             if (is.String(input)) input = query(input);
-            if (is.Node(input) && def(input[sI])) {
+            if (is.Node(input) && is.Def(input[sI])) {
                 input[sI].Off();
                 delete input[sI];
             }
@@ -2472,8 +2488,8 @@ function _toConsumableArray(arr) {
     });
     Craft.curry.adaptTo = Craft.curry(function(num, fn) {
         return Craft.curry.to(num, function(context) {
-            for (var _len2 = arguments.length, args = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-                args[_key2 - 1] = arguments[_key2];
+            for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+                args[_key - 1] = arguments[_key];
             }
 
             return fn.apply(null, args.slice(1).concat(context));
@@ -2484,7 +2500,7 @@ function _toConsumableArray(arr) {
     };
     Craft.loader.removeAll(true);
     Craft.mouse.eventhandler = On('mousemove', function(e) {
-        if (Craft.mouse.track === true) {
+        if (!!Craft.mouse.track) {
             Craft.mouse.x = e.clientX;
             Craft.mouse.y = e.clientY;
             Craft.mouse.over = e.target;
@@ -2496,7 +2512,7 @@ function _toConsumableArray(arr) {
             var _this14 = this,
                 src = this.getAttribute('src');
 
-            if (!nil(src)) {
+            if (!is.Null(src)) {
                 (function() {
                     var wc = null,
                         el = dom(_this14),
@@ -2504,16 +2520,16 @@ function _toConsumableArray(arr) {
                     if (!Craft.WebComponents.includes(src)) {
                         if (el.hasAttr(cc)) {
                             wc = localStorage.getItem(src);
-                            if (!nil(wc)) Craft.createWebComponent(wc, src);
+                            if (!is.Null(wc)) Craft.createWebComponent(wc, src);
                         }
-                        if (nil(wc)) fetch(src).then(function(res) {
+                        if (is.Null(wc)) fetch(src).then(function(res) {
                             return res.json().then(function(webcomponent) {
                                 CrafterStyles.innerHTML += webcomponent.css;
                                 head.appendChild(dom().script(webcomponent.js + ('\nCraft.WebComponents.push(\'' + src + '\')'), w + ('=' + webcomponent.name)));
                                 if (el.getAttr(cc) == 'true') localStorage.setItem(src, JSON.stringify(webcomponent));
                             });
                         }).catch(function(err) {
-                            return console.error(err + " couldn't load " + w);
+                            throw new Error(err + " couldn't load " + w);
                         });
                     }
                     el.removeAfter(3500);
@@ -2532,18 +2548,18 @@ function _toConsumableArray(arr) {
         try {
             var cutbind = cutdot(bind),
                 prop = cutbind[cutbind.length - 1],
-                _obj = def(Craft.Models[cutbind[0]]) ? Craft.Models[cutbind[0]].scope : Craft.getDeep(root, Craft.omit(cutbind, prop).join('.')) || CraftScope,
-                val = Craft.getDeep(_obj, cutbind.length > 1 ? Craft.omit(cutbind, cutbind[0]).join('.') : prop);
+                obj = is.Def(Craft.Models[cutbind[0]]) ? Craft.Models[cutbind[0]].scope : Craft.getDeep(root, Craft.omit(cutbind, prop).join('.')) || CraftScope,
+                val = Craft.getDeep(obj, cutbind.length > 1 ? Craft.omit(cutbind, cutbind[0]).join('.') : prop);
 
-            def(val) ? el.html(val) : Craft.setDeep(_obj, prop, el.html());
+            is.Def(val) ? el.html(val) : Craft.setDeep(obj, prop, el.html());
 
-            if (def(Object.getOwnPropertyDescriptor(_obj, 'addListener')) && !is.Func(el['BindListener'])) {
+            if (is.Def(Object.getOwnPropertyDescriptor(obj, 'addListener')) && !is.Func(el['BindListener'])) {
                 el.BindListener = function(o, n, v) {
                     return el.html(v);
                 };
-                _obj.addListener(prop, el);
+                obj.addListener(prop, el);
             }
-            if (is.Input(el)) el.SyncInput(_obj, cutbind.length == 1 ? cutbind[0] : Craft.omit(cutbind, cutbind[0]).join('.'));
+            if (is.Input(el)) el.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : Craft.omit(cutbind, cutbind[0]).join('.'));
         } catch (e) {
             console.log(e);
             console.warn("couldn't bind :", el);
@@ -2576,7 +2592,7 @@ function _toConsumableArray(arr) {
             Craft.DomObserver = new MutationObserver(function(muts) {
                 return forEach(muts, function(mut) {
                     forEach(mut.addedNodes, function(el) {
-                        if (def(el['hasAttribute'])) manageAttr(el);
+                        if (el['hasAttribute']) manageAttr(el);
                     });
                     manageAttr(mut.target);
                 });
