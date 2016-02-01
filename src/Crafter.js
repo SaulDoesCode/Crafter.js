@@ -1070,7 +1070,7 @@
         forEach(len, i => arr.push(is.Func(val) ? val() : val));
         return arr;
       },
-      flatten:arr => (is.Arraylike(arr) ? toArr(arr) : is.Array(arr) ? arr : []).reduce((flat, toFlatten) => flat.concat(Array.isArray(toFlatten) ? flatten(toFlatten) : toFlatten), []),
+      flatten:arr => (is.Arraylike(arr) ? toArr(arr) : is.Array(arr) ? arr : []).reduce((flat, toFlatten) => flat.concat(is.Array(toFlatten) ? flatten(toFlatten) : toFlatten), []),
       getDeep(obj, keychain) {
         keychain = keychain.replace(/\[(\w+)\]/g, '.$1');
         keychain = keychain.replace(/^\./, '');
