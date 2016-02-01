@@ -755,6 +755,15 @@ Craft is Crafter.js's Core containing most functionality.
 -   `newArr`  
 -   `func`  
 
+## array
+
+Generates arrays of a set length , with values or values generated from functions
+
+**Parameters**
+
+-   `len` **Number** the integer length of the array to be generated
+-   `val` **...function or Any** value to set at each index , multiple value params after lenth will generate nested 2d arrays
+
 ## arrDiff
 
 Converts an Array to an Object
@@ -878,7 +887,7 @@ in the absence of parameters the function will return methods for created elemen
 
 -   `element` **[Node or NodeList or string]** optional Node, NodeList or CSS Selector that will be affected by the methods returned
 -   `within` **[Node or string]** optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
--   `one`  
+-   `one` **[boolean]** even if there are more than one elements matching a selector only return the first one
 
 # On
 
@@ -986,17 +995,21 @@ Change the Event type to listen for
 
 # forEach
 
-Easy way to loop through Collections and Objects
+Easy way to loop through Collections and Objects and Numbers as well
 
 **Parameters**
 
--   `iterable` **Array or Object or NodeList** any collection that is either an Object or has a .length value
+-   `iterable` **Array or Object or NodeList or Number** any collection that is either an Object or has a .length value
 -   `func` **function** function called on each iteration -> "function( value , indexOrKey ) {...}"
 
 # getAttr
 
 Gets the value of an attribute , short alias for element.getAttribute
 {string} attr - name of attribute to get
+
+# hide
+
+Hides and element by setting display none
 
 # move
 
@@ -1017,6 +1030,10 @@ Remove the element after a time in milliseconds
 **Parameters**
 
 -   `time` **[number]** time to wait before self destructing the element
+
+# show
+
+Shows and element by setting display none
 
 # toggleAttr
 
