@@ -517,8 +517,8 @@
   }
 
   /**
-   * Easy way to loop through Collections and Objects
-   * @param {Array|Object|NodeList} iterable - any collection that is either an Object or has a .length value
+   * Easy way to loop through Collections and Objects and Numbers as well
+   * @param {Array|Object|NodeList|Number} iterable - any collection that is either an Object or has a .length value
    * @param {function} func - function called on each iteration -> "function( value , indexOrKey ) {...}"
    */
   function forEach(iterable, func) {
@@ -892,11 +892,17 @@
        * {string} attr - name of attribute to get
        */
     element.getAttr = element.getAttribute;
-
+    /**
+    * Hides and element by setting display none
+    * @todo : Smooth animation
+    */
     element.hide = () => element.css({
       display: 'none'
     });
-
+    /**
+    * Shows and element by setting display none
+    * @todo : Smooth animation
+    */
     element.show = () => element.css({
       display: ''
     });
@@ -1065,9 +1071,21 @@
           if (arr1[i] !== arr2[i]) return false;
         return true;
       },
-      array(len, val) {
+      /**
+      * Generates arrays of a set length , with values or values generated from functions
+      * @param {Number} len - the integer length of the array to be generated
+      * @param {...function|*} val - value to set at each index , multiple value params after lenth will generate nested 2d arrays
+      */
+      array(len, ...val) {
         let arr = [];
-        forEach(len, i => arr.push(is.Func(val) ? val() : val));
+        if(val.length === 1) {
+          val = val[0];
+          forEach(len, i => arr.push(is.Func(val) ? val() : val));
+        } else forEach(val,v => {
+          let temp = [];
+          forEach(len, i => temp.push(is.Func(v) ? val() : v));
+          arr.push(temp);
+        });
         return arr;
       },
       flatten:arr => (is.Arraylike(arr) ? toArr(arr) : is.Array(arr) ? arr : []).reduce((flat, toFlatten) => flat.concat(is.Array(toFlatten) ? flatten(toFlatten) : toFlatten), []),
