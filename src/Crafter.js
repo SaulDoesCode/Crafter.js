@@ -1088,15 +1088,32 @@
         });
         return arr;
       },
+      /**
+      * Flattens any multidimentional array or arraylike object
+      *  @param {Array|Arraylike} arr - multidimentional array(like) object to flatten
+      */
       flatten:arr => (is.Arraylike(arr) ? toArr(arr) : is.Array(arr) ? arr : []).reduce((flat, toFlatten) => flat.concat(is.Array(toFlatten) ? flatten(toFlatten) : toFlatten), []),
-      getDeep(obj, keychain) {
-        keychain = keychain.replace(/\[(\w+)\]/g, '.$1');
-        keychain = keychain.replace(/^\./, '');
+      /**
+      * Gets a value from inside an object using a reference string
+      * example Craft.getDeep(myObj,'Company.employees[16].person.name') -> Mr Smithers or Craft.getDeep(anObj,'Colony.Queen.brood') -> [...ants]
+      * @param {Object} obj - the object to extract values from
+      * @param {string} path - string to reference value by simple dot notation or array refference example Craft.getDeep({ a : { b : [1,2,3] }},"a.b[2]") -> 3
+      */
+      getDeep(obj, path) {
+        path = path.replace(/\[(\w+)\]/g, '.$1');
+        path = path.replace(/^\./, '');
         try {
-          for (let i = 0, a = keychain.split('.'); i < a.length; ++i) a[i] in obj ? obj = obj[a[i]] : obj = undefined;
+          for (let i = 0, a = path.split('.'); i < a.length; ++i) a[i] in obj ? obj = obj[a[i]] : obj = undefined;
         } catch (e) {}
         return obj;
       },
+      /**
+      * Craft.setDeep  is similar to getDeep it uses a string to reference to a value
+      * @param {Object} obj - the object to set values on
+      * @param {string} path - string to reference value by simple dot notation
+      * @param {*} value - value to set
+      * @param {boolean} returnObj - should the function return the object
+      */
       setDeep(obj, path, value, returnObj) {
         path = path.split('.');
         let temp = obj;

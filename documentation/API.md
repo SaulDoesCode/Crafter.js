@@ -784,6 +784,14 @@ Part of Crafter.js's own WebComponent format (.wc) it takes a json object that c
 -   `wc`  
 -   `src`  
 
+## flatten
+
+Flattens any multidimentional array or arraylike object
+
+**Parameters**
+
+-   `arr` **Array or Arraylike** multidimentional array(like) object to flatten
+
 ## GenUID
 
 similar to Craft.randomString in that it generates a unique string , in this case a Unique ID with random alphanumeric strings separated by hyphens
@@ -792,6 +800,16 @@ example 0ebf-c7d2-ef81-2667-08ef-4cde
 **Parameters**
 
 -   `len` **[number]** optional length of uid sections
+
+## getDeep
+
+Gets a value from inside an object using a reference string
+example Craft.getDeep(myObj,'Company.employees[16].person.name') -> Mr Smithers or Craft.getDeep(anObj,'Colony.Queen.brood') -> [...ants]
+
+**Parameters**
+
+-   `obj` **Object** the object to extract values from
+-   `path` **string** string to reference value by simple dot notation or array refference example Craft.getDeep({ a : { b : [1,2,3] }},"a.b[2]") -> 3
 
 ## Import
 
@@ -831,6 +849,17 @@ Compares two arrays and determines if they are the same array
 
 -   `arr1` **Array** array one
 -   `arr2` **Array** array two
+
+## setDeep
+
+Craft.setDeep  is similar to getDeep it uses a string to reference to a value
+
+**Parameters**
+
+-   `obj` **Object** the object to set values on
+-   `path` **string** string to reference value by simple dot notation
+-   `value` **Any** value to set
+-   `returnObj` **boolean** should the function return the object
 
 ## Socket
 
