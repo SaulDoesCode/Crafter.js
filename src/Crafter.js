@@ -71,15 +71,15 @@
   let def = ta(o => typeof o !== 'undefined'),
     nil = ta(o => o === null),
     RegExps = {
-        email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
-        timeString: /^(2[0-3]|[01]?[0-9]):([0-5]?[0-9]):([0-5]?[0-9])$/,
-        dateString: /^(1[0-2]|0?[1-9])\/(3[01]|[12][0-9]|0?[1-9])\/(?:[0-9]{2})?[0-9]{2}$/,
-        hexadecimal: /^[0-9a-fA-F]+$/,
-        hexColor: /^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/,
-        ipv4: /^(?:(?:\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.){3}(?:\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])$/,
-        ipv6: /^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/,
-        ip: /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/
-      }
+      email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
+      timeString: /^(2[0-3]|[01]?[0-9]):([0-5]?[0-9]):([0-5]?[0-9])$/,
+      dateString: /^(1[0-2]|0?[1-9])\/(3[01]|[12][0-9]|0?[1-9])\/(?:[0-9]{2})?[0-9]{2}$/,
+      hexadecimal: /^[0-9a-fA-F]+$/,
+      hexColor: /^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/,
+      ipv4: /^(?:(?:\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.){3}(?:\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])$/,
+      ipv6: /^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/,
+      ip: /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/
+    }
 
   /** is - Type Testing / Assertion */
   root.is = {
@@ -233,14 +233,14 @@
      */
     Symbol: ta(obj => type(obj, '[object Symbol]')),
     /**
-    * tests if a value is a single character
-    * @param {...string} values to test
-    */
+     * tests if a value is a single character
+     * @param {...string} values to test
+     */
     char: ta(val => is.String(val) && val.length === 1),
     /**
-    * tests if a value is a space character
-    * @param {...string} values to test
-    */
+     * tests if a value is a space character
+     * @param {...string} values to test
+     */
     space: val => is.char(val) && (val.charCodeAt(0) > 8 && val.charCodeAt(0) < 14) || val.charCodeAt(0) === 32,
     /**
      * Determine if a String is UPPERCASE
@@ -378,10 +378,10 @@
      */
     negative: val => is.Num(val) && val < 0,
     /**
-    * tests that all parameters following the first are not the same as the first
-    * @param {*} value - inital value to compare all other params with
-    * @param {...*} arguments to compare with value
-    */
+     * tests that all parameters following the first are not the same as the first
+     * @param {*} value - inital value to compare all other params with
+     * @param {...*} arguments to compare with value
+     */
     neither(value) {
       return toArr(arguments).slice(1).every(val => value !== val);
     },
@@ -429,9 +429,9 @@
       return is.Func(val) ? RegExp('^' + String(Object.prototype.toString).replace(/[.*+?^${}()|[\]\/\\]/g, '\\$&').replace(/toString|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$').test(Function.prototype.toString.call(val)) : (val && type == 'object' && /^\[object .+?Constructor\]$/.test(val.toString)) || false;
     },
     /**
-    * Tests where a dom element is an input of some sort
-    * @param {Element|Node} - element to test
-    */
+     * Tests where a dom element is an input of some sort
+     * @param {Element|Node} - element to test
+     */
     Input: element => ['INPUT', 'TEXTAREA'].some(i => element.tagName === i),
   };
 
@@ -639,7 +639,7 @@
   function craftElement(name, inner, attributes, extraAttr, stringForm) {
     if (is.False(is.String(inner), is.Node(inner), is.Num(inner), is.Array(inner))) is.Object(inner) ? attributes = inner : inner = is.Func(inner) ? inner() : '';
     let newEl = dom(doc.createElement(name));
-    is.Array(inner) ? newEl.html.apply(this,inner) : newEl.html(inner);
+    is.Array(inner) ? newEl.html.apply(this, inner) : newEl.html(inner);
     if (is.Object(attributes) || is.String(attributes)) newEl.setAttr(attributes);
     if (is.Def(extraAttr)) newEl.setAttr(extraAttr);
     if (is.Bool(extraAttr)) stringForm = extraAttr;
@@ -722,11 +722,11 @@
      * @param {string=} sets the textContent value or when undefined gets the textContent value
      */
     element.Text = Inner('textContent', element);
-      /**
-       * replaces a Node with another node provided as a parameter/argument
-       * @memberof dom
-       * @param {Node} Node to replace with
-       */
+    /**
+     * replaces a Node with another node provided as a parameter/argument
+     * @memberof dom
+     * @param {Node} Node to replace with
+     */
     element.replace = function (val) {
         this.parentNode.replaceChild(val, this);
         return this;
@@ -769,19 +769,19 @@
     element.On = (eventType, func) => On(eventType, element, func);
 
     element.Click = (fn, listen) => root[listen ? 'Once' : 'On']('click', element, fn);
-    element.Input = (fn, listen) => root[listen ? 'Once' : 'On']('input', element, func);
-    element.DoubleClick = (fn, listen) => root[listen ? 'Once' : 'On']('dblclick', element, func);
-    element.Focus = (fn, listen) => root[listen ? 'Once' : 'On']('focus', element, func);
-    element.Blur = (fn, listen) => root[listen ? 'Once' : 'On']('blur', element, func);
-    element.Keydown = (fn, listen) => root[listen ? 'Once' : 'On']('keydown', element, func);
-    element.Mousemove = (fn, listen) => root[listen ? 'Once' : 'On']('mousemove', element, func);
-    element.Mousedown = (fn, listen) => root[listen ? 'Once' : 'On']('mousedown', element, func);
-    element.Mouseup = (fn, listen) => root[listen ? 'Once' : 'On']('mouseup', element, func);
-    element.Mouseover = (fn, listen) => root[listen ? 'Once' : 'On']('mouseover', element, func);
-    element.Mouseout = (fn, listen) => root[listen ? 'Once' : 'On']('mouseout', element, func);
-    element.Mouseenter = (fn, listen) => root[listen ? 'Once' : 'On']('mouseenter', element, func);
-    element.Mouseleave = (fn, listen) => root[listen ? 'Once' : 'On']('mouseleave', element, func);
-    element.Scroll = (fn, listen) => root[listen ? 'Once' : 'On']('scroll', element, func);
+    element.Input = (fn, listen) => root[listen ? 'Once' : 'On']('input', element, fn);
+    element.DoubleClick = (fn, listen) => root[listen ? 'Once' : 'On']('dblclick', element, fn);
+    element.Focus = (fn, listen) => root[listen ? 'Once' : 'On']('focus', element, fn);
+    element.Blur = (fn, listen) => root[listen ? 'Once' : 'On']('blur', element, fn);
+    element.Keydown = (fn, listen) => root[listen ? 'Once' : 'On']('keydown', element, fn);
+    element.Mousemove = (fn, listen) => root[listen ? 'Once' : 'On']('mousemove', element, fn);
+    element.Mousedown = (fn, listen) => root[listen ? 'Once' : 'On']('mousedown', element, fn);
+    element.Mouseup = (fn, listen) => root[listen ? 'Once' : 'On']('mouseup', element, fn);
+    element.Mouseover = (fn, listen) => root[listen ? 'Once' : 'On']('mouseover', element, fn);
+    element.Mouseout = (fn, listen) => root[listen ? 'Once' : 'On']('mouseout', element, fn);
+    element.Mouseenter = (fn, listen) => root[listen ? 'Once' : 'On']('mouseenter', element, fn);
+    element.Mouseleave = (fn, listen) => root[listen ? 'Once' : 'On']('mouseleave', element, fn);
+    element.Scroll = (fn, listen) => root[listen ? 'Once' : 'On']('scroll', element, fn);
     element.Enter = (fn, listen) => root[listen ? 'Once' : 'On']('keydown', element, (e, srcElement) => {
         if (event.which == 13 || event.keyCode == 13) fn(e, srcElement);
       }),
@@ -893,16 +893,16 @@
        */
     element.getAttr = element.getAttribute;
     /**
-    * Hides and element by setting display none
-    * @todo : Smooth animation
-    */
+     * Hides and element by setting display none
+     * @todo : Smooth animation
+     */
     element.hide = () => element.css({
       display: 'none'
     });
     /**
-    * Shows and element by setting display none
-    * @todo : Smooth animation
-    */
+     * Shows and element by setting display none
+     * @todo : Smooth animation
+     */
     element.show = () => element.css({
       display: ''
     });
@@ -1072,16 +1072,16 @@
         return true;
       },
       /**
-      * Generates arrays of a set length , with values or values generated from functions
-      * @param {Number} len - the integer length of the array to be generated
-      * @param {...function|*} val - value to set at each index , multiple value params after lenth will generate nested 2d arrays
-      */
+       * Generates arrays of a set length , with values or values generated from functions
+       * @param {Number} len - the integer length of the array to be generated
+       * @param {...function|*} val - value to set at each index , multiple value params after lenth will generate nested 2d arrays
+       */
       array(len, ...val) {
         let arr = [];
-        if(val.length === 1) {
+        if (val.length === 1) {
           val = val[0];
           forEach(len, i => arr.push(is.Func(val) ? val() : val));
-        } else forEach(val,v => {
+        } else forEach(val, v => {
           let temp = [];
           forEach(len, i => temp.push(is.Func(v) ? val() : v));
           arr.push(temp);
@@ -1089,16 +1089,16 @@
         return arr;
       },
       /**
-      * Flattens any multidimentional array or arraylike object
-      *  @param {Array|Arraylike} arr - multidimentional array(like) object to flatten
-      */
-      flatten:arr => (is.Arraylike(arr) ? toArr(arr) : is.Array(arr) ? arr : []).reduce((flat, toFlatten) => flat.concat(is.Array(toFlatten) ? flatten(toFlatten) : toFlatten), []),
+       * Flattens any multidimentional array or arraylike object
+       *  @param {Array|Arraylike} arr - multidimentional array(like) object to flatten
+       */
+      flatten: arr => (is.Arraylike(arr) ? toArr(arr) : is.Array(arr) ? arr : []).reduce((flat, toFlatten) => flat.concat(is.Array(toFlatten) ? flatten(toFlatten) : toFlatten), []),
       /**
-      * Gets a value from inside an object using a reference string
-      * example Craft.getDeep(myObj,'Company.employees[16].person.name') -> Mr Smithers or Craft.getDeep(anObj,'Colony.Queen.brood') -> [...ants]
-      * @param {Object} obj - the object to extract values from
-      * @param {string} path - string to reference value by simple dot notation or array refference example Craft.getDeep({ a : { b : [1,2,3] }},"a.b[2]") -> 3
-      */
+       * Gets a value from inside an object using a reference string
+       * example Craft.getDeep(myObj,'Company.employees[16].person.name') -> Mr Smithers or Craft.getDeep(anObj,'Colony.Queen.brood') -> [...ants]
+       * @param {Object} obj - the object to extract values from
+       * @param {string} path - string to reference value by simple dot notation or array refference example Craft.getDeep({ a : { b : [1,2,3] }},"a.b[2]") -> 3
+       */
       getDeep(obj, path) {
         path = path.replace(/\[(\w+)\]/g, '.$1');
         path = path.replace(/^\./, '');
@@ -1108,12 +1108,12 @@
         return obj;
       },
       /**
-      * Craft.setDeep  is similar to getDeep it uses a string to reference to a value
-      * @param {Object} obj - the object to set values on
-      * @param {string} path - string to reference value by simple dot notation
-      * @param {*} value - value to set
-      * @param {boolean} returnObj - should the function return the object
-      */
+       * Craft.setDeep  is similar to getDeep it uses a string to reference to a value
+       * @param {Object} obj - the object to set values on
+       * @param {string} path - string to reference value by simple dot notation
+       * @param {*} value - value to set
+       * @param {boolean} returnObj - should the function return the object
+       */
       setDeep(obj, path, value, returnObj) {
         path = path.split('.');
         let temp = obj;
@@ -1142,7 +1142,7 @@
         }
       },
       concatObjects(host) {
-        forEach(Craft.omit(arguments,host),obj => forEach(Object.keys(obj), key => Object.defineProperty(host, key, Object.getOwnPropertyDescriptor(obj, key))));
+        forEach(Craft.omit(arguments, host), obj => forEach(Object.keys(obj), key => Object.defineProperty(host, key, Object.getOwnPropertyDescriptor(obj, key))));
         return host;
       },
       clone: val => is.Object(val) ? Object.create(val) : toArr(val),
@@ -1242,7 +1242,7 @@
             type: 'text/javascript',
             src: Craft.URLfrom(code)
           });
-          script.defer = defer !== false;
+          script.defer = defer === true;
           return script;
         },
         td: (inner, attr) => craftElement('td', inner, attr),
@@ -1524,7 +1524,7 @@
         };
         return function () {
           let now = Date.now();
-          if (is.False(previous,options.leading)) previous = now;
+          if (is.False(previous, options.leading)) previous = now;
           let remaining = wait - (now - previous);
           context = this;
           args = arguments;
@@ -1786,6 +1786,14 @@
         }
         return true;
       },
+      formatBytes(bytes, decimals) {
+        if (bytes == 0) return '0 Byte';
+        let k = 1000,
+          dm = decimals + 1 || 3,
+          sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
+          i = Math.floor(Math.log(bytes) / Math.log(k));
+        return (bytes / Math.pow(k, i)).toPrecision(dm) + ' ' + sizes[i];
+      },
       /** method for generating random alphanumeric strings*/
       randomString: () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1),
       /**
@@ -1938,7 +1946,6 @@
       }
     }
   }
-
 
   Once('DOMContentLoaded', () => {
     Craft.router.links.forEach(link => link());
