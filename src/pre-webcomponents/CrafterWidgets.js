@@ -81,9 +81,9 @@
 
         Object.defineProperty(this, 'show', {
           set: function (val) {
-            Craft.mouse.observe(Show);
+            Craft.mouse.observe = Show;
             setTimeout(() => val ? el.addClass('context-menu-active').move((Craft.mouse.x + 5), (Craft.mouse.y + 5)) : el.stripClass('context-menu-active'), 50);
-            Craft.mouse.observe(false);
+            Craft.mouse.observe = !1;
           },
           get: () => el.gotClass('context-menu-active')
         });
@@ -322,7 +322,7 @@
 
     let moveTooltip = () => {
       let movecheck = setInterval(() => {
-        Craft.mouse.observe(show);
+        Craft.mouse.observe = show;
         show ? dom(tooltip).move(Craft.mouse.x, Craft.mouse.y) : clearInterval(movecheck);
       }, 5);
     }
@@ -387,7 +387,7 @@
       movable = true;
       rect = element.getBoundingClientRect();
       move = setInterval(() => {
-        Craft.mouse.observe(movable);
+        Craft.mouse.observe = movable;
         movable ? dom(element).move(Craft.mouse.x - e.clientX + rect.left, Craft.mouse.y - e.clientY + rect.top) : clearInterval(move);
       }, 5);
     });

@@ -891,6 +891,11 @@ Tail Call Optimization for recursive functional functions
 
 -   `fn`  function that uses recursion inside
 
+## toArr
+
+Convert Arraylike variables to Array
+{...*} val - arraylike variable to convert to array
+
 ## toFormData
 
 converts Objects or URL variable strings to a FormData object
@@ -898,6 +903,11 @@ converts Objects or URL variable strings to a FormData object
 **Parameters**
 
 -   `val` **object or string** values to convert
+
+## toInt
+
+Convert numbers to integers
+{number|string} val - number to convert to an integer
 
 ## WhenReady
 

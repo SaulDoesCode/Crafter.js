@@ -528,7 +528,7 @@
         for (; i < iterable.length; i++) func(iterable[i], i);
       } else if (is.int(iterable)) {
         iterable = toInt(iterable);
-        for (; i < iterable; iterable--) func(iterable);
+        for (; i < iterable; func(iterable--));
       } else
         for (i in iterable)
           if (iterable.hasOwnProperty(i)) func(iterable[i], i);
@@ -703,6 +703,10 @@
       return el;
     }
   }
+  // evlt - Event Listener Type (On or Once)
+  function evlt(type) {
+    return root[type ? 'Once' : 'On'];
+  }
 
   function domManip(element, within) {
     if (is.String(element)) element = query(element, within);
@@ -768,21 +772,21 @@
        */
     element.On = (eventType, func) => On(eventType, element, func);
 
-    element.Click = (fn, listen) => root[listen ? 'Once' : 'On']('click', element, fn);
-    element.Input = (fn, listen) => root[listen ? 'Once' : 'On']('input', element, fn);
-    element.DoubleClick = (fn, listen) => root[listen ? 'Once' : 'On']('dblclick', element, fn);
-    element.Focus = (fn, listen) => root[listen ? 'Once' : 'On']('focus', element, fn);
-    element.Blur = (fn, listen) => root[listen ? 'Once' : 'On']('blur', element, fn);
-    element.Keydown = (fn, listen) => root[listen ? 'Once' : 'On']('keydown', element, fn);
-    element.Mousemove = (fn, listen) => root[listen ? 'Once' : 'On']('mousemove', element, fn);
-    element.Mousedown = (fn, listen) => root[listen ? 'Once' : 'On']('mousedown', element, fn);
-    element.Mouseup = (fn, listen) => root[listen ? 'Once' : 'On']('mouseup', element, fn);
-    element.Mouseover = (fn, listen) => root[listen ? 'Once' : 'On']('mouseover', element, fn);
-    element.Mouseout = (fn, listen) => root[listen ? 'Once' : 'On']('mouseout', element, fn);
-    element.Mouseenter = (fn, listen) => root[listen ? 'Once' : 'On']('mouseenter', element, fn);
-    element.Mouseleave = (fn, listen) => root[listen ? 'Once' : 'On']('mouseleave', element, fn);
-    element.Scroll = (fn, listen) => root[listen ? 'Once' : 'On']('scroll', element, fn);
-    element.Enter = (fn, listen) => root[listen ? 'Once' : 'On']('keydown', element, (e, srcElement) => {
+    element.Click = (fn, type) => evlt(type)('click', element, fn);
+    element.Input = (fn,type) => evlt(type)('input', element, fn);
+    element.DoubleClick = (fn, type) => evlt(type)('dblclick', element, fn);
+    element.Focus = (fn, type) => evlt(type)('focus', element, fn);
+    element.Blur = (fn, type) => evlt(type)('blur', element, fn);
+    element.Keydown = (fn, type) => evlt(type)('keydown', element, fn);
+    element.Mousemove = (fn, type) => evlt(type)('mousemove', element, fn);
+    element.Mousedown = (fn, type) => evlt(type)('mousedown', element, fn);
+    element.Mouseup = (fn, type) => evlt(type)('mouseup', element, fn);
+    element.Mouseover = (fn, type) => evlt(type)('mouseover', element, fn);
+    element.Mouseout = (fn, type) => evlt(type)('mouseout', element, fn);
+    element.Mouseenter = (fn, type) => evlt(type)('mouseenter', element, fn);
+    element.Mouseleave = (fn, type) => evlt(type)('mouseleave', element, fn);
+    element.Scroll = (fn, type) => evlt(type)('scroll', element, fn);
+    element.Enter = (fn, type) => evlt(type)('keydown', element, (e, srcElement) => {
         if (event.which == 13 || event.keyCode == 13) fn(e, srcElement);
       }),
       element.Escape = (fn, listen) => root[listen ? 'Once' : 'On']('keydown', element, (e, srcElement) => {
@@ -1035,6 +1039,62 @@
 
   CrafterStyles = query('[crafterstyles]', head);
 
+  function observable(obj) {
+    Object.defineProperty(obj, 'listeners', {
+      value: [],
+      enumerable: false,
+    });
+    Object.defineProperty(obj, 'removeListener', {
+      value: fn => obj.listeners = obj.listeners.filter(l => {
+        if (l.fn !== fn) return l;
+      }),
+      enumerable: false,
+    });
+    Object.defineProperty(obj, 'addListener', {
+      value: function (prop, func) {
+        if (is.Func(prop) || is.Node(prop)) {
+          func = prop;
+          prop = '*';
+        }
+        let listner = {
+          prop: is.String(prop) ? prop : '*'
+        }
+        if (is.Node(func)) {
+          if (!is.Func(func['BindListener'])) throw Error('BindListener is not a function');
+          listner.node = func;
+          listner.fn = func['BindListener'];
+        } else if (is.Func(func)) listner.fn = func;
+        else throw new Error('no function');
+        obj.listeners.push(listner);
+      },
+      enumerable: false,
+    });
+    try {
+      return new Proxy(obj, {
+        get: function (target, key, reciever) {
+          return Reflect.get(target, key);
+        },
+        set: function (target, key, value, reciever) {
+          target.listeners.forEach(l => {
+            if (l.prop === '*' || l.prop === key) l.fn(target, key, value, !(key in target));
+          });
+          return Reflect.set(target, key, value);
+        }
+      });
+    } catch (e) {
+      try {
+        Object.observe(obj, changes => changes.forEach(change => {
+          if (change.type === 'add' || change.type === 'update') obj.listeners.forEach(l => {
+            if (l.prop === '*' || l.prop === change.name) l.fn(obj, change.name, obj[change.name], change.type === 'add');
+          });
+        }));
+        return obj;
+      } catch (e2) {
+        console.warn('Your Browser is Old Update it');
+      }
+    }
+  }
+
   /**
    * Craft is Crafter.js's Core containing most functionality.
    */
@@ -1043,815 +1103,774 @@
      * @param {Array} arr - array to be converted
      */
     arrDiff(arr, newArr, func) {
-        let added = newArr.filter(item => {
-            if (!arr.includes(item)) return item;
-          }),
-          removed = arr.filter(item => {
-            if (!newArr.includes(item)) return item;
-          }),
-          diff = Craft.omit(added.concat(removed), undefined);
-        if (is.Func(func)) func(arr, newArr, added, removed, diff);
-        else return {
-          arr: arr,
-          newArr: newArr,
-          diff: diff,
-          added: added,
-          removed: removed
+      let added = newArr.filter(item => {
+          if (!arr.includes(item)) return item;
+        }),
+        removed = arr.filter(item => {
+          if (!newArr.includes(item)) return item;
+        }),
+        diff = Craft.omit(added.concat(removed), undefined);
+      if (is.Func(func)) func(arr, newArr, added, removed, diff);
+      else return {
+        arr: arr,
+        newArr: newArr,
+        diff: diff,
+        added: added,
+        removed: removed
+      }
+    },
+    /**
+     * Compares two arrays and determines if they are the same array
+     * @param {Array} arr1 - array one
+     * @param {Array} arr2 - array two
+     */
+    sameArray(arr1, arr2) {
+      let i = arr1.length;
+      if (i !== arr2.length) return false;
+      while (i--)
+        if (arr1[i] !== arr2[i]) return false;
+      return true;
+    },
+    /**
+     * Generates arrays of a set length , with values or values generated from functions
+     * @param {Number} len - the integer length of the array to be generated
+     * @param {...function|*} val - value to set at each index , multiple value params after lenth will generate nested 2d arrays
+     */
+    array(len, ...val) {
+      let arr = [];
+      if (val.length === 1) {
+        val = val[0];
+        forEach(len, i => arr.push(is.Func(val) ? val() : val));
+      } else forEach(val, v => {
+        let temp = [];
+        forEach(len, i => temp.push(is.Func(v) ? val() : v));
+        arr.push(temp);
+      });
+      return arr;
+    },
+    /**
+     * Flattens any multidimentional array or arraylike object
+     *  @param {Array|Arraylike} arr - multidimentional array(like) object to flatten
+     */
+    flatten: arr => (is.Arraylike(arr) ? toArr(arr) : is.Array(arr) ? arr : []).reduce((flat, toFlatten) => flat.concat(is.Array(toFlatten) ? flatten(toFlatten) : toFlatten), []),
+    /**
+     * Gets a value from inside an object using a reference string
+     * example Craft.getDeep(myObj,'Company.employees[16].person.name') -> Mr Smithers or Craft.getDeep(anObj,'Colony.Queen.brood') -> [...ants]
+     * @param {Object} obj - the object to extract values from
+     * @param {string} path - string to reference value by simple dot notation or array refference example Craft.getDeep({ a : { b : [1,2,3] }},"a.b[2]") -> 3
+     */
+    getDeep(obj, path) {
+      path = path.replace(/\[(\w+)\]/g, '.$1');
+      path = path.replace(/^\./, '');
+      try {
+        for (let i = 0, a = path.split('.'); i < a.length; ++i) a[i] in obj ? obj = obj[a[i]] : obj = undefined;
+      } catch (e) {}
+      return obj;
+    },
+    /**
+     * Craft.setDeep  is similar to getDeep it uses a string to reference to a value
+     * @param {Object} obj - the object to set values on
+     * @param {string} path - string to reference value by simple dot notation
+     * @param {*} value - value to set
+     * @param {boolean} returnObj - should the function return the object
+     */
+    setDeep(obj, path, value, returnObj) {
+      path = path.split('.');
+      let temp = obj;
+      for (let i = 0, n; i < path.length - 1; i++) {
+        n = path[i];
+        if (n in temp) temp = temp[n];
+        else {
+          temp[n] = {};
+          temp = temp[n];
         }
-      },
+      }
+      temp[path[path.length - 1]] = value;
+      if (!!returnObj) return obj;
+    },
+    forEachDeep(object, fn, path) {
+      path = path || '';
+      let currentPath = path,
+        nestable, val, key;
+      for (key in object) {
+        if (object.hasOwnProperty(key)) val = object[key];
+        currentPath = path;
+        nestable = false;
+        is.Array(object) ? currentPath += `[${key}]` : !currentPath ? currentPath = key : currentPath += '.' + key;
+        nestable = !!fn(val, key, object, currentPath);
+        if (nestable && (is.Arr(val) || is.Object(val))) Craft.forEachDeep(val, fn, currentPath);
+      }
+    },
+    concatObjects(host) {
+      forEach(Craft.omit(arguments, host), obj => forEach(Object.keys(obj), key => Object.defineProperty(host, key, Object.getOwnPropertyDescriptor(obj, key))));
+      return host;
+    },
+    clone: val => is.Object(val) ? Object.create(val) : toArr(val),
+    omitFrom(Arr) {
+      let string = is.String(Arr),
+        values = toArr(arguments).slice(1);
+      string ? forEach(values, e => {
+          function replace() {
+            if (Arr.includes(e)) {
+              Arr = Arr.replace(e, '');
+              replace();
+            }
+          }
+          replace();
+        }) :
+        Arr = (is.Array(Arr) && !string ? Arr : toArr(Arr)).filter(e => {
+          if (!values.some(v => is.eq(v, e))) return e;
+        });
+      return Arr;
+    },
+    omit(val) {
+      if (is.Arraylike(val)) val = Craft.omitFrom.apply(this, arguments);
+      let values = toArr(arguments).slice(1);
+      if (is.Object(val) && !values.some(v => v === val)) forEach(val, (prop, key) => {
+        if (values.some(v => is.eq(v, prop) || is.eq(v, key))) delete val[key];
+      });
+      return val;
+    },
+    dom: {
+      element: craftElement,
       /**
-       * Compares two arrays and determines if they are the same array
-       * @param {Array} arr1 - array one
-       * @param {Array} arr2 - array two
+       * creates a div element with the options provided
+       * @memberof dom
+       * @param {string} sets innerHTML of the div
+       * @param {string|Object=} sets div attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
        */
-      sameArray(arr1, arr2) {
-        let i = arr1.length;
-        if (i !== arr2.length) return false;
-        while (i--)
-          if (arr1[i] !== arr2[i]) return false;
+      div: (inner, attr) => craftElement('div', inner, attr),
+      /**
+       * creates a span element with the options provided
+       * @memberof dom
+       * @param {string} sets innerHTML of the span
+       * @param {string|Object=} sets span attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
+       */
+      span: (inner, attr) => craftElement('span', inner, attr),
+      /**
+       * creates a label element with the options provided
+       * @memberof dom
+       * @param {string} sets innerHTML of the label
+       * @param {string|Object=} sets label attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
+       */
+      label: (inner, attr) => craftElement('label', inner, attr),
+      /**
+       * creates a p (paragraph) element with the options provided
+       * @memberof dom
+       * @param {string} sets innerHTML of the p
+       * @param {string|Object=} sets p attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
+       */
+      p: (inner, attr) => craftElement('p', inner, attr),
+      /**
+       * creates an img element with the options provided
+       * @memberof dom
+       * @param {string} sets src of the img
+       * @param {string} sets alt of the img
+       * @param {string|Object=} sets p attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
+       */
+      img: (src, alt, attr) => craftElement('img', '', attr, {
+        src: src,
+        alt: alt
+      }),
+      input(type, attributes) {
+        if (is.Object(type)) {
+          attributes = type;
+          type = 'text';
+        }
+        return craftElement('input', '', attributes, {
+          type: type || 'text'
+        });
+      },
+      button: (inner, attr) => craftElement('button', inner, attr),
+      list(type, items, attr) {
+        let list = ``;
+        if (is.Arrylike(items)) forEach(items, item => {
+          if (is.String(item)) list += craftElement('li', item).outerHTML;
+          else if (is.Object(items)) list += craftElement('li', item.inner, item.attr).outerHTML;
+        });
+        return craftElement(type, list, attr)
+      },
+      ul: (items, attr) => Craft.dom.list('ul', items, attr),
+      ol: (items, attr) => Craft.dom.list('ol', items, attr),
+      li: (inner, attr) => craftElement('li', inner, attr),
+      h: (level, inner, attr) => craftElement('h' + level, inner, attr),
+      a: (link, inner, attr) => craftElement('a', inner, attr, {
+        href: link
+      }),
+      script(code, attr, defer) {
+        let script = craftElement('script', '', attr, {
+          type: 'text/javascript',
+          src: Craft.URLfrom(code)
+        });
+        script.defer = defer === true;
+        return script;
+      },
+      td: (inner, attr) => craftElement('td', inner, attr),
+      th: (inner, attr) => craftElement('th', inner, attr),
+      tr: (inner, attr) => craftElement('tr', inner, attr),
+      table: (rows, attr) => craftElement('table', rows, attr),
+      SafeHTML(html, node) {
+        html = html.replace(/<script[^>]*?>.*?<\/script>/gi, '').replace(/<style[^>]*?>.*?<\/style>/gi, '').replace(/<![\s\S]*?--[ \t\n\r]*>/gi, '');
+        return !node ? html : docfragFromString(html);
+      },
+    },
+    CurrentBrowser: {
+      is: browser => _br.join(' ').toLowerCase().includes(browser.toLowerCase()),
+      browser: _br.join(' ')
+    },
+    loader: {
+      pre: 'craft:',
+      fetchImport(obj) {
+        obj.key = obj.key || obj.url;
+        let now = +new Date(),
+          src = Craft.loader.get(obj.key);
+        if (src || src.expire - now > 0) return new Promise(resolve => resolve(src));
+        return new Promise((success, failed) => fetch(obj.url).then(res => res.text().then(data => {
+          obj.data = data;
+          obj.stamp = now;
+          obj.expire = now + Craft.millis.hours(obj.expire || 400);
+          if (obj.cache) localStorage.setItem(Craft.loader.pre + obj.key, JSON.stringify(obj));
+          success(obj);
+        })).catch(err => failed(`error importing -> ${err}`)));
+      },
+      setPrekey: str => Craft.loader.pre = str + ':',
+      get: key => JSON.parse(localStorage.getItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key) || false),
+      remove: key => localStorage.removeItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key),
+      removeAll(expired) {
+        for (let i in localStorage)
+          if (!expired || is.past(Craft.loader.get(i).expire)) Craft.loader.remove(i)
+      },
+    },
+    /**
+     * Crafter.js resource loader for Scripts and Style sheets,
+     * each import option is an object with properties like 'script/css/wc : "location" ' for resource url
+     * other options include 'cache' - determines wether to cache the resource or not , 'test' : usefull for conditional imports if test is false the resource won't load or execute ,
+     * 'key' custom name to cache the resource in localStorage with instead of the resource location, 'defer' optionally load the script when the dom is loaded or load when it's ready,
+     * {...object} args - Objects containing options for Script/CSS/WebComponent import
+     */
+    Import() {
+      let promises = [];
+      forEach(arguments, arg => !!arg.test ? Craft.loader.remove(arg.css || arg.script) : promises.push(Craft.loader.fetchImport({
+        url: arg.css || arg.script,
+        type: arg.css ? 'css' : 'script',
+        exec: !!arg.execute,
+        cache: !!arg.cache,
+        defer: arg.defer ? 'defer' : null,
+        key: arg.key,
+        expire: arg.expire
+      })));
+      return Promise.all(promises).then(src => src.map(obj => {
+        if (obj.exec) obj.type === 'css' ? CrafterStyles.textContent += '\n' + obj.data : head.appendChild(dom().script('', {
+          src: Craft.URLfrom(obj.data),
+          key: obj.key
+        }, obj.defer))
+      }));
+    },
+    router: {
+      addHandle(link, func) {
+        Craft.router.handlers.push({
+          link: link,
+          func: func
+        });
+      },
+      handle(route, func) {
+        if (is.String(route)) {
+          if (Locs(l => l === route)) func(route);
+          Craft.router.addHandle(route, func);
+        } else if (is.Arr(route)) route.forEach(link => {
+          if (Locs(l => l === link)) func(link);
+          Craft.router.addHandle(link, func);
+        });
+      },
+      handlers: [],
+      links: [],
+      link: (Selector, link, newtab, eventType) => Craft.router.links.push(() => On(is.String(eventType) ? eventType : 'click', Selector, e => newtab ? open(link) : location = link)),
+      open(link, newtab) {
+        newtab ? open(link) : location = link
+      },
+      setTitle: title => doc.title = title,
+      setView(selector, view) {
+        dom(selector, !0).html(view)
+      },
+      fetchView(selector, src, cache, position) {
+        let vh = dom(selector, !0),
+          srcpre = (`Cr:${src}`),
+          view = localStorage.getItem(srcpre);
+        if (!is.Def(vh.element)) return;
+        is.Null(view) ? fetch(src).then(res => res.text().then(txt => {
+          if (is.True(cache, is.Null(view))) localStorage.setItem(srcpre, txt);
+          vh.html(txt, position);
+        })).catch(err => console.error("fetchView: " + err)) : vh.html(view, position);
+      },
+      clearViews() {
+        for (let i in localStorage) localStorage.removeItem(localStorage.key(i).includes("Cr:"))
+      }
+    },
+    Cookies: {
+      get: key => key ? decodeURIComponent(doc.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1")) || null : null,
+      set(key, val, expires, path, domain, secure) {
+        if (!key || /^(?:expires|max\-age|path|domain|secure)$/i.test(key)) return false;
+        let expiry = "";
+        if (expires) {
+          if (is.Num(expires)) expiry = expires === Infinity ? "; expires=Fri, 11 April 9997 23:59:59 UTC" : "; max-age=" + expires;
+          if (is.String(expires)) expiry = "; expires=" + expires;
+          if (is.Date(expires)) expiry = "; expires=" + expires.toUTCString();
+        }
+        doc.cookie = encodeURIComponent(key) + "=" + encodeURIComponent(val) + expiry + (domain ? "; domain=" + domain : "") + (path ? "; path=" + path : "") + (secure ? "; secure" : "");
         return true;
       },
-      /**
-       * Generates arrays of a set length , with values or values generated from functions
-       * @param {Number} len - the integer length of the array to be generated
-       * @param {...function|*} val - value to set at each index , multiple value params after lenth will generate nested 2d arrays
-       */
-      array(len, ...val) {
-        let arr = [];
-        if (val.length === 1) {
-          val = val[0];
-          forEach(len, i => arr.push(is.Func(val) ? val() : val));
-        } else forEach(val, v => {
-          let temp = [];
-          forEach(len, i => temp.push(is.Func(v) ? val() : v));
-          arr.push(temp);
-        });
-        return arr;
+      remove(key, path, domain) {
+        if (!Craft.Cookies.has(key)) return false;
+        doc.cookie = encodeURIComponent(key) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT" + (domain ? "; domain=" + domain : "") + (path ? "; path=" + path : "");
+        return true;
       },
-      /**
-       * Flattens any multidimentional array or arraylike object
-       *  @param {Array|Arraylike} arr - multidimentional array(like) object to flatten
-       */
-      flatten: arr => (is.Arraylike(arr) ? toArr(arr) : is.Array(arr) ? arr : []).reduce((flat, toFlatten) => flat.concat(is.Array(toFlatten) ? flatten(toFlatten) : toFlatten), []),
-      /**
-       * Gets a value from inside an object using a reference string
-       * example Craft.getDeep(myObj,'Company.employees[16].person.name') -> Mr Smithers or Craft.getDeep(anObj,'Colony.Queen.brood') -> [...ants]
-       * @param {Object} obj - the object to extract values from
-       * @param {string} path - string to reference value by simple dot notation or array refference example Craft.getDeep({ a : { b : [1,2,3] }},"a.b[2]") -> 3
-       */
-      getDeep(obj, path) {
-        path = path.replace(/\[(\w+)\]/g, '.$1');
-        path = path.replace(/^\./, '');
-        try {
-          for (let i = 0, a = path.split('.'); i < a.length; ++i) a[i] in obj ? obj = obj[a[i]] : obj = undefined;
-        } catch (e) {}
-        return obj;
-      },
-      /**
-       * Craft.setDeep  is similar to getDeep it uses a string to reference to a value
-       * @param {Object} obj - the object to set values on
-       * @param {string} path - string to reference value by simple dot notation
-       * @param {*} value - value to set
-       * @param {boolean} returnObj - should the function return the object
-       */
-      setDeep(obj, path, value, returnObj) {
-        path = path.split('.');
-        let temp = obj;
-        for (let i = 0, n; i < path.length - 1; i++) {
-          n = path[i];
-          if (n in temp) temp = temp[n];
-          else {
-            temp[n] = {};
-            temp = temp[n];
-          }
-        }
-        temp[path[path.length - 1]] = value;
-        if (!!returnObj) return obj;
-      },
-      forEachDeep(object, fn, path) {
-        path = path || '';
-        let currentPath = path,
-          nestable, val, key;
-        for (key in object) {
-          if (object.hasOwnProperty(key)) val = object[key];
-          currentPath = path;
-          nestable = false;
-          is.Array(object) ? currentPath += `[${key}]` : !currentPath ? currentPath = key : currentPath += '.' + key;
-          nestable = !!fn(val, key, object, currentPath);
-          if (nestable && (is.Arr(val) || is.Object(val))) Craft.forEachDeep(val, fn, currentPath);
-        }
-      },
-      concatObjects(host) {
-        forEach(Craft.omit(arguments, host), obj => forEach(Object.keys(obj), key => Object.defineProperty(host, key, Object.getOwnPropertyDescriptor(obj, key))));
-        return host;
-      },
-      clone: val => is.Object(val) ? Object.create(val) : toArr(val),
-      omitFrom(Arr) {
-        let string = is.String(Arr),
-          values = toArr(arguments).slice(1);
-        string ? forEach(values, e => {
-            let replace = () => {
-              if (Arr.includes(e)) {
-                Arr = Arr.replace(e, '');
-                if (Arr.includes(e)) replace();
-              }
+      has: key => key ? (new RegExp("(?:^|;\\s*)" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=")).test(doc.cookie) : false,
+      keys() {
+        let all = doc.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/);
+        all.forEach(c => decodeURIComponent(c));
+        return all;
+      }
+    },
+    /**
+     * Handles WebSockets in a contained manner with send and recieve methods
+     * @param {string} address - the WebSocket address example "ws://localhost:3000/" but the ws:// or wss:// is optional
+     * @param {Array=} protocols - the protocols to pass to the WebSocket Connection
+     */
+    Socket(address, protocols) {
+      if (!is.URL(address)) {
+        let match = address.match(/^(\/.*?)?$/);
+        if (is.empty(match)) throw new Error('invalid url');
+        address = location.host + match[0];
+      }
+      if (!address.includes('ws://')) address = (location.protocol === 'http:' ? 'ws://' : 'wss://') + address;
+      if (is.URL(address)) {
+        let Options = {
+          socket: null,
+          open: !1,
+          recievers: [],
+          message: '',
+          set send(msg) {
+            if (this.socket['readyState'] === 1) this.socket.send(is.Object(msg) ? JSON.stringify(msg) : msg);
+            else {
+              let poll = setInterval(() => {
+                if (this.socket['readyState'] === 1) {
+                  this.socket.send(is.Object(msg) ? JSON.stringify(msg) : msg);
+                  clearInterval(poll);
+                }
+              }, 20);
+              setTimeout(() => clearInterval(poll), 2000);
             }
-            replace();
-          }) :
-          Arr = (is.Array(Arr) && !string ? Arr : toArr(Arr)).filter(e => {
-            if (!values.some(v => is.eq(v, e))) return e;
-          });
-        return Arr;
-      },
-      omit(val) {
-        if (is.Arraylike(val)) val = Craft.omitFrom.apply(this, arguments);
-        let values = toArr(arguments).slice(1);
-        if (is.Object(val) && !values.some(v => v === val)) forEach(val, (prop, key) => {
-          if (values.some(v => is.eq(v, prop) || is.eq(v, key))) delete val[key];
-        });
-        return val;
-      },
-      dom: {
-        element: craftElement,
-        /**
-         * creates a div element with the options provided
-         * @memberof dom
-         * @param {string} sets innerHTML of the div
-         * @param {string|Object=} sets div attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
-         */
-        div: (inner, attr) => craftElement('div', inner, attr),
-        /**
-         * creates a span element with the options provided
-         * @memberof dom
-         * @param {string} sets innerHTML of the span
-         * @param {string|Object=} sets span attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
-         */
-        span: (inner, attr) => craftElement('span', inner, attr),
-        /**
-         * creates a label element with the options provided
-         * @memberof dom
-         * @param {string} sets innerHTML of the label
-         * @param {string|Object=} sets label attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
-         */
-        label: (inner, attr) => craftElement('label', inner, attr),
-        /**
-         * creates a p (paragraph) element with the options provided
-         * @memberof dom
-         * @param {string} sets innerHTML of the p
-         * @param {string|Object=} sets p attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
-         */
-        p: (inner, attr) => craftElement('p', inner, attr),
-        /**
-         * creates an img element with the options provided
-         * @memberof dom
-         * @param {string} sets src of the img
-         * @param {string} sets alt of the img
-         * @param {string|Object=} sets p attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
-         */
-        img: (src, alt, attr) => craftElement('img', '', attr, {
-          src: src,
-          alt: alt
-        }),
-        input(type, attributes) {
-          if (is.Object(type)) {
-            attributes = type;
-            type = 'text';
-          }
-          return craftElement('input', '', attributes, {
-            type: type || 'text'
-          });
-        },
-        button: (inner, attr) => craftElement('button', inner, attr),
-        list(type, items, attr) {
-          let list = ``;
-          if (is.Arrylike(items)) forEach(items, item => {
-            if (is.String(item)) list += craftElement('li', item).outerHTML;
-            else if (is.Object(items)) list += craftElement('li', item.inner, item.attr).outerHTML;
-          });
-          return craftElement(type, list, attr)
-        },
-        ul: (items, attr) => Craft.dom.list('ul', items, attr),
-        ol: (items, attr) => Craft.dom.list('ol', items, attr),
-        li: (inner, attr) => craftElement('li', inner, attr),
-        h: (level, inner, attr) => craftElement('h' + level, inner, attr),
-        a: (link, inner, attr) => craftElement('a', inner, attr, {
-          href: link
-        }),
-        script(code, attr, defer) {
-          let script = craftElement('script', '', attr, {
-            type: 'text/javascript',
-            src: Craft.URLfrom(code)
-          });
-          script.defer = defer === true;
-          return script;
-        },
-        td: (inner, attr) => craftElement('td', inner, attr),
-        th: (inner, attr) => craftElement('th', inner, attr),
-        tr: (inner, attr) => craftElement('tr', inner, attr),
-        table: (rows, attr) => craftElement('table', rows, attr),
-        SafeHTML(html, node) {
-          html = html.replace(/<script[^>]*?>.*?<\/script>/gi, '').replace(/<style[^>]*?>.*?<\/style>/gi, '').replace(/<![\s\S]*?--[ \t\n\r]*>/gi, '');
-          return !node ? html : docfragFromString(html);
-        },
-      },
-      CurrentBrowser: {
-        is: browser => _br.join(' ').toLowerCase().includes(browser.toLowerCase()),
-        browser: _br.join(' ')
-      },
-      loader: {
-        pre: 'craft:',
-        fetchImport(obj) {
-          obj.key = obj.key || obj.url;
-          let now = +new Date(),
-            src = Craft.loader.get(obj.key);
-          if (src || src.expire - now > 0) return new Promise(resolve => resolve(src));
-          return new Promise((success, failed) => fetch(obj.url).then(res => res.text().then(data => {
-            obj.data = data;
-            obj.stamp = now;
-            obj.expire = now + Craft.millis.hours(obj.expire || 400);
-            if (obj.cache) localStorage.setItem(Craft.loader.pre + obj.key, JSON.stringify(obj));
-            success(obj);
-          })).catch(err => failed(`error importing -> ${err}`)));
-        },
-        setPrekey: str => Craft.loader.pre = str + ':',
-        get: key => JSON.parse(localStorage.getItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key) || false),
-        remove: key => localStorage.removeItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key),
-        removeAll(expired) {
-          for (let i in localStorage)
-            if (!expired || is.past(Craft.loader.get(i).expire)) Craft.loader.remove(i)
-        },
-      },
-      /**
-       * Crafter.js resource loader for Scripts and Style sheets,
-       * each import option is an object with properties like 'script/css/wc : "location" ' for resource url
-       * other options include 'cache' - determines wether to cache the resource or not , 'test' : usefull for conditional imports if test is false the resource won't load or execute ,
-       * 'key' custom name to cache the resource in localStorage with instead of the resource location, 'defer' optionally load the script when the dom is loaded or load when it's ready,
-       * {...object} args - Objects containing options for Script/CSS/WebComponent import
-       */
-      Import() {
-        let promises = [];
-        forEach(arguments, arg => !!arg.test ? Craft.loader.remove(arg.css || arg.script) : promises.push(Craft.loader.fetchImport({
-          url: arg.css || arg.script,
-          type: arg.css ? 'css' : 'script',
-          exec: !!arg.execute,
-          cache: !!arg.cache,
-          defer: arg.defer ? 'defer' : null,
-          key: arg.key,
-          expire: arg.expire
-        })));
-        return Promise.all(promises).then(src => src.map(obj => {
-          if (obj.exec) obj.type === 'css' ? CrafterStyles.textContent += '\n' + obj.data : head.appendChild(dom().script('', {
-            src: Craft.URLfrom(obj.data),
-            key: obj.key
-          }, obj.defer))
-        }));
-      },
-      router: {
-        addHandle(link, func) {
-            Craft.router.handlers.push({
-              link: link,
-              func: func
-            });
           },
-          handle(route, func) {
-            if (is.String(route)) {
-              if (Locs(l => l === route)) func(route);
-              Craft.router.addHandle(route, func);
-            } else if (is.Arr(route)) route.forEach(link => {
-              if (Locs(l => l === link)) func(link);
-              Craft.router.addHandle(link, func);
-            });
+          set recieve(func) {
+            if (is.Func(func)) this.recievers.push(func);
           },
-          handlers: [],
-          links: [],
-          link: (Selector, link, newtab, eventType) => Craft.router.links.push(() => On(is.String(eventType) ? eventType : 'click', Selector, e => newtab ? open(link) : location = link)),
-          open(link, newtab) {
-            newtab ? open(link) : location = link
+          get recieve() {
+            return this.message;
           },
-          setTitle: title => doc.title = title,
-          setView(selector, view) {
-            dom(selector, !0).html(view)
+          close() {
+            this.socket.close();
           },
-          fetchView(selector, src, cache, position) {
-            let vh = dom(selector, !0),
-              srcpre = (`Cr:${src}`),
-              view = localStorage.getItem(srcpre);
-            if (!is.Def(vh.element)) return;
-            is.Null(view) ? fetch(src).then(res => res.text().then(txt => {
-              if (is.True(cache, is.Null(view))) localStorage.setItem(srcpre, txt);
-              vh.html(txt, position);
-            })).catch(err => console.error("fetchView: " + err)) : vh.html(view, position);
-          },
-          clearViews() {
-            for (let i in localStorage) localStorage.removeItem(localStorage.key(i).includes("Cr:"))
-          }
-      },
-      Cookies: {
-        get: key => key ? decodeURIComponent(doc.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1")) || null : null,
-        set(key, val, expires, path, domain, secure) {
-          if (!key || /^(?:expires|max\-age|path|domain|secure)$/i.test(key)) return false;
-          let expiry = "";
-          if (expires) {
-            if (is.Num(expires)) expiry = expires === Infinity ? "; expires=Fri, 11 April 9997 23:59:59 UTC" : "; max-age=" + expires;
-            if (is.String(expires)) expiry = "; expires=" + expires;
-            if (is.Date(expires)) expiry = "; expires=" + expires.toUTCString();
-          }
-          doc.cookie = encodeURIComponent(key) + "=" + encodeURIComponent(val) + expiry + (domain ? "; domain=" + domain : "") + (path ? "; path=" + path : "") + (secure ? "; secure" : "");
-          return true;
-        },
-        remove(key, path, domain) {
-          if (!Craft.Cookies.has(key)) return false;
-          doc.cookie = encodeURIComponent(key) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT" + (domain ? "; domain=" + domain : "") + (path ? "; path=" + path : "");
-          return true;
-        },
-        has: key => key ? (new RegExp("(?:^|;\\s*)" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=")).test(doc.cookie) : false,
-        keys() {
-          let all = doc.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/);
-          all.forEach(c => decodeURIComponent(c));
-          return all;
-        }
-      },
-      /**
-       * Handles WebSockets in a contained manner with send and recieve methods
-       * @param {string} address - the WebSocket address example "ws://localhost:3000/" but the ws:// or wss:// is optional
-       * @param {Array=} protocols - the protocols to pass to the WebSocket Connection
-       */
-      Socket(address, protocols) {
-        if (!is.URL(address)) {
-          let match = address.match(/^(\/.*?)?$/);
-          if (is.empty(match)) throw new Error('invalid url');
-          address = location.host + match[0];
-        }
-        if (!address.includes('ws://')) address = (location.protocol === 'http:' ? 'ws://' : 'wss://') + address;
-        if (is.URL(address)) {
-          let Options = {
-            socket: null,
-            open: !1,
-            recievers: [],
-            message: '',
-            set send(msg) {
-              if (this.socket['readyState'] === 1) this.socket.send(is.Object(msg) ? JSON.stringify(msg) : msg);
-              else {
-                let poll = setInterval(() => {
-                  if (this.socket['readyState'] === 1) {
-                    this.socket.send(is.Object(msg) ? JSON.stringify(msg) : msg);
-                    clearInterval(poll);
-                  }
-                }, 20);
-                setTimeout(() => clearInterval(poll), 2000);
-              }
-            },
-            set recieve(func) {
-              if (is.Func(func)) this.recievers.push(func);
-            },
-            get recieve() {
-              return this.message;
-            },
-            close() {
-              this.socket.close();
-            },
-            reopen() {
-              if (this.open === false) this.socket = protocols ? new WebSocket(address, protocols) : new WebSocket(address);
-              socket.onopen = e => Options.open = !0;
-              socket.onclose = e => Options.open = !1;
-              socket.onmessage = e => {
-                Options.message = e.data;
-                forEach(Options.recievers, fn => fn(e.data, e));
-              }
+          reopen() {
+            if (this.open === false) this.socket = protocols ? new WebSocket(address, protocols) : new WebSocket(address);
+            socket.onopen = e => Options.open = !0;
+            socket.onclose = e => Options.open = !1;
+            socket.onmessage = e => {
+              Options.message = e.data;
+              forEach(Options.recievers, fn => fn(e.data, e));
             }
           }
-          let socket = protocols ? new WebSocket(address, protocols) : new WebSocket(address);
-          socket.onopen = e => Options.open = !0;
+        }
+        let socket = protocols ? new WebSocket(address, protocols) : new WebSocket(address);
+        socket.onopen = e => Options.open = !0;
 
-          socket.onclose = e => Options.open = !1;
+        socket.onclose = e => Options.open = !1;
 
-          socket.onmessage = e => {
-            Options.message = e.data;
-            forEach(Options.recievers, fn => fn(e.data, e));
-          }
-          Options.socket = socket;
-
-          return Options;
+        socket.onmessage = e => {
+          Options.message = e.data;
+          forEach(Options.recievers, fn => fn(e.data, e));
         }
-      },
-      observable(obj) {
-        Object.defineProperty(obj, 'listeners', {
-          value: [],
-          enumerable: false,
-        });
-        Object.defineProperty(obj, 'removeListener', {
-          value: fn => obj.listeners = obj.listeners.filter(l => {
-            if (l.fn !== fn) return l;
-          }),
-          enumerable: false,
-        });
-        Object.defineProperty(obj, 'addListener', {
-          value: function (prop, func) {
-            if (is.Func(prop) || is.Node(prop)) {
-              func = prop;
-              prop = '*';
-            }
-            let listner = {
-              prop: is.String(prop) ? prop : '*'
-            }
-            if (is.Node(func)) {
-              if (!is.Func(func['BindListener'])) throw Error('BindListener is not a function');
-              listner.node = func;
-              listner.fn = func['BindListener'];
-            } else if (is.Func(func)) listner.fn = func;
-            else throw new Error('no function');
-            obj.listeners.push(listner);
+        Options.socket = socket;
+
+        return Options;
+      }
+    },
+    observable : observable,
+    curry: fn => makeFn(fn, [], fn.length),
+    after(n, func) {
+      !is.Func(func) && is.Func(n) ? func = n : console.error("after: no function");
+      n = Number.isFinite(n = +n) ? n : 0;
+      if (--n < 1) return function () {
+        return func.apply(this, arguments);
+      }
+    },
+    debounce(wait, func, immediate) {
+      let timeout;
+      return function () {
+        let args = arguments;
+        let later = () => {
+            timeout = null;
+            if (!immediate) func.apply(this, args);
           },
-          enumerable: false,
-        });
-        try {
-          return new Proxy(obj, {
-            get: function (target, key, reciever) {
-              return Reflect.get(target, key);
-            },
-            set: function (target, key, value, reciever) {
-              target.listeners.forEach(l => {
-                if (l.prop === '*' || l.prop === key) l.fn(target, key, value, !(key in target));
-              });
-              return Reflect.set(target, key, value);
-            }
-          });
-        } catch (e) {
-          try {
-            Object.observe(obj, changes => changes.forEach(change => {
-              if (change.type === 'add' || change.type === 'update') obj.listeners.forEach(l => {
-                if (l.prop === '*' || l.prop === change.name) l.fn(obj, change.name, obj[change.name], change.type === 'add');
-              });
-            }));
-            return obj;
-          } catch (e2) {
-            console.warn('Your Browser is Old Update it');
+          callNow = immediate && !timeout;
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+        if (callNow) func.apply(this, args);
+      };
+    },
+    throttle(wait, func, options) {
+      let context, args, result,
+        timeout = null,
+        previous = 0;
+      if (!options) options = {};
+      let later = function () {
+        previous = !options.leading ? 0 : Date.now();
+        timeout = null;
+        result = func.apply(context, args);
+        if (!timeout) context = args = null;
+      };
+      return function () {
+        let now = Date.now();
+        if (is.False(previous, options.leading)) previous = now;
+        let remaining = wait - (now - previous);
+        context = this;
+        args = arguments;
+        if (remaining <= 0 || remaining > wait) {
+          if (timeout) {
+            clearTimeout(timeout);
+            timeout = null;
           }
-        }
-      },
-      curry: fn => makeFn(fn, [], fn.length),
-      after(n, func) {
-        !is.Func(func) && is.Func(n) ? func = n : console.error("after: no function");
-        n = Number.isFinite(n = +n) ? n : 0;
-        if (--n < 1) return function () {
-          return func.apply(this, arguments);
-        }
-      },
-      debounce(wait, func, immediate) {
-        let timeout;
-        return function () {
-          let args = arguments;
-          let later = () => {
-              timeout = null;
-              if (!immediate) func.apply(this, args);
-            },
-            callNow = immediate && !timeout;
-          clearTimeout(timeout);
-          timeout = setTimeout(later, wait);
-          if (callNow) func.apply(this, args);
-        };
-      },
-      throttle(wait, func, options) {
-        let context, args, result,
-          timeout = null,
-          previous = 0;
-        if (!options) options = {};
-        let later = function () {
-          previous = !options.leading ? 0 : Date.now();
-          timeout = null;
+          previous = now;
           result = func.apply(context, args);
           if (!timeout) context = args = null;
-        };
-        return function () {
-          let now = Date.now();
-          if (is.False(previous, options.leading)) previous = now;
-          let remaining = wait - (now - previous);
-          context = this;
-          args = arguments;
-          if (remaining <= 0 || remaining > wait) {
-            if (timeout) {
-              clearTimeout(timeout);
-              timeout = null;
-            }
-            previous = now;
-            result = func.apply(context, args);
-            if (!timeout) context = args = null;
-          } else if (!timeout && !!options.trailing) timeout = setTimeout(later, remaining);
-          return result;
-        };
-      },
-      once(func, context) {
-        let res;
-        return function () {
-          if (is.Func(func)) {
-            res = func.apply(context || this, arguments);
-            func = null;
-          }
-          return res;
+        } else if (!timeout && !!options.trailing) timeout = setTimeout(later, remaining);
+        return result;
+      };
+    },
+    once(func, context) {
+      let res;
+      return function () {
+        if (is.Func(func)) {
+          res = func.apply(context || this, arguments);
+          func = null;
+        }
+        return res;
+      }
+    },
+    css: (el, styles) => is.Def(styles) && is.Node(el) ? forEach(styles, (prop, key) => el.style[key] = prop) : console.error('invalid args'),
+    hasCapitals: string => toArr(string).some(c => is.Uppercase(c)),
+    OverrideFunction(funcName, Func, ContextObject) {
+      let func = funcName.split(".").pop(),
+        ns = funcName.split(".");
+      for (let i = 0; i < ns.length; i++) ContextObject = ContextObject[ns[i]];
+      ContextObject[func] = Func;
+    },
+    len(val) {
+      try {
+        return is.Object(val) ? Object.keys(val).length : is.Map(val) || is.Set(val) ? val.size : val.length;
+      } catch (e) {}
+      return -1;
+    },
+    indexOfDate(Collection, date) {
+      for (let i = 0; i < Collection.length; i++)
+        if (+Collection[i] === +date) return i;
+      return -1;
+    },
+    type() {
+      let types = [];
+      forEach(arguments, arg => types.push(typeof arg));
+      return types.length < 2 ? types[0] : types;
+    },
+    toggle: bool => !bool,
+    memoize(func, resolver) {
+      if (!is.Func(func) || (resolver && !is.Func(resolver))) throw new TypeError("no function");
+      let cache = new WeakMap;
+      let memoized = function () {
+        let args = arguments,
+          key = resolver ? resolver.apply(this, args) : args[0];
+        if (cache.has(key)) return cache.get(key);
+        let result = func.apply(this, args);
+        memoized.cache = cache.set(key, result);
+        return result;
+      };
+      return memoized;
+    },
+    millis: {
+      seconds: n => (n || 1) * 1000,
+      minutes: n => (n || 1) * 60000,
+      hours: n => (n || 1) * 60000 * 60,
+      days: n => (n || 1) * 60000 * 60 * 24,
+      weeks: n => (n || 1) * Craft.millis.days(7),
+      months: (n, daysInMonth) => n * Craft.millis.days((daysInMonth || 30)),
+      years: (n) => n * Craft.millis.days(365),
+    },
+    WebComponents: [],
+    CustomAttributes: [],
+    Scope : observable({}),
+    Models : observable({}),
+    tabActive: true,
+    /**
+    * Convert Arraylike variables to Array
+    * {...*} val - arraylike variable to convert to array
+    */
+    toArr: toArr,
+    /**
+    * Convert numbers to integers
+    * {number|string} val - number to convert to an integer
+    */
+    toInt: toInt,
+    /**
+     * Tail Call Optimization for recursive functional functions
+     * @param fn - function that uses recursion inside
+     */
+    tco(fn) {
+      let active, nextArgs;
+      return function () {
+        let result;
+        nextArgs = arguments;
+        if (!active) {
+          active = !0;
+          while (nextArgs) result = fn.apply(this, [nextArgs, nextArgs = null][0]);
+          active = !1;
+        }
+        return result;
+      }
+    },
+    mouse: {
+      x: 0,
+      y: 0,
+      over: null,
+      track: false,
+      get observe() { return Craft.mouse.track },
+      set observe(val) {
+        if (is.Bool(val)) {
+          val ? Craft.mouse.eventhandler.On : Craft.mouse.eventhandler.Off;
+          track = val;
         }
       },
-      css: (el, styles) => is.Def(styles) && is.Node(el) ? forEach(styles, (prop, key) => el.style[key] = prop) : console.error('invalid args'),
-      hasCapitals: string => toArr(string).some(c => is.Uppercase(c)),
-      OverrideFunction(funcName, Func, ContextObject) {
-        let func = funcName.split(".").pop(),
-          ns = funcName.split(".");
-        for (let i = 0; i < ns.length; i++) ContextObject = ContextObject[ns[i]];
-        ContextObject[func] = Func;
-      },
-      len(val) {
-        try {
-          return is.Object(val) ? Object.keys(val).length : is.Map(val) || is.Set(val) ? val.size : val.length;
-        } catch (e) {}
-        return -1;
-      },
-      indexOfDate(Collection, date) {
-        for (let i = 0; i < Collection.length; i++)
-          if (+Collection[i] === +date) return i;
-        return -1;
-      },
-      type() {
-        let types = [];
-        forEach(arguments, arg => types.push(typeof arg));
-        return types.length < 2 ? types[0] : types;
-      },
-      toggle: bool => !bool,
-      memoize(func, resolver) {
-        if (!is.Func(func) || (resolver && !is.Func(resolver))) throw new TypeError("no function");
-        let cache = new WeakMap;
-        let memoized = function () {
-          let args = arguments,
-            key = resolver ? resolver.apply(this, args) : args[0];
-          if (cache.has(key)) return cache.get(key);
-          let result = func.apply(this, args);
-          memoized.cache = cache.set(key, result);
-          return result;
-        };
-        return memoized;
-      },
-      millis: {
-        seconds: n => (n || 1) * 1000,
-        minutes: n => (n || 1) * 60000,
-        hours: n => (n || 1) * 60000 * 60,
-        days: n => (n || 1) * 60000 * 60 * 24,
-        weeks: n => (n || 1) * Craft.millis.days(7),
-        months: (n, daysInMonth) => n * Craft.millis.days((daysInMonth || 30)),
-        years: (n) => n * Craft.millis.days(365),
-      },
-      WebComponents: [],
-      CustomAttributes: [],
-      tabActive: true,
-      toArr: toArr,
-      toInt: toInt,
-      /**
-       * Tail Call Optimization for recursive functional functions
-       * @param fn - function that uses recursion inside
-       */
-      tco(fn) {
-        let active, nextArgs;
-        return function () {
-          let result;
-          nextArgs = arguments;
-          if (!active) {
-            active = !0;
-            while (nextArgs) result = fn.apply(this, [nextArgs, nextArgs = null][0]);
-            active = !1;
-          }
-          return result;
-        }
-      },
-      mouse: {
-        x: 0,
-        y: 0,
-        over: null,
-        track: false,
-        observe(val) {
-          if (is.Bool(val)) {
-            Craft.mouse.track = val;
-            Craft.mouse.track ? Craft.mouse.eventhandler.On : Craft.mouse.eventhandler.Off;
-          } else return Craft.mouse.track;
-        },
-      },
-      easing: {
-        inOutQuad(t, b, c, d) {
-          t /= d / 2;
-          if (t < 1) return c / 2 * t * t + b;
-          t--;
-          return -c / 2 * (t * (t - 2) - 1) + b;
-        }
-      },
-      JumpTo(target, options) {
-        options = options || {};
-        options.duration = options.duration || 400;
-        options.offset = options.offset || 0;
+    },
+    easing: {
+      inOutQuad(t, b, c, d) {
+        t /= d / 2;
+        if (t < 1) return c / 2 * t * t + b;
+        t--;
+        return -c / 2 * (t * (t - 2) - 1) + b;
+      }
+    },
+    JumpTo(target, options) {
+      options = options || {};
+      options.duration = options.duration || 400;
+      options.offset = options.offset || 0;
 
-        let startTime, elapsedTime, start = root.pageYOffset,
-          distance = is.String(target) ? options.offset + query(target).getBoundingClientRect().top : target,
-          loopIteration = 0,
-          loop = time => {
-            if (loopIteration === 0) startTime = time;
-            loopIteration++;
-            elapsedTime = time - startTime;
-            root.scrollTo(0, Craft.easing.inOutQuad(elapsedTime, start, distance, options.duration));
-            if (elapsedTime < options.duration) requestAnimationFrame(loop)
-            else {
-              root.scrollTo(0, start + distance);
-              if (is.Func(options.func)) options.func.call();
-              startTime = undefined;
-            }
-          };
-        requestAnimationFrame(loop)
-      },
-      /**
-       * converts Objects or URL variable strings to a FormData object
-       * @param {object|string} val - values to convert
-       */
-      toFormData(val) {
-        let formData = new FormData();
-        if (is.String(val)) val = val.split('&');
-        forEach(val, v => {
-          if (is.String(v)) {
-            v = v.split('=');
-            if (v.length === 1) v[1] = '';
-            formData.append(v[0], v[1]);
-          } else formData.append(key, v);
-        });
-        return formData;
-      },
-      CSSRule(selector, rules, index, sheet) {
-        if (is.Object(rules)) {
-          let temp = '';
-          forEach(rules, (val, key) => temp += key + ': ' + (val.includes(';') ? val : val + ';\n'));
-          rules = temp;
-        }
-        if (!sheet) sheet = CrafterStyles.sheet;
-        sheet.insertRule(selector + "{" + rules + "}", index);
-      },
-      revokeCSSRule: (index, sheet) => (sheet || CrafterStyles).sheet.deleteRule(index),
-      URLfrom: text => URL.createObjectURL(new Blob([text])),
-      OnScroll: (element, func) => is.Func(func) ? On('scroll', element, e => func(e.deltaY < 1, e)) : console.error('no function'),
-      OnResize: func => is.Func(func) ? Craft.ResizeHandlers.add(func) : console.error("Craft.OnResize -> no function"),
-      OnScrolledTo: Scroll => new Promise((pass, fail) => {
-        let ev = On('scroll', e => pageYOffset >= Scroll ? pass(e, ev) : fail(e, ev));
-      }),
-      WhenScrolledTo: Scroll => new Promise((pass, fail) => Once('scroll', e => pageYOffset >= Scroll || pageYOffset <= Scroll ? pass(e) : fail(e))),
-      /**
-       * returns a promise when the DOM and WebComponents are all finished loading
-       * @param {function} func - function to execute when the DOM and webcomponents are ready
-       */
-      get WhenReady() {
-        return new Promise((pass, fail) => {
-          if (Ready) return pass();
-          let check = setInterval(() => {
-            if (Ready) {
-              pass();
-              clearInterval(check);
-            }
-          }, 30);
-          setTimeout(() => {
-            clearInterval(check);
-            if (!Ready) fail('loading took too long loaded with errors :(');
-          }, 5500);
-        });
-      },
-      model(name, func) {
-        if (is.Func(func) && is.String(name)) {
-          if (!is.Def(Craft.Models[name])) Craft.Models[name] = {
-            func: func,
-            scope: Craft.observable({})
+      let startTime, elapsedTime, start = root.pageYOffset,
+        distance = is.String(target) ? options.offset + query(target).getBoundingClientRect().top : target,
+        loopIteration = 0,
+        loop = time => {
+          if (loopIteration === 0) startTime = time;
+          loopIteration++;
+          elapsedTime = time - startTime;
+          root.scrollTo(0, Craft.easing.inOutQuad(elapsedTime, start, distance, options.duration));
+          if (elapsedTime < options.duration) requestAnimationFrame(loop)
+          else {
+            root.scrollTo(0, start + distance);
+            if (is.Func(options.func)) options.func.call();
+            startTime = undefined;
           }
-        }
-      },
-      fromModel(key, val) {
-        let cutkey = cutdot(key);
-        if (is.Def(Craft.Models[cutkey[0]])) {
-          let type = (is.Def(val) ? 'set' : 'get') + 'Deep';
-          return cutkey.length === 1 && !is.Def(val) ? Craft.Models[cutkey[0]].scope : Craft[type](Craft.Models[cutkey[0]].scope, Craft.omit(cutkey, cutkey[0]).join('.'), val);
-        }
-      },
-      customAttribute(name, handle) {
-        if (is.Func(handle)) {
-          Craft.CustomAttributes.push({
-            name: name,
-            handle: handle
-          });
-
-          function apply() {
-            queryEach(`[${name}]`, el => {
-              el = el.hasDOMmethods ? el : dom(el);
-              if (el.hasAttr(name)) {
-                if (!is.Array(el.customAttr)) el.customAttr = [];
-                if (!el.customAttr.includes(name)) {
-                  el.customAttr.push(name);
-                  handle(el, el.getAttr(name));
-                }
-              }
-            });
-          }
-          Ready ? apply() : Craft.WhenReady.then(() => setTimeout(apply, 80));
-        }
-      },
-      poll: (test, interval, timeout) => new Promise((pass, fail) => {
-        if (!is.Def(timeout)) interval = timeout;
-        let bool = is.Bool(test) && test === true;
-        let Interval = setInterval(() => {
-          if (bool || (is.Func(test) && test() === true)) {
+        };
+      requestAnimationFrame(loop)
+    },
+    /**
+     * converts Objects or URL variable strings to a FormData object
+     * @param {object|string} val - values to convert
+     */
+    toFormData(val) {
+      let formData = new FormData();
+      if (is.String(val)) val = val.split('&');
+      forEach(val, v => {
+        if (is.String(v)) {
+          v = v.split('=');
+          if (v.length === 1) v[1] = '';
+          formData.append(v[0], v[1]);
+        } else formData.append(key, v);
+      });
+      return formData;
+    },
+    CSSRule(selector, rules, index, sheet) {
+      if (is.Object(rules)) {
+        let temp = '';
+        forEach(rules, (val, key) => temp += key + ': ' + (val.includes(';') ? val : val + ';\n'));
+        rules = temp;
+      }
+      if (!sheet) sheet = CrafterStyles.sheet;
+      sheet.insertRule(selector + "{" + rules + "}", index);
+    },
+    revokeCSSRule: (index, sheet) => (sheet || CrafterStyles).sheet.deleteRule(index),
+    URLfrom: text => URL.createObjectURL(new Blob([text])),
+    OnScroll: (element, func) => is.Func(func) ? On('scroll', element, e => func(e.deltaY < 1, e)) : console.error('no function'),
+    OnResize: func => is.Func(func) ? Craft.ResizeHandlers.add(func) : console.error("Craft.OnResize -> no function"),
+    OnScrolledTo: Scroll => new Promise((pass, fail) => {
+      let ev = On('scroll', e => pageYOffset >= Scroll ? pass(e, ev) : fail(e, ev));
+    }),
+    WhenScrolledTo: Scroll => new Promise((pass, fail) => Once('scroll', e => pageYOffset >= Scroll || pageYOffset <= Scroll ? pass(e) : fail(e))),
+    /**
+     * returns a promise when the DOM and WebComponents are all finished loading
+     * @param {function} func - function to execute when the DOM and webcomponents are ready
+     */
+    get WhenReady() {
+      return new Promise((pass, fail) => {
+        if (Ready) return pass();
+        let check = setInterval(() => {
+          if (Ready) {
             pass();
-            clearInterval(Interval);
+            clearInterval(check);
           }
-        }, interval || 20);
+        }, 30);
+        setTimeout(() => {
+          clearInterval(check);
+          if (!Ready) fail('loading took too long loaded with errors :(');
+        }, 5500);
+      });
+    },
+    model(name, func) {
+      if (is.Func(func) && is.String(name)) {
+        if (!is.Def(Craft.Models[name])) Craft.Models[name] = {
+          func: func,
+          scope: Craft.observable({})
+        }
+      }
+    },
+    fromModel(key, val) {
+      let cutkey = cutdot(key);
+      if (is.Def(Craft.Models[cutkey[0]])) {
+        let type = (is.Def(val) ? 'set' : 'get') + 'Deep';
+        return cutkey.length === 1 && !is.Def(val) ? Craft.Models[cutkey[0]].scope : Craft[type](Craft.Models[cutkey[0]].scope, Craft.omit(cutkey, cutkey[0]).join('.'), val);
+      }
+    },
+    customAttribute(name, handle) {
+      if (is.Func(handle)) {
+        Craft.CustomAttributes.push({
+          name: name,
+          handle: handle
+        });
+
+        function apply() {
+          queryEach(`[${name}]`, el => {
+            el = el.hasDOMmethods ? el : dom(el);
+            if (el.hasAttr(name)) {
+              if (!is.Array(el.customAttr)) el.customAttr = [];
+              if (!el.customAttr.includes(name)) {
+                el.customAttr.push(name);
+                handle(el, el.getAttr(name));
+              }
+            }
+          });
+        }
+        Ready ? apply() : Craft.WhenReady.then(() => setTimeout(apply, 80));
+      }
+    },
+    poll(test, interval, timeout) {
+      return new Promise((pass, fail) => {
+        if (!is.Def(timeout)) interval = timeout;
+        let isfn = is.Func(test),
+        Interval = setInterval(() => {
+            if (!!test || (isfn && !test())) {
+              pass();
+              clearInterval(Interval);
+            }
+          }, interval || 20);
         if (is.Num(timeout)) setTimeout(() => {
-          if (bool || (is.Func(test) && test() === false)) fail();
+          if (!!test || (isfn && !test())) fail();
           clearInterval(Interval);
         }, timeout);
-      }),
-      /**
-       * Usefull method for validating passwords , example Craft.strongPassword('#MyFancyPassword18',8,true,true,"#") -> true requirements met
-       * @param {string} pass - string containing the password
-       * @param {Number} length - Character length in numbers (Minimum password length)
-       * @param {Boolean} caps - Should the password contains Capital Letters
-       * @param {Boolean} number - should the password contain Numbers
-       * @param {Boolean} reasons - should the function return a short string explaining the reason exept when it's a pass then it gives a bool;
-       * @param {...string} includeChars - every extra argument should be a string containing a character you want the password to include
-       */
-      strongPassword(pass, length, caps, number, reasons) {
-        let includeChars = toArr(arguments).slice(5);
-        if (pass.length <= length - 1) return reasons ? 'Password too short' : false;
-        if (caps === true && Craft.hasCapitals(pass) === false) return reasons ? 'Password should have a Capital letter' : false;
-        if (number === true && /\d/g.test(pass) === false) return reasons ? 'Password should have a number' : false;
-        if (includeChars.length) {
-          let hasChars = true,
-            reason = includeChars.join();
-          forEach(includeChars, ch => hasChars = pass.includes(ch));
-          if (!hasChars) return reasons ? '' : false
-        }
-        return true;
-      },
-      formatBytes(bytes, decimals) {
-        if (bytes == 0) return '0 Byte';
-        let k = 1000,
-          dm = decimals + 1 || 3,
-          sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
-          i = Math.floor(Math.log(bytes) / Math.log(k));
-        return (bytes / Math.pow(k, i)).toPrecision(dm) + ' ' + sizes[i];
-      },
-      /** method for generating random alphanumeric strings*/
-      randomString: () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1),
-      /**
-       * similar to Craft.randomString in that it generates a unique string , in this case a Unique ID with random alphanumeric strings separated by hyphens
-       * example 0ebf-c7d2-ef81-2667-08ef-4cde
-       * @param {number=} len - optional length of uid sections
-       */
-      GenUID: (len) => Craft.array(len || 6, Craft.randomString).join('-'),
-      /**
-       * Part of Crafter.js's own WebComponent format (.wc) it takes a json object that contains .css and .js values then imports and executes them
-       * @param {string} webcomponent - JSON string from Crafter.js's (.wc) WebComponent format
-       */
-      createWebComponent(wc, src) {
-        wc = JSON.parse(wc);
-        CrafterStyles.textComponent += wc.css;
-        head.appendChild(dom().script(wc.js + `\nCraft.WebComponents.push('${src}')`, `${w}=${wc.name}`));
-      },
-      /**
-       * method for creating custom elements configuring their lifecycle's and inheritance
-       * the config Object has 5 distinct options ( created , inserted , destroyed , attr and extends )
-       * Craft.newComponent('custom-element',{
-       * // note : inside each lifecycle method the "this" is a reference to the element being created -> this === element
-       *    created() { ... }, // this method gets called when the custom-element is first instanciated
-       *    inserted() { ... }, // this method gets called when the custom-element is first inserted into the DOM
-       *    destroyed() { ... }, // this method gets called when the custom-element removed from the DOM (AKA. destroyed)
-       *    attr(attributeChangedName , oldValue , newValue) { ... }, // attr method gets called when attributes are changed on the element
-       *    extends : 'button' //tagName of element being inherited from should you want to
-       * });
-       * @param {string} tag - a hyphenated custom HTML tagname for the new element -> "custom-element"
-       * @param {object} config - Object containing all the element's lifecycle methods / extends and attached methods or properties
-       */
-      newComponent(tag, config) {
-        if (!is.Def(config)) throw new Error(tag + ' : config undefined');
-        let element = Object.create(HTMLElement.prototype),
-          settings = {};
+      });
+    },
+    /**
+     * Usefull method for validating passwords , example Craft.strongPassword('#MyFancyPassword18',8,true,true,"#") -> true requirements met
+     * @param {string} pass - string containing the password
+     * @param {Number} length - Character length in numbers (Minimum password length)
+     * @param {Boolean} caps - Should the password contains Capital Letters
+     * @param {Boolean} number - should the password contain Numbers
+     * @param {Boolean} reasons - should the function return a short string explaining the reason exept when it's a pass then it gives a bool;
+     * @param {...string} includeChars - every extra argument should be a string containing a character you want the password to include
+     */
+    strongPassword(pass, length, caps, number, reasons) {
+      let includeChars = toArr(arguments).slice(5);
+      if (pass.length <= length - 1) return reasons ? 'Password too short' : false;
+      if (caps === true && Craft.hasCapitals(pass) === false) return reasons ? 'Password should have a Capital letter' : false;
+      if (number === true && /\d/g.test(pass) === false) return reasons ? 'Password should have a number' : false;
+      if (includeChars.length) {
+        let hasChars = true,
+          reason = includeChars.join();
+        forEach(includeChars, ch => hasChars = pass.includes(ch));
+        if (!hasChars) return reasons ? '' : false
+      }
+      return true;
+    },
+    formatBytes(bytes, decimals) {
+      if (bytes == 0) return '0 Byte';
+      let k = 1000,
+        dm = decimals + 1 || 3,
+        sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
+        i = Math.floor(Math.log(bytes) / Math.log(k));
+      return (bytes / Math.pow(k, i)).toPrecision(dm) + ' ' + sizes[i];
+    },
+    /** method for generating random alphanumeric strings*/
+    randomString: () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1),
+    /**
+     * similar to Craft.randomString in that it generates a unique string , in this case a Unique ID with random alphanumeric strings separated by hyphens
+     * example 0ebf-c7d2-ef81-2667-08ef-4cde
+     * @param {number=} len - optional length of uid sections
+     */
+    GenUID: (len) => Craft.array(len || 6, Craft.randomString).join('-'),
+    /**
+     * Part of Crafter.js's own WebComponent format (.wc) it takes a json object that contains .css and .js values then imports and executes them
+     * @param {string} webcomponent - JSON string from Crafter.js's (.wc) WebComponent format
+     */
+    createWebComponent(wc, src) {
+      wc = JSON.parse(wc);
+      CrafterStyles.textComponent += wc.css;
+      head.appendChild(dom().script(wc.js + `\nCraft.WebComponents.push('${src}')`, `${w}=${wc.name}`));
+    },
+    /**
+     * method for creating custom elements configuring their lifecycle's and inheritance
+     * the config Object has 5 distinct options ( created , inserted , destroyed , attr and extends )
+     * Craft.newComponent('custom-element',{
+     * // note : inside each lifecycle method the "this" is a reference to the element being created -> this === element
+     *    created() { ... }, // this method gets called when the custom-element is first instanciated
+     *    inserted() { ... }, // this method gets called when the custom-element is first inserted into the DOM
+     *    destroyed() { ... }, // this method gets called when the custom-element removed from the DOM (AKA. destroyed)
+     *    attr(attributeChangedName , oldValue , newValue) { ... }, // attr method gets called when attributes are changed on the element
+     *    extends : 'button' //tagName of element being inherited from should you want to
+     * });
+     * @param {string} tag - a hyphenated custom HTML tagname for the new element -> "custom-element"
+     * @param {object} config - Object containing all the element's lifecycle methods / extends and attached methods or properties
+     */
+    newComponent(tag, config) {
+      if (!is.Def(config)) throw new Error(tag + ' : config undefined');
+      let element = Object.create(HTMLElement.prototype),
+        settings = {};
 
-        forEach(config, (prop, key) => {
-          if (key === 'created') element.createdCallback = prop;
-          else if (key === 'inserted') element.attachedCallback = prop;
-          else if (key === 'destroyed') element.detachedCallback = prop;
-          else if (key === 'attr') element.attributeChangedCallback = prop;
-          else key === 'extends' ? settings.extends = prop : Object.defineProperty(element, key, Object.getOwnPropertyDescriptor(config, key));
-        });
+      forEach(config, (prop, key) => {
+        if (key === 'created') element.createdCallback = prop;
+        else if (key === 'inserted') element.attachedCallback = prop;
+        else if (key === 'destroyed') element.detachedCallback = prop;
+        else if (key === 'attr') element.attributeChangedCallback = prop;
+        else key === 'extends' ? settings.extends = prop : Object.defineProperty(element, key, Object.getOwnPropertyDescriptor(config, key));
+      });
 
-        settings['prototype'] = element;
-        doc.registerElement(tag, settings);
-      },
-      SyncInput(input, obj, key) {
-        if (is.String(input)) input = query(input);
-        if (is.Input(input)) input[sI] = On(input).Input(e => Craft.setDeep(obj, key, input.value));
-      },
-      disconectInputSync(input) {
-        if (is.String(input)) input = query(input);
-        if (is.Node(input) && is.Def(input[sI])) {
-          input[sI].Off();
-          delete input[sI];
-        }
-      },
+      settings['prototype'] = element;
+      doc.registerElement(tag, settings);
+    },
+    SyncInput(input, obj, key) {
+      if (is.String(input)) input = query(input);
+      if (is.Input(input)) input[sI] = On(input).Input(e => Craft.setDeep(obj, key, input.value));
+    },
+    disconectInputSync(input) {
+      if (is.String(input)) input = query(input);
+      if (is.Node(input) && is.Def(input[sI])) {
+        input[sI].Off();
+        delete input[sI];
+      }
+    },
   };
 
   Craft.ForEach = Craft.tco((collection, func, i = 0) => {
@@ -1861,12 +1880,8 @@
     }
   });
 
-  root.CraftScope = Craft.observable({});
-
   On('blur', e => Craft.tabActive = !1);
   On('focus', e => Craft.tabActive = !0);
-
-  Craft.Models = Craft.observable({});
 
   Craft.Models.addListener((o, key, model, New) => {
     if (New) Ready ? model.func(model.scope) : Craft.WhenReady.then(() => model.func(model.scope));
@@ -1916,7 +1931,7 @@
     try {
       let cutbind = cutdot(bind),
         prop = cutbind[cutbind.length - 1],
-        obj = is.Def(Craft.Models[cutbind[0]]) ? Craft.Models[cutbind[0]].scope : Craft.getDeep(root, Craft.omit(cutbind, prop).join('.')) || CraftScope,
+        obj = is.Def(Craft.Models[cutbind[0]]) ? Craft.Models[cutbind[0]].scope : Craft.getDeep(root, Craft.omit(cutbind, prop).join('.')) || Craft.Scope,
         val = Craft.getDeep(obj, cutbind.length > 1 ? Craft.omit(cutbind, cutbind[0]).join('.') : prop);
 
       is.Def(val) ? el.html(val) : Craft.setDeep(obj, prop, el.html());
@@ -1933,16 +1948,15 @@
   });
 
   function manageAttr(el) {
-    dom(el);
     for (let i = 0, attr; i < Craft.CustomAttributes.length; i++) {
       attr = Craft.CustomAttributes[i];
-      if (el.hasAttr(attr.name)) {
+      if (el.hasAttribute(attr.name)) {
         if (!is.Array(el.customAttr)) el.customAttr = [];
         if (!el.customAttr.includes(attr.name)) {
           el.customAttr.push(attr.name);
-          attr.handle(el, el.getAttr(attr.name));
+          attr.handle(dom(el), el.getAttribute(attr.name));
         }
-        break;
+        return;
       }
     }
   }
@@ -1974,7 +1988,6 @@
     forEach(Craft.router.handlers, handle => {
       if (Locs(l => l === handle.link)) handle.func(location.hash);
     });
-
   });
 
   root.forEach = forEach;
