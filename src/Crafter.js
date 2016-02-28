@@ -196,12 +196,12 @@
      * Determine if a variable/s are true
      * @param args - value/values to test
      */
-    True: ta(o => o === true),
+    True: ta(o => !!o),
     /**
      * Determine if a variable/s are false
      * @param args - value/values to test
      */
-    False: ta(o => o !== true),
+    False: ta(o => !o),
     /**
      * Determine if a variable is of Blob type
      * @param obj - variable to test
@@ -419,7 +419,7 @@
      * Determine if a given collection or string is empty
      * @param {Object|Array|string} val - value to test if empty
      */
-    empty: ta(val => Craft.len(val) === 0 || val === ''),
+    empty: ta(val => !Craft.len(val) || val === ''),
     /**
      * Test if something is a Native JavaScript feature
      * @param val - value to test
@@ -521,7 +521,7 @@
    * @param {Array|Object|NodeList|Number} iterable - any collection that is either an Object or has a .length value
    * @param {function} func - function called on each iteration -> "function( value , indexOrKey ) {...}"
    */
-  function forEach(iterable, func) {
+  root.forEach = function (iterable, func) {
     if (!is.empty(iterable) && is.Func(func)) {
       let i = 0;
       if (is.Array(iterable) || is.Arraylike(iterable) && !localStorage) {
@@ -674,11 +674,11 @@
       stripClass: (Class) => forEach(elements, el => el.classList.remove(Class)),
       toggleClass: (Class, state) => forEach(elements, el => (is.Bool(state) ? state : el.classList.contains(Class)) ? el.classList.remove(Class) : el.classList.add(Class)),
       append() {
-        forEach(arguments, val => forEach(elements, el => el.appendChild((is.Node(val) ? val : docfragFromString(val)).cloneNode(true))));
+        forEach(arguments, val => forEach(elements, el => el.appendChild((is.Node(val) ? val : docfragFromString(val)).cloneNode(!0))));
         return this;
       },
       prepend() {
-        forEach(arguments, val => forEach(elements, el => el.insertBefore((is.Node(val) ? val : docfragFromString(val)).cloneNode(true), el.firstChild)));
+        forEach(arguments, val => forEach(elements, el => el.insertBefore((is.Node(val) ? val : docfragFromString(val)).cloneNode(!0), el.firstChild)));
         return this;
       },
       hide() {
@@ -698,8 +698,8 @@
     return function () {
       let args = toArr(arguments);
       type = is.Input(el) ? 'value' : type;
-      if (args.length === 0) return el[type];
-      args.length === 1 ? is.Node(args[0]) ? el.append(args[0]) : el[type] = args[0] : el[type] = args.map(val => is.Node(val) ? val.outerHTML : val).join('');
+      if (args.length == 0) return el[type];
+      args.length == 1 ? is.Node(args[0]) ? el.append(args[0]) : el[type] = args[0] : el[type] = args.map(val => is.Node(val) ? val.outerHTML : val).join('');
       return el;
     }
   }
@@ -710,8 +710,8 @@
 
   function domManip(element, within) {
     if (is.String(element)) element = query(element, within);
-    if (element.hasDOMmethods === true) return element;
-    element.hasDOMmethods = true;
+    if (element.hasDOMmethods === !0) return element;
+    element.hasDOMmethods = !0;
     /**
      * changes or returns the innerHTML value of a Node
      * @memberof dom
@@ -997,9 +997,9 @@
     element.observe = function (func, options) {
       this.MutObserver = new MutationObserver(muts => muts.forEach(mut => func(mut, mut.type, mut.target, mut.addedNodes, mut.removedNodes)));
       this.MutObserver.observe(this, options || {
-        attributes: true,
-        childList: true,
-        subtree: true
+        attributes: !0,
+        childList: !0,
+        subtree: !0
       });
     }
     element.unobserve = function () {
@@ -1022,18 +1022,18 @@
    * @param {boolean=} one - even if there are more than one elements matching a selector only return the first one
    */
   root.dom = (element, within, one) => {
-    if (within === true) {
+    if (within == !0) {
       one = within;
       within = null;
     }
     if (!one) {
       if (is.String(element)) element = queryAll(element, within);
       if (is.NodeList(element)) {
-        if (element.length === 1) element = element[0];
-        else return domNodeList(element);
+        if (element.length !== 1) return domNodeList(element);
+        else element = element[0];
       }
     } else if (is.String(element)) element = query(element, within);
-    if (is.Node(element)) return element['hasDOMmethods'] !== !0 ? domManip(element) : element;
+    if (is.Node(element)) return !element['hasDOMmethods'] ? domManip(element) : element;
     return Craft.dom;
   }
 
@@ -1071,10 +1071,8 @@
     });
     try {
       return new Proxy(obj, {
-        get: function (target, key, reciever) {
-          return Reflect.get(target, key);
-        },
-        set: function (target, key, value, reciever) {
+        get : (target, key, reciever) => Reflect.get(target, key),
+        set(target, key, value, reciever) {
           target.listeners.forEach(l => {
             if (l.prop === '*' || l.prop === key) l.fn(target, key, value, !(key in target));
           });
@@ -1099,16 +1097,13 @@
    * Craft is Crafter.js's Core containing most functionality.
    */
   root.Craft = {
-    /** Converts an Array to an Object
-     * @param {Array} arr - array to be converted
+    /** Returns an object or calls a function with all the differences between two arrays
+     * @param {Array} arr - array to be compared
+     * @param {Array} arr - second array to be compared
      */
     arrDiff(arr, newArr, func) {
-      let added = newArr.filter(item => {
-          if (!arr.includes(item)) return item;
-        }),
-        removed = arr.filter(item => {
-          if (!newArr.includes(item)) return item;
-        }),
+      let added = newArr.filter(item => !arr.includes(item) ? item : nil()),
+        removed = arr.filter(item => newArr.includes(item) ? item : nil()),
         diff = Craft.omit(added.concat(removed), undefined);
       if (is.Func(func)) func(arr, newArr, added, removed, diff);
       else return {
@@ -1126,9 +1121,9 @@
      */
     sameArray(arr1, arr2) {
       let i = arr1.length;
-      if (i !== arr2.length) return false;
+      if (i !== arr2.length) return !1;
       while (i--)
-        if (arr1[i] !== arr2[i]) return false;
+        if (arr1[i] !== arr2[i]) return !1;
       return true;
     },
     /**
@@ -1136,8 +1131,9 @@
      * @param {Number} len - the integer length of the array to be generated
      * @param {...function|*} val - value to set at each index , multiple value params after lenth will generate nested 2d arrays
      */
-    array(len, ...val) {
-      let arr = [];
+    array(len) {
+      let arr = [],
+      val = Craft.omit(arguments,len);
       if (val.length === 1) {
         val = val[0];
         forEach(len, i => arr.push(is.Func(val) ? val() : val));
@@ -1163,7 +1159,7 @@
       path = path.replace(/\[(\w+)\]/g, '.$1');
       path = path.replace(/^\./, '');
       try {
-        for (let i = 0, a = path.split('.'); i < a.length; ++i) a[i] in obj ? obj = obj[a[i]] : obj = undefined;
+        for (let i = 0, a = cutdot(path); i < a.length; ++i) a[i] in obj ? obj = obj[a[i]] : obj = undefined;
       } catch (e) {}
       return obj;
     },
@@ -1175,7 +1171,7 @@
      * @param {boolean} returnObj - should the function return the object
      */
     setDeep(obj, path, value, returnObj) {
-      path = path.split('.');
+      path = cutdot(path);
       let temp = obj;
       for (let i = 0, n; i < path.length - 1; i++) {
         n = path[i];
@@ -1302,7 +1298,7 @@
           type: 'text/javascript',
           src: Craft.URLfrom(code)
         });
-        script.defer = defer === true;
+        script.defer = !!defer;
         return script;
       },
       td: (inner, attr) => craftElement('td', inner, attr),
@@ -1482,9 +1478,7 @@
         }
         let socket = protocols ? new WebSocket(address, protocols) : new WebSocket(address);
         socket.onopen = e => Options.open = !0;
-
         socket.onclose = e => Options.open = !1;
-
         socket.onmessage = e => {
           Options.message = e.data;
           forEach(Options.recievers, fn => fn(e.data, e));
@@ -1506,8 +1500,8 @@
     debounce(wait, func, immediate) {
       let timeout;
       return function () {
-        let args = arguments;
-        let later = () => {
+        let args = arguments,
+        later = () => {
             timeout = null;
             if (!immediate) func.apply(this, args);
           },
@@ -1688,7 +1682,7 @@
       forEach(val, v => {
         if (is.String(v)) {
           v = v.split('=');
-          if (v.length === 1) v[1] = '';
+          if (v.length == 1) v[1] = '';
           formData.append(v[0], v[1]);
         } else formData.append(key, v);
       });
@@ -1890,7 +1884,7 @@
   Craft.curry.to = Craft.curry((arity, fn) => makeFn(fn, [], arity));
   Craft.curry.adaptTo = Craft.curry((num, fn) => Craft.curry.to(num, (context, ...args) => fn.apply(null, args.slice(1).concat(context))));
   Craft.curry.adapt = fn => Craft.curry.adaptTo(fn.length, fn);
-  Craft.loader.removeAll(true);
+  Craft.loader.removeAll(!0);
   Craft.mouse.eventhandler = On('mousemove', e => {
     if (!!Craft.mouse.track) {
       Craft.mouse.x = e.clientX;
@@ -1962,11 +1956,11 @@
   }
 
   Once('DOMContentLoaded', () => {
-    Craft.router.links.forEach(link => link());
-    Craft.WebComponents.length === queryAll(fw).length ? Ready = true :
+    forEach(Craft.router.links,link => link());
+    Craft.WebComponents.length === queryAll(fw).length ? Ready = !0 :
       Craft.poll(() => Craft.WebComponents.length === queryAll(fw).length, 35, 5035)
       .then(() => {
-        Ready = true;
+        Ready = !0;
         Craft.DomObserver = new MutationObserver(muts => forEach(muts, mut => {
           forEach(mut.addedNodes, el => {
             if (el['hasAttribute']) manageAttr(el);
@@ -1974,21 +1968,20 @@
           manageAttr(mut.target);
         }));
         Craft.DomObserver.observe(doc.body, {
-          attributes: true,
-          childList: true,
-          subtree: true,
+          attributes: !0,
+          childList: !0,
+          subtree: !0,
         });
       }).catch(() => {
-        Ready = true;
+        Ready = !0;
         console.warn('loading took too long loaded with errors :(');
       });
   });
 
   On('hashchange', () => {
     forEach(Craft.router.handlers, handle => {
-      if (Locs(l => l === handle.link)) handle.func(location.hash);
+      if (Locs(l => l === handle.link)) handle.func(location.hash)
     });
   });
 
-  root.forEach = forEach;
 })(document, self);

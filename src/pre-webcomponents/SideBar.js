@@ -6,7 +6,7 @@
         if (!el.hasAttr('sidebar-direction')) el.setAttr('sidebar-direction', 'left');
         if (el.hasAttr('color-accent')) el.color = el.getAttr('color-accent');
         if (el.hasAttr('toggle-element')) el.setToggleElement(el.getAttr('toggle-element'));
-        el.onClick = On('click', el, e => {
+        el.onClick = el.Click(e => {
           queryEach('[selected]', el, s => {
             if (s !== e.target) s.removeAttribute('selected');
           });
@@ -28,15 +28,15 @@
           sbt = 'hidden',
           gotSBT = el.hasAttr(sbt);
         if (is.Def(open)) open ? el.stripAttr(sbt) : el.setAttr(sbt, '');
-        else gotSBT ? el.stripAttr(sbt) : el.setAttr(sbt, '');
+        else gotSBT ? el.stripAttr(sbt) : el.setAttr(sbt);
       },
       attr(name) {
         let el = dom(this);
         if (name === 'hidden' && is.Func(el.func)) this.func(!el.hasAttr('hidden'));
       },
       destroyed() {
-        this.onClick.Off();
-        if (this.onToggleClick instanceof EventHandler) this.onToggleClick.Off();
+        this.onClick.Off;
+        if (this.onToggleClick instanceof EventHandler) this.onToggleClick.Off;
       }
   });
 
@@ -77,7 +77,7 @@
         if (el.hasAttr('color-accent')) el.color = el.getAttr('color-accent');
         el.style.borderColor = el.color;
         if (query('sidebar-icon', el) !== null) query('sidebar-icon', el).style.color = el.color;
-        el.Onclick = On('click', el, e => el.hasAttr('selected') ? el.stripAttr('selected') : setTimeout(() => el.setAttr('selected'), 50));
+        el.Onclick = el.Click(e => el.hasAttr('selected') ? el.stripAttr('selected') : setTimeout(() => el.setAttr('selected'), 50));
       },
       attr(attrName, oldVal, newVal) {
         if (attrName === 'ripple' || attrName === 'color-accent') this.color = newVal;
@@ -86,14 +86,14 @@
         if (sb !== null) sb.style.color = this.color;
       },
       destroyed() {
-        this.Onclick.Off();
+        this.Onclick.Off;
       }
   });
 
   Craft.newComponent('sidebar-accordion', {
     inserted() {
         let el = dom(this);
-        el.open = el.getAttr('accordion') === 'open' ? true : false;
+        el.open = el.getAttr('accordion') === 'open';
         el.setAttr('accordion', el.open ? 'open' : 'closed');
         setTimeout(() => {
           let heading = dom('sidebar-heading', el);
@@ -116,14 +116,14 @@
       },
       attr() {
         let el = dom(this);
-        el.getAttr('accordion') === 'open' ? el.open = true : el.open = false;
+         el.open = el.getAttr('accordion') === 'open';
         setTimeout(() => el.setAttr('accordion', el.open ? 'open' : 'closed'), 50);
         el.style.height = el.open ? ((queryAll('sidebar-item', el).length * 8.5) + 12) + "mm" : '';
       },
       destroyed() {
         let s = this;
-        if (s.headingclick instanceof EventHandler) s.headingclick.Off();
-        if (s.Click instanceof EventHandler) s.Click.Off();
+        if (s.headingclick instanceof EventHandler) s.headingclick.Off;
+        if (s.Click instanceof EventHandler) s.Click.Off;
       }
   });
 })();
