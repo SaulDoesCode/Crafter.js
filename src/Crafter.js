@@ -456,6 +456,7 @@
 
     constructor(EventType, Target, func, Within) {
         this.EventType = EventType || 'click';
+        this.state = false;
         this.Target = (Target !== root && Target !== doc) ? NodeOrQuerytoArr(Target, Within) : [Target];
         this.FuncWrapper = e => func(e, e.srcElement);
         if (is.String(EventType) && EventType.includes(',')) this.EventType = EventType.split(',');
@@ -466,6 +467,7 @@
     get On() {
         is.Arr(this.EventType) ? forEach(this.Target, target => this.EventType.forEach(evt => target.addEventListener(evt, this.FuncWrapper))) :
           this.Target.forEach(target => target.addEventListener(this.EventType, this.FuncWrapper));
+        this.state = true;
         return this;
       }
       /**
@@ -489,6 +491,7 @@
     get Off() {
         is.Arr(this.EventType) ? forEach(this.Target, target => this.EventType.forEach(evt => target.removeEventListener(evt, this.FuncWrapper))) :
           this.Target.forEach(target => target.removeEventListener(this.EventType, this.FuncWrapper));
+        this.state = true;
         return this;
       }
       /**
@@ -499,14 +502,18 @@
       let func = this.FuncWrapper,
         target = this.Target;
       if (is.Arr(this.EventType)) forEach(this.EventType, etype => {
+        this.state = true;
         let listenOnce = e => {
+          this.state = false;
           func(e);
           forEach(target, t => t.removeEventListener(etype, listenOnce));
         }
         forEach(target, t => t.addEventListener(etype, listenOnce));
-      });
+      })
       else {
+        this.state = true;
         let listenOnce = e => {
+          this.state = false;
           func(e);
           forEach(target, t => t.removeEventListener(this.EventType, listenOnce));
         }
@@ -1633,22 +1640,10 @@
       x: 0,
       y: 0,
       over: null,
-      track: false,
-      get observe() { return Craft.mouse.track },
+      get observe() { return Craft.mouse.tracker.state },
       set observe(val) {
-        if (is.Bool(val)) {
-          val ? Craft.mouse.eventhandler.On : Craft.mouse.eventhandler.Off;
-          track = val;
-        }
+        Craft.mouse.tracker[val ? 'On' : 'Off'];
       },
-    },
-    easing: {
-      inOutQuad(t, b, c, d) {
-        t /= d / 2;
-        if (t < 1) return c / 2 * t * t + b;
-        t--;
-        return -c / 2 * (t * (t - 2) - 1) + b;
-      }
     },
     JumpTo(target, options) {
       options = options || {};
@@ -1662,7 +1657,12 @@
           if (loopIteration === 0) startTime = time;
           loopIteration++;
           elapsedTime = time - startTime;
-          root.scrollTo(0, Craft.easing.inOutQuad(elapsedTime, start, distance, options.duration));
+          root.scrollTo(0, ((t, b, c, d) => {
+            t /= d / 2;
+            if (t < 1) return c / 2 * t * t + b;
+            t--;
+            return -c / 2 * (t * (t - 2) - 1) + b;
+          })(elapsedTime, start, distance, options.duration));
           if (elapsedTime < options.duration) requestAnimationFrame(loop)
           else {
             root.scrollTo(0, start + distance);
@@ -1885,8 +1885,8 @@
   Craft.curry.adaptTo = Craft.curry((num, fn) => Craft.curry.to(num, (context, ...args) => fn.apply(null, args.slice(1).concat(context))));
   Craft.curry.adapt = fn => Craft.curry.adaptTo(fn.length, fn);
   Craft.loader.removeAll(!0);
-  Craft.mouse.eventhandler = On('mousemove', e => {
-    if (!!Craft.mouse.track) {
+  Craft.mouse.tracker = On('mousemove', e => {
+    if (Craft.mouse.observe) {
       Craft.mouse.x = e.clientX;
       Craft.mouse.y = e.clientY;
       Craft.mouse.over = e.target;
