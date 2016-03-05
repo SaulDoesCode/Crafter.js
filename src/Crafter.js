@@ -656,6 +656,7 @@
 
   function domNodeList(elements) {
     return {
+      elements : elements,
       /**
        * Listen for Events on the NodeList
        * @param {string} string indicating the type of event to listen for
@@ -677,8 +678,8 @@
        */
       css: styles => is.Def(styles) ? forEach(elements, el => forEach(styles, (prop, key) => el.style[key] = prop)) : console.error('styles unefined'),
 
-      addClass: (Class) => forEach(elements, el => el.classList.add(Class)),
-      stripClass: (Class) => forEach(elements, el => el.classList.remove(Class)),
+      addClass: Class => forEach(elements, el => el.classList.add(Class)),
+      stripClass: Class => forEach(elements, el => el.classList.remove(Class)),
       toggleClass: (Class, state) => forEach(elements, el => (is.Bool(state) ? state : el.classList.contains(Class)) ? el.classList.remove(Class) : el.classList.add(Class)),
       append() {
         forEach(arguments, val => forEach(elements, el => el.appendChild((is.Node(val) ? val : docfragFromString(val)).cloneNode(!0))));
@@ -928,7 +929,9 @@
     }
 
     Object.defineProperty(element,'Siblings',{
-      get : () => Craft.omit(element.parentNode.childNodes, element),
+      get : () => Craft.omit(element.parentNode.childNodes, element).filter(el => {
+        if(is.Element(el)) return el;
+      }),
       configurable: false
     })
     /**
