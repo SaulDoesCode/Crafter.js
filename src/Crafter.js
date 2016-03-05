@@ -4,7 +4,7 @@
  *  @license MIT
  */
 
-((doc, root) => {
+(function (doc, root) {
   "use strict ";
 
   let Ready = false,
@@ -780,7 +780,7 @@
     element.On = (eventType, func) => On(eventType, element, func);
 
     element.Click = (fn, type) => evlt(type)('click', element, fn);
-    element.Input = (fn,type) => evlt(type)('input', element, fn);
+    element.Input = (fn, type) => evlt(type)('input', element, fn);
     element.DoubleClick = (fn, type) => evlt(type)('dblclick', element, fn);
     element.Focus = (fn, type) => evlt(type)('focus', element, fn);
     element.Blur = (fn, type) => evlt(type)('blur', element, fn);
@@ -1063,22 +1063,24 @@
           func = prop;
           prop = '*';
         }
-        let listner = {
+        let listener = {
           prop: is.String(prop) ? prop : '*'
         }
         if (is.Node(func)) {
-          if (!is.Func(func['BindListener'])) throw Error('BindListener is not a function');
-          listner.node = func;
-          listner.fn = func['BindListener'];
-        } else if (is.Func(func)) listner.fn = func;
+          if (!is.Func(func['_BL'])) throw Error('_BL is not a function');
+          listener.node = func;
+          listener.fn = func['_BL'];
+        } else if (is.Func(func)) listener.fn = func;
         else throw new Error('no function');
-        obj.listeners.push(listner);
+        obj.listeners.push(listener);
       },
       enumerable: false,
     });
     try {
       return new Proxy(obj, {
-        get : (target, key, reciever) => Reflect.get(target, key),
+        get(target, key, reciever) {
+          return Reflect.get(target, key)
+        },
         set(target, key, value, reciever) {
           target.listeners.forEach(l => {
             if (l.prop === '*' || l.prop === key) l.fn(target, key, value, !(key in target));
@@ -1140,7 +1142,7 @@
      */
     array(len) {
       let arr = [],
-      val = Craft.omit(arguments,len);
+        val = Craft.omit(arguments, len);
       if (val.length === 1) {
         val = val[0];
         forEach(len, i => arr.push(is.Func(val) ? val() : val));
@@ -1189,7 +1191,7 @@
         }
       }
       temp[path[path.length - 1]] = value;
-      if (!!returnObj) return obj;
+      if (returnObj) return obj;
     },
     forEachDeep(object, fn, path) {
       path = path || '';
@@ -1495,7 +1497,7 @@
         return Options;
       }
     },
-    observable : observable,
+    observable: observable,
     curry: fn => makeFn(fn, [], fn.length),
     after(n, func) {
       !is.Func(func) && is.Func(n) ? func = n : console.error("after: no function");
@@ -1508,7 +1510,7 @@
       let timeout;
       return function () {
         let args = arguments,
-        later = () => {
+          later = () => {
             timeout = null;
             if (!immediate) func.apply(this, args);
           },
@@ -1606,18 +1608,18 @@
     },
     WebComponents: [],
     CustomAttributes: [],
-    Scope : observable({}),
-    Models : observable({}),
+    Scope: observable({}),
+    Models: observable({}),
     tabActive: true,
     /**
-    * Convert Arraylike variables to Array
-    * {...*} val - arraylike variable to convert to array
-    */
+     * Convert Arraylike variables to Array
+     * {...*} val - arraylike variable to convert to array
+     */
     toArr: toArr,
     /**
-    * Convert numbers to integers
-    * {number|string} val - number to convert to an integer
-    */
+     * Convert numbers to integers
+     * {number|string} val - number to convert to an integer
+     */
     toInt: toInt,
     /**
      * Tail Call Optimization for recursive functional functions
@@ -1640,7 +1642,9 @@
       x: 0,
       y: 0,
       over: null,
-      get observe() { return Craft.mouse.tracker.state },
+      get observe() {
+        return Craft.mouse.tracker.state
+      },
       set observe(val) {
         Craft.mouse.tracker[val ? 'On' : 'Off'];
       },
@@ -1765,14 +1769,14 @@
       return new Promise((pass, fail) => {
         if (!is.Def(timeout)) interval = timeout;
         let isfn = is.Func(test),
-        Interval = setInterval(() => {
-            if (!!test || (isfn && !test())) {
+          Interval = setInterval(() => {
+            if (test === true || (isfn && !test())) {
               pass();
               clearInterval(Interval);
             }
           }, interval || 20);
         if (is.Num(timeout)) setTimeout(() => {
-          if (!!test || (isfn && !test())) fail();
+          if (test === true || (isfn && !test())) fail();
           clearInterval(Interval);
         }, timeout);
       });
@@ -1930,13 +1934,12 @@
 
       is.Def(val) ? el.html(val) : Craft.setDeep(obj, prop, el.html());
 
-      if (is.Def(Object.getOwnPropertyDescriptor(obj, 'addListener')) && !is.Func(el['BindListener'])) {
-        el.BindListener = (o, n, v) => el.html(v);
+      if (is.Def(Object.getOwnPropertyDescriptor(obj, 'addListener')) && !is.Func(el['_BL'])) {
+        el._BL = (o, n, v) => el.html(v);
         obj.addListener(prop, el);
       }
       if (is.Input(el)) el.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : Craft.omit(cutbind, cutbind[0]).join('.'));
     } catch (e) {
-      console.log(e);
       console.warn("couldn't bind :", el);
     }
   });
@@ -1956,7 +1959,7 @@
   }
 
   Once('DOMContentLoaded', () => {
-    forEach(Craft.router.links,link => link());
+    forEach(Craft.router.links, link => link());
     Craft.WebComponents.length === queryAll(fw).length ? Ready = !0 :
       Craft.poll(() => Craft.WebComponents.length === queryAll(fw).length, 35, 5035)
       .then(() => {
@@ -1980,7 +1983,7 @@
 
   On('hashchange', () => {
     forEach(Craft.router.handlers, handle => {
-      if (Locs(l => l === handle.link)) handle.func(location.hash)
+      if (Locs(l => l == handle.link)) handle.func(location.hash)
     });
   });
 
