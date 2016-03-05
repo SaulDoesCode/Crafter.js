@@ -927,11 +927,10 @@
       return element;
     }
 
-    /**
-     * gets all the elements siblings within it's parentNode
-     * @memberof dom
-     */
-    element.getSiblings = () => Craft.omit(element.parentNode.childNodes, element);
+    Object.defineProperty(element,'Siblings',{
+      get : () => Craft.omit(element.parentNode.childNodes, element),
+      configurable: false
+    })
     /**
      * gets all the element's dimentions (width,height,left,top,bottom,right)
      * @memberof dom
