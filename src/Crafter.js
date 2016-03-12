@@ -3,16 +3,15 @@
  *  @author Saul van der Walt - https://github.com/SaulDoesCode/
  *  @license MIT
  */
-
+"use strict ";
 (function (doc, root) {
-  "use strict ";
 
   let Ready = false,
     w = 'webcomponent',
     fw = 'fetch-' + w,
     sI = 'Isync',
     head = doc.head,
-    Locs = (test) => [location.hash, location.href, location.pathname].some(test),
+    Locs = test => [location.hash, location.href, location.pathname].some(test),
     CrafterStyles = doc.createElement('style'),
     ua = navigator.userAgent,
     tem, _br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
@@ -39,26 +38,26 @@
     return toString.call(obj) === str;
   }
 
-  function doInvok(fn, argsArr, totalArity) {
-    if (argsArr.length > totalArity) argsArr = argsArr.slice(0, totalArity);
-    return argsArr.length == totalArity ? fn.apply(null, argsArr) : makeFn(fn, argsArr, totalArity);
-  }
-
   function makeFn(fn, Args, totalArity) {
     let remainingArity = totalArity - Args.length;
     return is.Between(remainingArity, 10, 0) ? function () {
       return doInvok(fn, Args.concat(toArr(arguments)), totalArity);
     } : ((fn, args, arity) => {
       let a = [];
-      forEach(arity, (v, i) => a.push('a' + i.toString()));
+      for (let i = arity; 0 > i; i--) a.push('a' + i.toString());
       return function () {
         return doInvok(fn, toArr(arguments).concat(a));
       }
     })(fn, args, remainingArity);
   }
 
+  function doInvok(fn, argsArr, totalArity) {
+    if (argsArr.length > totalArity) argsArr = argsArr.slice(0, totalArity);
+    return argsArr.length == totalArity ? fn.apply(null, argsArr) : makeFn(fn, argsArr, totalArity);
+  }
+
   function cutdot(str) {
-    return str.split('.');
+    return str.split('.')
   }
 
   // tests arguments with Array.prototype.every;
@@ -460,13 +459,13 @@
         this.Target = (Target !== root && Target !== doc) ? NodeOrQuerytoArr(Target, Within) : [Target];
         this.FuncWrapper = e => func(e, e.srcElement);
         if (is.String(EventType) && EventType.includes(',')) this.EventType = EventType.split(',');
+        if (!is.Array(this.EventType)) this.EventType = [this.EventType];
       }
       /**
        * Activates the EventHandler to start listening for the EventType on the Target/Targets
        */
     get On() {
-        is.Arr(this.EventType) ? forEach(this.Target, target => this.EventType.forEach(evt => target.addEventListener(evt, this.FuncWrapper))) :
-          this.Target.forEach(target => target.addEventListener(this.EventType, this.FuncWrapper));
+        forEach(this.Target, target => this.EventType.forEach(evt => target.addEventListener(evt, this.FuncWrapper)));
         this.state = true;
         return this;
       }
@@ -478,6 +477,7 @@
       //  have you tried turning it on and off again? - THE IT CROWD
       this.Off;
       this.EventType = type.includes(',') ? type.split(',') : type;
+      if (!is.Array(this.EventType)) this.EventType = [this.EventType];
       this.On;
       return this;
     }
@@ -489,8 +489,7 @@
        * can still optionally be re-activated with On again
        */
     get Off() {
-        is.Arr(this.EventType) ? forEach(this.Target, target => this.EventType.forEach(evt => target.removeEventListener(evt, this.FuncWrapper))) :
-          this.Target.forEach(target => target.removeEventListener(this.EventType, this.FuncWrapper));
+        forEach(this.Target, target => this.EventType.forEach(evt => target.removeEventListener(evt, this.FuncWrapper)));
         this.state = true;
         return this;
       }
@@ -501,7 +500,7 @@
     get Once() {
       let func = this.FuncWrapper,
         target = this.Target;
-      if (is.Arr(this.EventType)) forEach(this.EventType, etype => {
+      forEach(this.EventType, etype => {
         this.state = true;
         let listenOnce = e => {
           this.state = false;
@@ -509,16 +508,7 @@
           forEach(target, t => t.removeEventListener(etype, listenOnce));
         }
         forEach(target, t => t.addEventListener(etype, listenOnce));
-      })
-      else {
-        this.state = true;
-        let listenOnce = e => {
-          this.state = false;
-          func(e);
-          forEach(target, t => t.removeEventListener(this.EventType, listenOnce));
-        }
-        forEach(target, t => t.addEventListener(this.EventType, listenOnce));
-      }
+      });
       return this;
     }
   }
@@ -656,7 +646,7 @@
 
   function domNodeList(elements) {
     return {
-      elements : elements,
+      elements: elements,
       /**
        * Listen for Events on the NodeList
        * @param {string} string indicating the type of event to listen for
@@ -928,16 +918,16 @@
       return element;
     }
 
-    Object.defineProperty(element,'Siblings',{
-      get : () => Craft.omit(element.parentNode.childNodes, element).filter(el => {
-        if(is.Element(el)) return el;
-      }),
-      configurable: false
-    })
-    /**
-     * gets all the element's dimentions (width,height,left,top,bottom,right)
-     * @memberof dom
-     */
+    Object.defineProperty(element, 'Siblings', {
+        get: () => Craft.omit(element.parentNode.childNodes, element).filter(el => {
+          if (is.Element(el)) return el;
+        }),
+        configurable: false
+      })
+      /**
+       * gets all the element's dimentions (width,height,left,top,bottom,right)
+       * @memberof dom
+       */
     element.getRect = element.getBoundingClientRect;
     /**
      * sets or gets the element's pixel width
@@ -1017,6 +1007,14 @@
         delete this.MutObserver;
       }
     }
+    element.newSetGet = function (key, set, get) {
+      if (!get) get = () => undefined;
+      Object.defineProperty(this, key, {
+        set: set,
+        get: get,
+        enumerable: true
+      })
+    }
 
     return element;
   }
@@ -1093,7 +1091,7 @@
     } catch (e) {
       try {
         Object.observe(obj, changes => changes.forEach(change => {
-          if (change.type === 'add' || change.type === 'update') obj.listeners.forEach(l => {
+          if (change.type === 'add' || change.type === 'update') forEach(obj.listeners, l => {
             if (l.prop === '*' || l.prop === change.name) l.fn(obj, change.name, obj[change.name], change.type === 'add');
           });
         }));
@@ -1125,6 +1123,7 @@
         removed: removed
       }
     },
+    cutdot: cutdot,
     /**
      * Compares two arrays and determines if they are the same array
      * @param {Array} arr1 - array one
@@ -1154,6 +1153,13 @@
         arr.push(temp);
       });
       return arr;
+    },
+    getAllKeys(obj) {
+      let props = [];
+      do {
+        props = props.concat(Object.getOwnPropertyNames(obj));
+      } while (obj = Object.getPrototypeOf(obj));
+      return props;
     },
     /**
      * Flattens any multidimentional array or arraylike object
@@ -1588,23 +1594,27 @@
     toggle: bool => !bool,
     memoize(func, resolver) {
       if (!is.Func(func) || (resolver && !is.Func(resolver))) throw new TypeError("no function");
-      let cache = new WeakMap;
-      let memoized = function () {
-        let args = arguments,
-          key = resolver ? resolver.apply(this, args) : args[0];
-        if (cache.has(key)) return cache.get(key);
-        let result = func.apply(this, args);
-        memoized.cache = cache.set(key, result);
-        return result;
-      };
+      let cache = new WeakMap,
+        memoized = function () {
+          let args = arguments,
+            key = resolver ? resolver.apply(this, args) : args[0];
+          if (cache.has(key)) return cache.get(key);
+          let result = func.apply(this, args);
+          memoized.cache = cache.set(key, result);
+          return result;
+        };
       return memoized;
     },
     millis: {
+      min: 60000,
+      sec: 1000,
+      hour: 3600000,
+      day: 86400000,
       seconds: n => (n || 1) * 1000,
       minutes: n => (n || 1) * 60000,
-      hours: n => (n || 1) * 60000 * 60,
-      days: n => (n || 1) * 60000 * 60 * 24,
-      weeks: n => (n || 1) * Craft.millis.days(7),
+      hours: n => (n || 1) * 3600000,
+      days: n => (n || 1) * 86400000,
+      weeks: n => (n || 1) * 604800000,
       months: (n, daysInMonth) => n * Craft.millis.days((daysInMonth || 30)),
       years: (n) => n * Craft.millis.days(365),
     },
@@ -1641,14 +1651,16 @@
       }
     },
     mouse: {
-      x: 0,
-      y: 0,
-      over: null,
+      Listeners: new Map,
+      addListener(id, fn) {
+        is.Func(fn) ? Craft.mouse.Listeners.set(id, fn) : console.error('no function')
+      },
+      removeListener: id => Craft.mouse.Listeners.delete(id),
       get observe() {
         return Craft.mouse.tracker.state
       },
       set observe(val) {
-        Craft.mouse.tracker[val ? 'On' : 'Off'];
+        Craft.mouse.tracker[val ? 'On' : 'Off']
       },
     },
     JumpTo(target, options) {
@@ -1694,7 +1706,7 @@
       });
       return formData;
     },
-    CSSRule(selector, rules, index, sheet) {
+    CSSRule(index, selector, rules, sheet) {
       if (is.Object(rules)) {
         let temp = '';
         forEach(rules, (val, key) => temp += key + ': ' + (val.includes(';') ? val : val + ';\n'));
@@ -1772,13 +1784,13 @@
         if (!is.Def(timeout)) interval = timeout;
         let isfn = is.Func(test),
           Interval = setInterval(() => {
-            if (test === true || (isfn && !test())) {
+            if (test || (isfn && !test())) {
               pass();
               clearInterval(Interval);
             }
           }, interval || 20);
         if (is.Num(timeout)) setTimeout(() => {
-          if (test === true || (isfn && !test())) fail();
+          if (test || (isfn && !test())) fail();
           clearInterval(Interval);
         }, timeout);
       });
@@ -1794,16 +1806,15 @@
      */
     strongPassword(pass, length, caps, number, reasons) {
       let includeChars = toArr(arguments).slice(5);
-      if (pass.length <= length - 1) return reasons ? 'Password too short' : false;
-      if (caps === true && Craft.hasCapitals(pass) === false) return reasons ? 'Password should have a Capital letter' : false;
-      if (number === true && /\d/g.test(pass) === false) return reasons ? 'Password should have a number' : false;
+      if (pass.length <= length - 1) return reasons ? 'Password too short' : !1;
+      if (caps === !0 && Craft.hasCapitals(pass) === !1) return reasons ? 'Password should have a Capital letter' : !1;
+      if (number === !0 && /\d/g.test(pass) === !1) return reasons ? 'Password should have a number' : !1;
       if (includeChars.length) {
-        let hasChars = true,
-          reason = includeChars.join();
+        let hasChars = !0;
         forEach(includeChars, ch => hasChars = pass.includes(ch));
-        if (!hasChars) return reasons ? '' : false
+        if (!hasChars) return reasons ? '' : !1
       }
-      return true;
+      return !1;
     },
     formatBytes(bytes, decimals) {
       if (bytes == 0) return '0 Byte';
@@ -1820,7 +1831,7 @@
      * example 0ebf-c7d2-ef81-2667-08ef-4cde
      * @param {number=} len - optional length of uid sections
      */
-    GenUID: (len) => Craft.array(len || 6, Craft.randomString).join('-'),
+    GenUID: len => Craft.array(len || 6, Craft.randomString).join('-'),
     /**
      * Part of Crafter.js's own WebComponent format (.wc) it takes a json object that contains .css and .js values then imports and executes them
      * @param {string} webcomponent - JSON string from Crafter.js's (.wc) WebComponent format
@@ -1828,7 +1839,7 @@
     createWebComponent(wc, src) {
       wc = JSON.parse(wc);
       CrafterStyles.textComponent += wc.css;
-      head.appendChild(dom().script(wc.js + `\nCraft.WebComponents.push('${src}')`, `${w}=${wc.name}`));
+      head.appendChild(dom().script(wc.js + `\nCraft.WebComponents.push('${src}');`, `${w}=${wc.name}`));
     },
     /**
      * method for creating custom elements configuring their lifecycle's and inheritance
@@ -1849,13 +1860,14 @@
       let element = Object.create(HTMLElement.prototype),
         settings = {};
 
-      forEach(config, (prop, key) => {
-        if (key === 'created') element.createdCallback = prop;
-        else if (key === 'inserted') element.attachedCallback = prop;
-        else if (key === 'destroyed') element.detachedCallback = prop;
-        else if (key === 'attr') element.attributeChangedCallback = prop;
-        else key === 'extends' ? settings.extends = prop : Object.defineProperty(element, key, Object.getOwnPropertyDescriptor(config, key));
-      });
+      for (let i = 0,keys = Object.keys(config),key; i < keys.length; i++) {
+        key = keys[i];
+        if (key === 'created') element['createdCallback'] = config[key];
+        else if (key === 'inserted') element['attachedCallback'] = config[key];
+        else if (key === 'destroyed') element['detachedCallback'] = config[key];
+        else if (key === 'attr') element['attributeChangedCallback'] = config[key];
+        else key === 'extends' ? settings.extends = config.extends : Object.defineProperty(element, key, Object.getOwnPropertyDescriptor(config, key));
+      }
 
       settings['prototype'] = element;
       doc.registerElement(tag, settings);
@@ -1867,7 +1879,7 @@
     disconectInputSync(input) {
       if (is.String(input)) input = query(input);
       if (is.Node(input) && is.Def(input[sI])) {
-        input[sI].Off();
+        input[sI].Off;
         delete input[sI];
       }
     },
@@ -1880,8 +1892,8 @@
     }
   });
 
-  On('blur', e => Craft.tabActive = !1);
-  On('focus', e => Craft.tabActive = !0);
+  root.onblur = e => Craft.tabActive = !1;
+  root.onfocus = e => Craft.tabActive = !0;
 
   Craft.Models.addListener((o, key, model, New) => {
     if (New) Ready ? model.func(model.scope) : Craft.WhenReady.then(() => model.func(model.scope));
@@ -1892,11 +1904,7 @@
   Craft.curry.adapt = fn => Craft.curry.adaptTo(fn.length, fn);
   Craft.loader.removeAll(!0);
   Craft.mouse.tracker = On('mousemove', e => {
-    if (Craft.mouse.observe) {
-      Craft.mouse.x = e.clientX;
-      Craft.mouse.y = e.clientY;
-      Craft.mouse.over = e.target;
-    }
+    if (Craft.mouse.observe) forEach(Craft.mouse.Listeners, l => l(e.clientX, e.clientY, e.target));
   });
 
   Craft.newComponent(fw, {
@@ -1912,8 +1920,8 @@
             if (!is.Null(wc)) Craft.createWebComponent(wc, src);
           }
           if (is.Null(wc)) fetch(src).then(res => res.json().then(webcomponent => {
-            CrafterStyles.innerHTML += webcomponent.css;
-            head.appendChild(dom().script(webcomponent.js + `\nCraft.WebComponents.push('${src}')`, w + `=${webcomponent.name}`));
+            CrafterStyles.textContent += webcomponent.css;
+            head.appendChild(dom().script(webcomponent.js + `\nCraft.WebComponents.push('${src}');`, w + `=${webcomponent.name}`));
             if (el.getAttr(cc) == 'true') localStorage.setItem(src, JSON.stringify(webcomponent));
           })).catch(err => {
             throw new Error(err + " couldn't load " + w);
@@ -1960,10 +1968,10 @@
     }
   }
 
-  Once('DOMContentLoaded', () => {
+  root.onload = e => {
     forEach(Craft.router.links, link => link());
     Craft.WebComponents.length === queryAll(fw).length ? Ready = !0 :
-      Craft.poll(() => Craft.WebComponents.length === queryAll(fw).length, 35, 5035)
+      Craft.poll(() => Craft.WebComponents.length === queryAll(fw).length, 10, 5010)
       .then(() => {
         Ready = !0;
         Craft.DomObserver = new MutationObserver(muts => forEach(muts, mut => {
@@ -1981,12 +1989,12 @@
         Ready = !0;
         console.warn('loading took too long loaded with errors :(');
       });
-  });
+  }
 
-  On('hashchange', () => {
+  root.onhashchange = () => {
     forEach(Craft.router.handlers, handle => {
       if (Locs(l => l == handle.link)) handle.func(location.hash)
     });
-  });
+  }
 
 })(document, self);
