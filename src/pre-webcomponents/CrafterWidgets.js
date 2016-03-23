@@ -2,17 +2,19 @@
 Craft.dom.ripple = attr => dom().element('ripple-effect', '', attr);
 
 Craft.ripple = (selector, options) => queryEach(selector, element => On(element).Mousedown(e => {
-  let ripple = dom().ripple(options);
-  ripple.Rx = e.clientX;
-  ripple.Ry = e.clientY;
-  element.appendChild(ripple);
+  if (e.buttons == 1) {
+    let ripple = dom().ripple(options);
+    ripple.Rx = e.clientX;
+    ripple.Ry = e.clientY;
+    element.appendChild(ripple);
+  }
 }));
 
 Craft.newComponent('ripple-effect', {
   inserted() {
     let ripple = dom(this),
       color, timing = ripple.getAttr("timing") || 1600,
-      par = dom(this.parentNode),
+      par = dom(ripple.parentNode),
       rect = par.getRect(),
       diameter = Math.max(rect.width, rect.height);
     if (ripple.hasAttr("color-accent")) color = ripple.getAttr("color-accent");
@@ -29,7 +31,7 @@ Craft.newComponent('ripple-effect', {
     ripple.animate([{
       opacity: 0,
       transform: 'scale(2.5)'
-    }], timing).finished.then( e => ripple.remove());
+    }], timing).finished.then(e => ripple.remove());
 
   }
 });
@@ -43,16 +45,16 @@ Craft.notification = (msg, state, side, duration) => {
 
   if (is.int(side)) {
     if (is.String(side)) side = Number(side);
-    side = side === 1 ? 'top-left' :
-      side === 2 ? 'top-right' :
-      side === 3 ? 'bottom-left' :
-      side === 4 ? 'bottom-right' :
-      side === 5 ? 'bottom-middle' :
-      side === 6 ? 'top-middle' : 'top-left';
+    side = side == 1 ? 'top-left' :
+      side == 2 ? 'top-right' :
+      side == 3 ? 'bottom-left' :
+      side == 4 ? 'bottom-right' :
+      side == 5 ? 'bottom-middle' :
+      side == 6 ? 'top-middle' : 'top-left';
   }
 
   let host = query(`.notifications-${side}`);
-  if (host === null) {
+  if (host == null) {
     document.body.insertBefore(dom().div('', `class=notifications-${side}`), document.body.firstChild);
     host = query(`.notifications-${side}`);
   }
@@ -66,10 +68,10 @@ Craft.notification = (msg, state, side, duration) => {
 Craft.newComponent('craft-notification', {
   inserted() {
     let note = dom(this);
-    if (note.hasAttr('duration') && parseInt(note.getAttr('duration'), 10) !== 0) setTimeout(() => note.remove(), parseInt(note.getAttr('duration'), 10) || 3000);
+    if (note.hasAttr('duration') && parseInt(note.getAttr('duration'), 10) != 0) setTimeout(() => note.remove(), parseInt(note.getAttr('duration'), 10) || 3000);
     if (note.hasAttr('message')) note.html(note.getAttr('message'));
     note.append(dom().div('X', 'class=notification-close'));
-    this.clickEvent = On('.notification-close', this).Click(e => this.remove());
+    note.clickEvent = On('.notification-close', note).Click(e => note.remove());
   },
   destroyed() {
     this.clickEvent.Off();
@@ -302,7 +304,7 @@ Craft.customAttribute('ripple', (el, color) => {
 Craft.customAttribute('tooltip', (element, val) => {
   queryEach(`[owner="${element.parentNode.tagName}${element.tagName}${element.className}"]`, el => {
     if (is.Def(el.TooltipOwnerObserver)) el.TooltipOwnerObserver.disconnect();
-    if (is.Def(el.EventListeners)) el.EventListeners.forEach(ev => ev.Off());
+    if (is.Def(el.EventListeners)) el.EventListeners.forEach(ev => ev.Off);
     el.remove();
   });
   let show = false,
@@ -314,19 +316,11 @@ Craft.customAttribute('tooltip', (element, val) => {
   if (element.hasAttr('ripple')) tooltip.style.borderColor = element.getAttr('ripple');
   if (element.hasAttr('color-accent')) tooltip.style.borderColor = element.getAttr('color-accent');
 
-
-  let move = (x, y) => {
-    if (show) tooltip.move(x, y);
-    else {
-      Craft.mouse.removeListener('tooltip');
-      Craft.mouse.observe = show;
-    }
-  }
+  tooltip.mover = element.Mousemove(e => tooltip.move(e.clientX, e.clientY)).Off;
 
   tooltip.EventListeners.push(On(element).Mouseenter(ev => {
     show = true;
-    Craft.mouse.observe = show;
-    Craft.mouse.addListener('tooltip', move);
+    tooltip.mover.On;
     if (ev.target !== element || ev.target.parentNode !== element) {
       tooltip.style.display = show ? 'block' : 'none';
       setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
@@ -343,6 +337,7 @@ Craft.customAttribute('tooltip', (element, val) => {
   }));
   tooltip.EventListeners.push(On(element).Mouseleave(ev => {
     show = false;
+    tooltip.mover.Off;
     tooltip.style.display = show ? 'block' : 'none';
     setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
   }));
@@ -379,22 +374,19 @@ Craft.customAttribute('movable', element => {
 
   let el = dom(element),
     rect = el.getRect(),
-    movable = false,
     movehandle = query('[movehandle]', element),
-    move = (x, y) => {
-      if (movable) el.move(x - cx + rect.left, y - cy + rect.top);
-      else {
-        Craft.mouse.removeListener('movable');
-        Craft.mouse.observe = movehandle;
-      }
-    }
+    cx = 0,
+    cy = 0,
+    move = On(window).Mousemove(e => el.move(e.clientX - cx + rect.left, e.clientY - cy + rect.top)).Off;
 
-  On(movehandle == null ? element : movehandle).Mousedown(ev => {
-    movable = true;
-    Craft.mouse.addListener('movable', move);
-    rect = element.getBoundingClientRect();
-    Craft.mouse.observe = movable;
+  On(movehandle == null ? element : movehandle).Mousedown(e => {
+    if (e.button == 1) {
+      rect = el.getRect();
+      cx = e.clientX;
+      cy = e.clientY;
+      move.On;
+    }
   });
 
-  On(document).Mouseup(e => movable = false);
+  On(document).Mouseup(e => move.Off);
 })
