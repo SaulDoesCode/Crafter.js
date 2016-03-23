@@ -1143,21 +1143,23 @@
         },
         set(target, key, value, reciever) {
           target.listeners.forEach(l => {
-            if (l.prop === '*' || l.prop === key) l.fn(target, key, value, !(key in target));
+            if (l.prop === '*' || l.prop === key) l.fn(target, key, value, !Object.is(Reflect.get(target, key), value));
           });
           return Reflect.set(target, key, value);
         }
       });
     } catch (e) {
       try {
-        Object.observe(obj, changes => changes.forEach(change => {
-          if (change.type === 'add' || change.type === 'update') forEach(obj.listeners, l => {
-            if (l.prop === '*' || l.prop === change.name) l.fn(obj, change.name, obj[change.name], change.type === 'add');
-          });
-        }));
+        Object.observe(obj, changes => {
+          changes.forEach(change => {
+            if (change.type === 'add' || change.type === 'update') forEach(obj.listeners, l => {
+              if (l.prop === '*' || l.prop === change.name) l.fn(obj, change.name, obj[change.name], change.type === 'add' ? true : !Object.is(change.oldValue, obj[change.name]));
+            });
+          })
+        });
         return obj;
       } catch (e2) {
-        console.warn('Your Browser is Old Update it');
+        console.error('Your Browser is Old Update it',e2);
       }
     }
   }
@@ -1992,8 +1994,8 @@
     Craft.tabActive = !0
   }
 
-  Craft.Models.addListener((o, key, model, New) => {
-    if (New) Ready ? model.func(model.scope) : Craft.WhenReady.then(() => {
+  Craft.Models.addListener((o, key, model, isnew) => {
+    if (isnew) Ready ? model.func(model.scope) : Craft.WhenReady.then(() => {
       model.func(model.scope)
     });
   });
@@ -2049,7 +2051,8 @@
       if (is.Def(Object.getOwnPropertyDescriptor(obj, 'addListener')) && !is.Func(el['_BL'])) {
         el._BL = (o, n, v) => {
           el.html(v)
-        };
+        }
+
         obj.addListener(prop, el);
       }
       if (is.Input(el)) el.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : Craft.omit(cutbind, cutbind[0]).join('.'));
