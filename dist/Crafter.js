@@ -634,7 +634,7 @@ function _toConsumableArray(arr) {
             _classCallCheck(this, EventHandler);
 
             this.EventType = EventType || 'click';
-            this.state = false;
+            this.state = !1;
             this.Target = Target !== root && Target !== doc ? NodeOrQuerytoArr(Target, Within) : [Target];
             this.FuncWrapper = function(e) {
                 return func(e, e.srcElement);
@@ -649,15 +649,14 @@ function _toConsumableArray(arr) {
         _createClass(EventHandler, [{
             key: 'On',
             get: function get() {
-                    var _this = this;
-
-                    forEach(this.Target, function(target) {
-                        return _this.EventType.forEach(function(evt) {
-                            return target.addEventListener(evt, _this.FuncWrapper);
+                    var evtHndl = this;
+                    forEach(evtHndl.Target, function(target) {
+                        evtHndl.EventType.forEach(function(evt) {
+                            target.addEventListener(evt, evtHndl.FuncWrapper);
                         });
                     });
-                    this.state = true;
-                    return this;
+                    evtHndl.state = !0;
+                    return evtHndl;
                 }
                 /**
                  * Change the Event type to listen for
@@ -685,15 +684,14 @@ function _toConsumableArray(arr) {
         }, {
             key: 'Off',
             get: function get() {
-                    var _this2 = this;
-
-                    forEach(this.Target, function(target) {
-                        return _this2.EventType.forEach(function(evt) {
-                            return target.removeEventListener(evt, _this2.FuncWrapper);
+                    var evtHndl = this;
+                    forEach(evtHndl.Target, function(target) {
+                        evtHndl.EventType.forEach(function(evt) {
+                            target.removeEventListener(evt, evtHndl.FuncWrapper);
                         });
                     });
-                    this.state = true;
-                    return this;
+                    evtHndl.state = !0;
+                    return evtHndl;
                 }
                 /**
                  * Once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
@@ -703,24 +701,23 @@ function _toConsumableArray(arr) {
         }, {
             key: 'Once',
             get: function get() {
-                var _this3 = this,
-                    func = this.FuncWrapper,
-                    target = this.Target;
-
-                forEach(this.EventType, function(etype) {
-                    _this3.state = true;
+                var func = this.FuncWrapper,
+                    target = this.Target,
+                    evtHndl = this;
+                forEach(evtHndl.EventType, function(etype) {
+                    evtHndl.state = !0;
                     var listenOnce = function listenOnce(e) {
-                        _this3.state = false;
+                        evtHndl.state = !1;
                         func(e);
                         forEach(target, function(t) {
-                            return t.removeEventListener(etype, listenOnce);
+                            t.removeEventListener(etype, listenOnce);
                         });
                     };
                     forEach(target, function(t) {
-                        return t.addEventListener(etype, listenOnce);
+                        t.addEventListener(etype, listenOnce);
                     });
                 });
-                return this;
+                return evtHndl;
             }
         }]);
 
@@ -775,7 +772,7 @@ function _toConsumableArray(arr) {
                 if (is.Node(el)) {
                     el = queryAll(selector, el);
                     if (is.NodeList(el)) forEach(el, function(n) {
-                        return list.push(n);
+                        list.push(n);
                     });
                 }
             });
@@ -898,7 +895,7 @@ function _toConsumableArray(arr) {
         if (is.Object(attributes) || is.String(attributes)) newEl.setAttr(attributes);
         if (is.Def(extraAttr)) newEl.setAttr(extraAttr);
         if (is.Bool(extraAttr)) stringForm = extraAttr;
-        if (stringForm === true) newEl = newEl.outerHTML;
+        if (stringForm == true) newEl = newEl.outerHTML;
         return newEl;
     }
 
@@ -931,7 +928,7 @@ function _toConsumableArray(arr) {
             includes: function includes(selector) {
                 if (is.String(selector)) selector = query(selector);
                 return elements.length && toArr(elements).some(function(e) {
-                    return elements[i] === selector;
+                    elements[i] == selector;
                 });
             },
 
@@ -940,9 +937,9 @@ function _toConsumableArray(arr) {
              * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
              */
             css: function css(styles) {
-                return is.Def(styles) ? forEach(elements, function(el) {
-                    return forEach(styles, function(prop, key) {
-                        return el.style[key] = prop;
+                is.Def(styles) ? forEach(elements, function(el) {
+                    forEach(styles, function(prop, key) {
+                        el.style[key] = prop;
                     });
                 }) : console.error('styles unefined');
             },
@@ -958,21 +955,21 @@ function _toConsumableArray(arr) {
                 });
             },
             toggleClass: function toggleClass(Class, state) {
-                return forEach(elements, function(el) {
-                    return (is.Bool(state) ? state : el.classList.contains(Class)) ? el.classList.remove(Class) : el.classList.add(Class);
+                forEach(elements, function(el) {
+                    (is.Bool(state) ? state : el.classList.contains(Class)) ? el.classList.remove(Class): el.classList.add(Class);
                 });
             },
             append: function append() {
                 forEach(arguments, function(val) {
-                    return forEach(elements, function(el) {
-                        return el.appendChild((is.Node(val) ? val : docfragFromString(val)).cloneNode(!0));
+                    forEach(elements, function(el) {
+                        el.appendChild((is.Node(val) ? val : docfragFromString(val)).cloneNode(!0));
                     });
                 });
                 return this;
             },
             prepend: function prepend() {
                 forEach(arguments, function(val) {
-                    return forEach(elements, function(el) {
+                    forEach(elements, function(el) {
                         return el.insertBefore((is.Node(val) ? val : docfragFromString(val)).cloneNode(!0), el.firstChild);
                     });
                 });
@@ -1009,7 +1006,7 @@ function _toConsumableArray(arr) {
 
     function domManip(element, within) {
         if (is.String(element)) element = query(element, within);
-        if (element.hasDOMmethods === !0) return element;
+        if (element.hasDOMmethods == !0) return element;
         element.hasDOMmethods = !0;
         /**
          * changes or returns the innerHTML value of a Node
@@ -1049,12 +1046,10 @@ function _toConsumableArray(arr) {
          * @param {Node|string} String or Node to append to the this.element
          */
         element.append = function() {
-            var _this4 = this;
-
             forEach(arguments, function(val) {
-                return _this4.appendChild(is.Node(val) ? val : docfragFromString(val));
+                element.appendChild(is.Node(val) ? val : docfragFromString(val));
             });
-            return this;
+            return element;
         };
         /**
          * prepend text or a Node to the element
@@ -1062,12 +1057,10 @@ function _toConsumableArray(arr) {
          * @param {Node|string} String or Node to prepend to the this.element
          */
         element.prepend = function() {
-            var _this5 = this;
-
             forEach(arguments, function(val) {
-                return _this5.insertBefore(is.Node(val) ? val : docfragFromString(val), _this5.firstChild);
+                element.insertBefore(is.Node(val) ? val : docfragFromString(val), element.firstChild);
             });
-            return this;
+            return element;
         };
         /**
          * Listen for Events on the element or on all the elements in the NodeList
@@ -1149,9 +1142,9 @@ function _toConsumableArray(arr) {
         element.css = function(styles) {
             if (styles == ud) throw new Error('Style properties undefined');
             for (var style in styles) {
-                this.style[style] = styles[style];
+                element.style[style] = styles[style];
             }
-            return this;
+            return element;
         };
         /**
          * check if the element has got a specific CSS class
@@ -1159,10 +1152,8 @@ function _toConsumableArray(arr) {
          * @param {...string} name of the class to check for
          */
         element.gotClass = function() {
-            var _this6 = this;
-
             return toArr(arguments).every(function(Class) {
-                return _this6.classList.contains(Class);
+                element.classList.contains(Class);
             });
         };
         /**
@@ -1171,12 +1162,10 @@ function _toConsumableArray(arr) {
          * @param {string} name of the class to add
          */
         element.addClass = function() {
-            var _this7 = this;
-
             forEach(arguments, function(Class) {
-                return _this7.classList.add(Class);
+                element.classList.add(Class);
             });
-            return this;
+            return element;
         };
         /**
          * removes a specific CSS class from the element
@@ -1184,12 +1173,10 @@ function _toConsumableArray(arr) {
          * @param {...string} name of the class to strip
          */
         element.stripClass = function() {
-            var _this8 = this;
-
             forEach(arguments, function(Class) {
-                return _this8.classList.remove(Class);
+                element.classList.remove(Class);
             });
-            return this;
+            return element;
         };
         /**
          * Toggle a CSS class to the element
@@ -1198,9 +1185,9 @@ function _toConsumableArray(arr) {
          * @param {boolean=} state - optionally toggle class either on or off with bool
          */
         element.toggleClass = function(Class, state) {
-            if (!is.Bool(state)) state = this.gotClass(Class);
-            state ? this.stripClass(Class) : this.addClass(Class);
-            return this;
+            if (!is.Bool(state)) state = element.gotClass(Class);
+            state ? element.stripClass(Class) : element.addClass(Class);
+            return element;
         };
         /**
          * removes a specific Attribute from the this.element
@@ -1208,10 +1195,8 @@ function _toConsumableArray(arr) {
          * @param {...string} name of the Attribute/s to strip
          */
         element.stripAttr = function() {
-            var _this9 = this;
-
             forEach(arguments, function(attr) {
-                return _this9.removeAttribute(attr);
+                element.removeAttribute(attr);
             });
             return element;
         };
@@ -1222,7 +1207,7 @@ function _toConsumableArray(arr) {
          * @param {...string} names of attributes to check for
          */
         element.hasAttr = function(attr) {
-            if (is.String(attr)) return this.hasAttribute(attr);
+            if (is.String(attr)) return element.hasAttribute(attr);
             return Craft.flatten(toArr(arguments)).every(function(a) {
                 return element.hasAttribute(a);
             });
@@ -1234,9 +1219,9 @@ function _toConsumableArray(arr) {
          * @param {boolean=} returnState - optionally return a bool witht the toggle state otherwise returns the element
          */
         element.toggleAttr = function(name, val, returnState) {
-            if (is.Bool(val)) !val ? this.stripAttr(name) : this.setAttr(name);
-            else this.hasAttr(name) ? this.stripAttr(name) : this.setAttr(name, val);
-            return returnState ? this.hasAttr(name) : this;
+            if (is.Bool(val)) !val ? element.stripAttr(name) : element.setAttr(name);
+            else element.hasAttr(name) ? element.stripAttr(name) : element.setAttr(name, val);
+            return returnState ? element.hasAttr(name) : element;
         };
         /**
          * Sets or adds an Attribute on the element
@@ -1245,17 +1230,15 @@ function _toConsumableArray(arr) {
          * @param {string} Value of the Attribute to add/set
          */
         element.setAttr = function(attr, val) {
-            var _this10 = this;
-
             if (!is.Def(val)) {
                 if (is.String(attr)) {
                     attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(function(Attr) {
-                        return is.Def(Attr.split('=')[1]) ? _this10.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : _this10.setAttribute(Attr.split('=')[0], '');
-                    }) : this.setAttribute(attr, '');
+                        is.Def(Attr.split('=')[1]) ? element.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : element.setAttribute(Attr.split('=')[0], '');
+                    }) : element.setAttribute(attr, '');
                 } else if (is.Object(attr)) forEach(attr, function(value, Attr) {
-                    return _this10.setAttribute(Attr, value);
+                    return element.setAttribute(Attr, value);
                 });
-            } else this.setAttribute(attr, val);
+            } else element.setAttribute(attr, val);
             return this;
         };
         /**
@@ -2544,13 +2527,13 @@ function _toConsumableArray(arr) {
 
     Craft.newComponent(fw, {
         inserted: function inserted() {
-            var _this11 = this,
+            var _this = this,
                 src = this.getAttribute('src');
 
             if (src) {
                 (function() {
                     var wc = null,
-                        el = dom(_this11),
+                        el = dom(_this),
                         cc = 'cache-component';
                     if (!Craft.WebComponents.includes(src)) {
                         if (el.hasAttr(cc)) {
