@@ -1458,7 +1458,7 @@ function _toConsumableArray(arr) {
                 },
                 set: function set(target, key, value, reciever) {
                     target.listeners.forEach(function(l) {
-                        if (l.prop === '*' || l.prop === key) l.fn(target, key, value, !(key in target));
+                        if (l.prop === '*' || l.prop === key) l.fn(target, key, value, !Object.is(Reflect.get(target, key), value));
                     });
                     return Reflect.set(target, key, value);
                 }
@@ -1466,15 +1466,15 @@ function _toConsumableArray(arr) {
         } catch (e) {
             try {
                 Object.observe(obj, function(changes) {
-                    return changes.forEach(function(change) {
+                    changes.forEach(function(change) {
                         if (change.type === 'add' || change.type === 'update') forEach(obj.listeners, function(l) {
-                            if (l.prop === '*' || l.prop === change.name) l.fn(obj, change.name, obj[change.name], change.type === 'add');
+                            if (l.prop === '*' || l.prop === change.name) l.fn(obj, change.name, obj[change.name], change.type === 'add' ? true : !Object.is(change.oldValue, obj[change.name]));
                         });
                     });
                 });
                 return obj;
             } catch (e2) {
-                console.warn('Your Browser is Old Update it');
+                console.error('Your Browser is Old Update it', e2);
             }
         }
     }
@@ -2298,10 +2298,11 @@ function _toConsumableArray(arr) {
             return URL.createObjectURL(new Blob([text]));
         },
         OnScroll: function OnScroll(element, func) {
-            return is.Func(func) ? On('scroll', element, function(e) {
+            is.Func(func) ? On('scroll', element, function(e) {
                 func(e.deltaY < 1, e);
             }) : console.error('no function');
         },
+
         OnResize: function OnResize(func) {
             return is.Func(func) ? Craft.ResizeHandlers.add(func) : console.error("Craft.OnResize -> no function");
         },
@@ -2506,8 +2507,8 @@ function _toConsumableArray(arr) {
         Craft.tabActive = !0;
     };
 
-    Craft.Models.addListener(function(o, key, model, New) {
-        if (New) Ready ? model.func(model.scope) : Craft.WhenReady.then(function() {
+    Craft.Models.addListener(function(o, key, model, isnew) {
+        if (isnew) Ready ? model.func(model.scope) : Craft.WhenReady.then(function() {
             model.func(model.scope);
         });
     });
@@ -2575,6 +2576,7 @@ function _toConsumableArray(arr) {
                 el._BL = function(o, n, v) {
                     el.html(v);
                 };
+
                 obj.addListener(prop, el);
             }
             if (is.Input(el)) el.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : Craft.omit(cutbind, cutbind[0]).join('.'));

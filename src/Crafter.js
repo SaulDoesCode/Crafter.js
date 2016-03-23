@@ -1159,7 +1159,7 @@
         });
         return obj;
       } catch (e2) {
-        console.error('Your Browser is Old Update it',e2);
+        console.error('Your Browser is Old Update it', e2);
       }
     }
   }
@@ -1804,9 +1804,11 @@
     },
     revokeCSSRule: (index, sheet) => (sheet || CrafterStyles).sheet.deleteRule(index),
     URLfrom: text => URL.createObjectURL(new Blob([text])),
-    OnScroll: (element, func) => is.Func(func) ? On('scroll', element, e => {
-      func(e.deltaY < 1, e)
-    }) : console.error('no function'),
+    OnScroll(element, func) {
+      is.Func(func) ? On('scroll', element, e => {
+        func(e.deltaY < 1, e)
+      }) : console.error('no function')
+    },
     OnResize: func => is.Func(func) ? Craft.ResizeHandlers.add(func) : console.error("Craft.OnResize -> no function"),
     OnScrolledTo: Scroll => new Promise((pass, fail) => {
       let ev = On('scroll', e => pageYOffset >= Scroll ? pass(e, ev) : fail(e, ev));
