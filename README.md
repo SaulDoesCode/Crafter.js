@@ -7,20 +7,24 @@ Crafter.js is still very W.I.P , so tread carefully
 - Promises
 - Fetch API
 - ES6
+- Animation API
 - WebComponents
+
+Crafter.js uses Babel to ensure compatibility on older browsers
 
 ## Crafter.js Offers
 - DOM Manipulation
-- Several useful functional programming methods
+- Models
+- Several useful functional programming methods including currying
 - Two Way Data Binding
 - Type assertion methods
 - JSON based WebComponent format (.wc)
 - Streamlined Custom Element Creation
-- Custom Attribute Definition and Handling
+- Methods for defining and handling Custom Attributes
 - Useful custom attributes
 - Web Components
 - WebSocket wrapper for ease of use
-- Form Validation
+- Form Validation methods
 - Resource loader for Scripts and Style sheets
 - Front End Router
 - Event Handling system
@@ -87,38 +91,40 @@ Create a new Custom Element using the Craft.newComponent method
   });
 
 ```
+#### Models
 
-#### Data Binding
-
-```html
-<header bind='News.Headline'></header>
-```
+Crafter.js allows the creation of scoped models to manipulate your appVersion
+models execute after the page has loaded
 
 ```javascript
 
-// Craft.observer creates an observable object
-var News = Craft.observable({
-  Headline : 'New Headline , this Just in...'
-});
-// The Changes will be instantly reflected in the DOM
-News.Headline = 'New information, data-binding is a thing';
+  // Create models using Craft.model
+  Craft.model('MyModel', scope => {
+    scope.headline = 'New Headline , this Just in...';
+    scope.articles = ['article1...','article2...','article3...','article4...','article5...'];
+    scope.newinfo = 'I will change when there is new info';
 
-// You can also optionally add change listeners for a specific property or properties
-News.addListener('Headline',(object,key,value) => {
-  if(!Craft.tabActive) Craft.router.setTitle(document.title + '(1)');
-});
+    // you can listen for changes on model scope variables
+    scope.addListener('newinfo',(object,key,value,isValueNew) => {
+      if(isValueNew) console.log('new info recieved!')
+    })
+
+  })
+
+  // You can assign to variables from the model scope via Craft.fromModel
+  Craft.fromModel('MyModel').newinfo = 'a new piece of info!';
+
+  // Easily access variables from a model's scope using Craft.fromModel
+  Craft.fromModel('MyModel.headline') // -> 'New Headline , this Just in...'
+  Craft.fromModel('MyModel.articles[3]') // -> 'article4...'
+
+
 ```
-If a bind does not exist it gets bound as a property of the gobal CraftScope
-Binds on `input` and `textarea` will set the property when the value changes
-
+You can easily bind scope variables to the dom using the bind="ModelName.xyz" attribute and all your changes will reflect in the dom
 ```html
-<textarea bind="truestory">
-  All Changes gets reflected instantly
-</textarea>
-
-<article bind="truestory">
-  All Changes gets reflected instantly
-</article>
+  <div>
+    <header bind='MyModel.headline'> New Headline , this Just in... </header>
+  </div>
 ```
 #### Websocket example
 
@@ -152,6 +158,40 @@ Display the Websocket messages in the dom
   <div bind='MessageScope.msg'> </div>
 
   <input type='text'>
+```
+
+
+#### Data Binding
+
+```html
+<header bind='News.Headline'></header>
+```
+
+```javascript
+
+// Craft.observer creates an observable object
+var News = Craft.observable({
+  Headline : 'New Headline , this Just in...'
+});
+// The Changes will be instantly reflected in the DOM
+News.Headline = 'New information, data-binding is a thing';
+
+// You can also optionally add change listeners for a specific property or properties
+News.addListener('Headline',(object,key,value) => {
+  if(!Craft.tabActive) Craft.router.setTitle(document.title + '(1)');
+});
+```
+If a bind does not exist it gets bound as a property of the gobal CraftScope
+Binds on `input` and `textarea` will set the property when the value changes
+
+```html
+<textarea bind="truestory">
+  All Changes gets reflected instantly
+</textarea>
+
+<article bind="truestory">
+  All Changes gets reflected instantly
+</article>
 ```
 
 #### TODO
