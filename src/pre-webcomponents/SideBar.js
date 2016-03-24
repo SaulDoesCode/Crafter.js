@@ -27,8 +27,8 @@
         let el = dom(this),
           sbt = 'hidden',
           gotSBT = el.hasAttr(sbt);
-        if (is.Def(open)) open ? el.stripAttr(sbt) : el.setAttr(sbt, '');
-        else gotSBT ? el.stripAttr(sbt) : el.setAttr(sbt);
+        is.Def(open) ? open ? el.stripAttr(sbt) : el.setAttr(sbt, '') :
+        gotSBT ? el.stripAttr(sbt) : el.setAttr(sbt);
       },
       attr(name) {
         let el = dom(this);
@@ -36,7 +36,7 @@
       },
       destroyed() {
         this.onClick.Off;
-        if (this.onToggleClick instanceof EventHandler) this.onToggleClick.Off;
+        this.onToggleClick.Off;
       }
   });
 
@@ -53,7 +53,7 @@
         if (el.hasAttr('ripple')) {
           el.color = el.getAttr('ripple');
           if (!is.Array(el.customAttr)) el.customAttr = [];
-          if (!el.customAttr.includes('ripple')) {
+          if (!el.customAttr.includes('ripple') && is.Def(Craft.ripple)) {
             el.customAttr.push('ripple');
             Craft.ripple(el);
           }
@@ -122,8 +122,8 @@
       },
       destroyed() {
         let s = this;
-        if (s.headingclick instanceof EventHandler) s.headingclick.Off;
-        if (s.Click instanceof EventHandler) s.Click.Off;
+        s.headingclick.Off;
+        s.Click.Off;
       }
   });
 })();

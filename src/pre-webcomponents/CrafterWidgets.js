@@ -31,7 +31,9 @@ Craft.newComponent('ripple-effect', {
     ripple.animate([{
       opacity: 0,
       transform: 'scale(2.5)'
-    }], timing).finished.then(e => ripple.remove());
+    }], timing).finished.then(e => {
+      ripple.remove()
+    });
 
   }
 });
@@ -68,13 +70,17 @@ Craft.notification = (msg, state, side, duration) => {
 Craft.newComponent('craft-notification', {
   inserted() {
     let note = dom(this);
-    if (note.hasAttr('duration') && parseInt(note.getAttr('duration'), 10) != 0) setTimeout(() => note.remove(), parseInt(note.getAttr('duration'), 10) || 3000);
+    if (note.hasAttr('duration') && parseInt(note.getAttr('duration'), 10) != 0) setTimeout(() => {
+      note.remove()
+    }, parseInt(note.getAttr('duration'), 10) || 3000);
     if (note.hasAttr('message')) note.html(note.getAttr('message'));
     note.append(dom().div('X', 'class=notification-close'));
-    note.clickEvent = On('.notification-close', note).Click(e => note.remove());
+    note.clickEvent = On('.notification-close', note).Click(e => {
+      note.remove()
+    });
   },
   destroyed() {
-    this.clickEvent.Off();
+    this.clickEvent.Off
   }
 })
 
@@ -84,12 +90,14 @@ Craft.newComponent('context-menu', {
   inserted() {
     let el = dom(this);
 
-    el.hasAttr('scope') ? this.Contextmenu = On('contextmenu', el.getAttr('scope'), e => this.Show(true, e)) : console.error('context-menu : No Scope Attribute found');
+    el.hasAttr('scope') ? el.Contextmenu = On('contextmenu', el.getAttr('scope'), e => {
+      el.Show(true, e)
+    }) : console.error('context-menu : No Scope Attribute found');
     __ContextMenus.push(this);
   },
   destroyed() {
     __ContextMenus = Craft.omit(__ContextMenus, this);
-    this.Contextmenu.Off();
+    this.Contextmenu.Off;
   },
   Show(Show, ev) {
     if (is.Def(ev)) ev.preventDefault();
@@ -99,55 +107,45 @@ Craft.newComponent('context-menu', {
 });
 
 Craft.newComponent('check-box', {
-  created() {
+  inserted() {
     let el = dom(this);
-    el.Click = On(el).Click(e => el.value = !el.value);
-
-    Object.defineProperty(this, 'value', {
-      set: val => {
-        el.toggleAttr('checked', val);
-        if (is.Func(el.func)) el.func(el.hasAttr('checked'));
-      },
-      get: () => el.hasAttr('checked')
-    });
+    el.OnClick = el.Click(el.toggle.bind(this));
+    el.newSetGet('value', val => {
+      el.toggleAttr('checked', val);
+      if (is.Func(el.func)) el.func(el.hasAttr('checked'));
+    }, () => el.hasAttr('checked'));
   },
   toggle(val) {
-    this.value = is.Bool(val) ? val : !this.value;
+    this.value = is.Bool(val) ? val : !this.value
   },
   OnCheck(func) {
-    if (is.Func(func)) this.func = func;
+    if (is.Func(func)) this.func = func
   },
   destroyed() {
-    this.Click.Off();
+    this.OnClick.Off
   }
 });
 
 Craft.newComponent('toggle-button', {
-  created() {
-    let el = dom(this),
-      t = 'true',
-      f = 'false';
-    el.open ? el.setAttr('open', t) : el.setAttr('open', f);
-    this.click = On(this).Click(e => {
-      this.open = !this.open;
-      el.setAttr('open', this.open ? t : f);
-    });
+  inserted() {
+    let el = dom(this);
+    el.toggleAttr('on', el.hasAttr('on'));
+    el.click = el.Click(el.toggle.bind(this));
+    el.newSetGet('on', v => el.toggle(v), () => el.hasAttr('on'));
     el.append(dom().span('', 'class=toggle'));
   },
-  onToggle(func) {
+  set ontoggle(func) {
     if (is.Func(func)) this.func = func;
   },
-  toggle(open) {
-    open === true || (is.Undef(open) && this.getAttribute('open') === 'false') ? this.setAttribute('open', 'true') : this.setAttribute('open', 'false');
+  toggle(on) {
+    dom(this).toggleAttr('on', is.Bool(on) ? on : void 0)
   },
-  attr(attrName, oldVal, newVal) {
-    if (attrName === 'open') {
-      this.open = this.getAttribute('open') === 'true';
-      if (is.Func(this.func)) this.func(this.open);
-    }
+  attr(name) {
+    if (name == 'on')
+      if (is.Func(this.func)) this.func(this.hasAttribute('on'));
   },
   destroyed() {
-    this.click.Off();
+    this.click.Off
   }
 });
 
@@ -156,19 +154,15 @@ Craft.newComponent('grid-host', {
 });
 
 Craft.newComponent('text-collapser', {
-  created() {
+  inserted() {
     let el = dom(this),
       txt = el.html();
     el.html("");
-
     el.append(dom().label(el.getAttr('summary'), 'class=indicator')).append(dom().label(txt, 'class=text'));
-
-    Object.defineProperty(this, 'open', {
-      get: () => el.hasAttr('open'),
-      set: val => el.toggleAttr('open', val)
+    el.newSetGet('open', val => el.toggleAttr('open', val), () => el.hasAttr('open'));
+    el.onClick = On('.indicator', el).Click(e => {
+      el.toggle()
     });
-
-    this.onClick = On('.indicator', this).Click(e => this.toggle());
   },
   toggle(open) {
     this.open = is.Bool(open) ? open : !this.open;
@@ -177,7 +171,7 @@ Craft.newComponent('text-collapser', {
     if (name === 'open') this.open = this.hasAttribute('open');
   },
   destroyed() {
-    this.onClick.Off();
+    this.onClick.Off
   }
 });
 
@@ -197,47 +191,40 @@ Craft.newComponent('material-input', {
       get: () => input.value
     });
 
-    if (el.hasAttr("type")) {
-      if (el.getAttr("type") !== "submit" && el.getAttr("type") !== "button" && el.getAttr("type") !== "range") {
-        input.setAttr("type", el.getAttr("type"));
-      } else console.warn("<material-input> is only for text type inputs it will default to text if wrong type is chosen");
-    } else input.setAttr("type", "text");
+    el.hasAttr("type") ?
+      el.getAttr("type") !== "submit" && el.getAttr("type") !== "button" && el.getAttr("type") !== "range" ? input.setAttr("type", el.getAttr("type")) :
+      console.warn("<material-input> is only for text type inputs it will default to text if wrong type is chosen") :
+      input.setAttr("type", "text");
 
     forEach(__InputAttributes, attr => {
       if (el.hasAttr(attr)) input.setAttr(attr, el.getAttr(attr));
     });
 
-    el.append(input);
-    el.append(dom().span());
-    input = dom(el.query('input'));
-    let clearText = query('span', this);
+    el.append(input).append(dom().span());
+    input = dom('input', el);
+    let clearText = query('span', el);
 
     this.labelEffects = () => {
-      if (this.value.length > 0) {
-        input.addClass('inputhastext');
-        clearText.style.display = 'block';
-      } else {
-        input.stripClass('inputhastext');
-        clearText.style.display = '';
-      }
+      let lengthy = this.value.length > 0;
+      input.toggleClass('inputhastext', !lengthy);
+      clearText.style.display = !lengthy ? '' : 'block';
     }
 
     this.onblur = this.labelEffects;
 
     if (el.hasAttr("label") || el.hasAttr("placeholder")) {
-      let label = dom().label();
-      label.innerHTML = el.getAttr("label") || el.getAttr("placeholder");
+      let label = dom().label(el.getAttr("label") || el.getAttr("placeholder"));
       el.append(label);
-      this.labelEffects();
+      el.labelEffects();
     }
 
-    this.OnInput = On(input).Input(e => {
-      if (el.hasAttr("label") || el.hasAttr("placeholder")) this.labelEffects();
+    this.OnInput = input.Input(e => {
+      if (el.hasAttr("label") || el.hasAttr("placeholder")) el.labelEffects();
     });
 
-    this.OnClick = On('span', this).Click(e => {
-      this.value = '';
-      this.labelEffects();
+    this.OnClick = On('span', el).Click(e => {
+      el.value = '';
+      el.labelEffects();
     });
 
     el.append(clearText);

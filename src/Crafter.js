@@ -440,6 +440,25 @@
   };
 
   /**
+   * Easy way to loop through Collections and Objects and Numbers as well
+   * @param {Array|Object|NodeList|Number} iterable - any collection that is either an Object or has a .length value
+   * @param {function} func - function called on each iteration -> "function( value , indexOrKey ) {...}"
+   */
+  root.forEach = function (iterable, func) {
+    if (!is.empty(iterable) && is.Func(func)) {
+      let i = 0;
+      if (is.Array(iterable) || is.Arraylike(iterable) && !localStorage) {
+        for (; i < iterable.length; i++) func(iterable[i], i);
+      } else if (is.int(iterable)) {
+        iterable = toInt(iterable);
+        for (; i < iterable; func(iterable--));
+      } else
+        for (i in iterable)
+          if (iterable.hasOwnProperty(i)) func(iterable[i], i);
+    }
+  }
+
+  /**
    * Converts any Query/QueryAll to an Array of Nodes even if there is only one Node , this is error proof when no arguments are present it returns an empty array
    * @param {Node|NodeList|Array|String} val - pass either a CSS Selector string , Node/NodeList or Array of Nodes
    * @param {Node|NodeList|Array|String} within - pass either a CSS Selector string , Node/NodeList or Array of Nodes to search for val in
@@ -472,7 +491,7 @@
     get On() {
         let evtHndl = this;
         forEach(evtHndl.Target, target => {
-          evtHndl.EventType.forEach(evt => {
+          forEach(evtHndl.EventType, evt => {
             target.addEventListener(evt, evtHndl.FuncWrapper)
           })
         });
@@ -501,7 +520,7 @@
     get Off() {
         let evtHndl = this;
         forEach(evtHndl.Target, target => {
-          evtHndl.EventType.forEach(evt => {
+          forEach(evtHndl.EventType, evt => {
             target.removeEventListener(evt, evtHndl.FuncWrapper)
           })
         });
@@ -530,25 +549,6 @@
         })
       });
       return evtHndl;
-    }
-  }
-
-  /**
-   * Easy way to loop through Collections and Objects and Numbers as well
-   * @param {Array|Object|NodeList|Number} iterable - any collection that is either an Object or has a .length value
-   * @param {function} func - function called on each iteration -> "function( value , indexOrKey ) {...}"
-   */
-  root.forEach = function (iterable, func) {
-    if (!is.empty(iterable) && is.Func(func)) {
-      let i = 0;
-      if (is.Array(iterable) || is.Arraylike(iterable) && !localStorage) {
-        for (; i < iterable.length; i++) func(iterable[i], i);
-      } else if (is.int(iterable)) {
-        iterable = toInt(iterable);
-        for (; i < iterable; func(iterable--));
-      } else
-        for (i in iterable)
-          if (iterable.hasOwnProperty(i)) func(iterable[i], i);
     }
   }
 
@@ -667,68 +667,74 @@
   }
 
   function domNodeList(elements) {
-    return {
-      elements: elements,
-      /**
-       * Listen for Events on the NodeList
-       * @param {string} string indicating the type of event to listen for
-       * @param {function} func - handler function for the event
-       * @returns handler (Off,Once,On)
-       */
-      On: (eventType, func) => On(eventType, elements, func),
-      /**
-       * Checks wether a Node is in the NodeList with either a refference to the Node or a CSS selector
-       * @param {Node|string} Node or CSS selector
-       */
-      includes(selector) {
-        if (is.String(selector)) selector = query(selector);
-        return elements.length && toArr(elements).some(e => {
-          elements[i] == selector
+
+    Object.getOwnPropertyNames(Array.prototype).forEach(method => {
+      if (method !== "length") elements[method] = Array.prototype[method];
+    });
+    /**
+     * Listen for Events on the NodeList
+     * @param {string} string indicating the type of event to listen for
+     * @param {function} func - handler function for the event
+     * @returns handler (Off,Once,On)
+     */
+    elements.On = (eventType, func) => On(eventType, elements, func);
+    /**
+     * add CSS style rules to NodeList
+     * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
+     */
+    elements.css = function (styles) {
+      is.Def(styles) ? forEach(elements, el => {
+        forEach(styles, (prop, key) => {
+          el.style[key] = prop
         })
-      },
-      /**
-       * add CSS style rules to NodeList
-       * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
-       */
-      css(styles) {
-        is.Def(styles) ? forEach(elements, el => {
-          forEach(styles, (prop, key) => {
-            el.style[key] = prop
-          })
-        }) : console.error('styles unefined')
-      },
-      addClass: Class => forEach(elements, el => el.classList.add(Class)),
-      stripClass: Class => forEach(elements, el => el.classList.remove(Class)),
-      toggleClass: (Class, state) => {
-        forEach(elements, el => {
-          (is.Bool(state) ? state : el.classList.contains(Class)) ? el.classList.remove(Class): el.classList.add(Class)
-        })
-      },
-      append() {
-        forEach(arguments, val => {
-          forEach(elements, el => {
-            el.appendChild((is.Node(val) ? val : docfragFromString(val)).cloneNode(!0))
-          })
-        });
-        return this;
-      },
-      prepend() {
-        forEach(arguments, val => {
-          forEach(elements, el => el.insertBefore((is.Node(val) ? val : docfragFromString(val)).cloneNode(!0), el.firstChild))
-        });
-        return this;
-      },
-      hide() {
-        this.css({
-          display: 'none'
-        });
-      },
-      show() {
-        this.css({
-          display: ''
-        });
-      },
+      }) : console.error('styles unefined');
+      return this
     }
+    elements.addClass = function (Class) {
+      forEach(elements, el => {
+        el.classList.add(Class)
+      });
+      return this
+    }
+    elements.stripClass = function (Class) {
+      forEach(elements, el => {
+        el.classList.remove(Class)
+      });
+      return this
+    }
+    elements.toggleClass = function (Class, state) {
+      forEach(elements, el => {
+        (is.Bool(state) ? state : el.classList.contains(Class)) ? el.classList.remove(Class): el.classList.add(Class)
+      });
+      return this
+    }
+    elements.append = function () {
+      forEach(arguments, val => {
+        forEach(elements, el => {
+          el.appendChild((is.Node(val) ? val : docfragFromString(val)).cloneNode(!0))
+        })
+      });
+      return this;
+    }
+    elements.prepend = function () {
+      forEach(arguments, val => {
+        forEach(elements, el => el.insertBefore((is.Node(val) ? val : docfragFromString(val)).cloneNode(!0), el.firstChild))
+      });
+      return this;
+    }
+    elements.hide = function () {
+      this.css({
+        display: 'none'
+      });
+      return this
+    }
+    elements.show = function () {
+      this.css({
+        display: ''
+      })
+      return this
+    }
+    return elements
   }
 
   function Inner(type, el) {
@@ -1065,12 +1071,10 @@
         delete this.MutObserver;
       }
     }
-    element.newSetGet = function (key, set, get) {
-      if (!get) get = () => ud;
+    element.newSetGet = function (key, set, get = () => ud) {
       Object.defineProperty(this, key, {
         set: set,
-        get: get,
-        enumerable: true
+        get: get
       })
     }
 
@@ -1107,7 +1111,7 @@
   function observable(obj) {
     Object.defineProperty(obj, 'listeners', {
       value: [],
-      enumerable: false,
+      enumerable: !1,
     });
     Object.defineProperty(obj, 'removeListener', {
       value: fn => {
@@ -1115,7 +1119,7 @@
           if (l.fn !== fn) return l;
         })
       },
-      enumerable: false,
+      enumerable: !1,
     });
     Object.defineProperty(obj, 'addListener', {
       value: function (prop, func) {
@@ -1134,7 +1138,7 @@
         else throw new Error('no function');
         obj.listeners.push(listener);
       },
-      enumerable: false,
+      enumerable: !1,
     });
     try {
       return new Proxy(obj, {
@@ -1153,7 +1157,7 @@
         Object.observe(obj, changes => {
           changes.forEach(change => {
             if (change.type === 'add' || change.type === 'update') forEach(obj.listeners, l => {
-              if (l.prop === '*' || l.prop === change.name) l.fn(obj, change.name, obj[change.name], change.type === 'add' ? true : !Object.is(change.oldValue, obj[change.name]));
+              if (l.prop === '*' || l.prop === change.name) l.fn(obj, change.name, obj[change.name], change.type === 'add' ? !0 : !Object.is(change.oldValue, obj[change.name]));
             });
           })
         });
@@ -1288,8 +1292,12 @@
         if (nestable && (is.Arr(val) || is.Object(val))) Craft.forEachDeep(val, fn, currentPath);
       }
     },
-    concatObjects(host, ...args) {
-      forEach(args, obj => forEach(Object.keys(obj), key => Object.defineProperty(host, key, Object.getOwnPropertyDescriptor(obj, key))));
+    concatObjects(host, ...objs) {
+      forEach(objs, obj => {
+        forEach(Object.keys(obj), key => {
+          Object.defineProperty(host, key, Object.getOwnPropertyDescriptor(obj, key))
+        })
+      });
       return host;
     },
     clone(val) {
@@ -1425,7 +1433,7 @@
       setPrekey(str) {
         Craft.loader.pre = str + ':'
       },
-      get: key => JSON.parse(localStorage.getItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key) || false),
+      get: key => JSON.parse(localStorage.getItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key) || !1),
       remove(key) {
         localStorage.removeItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key)
       },
@@ -1443,15 +1451,17 @@
      */
     Import() {
       let promises = [];
-      forEach(arguments, arg => arg.test ? Craft.loader.remove(arg.css || arg.script) : promises.push(Craft.loader.fetchImport({
-        url: arg.css || arg.script,
-        type: arg.css ? 'css' : 'script',
-        exec: arg.execute != !1,
-        cache: arg.cache != !1,
-        defer: arg.defer ? 'defer' : null,
-        key: arg.key,
-        expire: arg.expire
-      })));
+      forEach(arguments, arg => {
+        arg.test ? Craft.loader.remove(arg.css || arg.script) : promises.push(Craft.loader.fetchImport({
+          url: arg.css || arg.script,
+          type: arg.css ? 'css' : 'script',
+          exec: arg.execute != !1,
+          cache: arg.cache != !1,
+          defer: arg.defer ? 'defer' : null,
+          key: arg.key,
+          expire: arg.expire
+        }))
+      });
       return Promise.all(promises).then(src => {
         src.map(obj => {
           if (obj.exec) obj.type === 'css' ? CrafterStyles.textContent += '\n' + obj.data : head.appendChild(dom().script('', {
@@ -1470,10 +1480,10 @@
       },
       handle(route, func) {
         if (is.String(route)) {
-          if (Locs(l => l === route)) func(route);
+          if (Locs(l => l == route)) func(route);
           Craft.router.addHandle(route, func);
         } else if (is.Arr(route)) route.forEach(link => {
-          if (Locs(l => l === link)) func(link);
+          if (Locs(l => l == link)) func(link);
           Craft.router.addHandle(link, func);
         });
       },
@@ -1512,10 +1522,10 @@
     Cookies: {
       get: key => key ? decodeURIComponent(doc.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1")) || null : null,
       set(key, val, expires, path, domain, secure) {
-        if (!key || /^(?:expires|max\-age|path|domain|secure)$/i.test(key)) return false;
+        if (!key || /^(?:expires|max\-age|path|domain|secure)$/i.test(key)) return !1;
         let expiry = "";
         if (expires) {
-          if (is.Num(expires)) expiry = expires === Infinity ? "; expires=Fri, 11 April 9997 23:59:59 UTC" : "; max-age=" + expires;
+          if (is.Num(expires)) expiry = expires == Infinity ? "; expires=Fri, 11 April 9997 23:59:59 UTC" : "; max-age=" + expires;
           if (is.String(expires)) expiry = "; expires=" + expires;
           if (is.Date(expires)) expiry = "; expires=" + expires.toUTCString();
         }
@@ -1523,14 +1533,16 @@
         return true;
       },
       remove(key, path, domain) {
-        if (!Craft.Cookies.has(key)) return false;
+        if (!Craft.Cookies.has(key)) return !1;
         doc.cookie = encodeURIComponent(key) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT" + (domain ? "; domain=" + domain : "") + (path ? "; path=" + path : "");
-        return true;
+        return !0;
       },
       has: key => key ? (new RegExp("(?:^|;\\s*)" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=")).test(doc.cookie) : false,
       keys() {
         let all = doc.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/);
-        all.forEach(c => decodeURIComponent(c));
+        forEach(all, c => {
+          decodeURIComponent(c)
+        });
         return all;
       }
     },
@@ -1583,7 +1595,9 @@
             }
             socket.onmessage = e => {
               Options.message = e.data;
-              forEach(Options.recievers, fn => fn(e.data, e));
+              forEach(Options.recievers, fn => {
+                fn(e.data, e)
+              });
             }
           }
         }
@@ -1596,7 +1610,9 @@
         }
         socket.onmessage = e => {
           Options.message = e.data;
-          forEach(Options.recievers, fn => fn(e.data, e));
+          forEach(Options.recievers, fn => {
+            fn(e.data, e)
+          });
         }
         Options.socket = socket;
 
@@ -1666,7 +1682,11 @@
         return res;
       }
     },
-    css: (el, styles) => is.Def(styles) && is.Node(el) ? forEach(styles, (prop, key) => el.style[key] = prop) : console.error('invalid args'),
+    css(el, styles) {
+      is.Def(styles) && is.Node(el) ? forEach(styles, (prop, key) => {
+        el.style[key] = prop
+      }) : console.error('invalid args')
+    },
     hasCapitals: string => toArr(string).some(c => is.Uppercase(c)),
     OverrideFunction(funcName, Func, ContextObject) {
       let func = funcName.split(".").pop(),
@@ -1803,7 +1823,9 @@
       sheet.insertRule(selector + "{" + rules + "}", index);
     },
     revokeCSSRule: (index, sheet) => (sheet || CrafterStyles).sheet.deleteRule(index),
-    URLfrom: text => URL.createObjectURL(new Blob([text])),
+    URLfrom(text) {
+      return URL.createObjectURL(new Blob([text]))
+    },
     OnScroll(element, func) {
       is.Func(func) ? On('scroll', element, e => {
         func(e.deltaY < 1, e)
@@ -1847,7 +1869,8 @@
       let cutkey = cutdot(key);
       if (is.Def(Craft.Models[cutkey[0]])) {
         let type = (is.Def(val) ? 'set' : 'get') + 'Deep';
-        return cutkey.length === 1 && !is.Def(val) ? Craft.Models[cutkey[0]].scope : Craft[type](Craft.Models[cutkey[0]].scope, Craft.omit(cutkey, cutkey[0]).join('.'), val);
+        return cutkey.length === 1 && !is.Def(val) ? Craft.Models[cutkey[0]].scope :
+          Craft[type](Craft.Models[cutkey[0]].scope, Craft.omit(cutkey, cutkey[0]).join('.'), val);
       }
     },
     customAttribute(name, handle) {
@@ -1982,10 +2005,11 @@
     },
   };
 
-  Craft.ForEach = Craft.tco((collection, func, i = 0) => {
+  Craft.ForEach = Craft.tco((collection, func, i) => {
+    if (is.Undef(i)) i = 0;
     if (collection.length != i) {
       func(collection[i], i);
-      ForEach(collection, func, i + 1);
+      Craft.ForEach(collection, func, i + 1);
     }
   });
 
@@ -2072,23 +2096,27 @@
           el.customAttr.push(attr.name);
           attr.handle(dom(el), el.getAttribute(attr.name));
         }
-        return;
+        break;
       }
     }
   }
 
   root.onload = e => {
-    forEach(Craft.router.links, link => link());
-    Craft.WebComponents.length === queryAll(fw).length ? Ready = !0 :
-      Craft.poll(() => Craft.WebComponents.length === queryAll(fw).length, 10, 5010)
+    forEach(Craft.router.links, link => {
+      link()
+    });
+    Craft.WebComponents.length == queryAll(fw).length ? Ready = !0 :
+      Craft.poll(() => Craft.WebComponents.length == queryAll(fw).length, 10, 5010)
       .then(() => {
         Ready = !0;
-        Craft.DomObserver = new MutationObserver(muts => forEach(muts, mut => {
-          forEach(mut.addedNodes, el => {
-            if (el['hasAttribute']) manageAttr(el);
-          });
-          manageAttr(mut.target);
-        }));
+        Craft.DomObserver = new MutationObserver(muts => {
+          forEach(muts, mut => {
+            forEach(mut.addedNodes, el => {
+              if (el['hasAttribute']) manageAttr(el)
+            });
+            manageAttr(mut.target)
+          })
+        });
         Craft.DomObserver.observe(doc.body, {
           attributes: !0,
           childList: !0,

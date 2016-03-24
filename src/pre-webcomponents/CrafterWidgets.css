@@ -166,13 +166,13 @@ toggle-button > .toggle {
   -webkit-transition: all 120ms ease;
   transition: all 120ms ease;
 }
-toggle-button[open="true"] > .toggle {
+toggle-button[on] > .toggle {
   left: calc(100% - 5mm);
 }
 toggle-button:hover {
   background: #ebb4b1;
 }
-toggle-button[open="true"]:hover {
+toggle-button[on]:hover {
   background: #adeeb7;
 }
 .notifications-top-left, .notifications-top-right, .notifications-top-middle, .notifications-bottom-left, .notifications-bottom-right, .notifications-bottom-middle {
