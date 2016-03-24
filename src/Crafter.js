@@ -714,13 +714,13 @@
           el.appendChild((is.Node(val) ? val : docfragFromString(val)).cloneNode(!0))
         })
       });
-      return this;
+      return this
     }
     elements.prepend = function () {
       forEach(arguments, val => {
         forEach(elements, el => el.insertBefore((is.Node(val) ? val : docfragFromString(val)).cloneNode(!0), el.firstChild))
       });
-      return this;
+      return this
     }
     elements.hide = function () {
       this.css({

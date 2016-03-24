@@ -1350,7 +1350,7 @@ function _toConsumableArray(arr) {
         element.observe = function(func, options) {
             this.MutObserver = new MutationObserver(function(muts) {
                 forEach(muts, function(mut) {
-                    func(mut, mut.type, mut.target, mut.addedNodes, mut.removedNodes);
+                    func(mut.type, mut.target, mut.addedNodes, mut.removedNodes, mut);
                 });
             });
             this.MutObserver.observe(this, options || {
@@ -2276,10 +2276,14 @@ function _toConsumableArray(arr) {
             if (!sheet) sheet = CrafterStyles.sheet;
             sheet.insertRule(selector + "{" + rules + "}", index);
         },
-
         revokeCSSRule: function revokeCSSRule(index, sheet) {
-            return (sheet || CrafterStyles).sheet.deleteRule(index);
+            (sheet || CrafterStyles).sheet.deleteRule(index);
         },
+
+        /**
+         * Converts any text to an inline URL code (good for images , svg , scripts or css)
+         * @param {string} - content to convert to an inline URL
+         **/
         URLfrom: function URLfrom(text) {
             return URL.createObjectURL(new Blob([text]));
         },
@@ -2308,7 +2312,7 @@ function _toConsumableArray(arr) {
         },
         /**
          * returns a promise when the DOM and WebComponents are all finished loading
-         * @param {function} func - function to execute when the DOM and webcomponents are ready
+         * @returns {promise} - when everything is done loading WhenReady will return a promise
          */
         get WhenReady() {
             return new Promise(function(pass, fail) {
@@ -2340,6 +2344,13 @@ function _toConsumableArray(arr) {
                 return cutkey.length === 1 && !is.Def(val) ? Craft.Models[cutkey[0]].scope : Craft[_type](Craft.Models[cutkey[0]].scope, Craft.omit(cutkey, cutkey[0]).join('.'), val);
             }
         },
+
+        /**
+         * defines custom attributes
+         * @param {string} name - the name of your custom attribute
+         * @param {function} handle - a function to handle how your custom attribute behaves
+         * @example Craft.customAttribute('turngreen', element => element.css({ background : 'green'}));
+         **/
         customAttribute: function customAttribute(name, handle) {
             if (is.Func(handle)) {
                 (function() {

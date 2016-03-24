@@ -1,3 +1,5 @@
+# 
+
 # addClass
 
 Add a CSS class to the element
@@ -46,10 +48,6 @@ creates a div element with the options provided
 # getRect
 
 gets all the element's dimentions (width,height,left,top,bottom,right)
-
-# getSiblings
-
-gets all the elements siblings within it's parentNode
 
 # gotClass
 
@@ -766,23 +764,29 @@ Generates arrays of a set length , with values or values generated from function
 
 ## arrDiff
 
-Converts an Array to an Object
+Returns an object or calls a function with all the differences between two arrays
 
 **Parameters**
 
--   `arr` **Array** array to be converted
+-   `arr` **Array** array to be compared
+-   `arr` **Array** second array to be compared
 -   `newArr`  
 -   `func`  
 
-## createWebComponent
+## customAttribute
 
-Part of Crafter.js's own WebComponent format (.wc) it takes a json object that contains .css and .js values then imports and executes them
+defines custom attributes
 
 **Parameters**
 
--   `webcomponent` **string** JSON string from Crafter.js's (.wc) WebComponent format
--   `wc`  
--   `src`  
+-   `name` **string** the name of your custom attribute
+-   `handle` **function** a function to handle how your custom attribute behaves
+
+**Examples**
+
+```javascript
+Craft.customAttribute('turngreen', element => element.css({ background : 'green'}));
+```
 
 ## flatten
 
@@ -837,6 +841,16 @@ Craft.newComponent('custom-element',{
 -   `tag` **string** a hyphenated custom HTML tagname for the new element -> "custom-element"
 -   `config` **object** Object containing all the element's lifecycle methods / extends and attached methods or properties
 
+## newWC
+
+Part of Crafter.js's own WebComponent format (.wc) it takes a json object that contains .css and .js values then imports and executes them
+
+**Parameters**
+
+-   `webcomponent` **string** JSON string from Crafter.js's (.wc) WebComponent format
+-   `wc`  
+-   `src`  
+
 ## randomString
 
 method for generating random alphanumeric strings
@@ -859,7 +873,8 @@ Craft.setDeep  is similar to getDeep it uses a string to reference to a value
 -   `obj` **Object** the object to set values on
 -   `path` **string** string to reference value by simple dot notation
 -   `value` **Any** value to set
--   `returnObj` **boolean** should the function return the object
+-   `val`  
+-   `robj` **boolean** should the function return the object
 
 ## Socket
 
@@ -909,13 +924,20 @@ converts Objects or URL variable strings to a FormData object
 Convert numbers to integers
 {number|string} val - number to convert to an integer
 
+## URLfrom
+
+Converts any text to an inline URL code (good for images , svg , scripts or css)
+
+**Parameters**
+
+-   `string`  content to convert to an inline URL
+-   `text`  
+
 ## WhenReady
 
 returns a promise when the DOM and WebComponents are all finished loading
 
-**Parameters**
-
--   `func` **function** function to execute when the DOM and webcomponents are ready
+Returns **promise** when everything is done loading WhenReady will return a promise
 
 # dom
 
@@ -927,6 +949,15 @@ in the absence of parameters the function will return methods for created elemen
 -   `element` **[Node or NodeList or string]** optional Node, NodeList or CSS Selector that will be affected by the methods returned
 -   `within` **[Node or string]** optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
 -   `one` **[boolean]** even if there are more than one elements matching a selector only return the first one
+
+# forEach
+
+Easy way to loop through Collections and Objects and Numbers as well
+
+**Parameters**
+
+-   `iterable` **Array or Object or NodeList or Number** any collection that is either an Object or has a .length value
+-   `func` **function** function called on each iteration -> "function( value , indexOrKey ) {...}"
 
 # On
 
@@ -993,7 +1024,17 @@ add CSS style rules to NodeList
 
 -   `styles` **object** should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
 
-# doc
+# On
+
+Listen for Events on the NodeList
+
+**Parameters**
+
+-   `string` **string** indicating the type of event to listen for
+-   `eventType`  
+-   `func` **function** handler function for the event
+
+Returns **** handler (Off,Once,On)
 
 # EventHandler
 
@@ -1031,15 +1072,6 @@ Change the Event type to listen for
 **Parameters**
 
 -   `type`  
-
-# forEach
-
-Easy way to loop through Collections and Objects and Numbers as well
-
-**Parameters**
-
--   `iterable` **Array or Object or NodeList or Number** any collection that is either an Object or has a .length value
--   `func` **function** function called on each iteration -> "function( value , indexOrKey ) {...}"
 
 # getAttr
 
@@ -1084,15 +1116,6 @@ Toggles an attribute on element , optionally add value when toggle is adding att
 -   `val` **string** value to set attribute to
 -   `returnState` **[boolean]** optionally return a bool witht the toggle state otherwise returns the element
 
-# includes
-
-Checks wether a Node is in the NodeList with either a refference to the Node or a CSS selector
-
-**Parameters**
-
--   `Node` **Node or string** or CSS selector
--   `selector`  
-
 # NodeOrQuerytoArr
 
 Converts any Query/QueryAll to an Array of Nodes even if there is only one Node , this is error proof when no arguments are present it returns an empty array
@@ -1101,15 +1124,3 @@ Converts any Query/QueryAll to an Array of Nodes even if there is only one Node 
 
 -   `val` **Node or NodeList or Array or String** pass either a CSS Selector string , Node/NodeList or Array of Nodes
 -   `within` **Node or NodeList or Array or String** pass either a CSS Selector string , Node/NodeList or Array of Nodes to search for val in
-
-# On
-
-Listen for Events on the NodeList
-
-**Parameters**
-
--   `string` **string** indicating the type of event to listen for
--   `eventType`  
--   `func` **function** handler function for the event
-
-Returns **** handler (Off,Once,On)
