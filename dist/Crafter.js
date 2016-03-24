@@ -90,8 +90,8 @@ function _toConsumableArray(arr) {
             return doInvok(fn, Args.concat(toArr(arguments)), totalArity);
         } : (function(fn, args, arity) {
             var a = [];
-            for (var _i = arity; 0 > _i; _i--) {
-                a.push('a' + _i.toString());
+            for (var i = arity; 0 > i; i--) {
+                a.push('a' + i.toString());
             }
             return function() {
                 return doInvok(fn, toArr(arguments).concat(a));
@@ -612,6 +612,28 @@ function _toConsumableArray(arr) {
     };
 
     /**
+     * Easy way to loop through Collections and Objects and Numbers as well
+     * @param {Array|Object|NodeList|Number} iterable - any collection that is either an Object or has a .length value
+     * @param {function} func - function called on each iteration -> "function( value , indexOrKey ) {...}"
+     */
+    root.forEach = function(iterable, func) {
+        if (!is.empty(iterable) && is.Func(func)) {
+            var i = 0;
+            if (is.Array(iterable) || is.Arraylike(iterable) && !localStorage) {
+                for (; i < iterable.length; i++) {
+                    func(iterable[i], i);
+                }
+            } else if (is.int(iterable)) {
+                iterable = toInt(iterable);
+                for (; i < iterable; func(iterable--)) {}
+            } else
+                for (i in iterable) {
+                    if (iterable.hasOwnProperty(i)) func(iterable[i], i);
+                }
+        }
+    };
+
+    /**
      * Converts any Query/QueryAll to an Array of Nodes even if there is only one Node , this is error proof when no arguments are present it returns an empty array
      * @param {Node|NodeList|Array|String} val - pass either a CSS Selector string , Node/NodeList or Array of Nodes
      * @param {Node|NodeList|Array|String} within - pass either a CSS Selector string , Node/NodeList or Array of Nodes to search for val in
@@ -651,7 +673,7 @@ function _toConsumableArray(arr) {
             get: function get() {
                     var evtHndl = this;
                     forEach(evtHndl.Target, function(target) {
-                        evtHndl.EventType.forEach(function(evt) {
+                        forEach(evtHndl.EventType, function(evt) {
                             target.addEventListener(evt, evtHndl.FuncWrapper);
                         });
                     });
@@ -686,7 +708,7 @@ function _toConsumableArray(arr) {
             get: function get() {
                     var evtHndl = this;
                     forEach(evtHndl.Target, function(target) {
-                        evtHndl.EventType.forEach(function(evt) {
+                        forEach(evtHndl.EventType, function(evt) {
                             target.removeEventListener(evt, evtHndl.FuncWrapper);
                         });
                     });
@@ -725,33 +747,11 @@ function _toConsumableArray(arr) {
     })();
 
     /**
-     * Easy way to loop through Collections and Objects and Numbers as well
-     * @param {Array|Object|NodeList|Number} iterable - any collection that is either an Object or has a .length value
-     * @param {function} func - function called on each iteration -> "function( value , indexOrKey ) {...}"
-     */
-
-    root.forEach = function(iterable, func) {
-        if (!is.empty(iterable) && is.Func(func)) {
-            var _i2 = 0;
-            if (is.Array(iterable) || is.Arraylike(iterable) && !localStorage) {
-                for (; _i2 < iterable.length; _i2++) {
-                    func(iterable[_i2], _i2);
-                }
-            } else if (is.int(iterable)) {
-                iterable = toInt(iterable);
-                for (; _i2 < iterable; func(iterable--)) {}
-            } else
-                for (_i2 in iterable) {
-                    if (iterable.hasOwnProperty(_i2)) func(iterable[_i2], _i2);
-                }
-        }
-    };
-
-    /**
      * Easy way to get a DOM Node or Node within another DOM Node using CSS selectors
      * @param {string} selector - CSS selector to query the DOM Node with
      * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
      */
+
     root.query = function(selector, element) {
         if (is.String(element)) element = doc.querySelector(element);
         return is.Node(element) ? element.querySelector(selector) : doc.querySelector(selector);
@@ -900,92 +900,78 @@ function _toConsumableArray(arr) {
     }
 
     function domNodeList(elements) {
-        return {
-            elements: elements,
-            /**
-             * Listen for Events on the NodeList
-             * @param {string} string indicating the type of event to listen for
-             * @param {function} func - handler function for the event
-             * @returns handler (Off,Once,On)
-             */
-            On: (function(_On) {
-                function On(_x2, _x3) {
-                    return _On.apply(this, arguments);
-                }
 
-                On.toString = function() {
-                    return _On.toString();
-                };
-
-                return On;
-            })(function(eventType, func) {
-                return On(eventType, elements, func);
-            }),
-            /**
-             * Checks wether a Node is in the NodeList with either a refference to the Node or a CSS selector
-             * @param {Node|string} Node or CSS selector
-             */
-            includes: function includes(selector) {
-                if (is.String(selector)) selector = query(selector);
-                return elements.length && toArr(elements).some(function(e) {
-                    elements[i] == selector;
-                });
-            },
-
-            /**
-             * add CSS style rules to NodeList
-             * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
-             */
-            css: function css(styles) {
-                is.Def(styles) ? forEach(elements, function(el) {
-                    forEach(styles, function(prop, key) {
-                        el.style[key] = prop;
-                    });
-                }) : console.error('styles unefined');
-            },
-
-            addClass: function addClass(Class) {
-                return forEach(elements, function(el) {
-                    return el.classList.add(Class);
-                });
-            },
-            stripClass: function stripClass(Class) {
-                return forEach(elements, function(el) {
-                    return el.classList.remove(Class);
-                });
-            },
-            toggleClass: function toggleClass(Class, state) {
-                forEach(elements, function(el) {
-                    (is.Bool(state) ? state : el.classList.contains(Class)) ? el.classList.remove(Class): el.classList.add(Class);
-                });
-            },
-            append: function append() {
-                forEach(arguments, function(val) {
-                    forEach(elements, function(el) {
-                        el.appendChild((is.Node(val) ? val : docfragFromString(val)).cloneNode(!0));
-                    });
-                });
-                return this;
-            },
-            prepend: function prepend() {
-                forEach(arguments, function(val) {
-                    forEach(elements, function(el) {
-                        return el.insertBefore((is.Node(val) ? val : docfragFromString(val)).cloneNode(!0), el.firstChild);
-                    });
-                });
-                return this;
-            },
-            hide: function hide() {
-                this.css({
-                    display: 'none'
-                });
-            },
-            show: function show() {
-                this.css({
-                    display: ''
-                });
-            }
+        Object.getOwnPropertyNames(Array.prototype).forEach(function(method) {
+            if (method !== "length") elements[method] = Array.prototype[method];
+        });
+        /**
+         * Listen for Events on the NodeList
+         * @param {string} string indicating the type of event to listen for
+         * @param {function} func - handler function for the event
+         * @returns handler (Off,Once,On)
+         */
+        elements.On = function(eventType, func) {
+            return On(eventType, elements, func);
         };
+        /**
+         * add CSS style rules to NodeList
+         * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
+         */
+        elements.css = function(styles) {
+            is.Def(styles) ? forEach(elements, function(el) {
+                forEach(styles, function(prop, key) {
+                    el.style[key] = prop;
+                });
+            }) : console.error('styles unefined');
+            return this;
+        };
+        elements.addClass = function(Class) {
+            forEach(elements, function(el) {
+                el.classList.add(Class);
+            });
+            return this;
+        };
+        elements.stripClass = function(Class) {
+            forEach(elements, function(el) {
+                el.classList.remove(Class);
+            });
+            return this;
+        };
+        elements.toggleClass = function(Class, state) {
+            forEach(elements, function(el) {
+                (is.Bool(state) ? state : el.classList.contains(Class)) ? el.classList.remove(Class): el.classList.add(Class);
+            });
+            return this;
+        };
+        elements.append = function() {
+            forEach(arguments, function(val) {
+                forEach(elements, function(el) {
+                    el.appendChild((is.Node(val) ? val : docfragFromString(val)).cloneNode(!0));
+                });
+            });
+            return this;
+        };
+        elements.prepend = function() {
+            forEach(arguments, function(val) {
+                forEach(elements, function(el) {
+                    return el.insertBefore((is.Node(val) ? val : docfragFromString(val)).cloneNode(!0), el.firstChild);
+                });
+            });
+            return this;
+        };
+        elements.hide = function() {
+            this.css({
+                display: 'none'
+            });
+            return this;
+        };
+        elements.show = function() {
+            this.css({
+                display: ''
+            });
+            return this;
+        };
+        return elements;
     }
 
     function Inner(type, el) {
@@ -1379,14 +1365,14 @@ function _toConsumableArray(arr) {
                 delete this.MutObserver;
             }
         };
-        element.newSetGet = function(key, set, get) {
-            if (!get) get = function get() {
+        element.newSetGet = function(key, set) {
+            var get = arguments.length <= 2 || arguments[2] === undefined ? function() {
                 return ud;
-            };
+            } : arguments[2];
+
             Object.defineProperty(this, key, {
                 set: set,
-                get: get,
-                enumerable: true
+                get: get
             });
         };
 
@@ -1422,7 +1408,7 @@ function _toConsumableArray(arr) {
     function observable(obj) {
         Object.defineProperty(obj, 'listeners', {
             value: [],
-            enumerable: false
+            enumerable: !1
         });
         Object.defineProperty(obj, 'removeListener', {
             value: function value(fn) {
@@ -1430,7 +1416,7 @@ function _toConsumableArray(arr) {
                     if (l.fn !== fn) return l;
                 });
             },
-            enumerable: false
+            enumerable: !1
         });
         Object.defineProperty(obj, 'addListener', {
             value: function value(prop, func) {
@@ -1449,7 +1435,7 @@ function _toConsumableArray(arr) {
                 else throw new Error('no function');
                 obj.listeners.push(listener);
             },
-            enumerable: false
+            enumerable: !1
         });
         try {
             return new Proxy(obj, {
@@ -1468,7 +1454,7 @@ function _toConsumableArray(arr) {
                 Object.observe(obj, function(changes) {
                     changes.forEach(function(change) {
                         if (change.type === 'add' || change.type === 'update') forEach(obj.listeners, function(l) {
-                            if (l.prop === '*' || l.prop === change.name) l.fn(obj, change.name, obj[change.name], change.type === 'add' ? true : !Object.is(change.oldValue, obj[change.name]));
+                            if (l.prop === '*' || l.prop === change.name) l.fn(obj, change.name, obj[change.name], change.type === 'add' ? !0 : !Object.is(change.oldValue, obj[change.name]));
                         });
                     });
                 });
@@ -1571,8 +1557,8 @@ function _toConsumableArray(arr) {
             path = path.replace(/\[(\w+)\]/g, '.$1');
             path = path.replace(/^\./, '');
             try {
-                for (var _i3 = 0, a = cutdot(path); _i3 < a.length; ++_i3) {
-                    a[_i3] in obj ? obj = obj[a[_i3]] : obj = ud;
+                for (var i = 0, a = cutdot(path); i < a.length; ++i) {
+                    a[i] in obj ? obj = obj[a[i]] : obj = ud;
                 }
             } catch (e) {
                 obj = ud;
@@ -1590,8 +1576,8 @@ function _toConsumableArray(arr) {
         setDeep: function setDeep(obj, path, val, robj) {
             path = cutdot(path);
             var temp = obj;
-            for (var _i4 = 0, n; _i4 < path.length - 1; _i4++) {
-                n = path[_i4];
+            for (var i = 0, n; i < path.length - 1; i++) {
+                n = path[i];
                 if (n in temp) temp = temp[n];
                 else {
                     temp[n] = {};
@@ -1617,13 +1603,13 @@ function _toConsumableArray(arr) {
             }
         },
         concatObjects: function concatObjects(host) {
-            for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-                args[_key - 1] = arguments[_key];
+            for (var _len = arguments.length, objs = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+                objs[_key - 1] = arguments[_key];
             }
 
-            forEach(args, function(obj) {
-                return forEach(Object.keys(obj), function(key) {
-                    return Object.defineProperty(host, key, Object.getOwnPropertyDescriptor(obj, key));
+            forEach(objs, function(obj) {
+                forEach(Object.keys(obj), function(key) {
+                    Object.defineProperty(host, key, Object.getOwnPropertyDescriptor(obj, key));
                 });
             });
             return host;
@@ -1817,14 +1803,14 @@ function _toConsumableArray(arr) {
             },
 
             get: function get(key) {
-                return JSON.parse(localStorage.getItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key) || false);
+                return JSON.parse(localStorage.getItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key) || !1);
             },
             remove: function remove(key) {
                 localStorage.removeItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key);
             },
             removeAll: function removeAll(expired) {
-                for (var _i5 in localStorage) {
-                    if (!expired || is.past(Craft.loader.get(_i5).expire)) Craft.loader.remove(_i5);
+                for (var i in localStorage) {
+                    if (!expired || is.past(Craft.loader.get(i).expire)) Craft.loader.remove(i);
                 }
             }
         },
@@ -1838,7 +1824,7 @@ function _toConsumableArray(arr) {
         Import: function Import() {
             var promises = [];
             forEach(arguments, function(arg) {
-                return arg.test ? Craft.loader.remove(arg.css || arg.script) : promises.push(Craft.loader.fetchImport({
+                arg.test ? Craft.loader.remove(arg.css || arg.script) : promises.push(Craft.loader.fetchImport({
                     url: arg.css || arg.script,
                     type: arg.css ? 'css' : 'script',
                     exec: arg.execute != !1,
@@ -1868,12 +1854,12 @@ function _toConsumableArray(arr) {
             handle: function handle(route, func) {
                 if (is.String(route)) {
                     if (Locs(function(l) {
-                            return l === route;
+                            return l == route;
                         })) func(route);
                     Craft.router.addHandle(route, func);
                 } else if (is.Arr(route)) route.forEach(function(link) {
                     if (Locs(function(l) {
-                            return l === link;
+                            return l == link;
                         })) func(link);
                     Craft.router.addHandle(link, func);
                 });
@@ -1889,7 +1875,7 @@ function _toConsumableArray(arr) {
                 });
             },
             open: (function(_open) {
-                function open(_x4, _x5) {
+                function open(_x3, _x4) {
                     return _open.apply(this, arguments);
                 }
 
@@ -1923,8 +1909,8 @@ function _toConsumableArray(arr) {
                 }) : vh.html(view, position);
             },
             clearViews: function clearViews() {
-                for (var _i6 in localStorage) {
-                    localStorage.removeItem(localStorage.key(_i6).includes("Cr:"));
+                for (var i in localStorage) {
+                    localStorage.removeItem(localStorage.key(i).includes("Cr:"));
                 }
             }
         },
@@ -1933,10 +1919,10 @@ function _toConsumableArray(arr) {
                 return key ? decodeURIComponent(doc.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1")) || null : null;
             },
             set: function set(key, val, expires, path, domain, secure) {
-                if (!key || /^(?:expires|max\-age|path|domain|secure)$/i.test(key)) return false;
+                if (!key || /^(?:expires|max\-age|path|domain|secure)$/i.test(key)) return !1;
                 var expiry = "";
                 if (expires) {
-                    if (is.Num(expires)) expiry = expires === Infinity ? "; expires=Fri, 11 April 9997 23:59:59 UTC" : "; max-age=" + expires;
+                    if (is.Num(expires)) expiry = expires == Infinity ? "; expires=Fri, 11 April 9997 23:59:59 UTC" : "; max-age=" + expires;
                     if (is.String(expires)) expiry = "; expires=" + expires;
                     if (is.Date(expires)) expiry = "; expires=" + expires.toUTCString();
                 }
@@ -1944,9 +1930,9 @@ function _toConsumableArray(arr) {
                 return true;
             },
             remove: function remove(key, path, domain) {
-                if (!Craft.Cookies.has(key)) return false;
+                if (!Craft.Cookies.has(key)) return !1;
                 doc.cookie = encodeURIComponent(key) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT" + (domain ? "; domain=" + domain : "") + (path ? "; path=" + path : "");
-                return true;
+                return !0;
             },
 
             has: function has(key) {
@@ -1954,8 +1940,8 @@ function _toConsumableArray(arr) {
             },
             keys: function keys() {
                 var all = doc.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/);
-                all.forEach(function(c) {
-                    return decodeURIComponent(c);
+                forEach(all, function(c) {
+                    decodeURIComponent(c);
                 });
                 return all;
             }
@@ -2015,7 +2001,7 @@ function _toConsumableArray(arr) {
                                 socket.onmessage = function(e) {
                                     Options.message = e.data;
                                     forEach(Options.recievers, function(fn) {
-                                        return fn(e.data, e);
+                                        fn(e.data, e);
                                     });
                                 };
                             }
@@ -2031,7 +2017,7 @@ function _toConsumableArray(arr) {
                     socket.onmessage = function(e) {
                         Options.message = e.data;
                         forEach(Options.recievers, function(fn) {
-                            return fn(e.data, e);
+                            fn(e.data, e);
                         });
                     };
                     Options.socket = socket;
@@ -2112,12 +2098,12 @@ function _toConsumableArray(arr) {
                 return res;
             };
         },
-
         css: function css(el, styles) {
-            return is.Def(styles) && is.Node(el) ? forEach(styles, function(prop, key) {
-                return el.style[key] = prop;
+            is.Def(styles) && is.Node(el) ? forEach(styles, function(prop, key) {
+                el.style[key] = prop;
             }) : console.error('invalid args');
         },
+
         hasCapitals: function hasCapitals(string) {
             return toArr(string).some(function(c) {
                 return is.Uppercase(c);
@@ -2126,8 +2112,8 @@ function _toConsumableArray(arr) {
         OverrideFunction: function OverrideFunction(funcName, Func, ContextObject) {
             var func = funcName.split(".").pop(),
                 ns = funcName.split(".");
-            for (var _i7 = 0; _i7 < ns.length; _i7++) {
-                ContextObject = ContextObject[ns[_i7]];
+            for (var i = 0; i < ns.length; i++) {
+                ContextObject = ContextObject[ns[i]];
             }
             ContextObject[func] = Func;
         },
@@ -2138,8 +2124,8 @@ function _toConsumableArray(arr) {
             return -1;
         },
         indexOfDate: function indexOfDate(Collection, date) {
-            for (var _i8 = 0; _i8 < Collection.length; _i8++) {
-                if (+Collection[_i8] === +date) return _i8;
+            for (var i = 0; i < Collection.length; i++) {
+                if (+Collection[i] === +date) return i;
             }
             return -1;
         },
@@ -2491,12 +2477,11 @@ function _toConsumableArray(arr) {
         }
     };
 
-    Craft.ForEach = Craft.tco(function(collection, func) {
-        var i = arguments.length <= 2 || arguments[2] === undefined ? 0 : arguments[2];
-
+    Craft.ForEach = Craft.tco(function(collection, func, i) {
+        if (is.Undef(i)) i = 0;
         if (collection.length != i) {
             func(collection[i], i);
-            ForEach(collection, func, i + 1);
+            Craft.ForEach(collection, func, i + 1);
         }
     });
 
@@ -2586,29 +2571,29 @@ function _toConsumableArray(arr) {
     });
 
     function manageAttr(el) {
-        for (var _i9 = 0, attr; _i9 < Craft.CustomAttributes.length; _i9++) {
-            attr = Craft.CustomAttributes[_i9];
+        for (var i = 0, attr; i < Craft.CustomAttributes.length; i++) {
+            attr = Craft.CustomAttributes[i];
             if (el.hasAttribute(attr.name)) {
                 if (!is.Array(el.customAttr)) el.customAttr = [];
                 if (!el.customAttr.includes(attr.name)) {
                     el.customAttr.push(attr.name);
                     attr.handle(dom(el), el.getAttribute(attr.name));
                 }
-                return;
+                break;
             }
         }
     }
 
     root.onload = function(e) {
         forEach(Craft.router.links, function(link) {
-            return link();
+            link();
         });
-        Craft.WebComponents.length === queryAll(fw).length ? Ready = !0 : Craft.poll(function() {
-            return Craft.WebComponents.length === queryAll(fw).length;
+        Craft.WebComponents.length == queryAll(fw).length ? Ready = !0 : Craft.poll(function() {
+            return Craft.WebComponents.length == queryAll(fw).length;
         }, 10, 5010).then(function() {
             Ready = !0;
             Craft.DomObserver = new MutationObserver(function(muts) {
-                return forEach(muts, function(mut) {
+                forEach(muts, function(mut) {
                     forEach(mut.addedNodes, function(el) {
                         if (el['hasAttribute']) manageAttr(el);
                     });
