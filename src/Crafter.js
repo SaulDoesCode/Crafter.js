@@ -85,9 +85,14 @@
       ip: /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/
     }
 
-  /** is - Type Testing / Assertion */
+  /**
+  * is - Type Testing / Assertion *
+  *
+  */
+
   root.is = {
     /**
+     * @method Bool
      * Test if something is a boolean type
      * @param val - value to test
      */
@@ -1085,12 +1090,12 @@
   /**
    * Function that returns many useful methods for interacting with and manipulating the DOM or creating elements
    * in the absence of parameters the function will return methods for created elements
-   * @name dom
+   * @function dom
    * @param {Node|NodeList|string=} element - optional Node, NodeList or CSS Selector that will be affected by the methods returned
    * @param {Node|string=} within - optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
    * @param {boolean=} one - even if there are more than one elements matching a selector only return the first one
    */
-  root.dom = (element, within, one) => {
+  root.dom = function(element, within, one) {
     if (within == !0) {
       one = within;
       within = null;
@@ -1099,11 +1104,11 @@
       if (is.String(element)) element = queryAll(element, within);
       if (is.NodeList(element)) {
         if (element.length !== 1) return domNodeList(element);
-        else element = element[0];
+        else element = element[0]
       }
     } else if (is.String(element)) element = query(element, within);
     if (is.Node(element)) return !element['hasDOMmethods'] ? domManip(element) : element;
-    return Craft.dom;
+    return Craft.dom
   }
 
   CrafterStyles = query('[crafterstyles]', head);
@@ -1170,11 +1175,16 @@
 
   /**
    * Craft is Crafter.js's Core containing most functionality.
+   * @namespace Craft
    */
   root.Craft = {
-    /** Returns an object or calls a function with all the differences between two arrays
+    /**
+     * Returns an object or calls a function with all the differences between two arrays
+     * @method arrDiff
+     * @memberof Craft
      * @param {Array} arr - array to be compared
-     * @param {Array} arr - second array to be compared
+     * @param {Array} newArr - second array to be compared
+     * @param {function=} func - optional function that recieves all the info as parameters
      */
     arrDiff(arr, newArr, func) {
       let added = newArr.filter(item => {
@@ -1193,9 +1203,16 @@
         removed: removed
       }
     },
+    /**
+     * Splits a string at dots "."
+     * @method cutdot
+     * @memberof Craft
+    */
     cutdot: cutdot,
     /**
      * Compares two arrays and determines if they are the same array
+     * @method sameArray
+     * @memberof Craft
      * @param {Array} arr1 - array one
      * @param {Array} arr2 - array two
      */
@@ -1208,6 +1225,8 @@
     },
     /**
      * Generates arrays of a set length , with values or values generated from functions
+     * @method array
+     * @memberof Craft
      * @param {Number} len - the integer length of the array to be generated
      * @param {...function|*} val - value to set at each index , multiple value params after lenth will generate nested 2d arrays
      */
@@ -1228,6 +1247,13 @@
       });
       return arr;
     },
+    /**
+    * Gets all the property keys in any object even the hiden ones
+    * @method getAllKeys
+    * @memberof Craft
+    * @param {*} obj - object to list keys fromModel
+    * @returns {Array} - array containing all the property keys
+    */
     getAllKeys(obj) {
       let props = [];
       do {
@@ -1237,14 +1263,18 @@
     },
     /**
      * Flattens any multidimentional array or arraylike object
-     *  @param {Array|Arraylike} arr - multidimentional array(like) object to flatten
+     * @method flatten
+     * @memberof Craft
+     * @param {Array|Arraylike} arr - multidimentional array(like) object to flatten
      */
     flatten(arr) {
       return (is.Arraylike(arr) ? toArr(arr) : is.Array(arr) ? arr : []).reduce((flat, toFlatten) => flat.concat(is.Array(toFlatten) ? Craft.flatten(toFlatten) : toFlatten), [])
     },
     /**
      * Gets a value from inside an object using a reference string
-     * example Craft.getDeep(myObj,'Company.employees[16].person.name') -> Mr Smithers or Craft.getDeep(anObj,'Colony.Queen.brood') -> [...ants]
+     * @method getDeep
+     * @memberof Craft
+     * @example Craft.getDeep(myObj,'Company.employees[16].person.name') -> Mr Smithers or Craft.getDeep(anObj,'Colony.Queen.brood') -> [...ants]
      * @param {Object} obj - the object to extract values from
      * @param {string} path - string to reference value by simple dot notation or array refference example Craft.getDeep({ a : { b : [1,2,3] }},"a.b[2]") -> 3
      */
@@ -1260,6 +1290,8 @@
     },
     /**
      * Craft.setDeep  is similar to getDeep it uses a string to reference to a value
+     * @method setDeep
+     * @memberof Craft
      * @param {Object} obj - the object to set values on
      * @param {string} path - string to reference value by simple dot notation
      * @param {*} value - value to set
@@ -1279,6 +1311,15 @@
       temp[path[path.length - 1]] = val;
       if (robj) return obj;
     },
+    /**
+     * forEachDeep is used to loop through any multi layered object - (flattens and loops through all enumerable properties in a given object)
+     * @method forEachDeep
+     * @memberof Craft
+     * @param {Object} obj - the object to loop through
+     * @param {function} fn - function to handle each iteration
+     * @param {string=} path - string to reference value by simple dot notation
+     * @example Craft.forEachDeep({ a : 1 , b : { c : 2}}, (value , key , object, currentPath) => { console.log(key) })
+     */
     forEachDeep(object, fn, path) {
       path = path || '';
       let currentPath = path,
@@ -1292,6 +1333,14 @@
         if (nestable && (is.Arr(val) || is.Object(val))) Craft.forEachDeep(val, fn, currentPath);
       }
     },
+    /**
+    * Method to merge the properties of multiple objects , it can handle getters or setters without breaking them
+    * @method concatObjects
+    * @memberof Craft
+    * @param {Object} host - main object to merge with all subsequent objects
+    * @param {...Object} objs - other objects to be merged with host object
+    * @returns {Object} resulting object after merges
+    */
     concatObjects(host, ...objs) {
       forEach(objs, obj => {
         forEach(Object.keys(obj), key => {
@@ -1300,6 +1349,13 @@
       });
       return host;
     },
+    /**
+    * Simply clones/duplicates any object or array/arraylike object
+    * @method clone
+    * @memberof Craft
+    * @param {Array|Object} val - array or object to be cloned
+    * @returns {Array|Object} cloned result
+    */
     clone(val) {
       is.Object(val) ? Object.create(val) : toArr(val)
     },
@@ -1315,6 +1371,14 @@
       }) : Arr = (is.Arraylike(Arr) ? toArr(Arr) : Arr).filter(e => rif(!args.some(v => v == e), e));
       return Arr;
     },
+    /**
+    * Omits values from Objects or Arrays
+    * @method omit
+    * @memberof Craft
+    * @param {Object|Array} val - object from which things may be omitted
+    * @param {...*} args - things to omit from Object or Array
+    * @returns {Object|Array}
+    */
     omit(val, ...args) {
       if (is.Arraylike(val)) val = Craft.omitFrom.apply(this, arguments);
       if (is.Object(val) && !args.some(v => v === val)) forEach(val, (prop, key) => {
@@ -1322,10 +1386,15 @@
       });
       return val;
     },
+    /**
+    * Contains several methods for Element Creation
+    * @namespace dom
+    */
     dom: {
       element: craftElement,
       /**
        * creates a div element with the options provided
+       * @method div
        * @memberof dom
        * @param {string} sets innerHTML of the div
        * @param {string|Object=} sets div attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
@@ -1333,6 +1402,7 @@
       div: (inner, attr) => craftElement('div', inner, attr),
       /**
        * creates a span element with the options provided
+       * @method span
        * @memberof dom
        * @param {string} sets innerHTML of the span
        * @param {string|Object=} sets span attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
@@ -1340,6 +1410,7 @@
       span: (inner, attr) => craftElement('span', inner, attr),
       /**
        * creates a label element with the options provided
+       * @method label
        * @memberof dom
        * @param {string} sets innerHTML of the label
        * @param {string|Object=} sets label attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
@@ -1347,6 +1418,7 @@
       label: (inner, attr) => craftElement('label', inner, attr),
       /**
        * creates a p (paragraph) element with the options provided
+       * @method p
        * @memberof dom
        * @param {string} sets innerHTML of the p
        * @param {string|Object=} sets p attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
@@ -1354,6 +1426,7 @@
       p: (inner, attr) => craftElement('p', inner, attr),
       /**
        * creates an img element with the options provided
+       * @method img
        * @memberof dom
        * @param {string} sets src of the img
        * @param {string} sets alt of the img
@@ -1448,6 +1521,9 @@
      * other options include 'cache' - determines wether to cache the resource or not , 'test' : usefull for conditional imports if test is false the resource won't load or execute ,
      * 'key' custom name to cache the resource in localStorage with instead of the resource location, 'defer' optionally load the script when the dom is loaded or load when it's ready,
      * {...object} args - Objects containing options for Script/CSS/WebComponent import
+     * @method import
+     * @param {...Object} Imports - Objects containing the properties neccesarry to import a resource
+     * @returns {Promise} returns a promise after importing the resource
      */
     Import() {
       let promises = [];

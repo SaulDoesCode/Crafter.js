@@ -6,64 +6,56 @@ var gulp = require('gulp'),
   uglify = require('gulp-uglify'),
   prettify = require('gulp-jsbeautifier'),
   minCss = require('gulp-minify-css'),
-  documentation = require('gulp-documentation'),
+  jsdoc = require('gulp-jsdoc3'),
   rename = require('gulp-rename'),
   babel = require("gulp-babel"),
   docs = './documentation';
 
-gulp.task('document', () => {
+gulp.task('document', cb => {
 
-  gulp.src('./src/Crafter.js')
-    .pipe(documentation({
-      format: 'md'
-    }))
-    .pipe(gulp.dest(docs));
+  //gulp.src('./src/Crafter.js').pipe(jsdoc(cb))
+    //.pipe(gulp.dest(docs));
 
-  gulp.src('./src/Crafter.js')
-    .pipe(documentation({
-      format: 'html'
-    }))
-    .pipe(gulp.dest(docs));
+  gulp.src('./src/Crafter.js').pipe(jsdoc(cb))
+    //.pipe(gulp.dest(docs));
 });
 
 gulp.task('babel', () => {
   gulp.src('./src/*.js')
     .pipe(babel({
-      presets: ['es2015'],
-      plugins : ['transform-es2015-function-name','transform-merge-sibling-variables']
+      presets: ['movio']
     })).pipe(prettify({}))
     .pipe(gulp.dest('./dist/'));
   console.log('\t babel be done!');
 });
 
 gulp.task('BabelUgly', () => gulp.src('./src/*.js').pipe(babel({
-    presets: ['es2015'],
-    plugins : ['transform-es2015-function-name','transform-merge-sibling-variables']
-  })).pipe(uglify({
-    mangle: true,
-    compress: true,
-    compressor: {
-      if_return: true,
-      evaluate: true,
-      loops: true,
-      conditionals: true,
-      booleans: true,
-      hoist_funs: true,
-      comparisons: true,
-      side_effects: true,
-      unsafe: true,
-      sequences: true
-    },
-    output: {
-      comments: false,
-      bracketize: false,
-    }
-  })).pipe(gulp.dest('./dist/min/')));
+  presets: ['movio']
+})).pipe(uglify({
+  mangle: true,
+  compress: true,
+  compressor: {
+    if_return: true,
+    evaluate: true,
+    loops: true,
+    conditionals: true,
+    booleans: true,
+    hoist_funs: true,
+    comparisons: true,
+    side_effects: true,
+    unsafe: true,
+    sequences: true
+  },
+  output: {
+    comments: false,
+    bracketize: false,
+  }
+})).pipe(gulp.dest('./dist/min/')));
 
 gulp.task('babelize_webcomponents', () => gulp.src(['./src/pre-webcomponents/*.js', '!./src/pre-webcomponents/*-extra.js'])
   .pipe(babel({
     presets: ['es2015'],
-    plugins : ['transform-es2015-function-name','transform-merge-sibling-variables']
+    plugins: ['transform-es2015-function-name', 'transform-merge-sibling-variables']
   })).pipe(uglify({
     mangle: true,
     compress: true,
@@ -181,10 +173,11 @@ gulp.task('polyfills', function () {
         sequences: true
       },
       output: {
-        comments: true
+        comments: false,
+        bracketize: false,
       }
     })).pipe(gulp.dest('./dist'));
   console.log('polyfill bundelling be done!');
 });
 
-gulp.task('default', ['babel']);
+gulp.task('default', ['babel', 'BabelUgly']);

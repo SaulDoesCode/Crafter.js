@@ -10,9 +10,9 @@ var _createClass = (function() {
     function defineProperties(target, props) {
         for (var i = 0; i < props.length; i++) {
             var descriptor = props[i];
-            descriptor.enumerable = descriptor.enumerable || false;
-            descriptor.configurable = true;
-            if ("value" in descriptor) descriptor.writable = true;
+            descriptor.enumerable = descriptor.enumerable || !1;
+            descriptor.configurable = !0;
+            if ("value" in descriptor) descriptor.writable = !0;
             Object.defineProperty(target, descriptor.key, descriptor);
         }
     }
@@ -46,7 +46,7 @@ function _toConsumableArray(arr) {
 
 (function(doc, root) {
 
-    var Ready = false,
+    var Ready = !1,
         w = 'webcomponent',
         fw = 'fetch-' + w,
         sI = 'Isync',
@@ -57,7 +57,7 @@ function _toConsumableArray(arr) {
         },
         CrafterStyles = doc.createElement('style'),
         ua = navigator.userAgent,
-        tem = undefined,
+        tem = void 0,
         _br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
     if (_br && (tem = ua.match(/version\/([\.\d]+)/i)) !== null) _br[2] = tem[1];
     _br ? [_br[1], _br[2]] : [navigator.appName, navigator.appVersion, '-?'];
@@ -205,7 +205,7 @@ function _toConsumableArray(arr) {
          * @param {string} tag - tag to test node for
          */
         Tag: function Tag(element, tag) {
-            return is.Node(element) ? element.tagName === tag.toUpperCase() : false;
+            return is.Node(element) ? element.tagName === tag.toUpperCase() : !1;
         },
         /**
          * Determine whether a variable is a DOM NodeList or Collection of Nodes
@@ -214,7 +214,7 @@ function _toConsumableArray(arr) {
         NodeList: ta(function(nl) {
             return nl instanceof NodeList || is.Arraylike(nl) ? ta(function(n) {
                 return n instanceof Node;
-            }).apply(null, nl) : false;
+            }).apply(null, nl) : !1;
         }),
         /**
          * Determine if a variable is a Number
@@ -597,7 +597,7 @@ function _toConsumableArray(arr) {
          */
         Native: function Native(val) {
             var type = typeof val === 'undefined' ? 'undefined' : _typeof(val);
-            return is.Func(val) ? RegExp('^' + String(Object.prototype.toString).replace(/[.*+?^${}()|[\]\/\\]/g, '\\$&').replace(/toString|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$').test(Function.prototype.toString.call(val)) : val && type == 'object' && /^\[object .+?Constructor\]$/.test(val.toString) || false;
+            return is.Func(val) ? RegExp('^' + String(Object.prototype.toString).replace(/[.*+?^${}()|[\]\/\\]/g, '\\$&').replace(/toString|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$').test(Function.prototype.toString.call(val)) : val && type == 'object' && /^\[object .+?Constructor\]$/.test(val.toString) || !1;
         },
 
         /**
@@ -895,7 +895,7 @@ function _toConsumableArray(arr) {
         if (is.Object(attributes) || is.String(attributes)) newEl.setAttr(attributes);
         if (is.Def(extraAttr)) newEl.setAttr(extraAttr);
         if (is.Bool(extraAttr)) stringForm = extraAttr;
-        if (stringForm == true) newEl = newEl.outerHTML;
+        if (stringForm == !0) newEl = newEl.outerHTML;
         return newEl;
     }
 
@@ -1268,7 +1268,7 @@ function _toConsumableArray(arr) {
                     if (is.Element(el)) return el;
                 });
             },
-            configurable: false
+            configurable: !1
         });
         /**
          * gets all the element's dimentions (width,height,left,top,bottom,right)
@@ -1596,7 +1596,7 @@ function _toConsumableArray(arr) {
             for (key in object) {
                 if (object.hasOwnProperty(key)) val = object[key];
                 currentPath = path;
-                nestable = false;
+                nestable = !1;
                 is.Array(object) ? currentPath += '[' + key + ']' : !currentPath ? currentPath = key : currentPath += '.' + key;
                 nestable = !!fn(val, key, object, currentPath);
                 if (nestable && (is.Arr(val) || is.Object(val))) Craft.forEachDeep(val, fn, currentPath);
@@ -1927,7 +1927,7 @@ function _toConsumableArray(arr) {
                     if (is.Date(expires)) expiry = "; expires=" + expires.toUTCString();
                 }
                 doc.cookie = encodeURIComponent(key) + "=" + encodeURIComponent(val) + expiry + (domain ? "; domain=" + domain : "") + (path ? "; path=" + path : "") + (secure ? "; secure" : "");
-                return true;
+                return !0;
             },
             remove: function remove(key, path, domain) {
                 if (!Craft.Cookies.has(key)) return !1;
@@ -1936,7 +1936,7 @@ function _toConsumableArray(arr) {
             },
 
             has: function has(key) {
-                return key ? new RegExp("(?:^|;\\s*)" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=").test(doc.cookie) : false;
+                return key ? new RegExp("(?:^|;\\s*)" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=").test(doc.cookie) : !1;
             },
             keys: function keys() {
                 var all = doc.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/);
