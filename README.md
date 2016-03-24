@@ -93,7 +93,7 @@ Create a new Custom Element using the Craft.newComponent method
 ```
 #### Models
 
-Crafter.js allows the creation of scoped models to manipulate your appVersion
+Crafter.js allows the creation of scoped models to manipulate your app,
 models execute after the page has loaded
 
 ```javascript
