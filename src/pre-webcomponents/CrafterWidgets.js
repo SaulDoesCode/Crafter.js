@@ -183,13 +183,11 @@ Craft.newComponent('material-input', {
       input = dom().input();
     el.html("");
 
-    Object.defineProperty(this, 'value', {
-      set: val => {
-        input.Text(val);
-        input[(input.value.length > 0 || input.value == ' ' ? 'add' : 'strip') + 'Class']('inputhastext');
-      },
-      get: () => input.value
-    });
+    el.newSetGet('value',val => {
+      input.Text(val)
+      .toggleClass('inputhastext',input.value.length > 0 || input.value);
+      el.labelEffects()
+    },() => input.value);
 
     el.hasAttr("type") ?
       el.getAttr("type") !== "submit" && el.getAttr("type") !== "button" && el.getAttr("type") !== "range" ? input.setAttr("type", el.getAttr("type")) :
@@ -204,13 +202,14 @@ Craft.newComponent('material-input', {
     input = dom('input', el);
     let clearText = query('span', el);
 
-    this.labelEffects = () => {
-      let lengthy = this.value.length > 0;
+    el.labelEffects = () => {
+      let lengthy = input.value.length > 0;
       input.toggleClass('inputhastext', !lengthy);
       clearText.style.display = !lengthy ? '' : 'block';
+      return el;
     }
 
-    this.onblur = this.labelEffects;
+    el.onblur = el.labelEffects;
 
     if (el.hasAttr("label") || el.hasAttr("placeholder")) {
       let label = dom().label(el.getAttr("label") || el.getAttr("placeholder"));
@@ -218,18 +217,18 @@ Craft.newComponent('material-input', {
       el.labelEffects();
     }
 
-    this.OnInput = input.Input(e => {
+    el.OnInput = input.Input(e => {
       if (el.hasAttr("label") || el.hasAttr("placeholder")) el.labelEffects();
     });
 
-    this.OnClick = On('span', el).Click(e => {
+    el.OnClick = On('span', el).Click(e => {
       el.value = '';
       el.labelEffects();
     });
 
     el.append(clearText);
   },
-  attr(attrName, oldVal, newVal) {
+  attr(attrName) {
     let el = dom(this),
       input = dom('input', el);
     __InputAttributes.forEach(i => {
@@ -249,25 +248,24 @@ Craft.newComponent('radio-button', {
 
     element.prepend(dom().span('', 'radio'));
 
-    this.CheckGroup = active => {
+    element.CheckGroup = active => {
       let Group = [];
       queryEach('radio-button', active.parentNode, rb => {
         if (rb.hasAttribute('checked')) Group.push(rb);
       });
       if (Group.length > 1) Group.forEach(rb => {
-        if (rb !== active) rb.checked = false;
+        if (rb !== active) rb.checked = false
       });
     }
 
-    On(this).Click(e => element.checked = !element.checked);
-
-    Object.defineProperty(this, 'checked', {
-      set: val => {
-        element.toggleAttr('checked', val);
-        if (element.hasAttr('checked')) element.CheckGroup(element);
-      },
-      get: () => element.hasAttr('checked')
+    element.Click(e => {
+      element.checked = !element.checked
     });
+
+    element.newSetGet('checked', val => {
+      element.toggleAttr('checked', val);
+      if (element.hasAttr('checked')) element.CheckGroup(element)
+    }, () => element.hasAttr('checked'))
 
   },
   attr(name) {
@@ -303,14 +301,16 @@ Craft.customAttribute('tooltip', (element, val) => {
   if (element.hasAttr('ripple')) tooltip.style.borderColor = element.getAttr('ripple');
   if (element.hasAttr('color-accent')) tooltip.style.borderColor = element.getAttr('color-accent');
 
-  tooltip.mover = element.Mousemove(e => tooltip.move(e.clientX, e.clientY)).Off;
+  tooltip.mover = element.Mousemove(e => {
+    tooltip.move(e.clientX, e.clientY)
+  }).Off;
 
-  tooltip.EventListeners.push(On(element).Mouseenter(ev => {
+  tooltip.EventListeners.push(element.Mouseenter(ev => {
     show = true;
     tooltip.mover.On;
     if (ev.target !== element || ev.target.parentNode !== element) {
       tooltip.style.display = show ? 'block' : 'none';
-      setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
+      setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10)
     } else {
       if (element.hasAttr('tooltip-delay')) setTimeout(() => {
         tooltip.style.display = show ? 'block' : 'none';
@@ -326,25 +326,28 @@ Craft.customAttribute('tooltip', (element, val) => {
     show = false;
     tooltip.mover.Off;
     tooltip.style.display = show ? 'block' : 'none';
-    setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
+    setTimeout(() => {
+      tooltip.style.opacity = show ? '1' : '0'
+    }, 10);
   }));
 
   tooltip.hostObserver = new MutationObserver(mutations => {
     forEach(mutations, mut => {
       if (mut.type === 'attributes') {
-        if (mut.attributeName === 'tooltip' && element.hasAttr('tooltip')) {
-          tooltip.innerHTML = element.getAttr('tooltip');
-        } else if (mut.attributeName === 'tooltip-delay' && element.hasAttr('tooltip-delay')) {
+        if (mut.attributeName === 'tooltip' && element.hasAttr('tooltip')) tooltip.html(element.getAttr('tooltip'));
+        else if (mut.attributeName === 'tooltip-delay' && element.hasAttr('tooltip-delay')) setTimeout(() => {
+          tooltip.style.display = show ? 'block' : 'none';
           setTimeout(() => {
-            tooltip.style.display = show ? 'block' : 'none';
-            setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
-          }, parseInt(element.getAttr('tooltip-delay')));
-        } else if (mut.attributeName === 'tooltip-direction' && element.hasAttr('tooltip-direction')) {
-          tooltip.setAttribute('direction', element.getAttr('tooltip-direction'));
-        } else if (!element.hasAttr('tooltip')) {
+            tooltip.style.opacity = show ? '1' : '0'
+          }, 10);
+        }, parseInt(element.getAttr('tooltip-delay')));
+        else if (mut.attributeName === 'tooltip-direction' && element.hasAttr('tooltip-direction')) tooltip.setAttribute('direction', element.getAttr('tooltip-direction'));
+        else if (!element.hasAttr('tooltip')) {
           if (is.Def(tooltip.hostObserver)) tooltip.hostObserver.disconnect();
-          if (is.Def(tooltip.EventListeners)) tooltip.EventListeners.forEach(ev => ev.Off());
-          tooltip.remove();
+          if (is.Def(tooltip.EventListeners)) tooltip.EventListeners.forEach(ev => {
+            ev.Off
+          });
+          tooltip.remove()
         }
       }
     });
@@ -371,9 +374,11 @@ Craft.customAttribute('movable', element => {
       rect = el.getRect();
       cx = e.clientX;
       cy = e.clientY;
-      move.On;
+      move.On
     }
   });
 
-  On(document).Mouseup(e => move.Off);
+  On(document).Mouseup(e => {
+    move.Off
+  });
 })
