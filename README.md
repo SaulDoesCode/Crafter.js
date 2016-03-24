@@ -14,9 +14,11 @@ Crafter.js uses Babel to ensure compatibility on older browsers
 
 ## Crafter.js Offers
 - DOM Manipulation
+- Observe elements and react to changes
 - Models
 - Several useful functional programming methods including currying
 - Two Way Data Binding
+- methods like setDeep , getDeep, forEachDeep , arrDiff ,flatten , omit... for manipulating objects and arrays
 - Type assertion methods
 - JSON based WebComponent format (.wc)
 - Streamlined Custom Element Creation
@@ -27,13 +29,13 @@ Crafter.js uses Babel to ensure compatibility on older browsers
 - Form Validation methods
 - Resource loader for Scripts and Style sheets
 - Front End Router
-- Event Handling system
+- Easy to use Event Handling system with features such as .On , .Off , .Once , .Type
 - Shorthand functions such as forEach, query/queryAll/queryEach
+- Methods for units of getting time in milliseconds , Craft.millis.days(4)
 - WhenReady method to execute code after everything has loaded
 
 ### The CrafterWidgets extension
- adds several useful CSS classes and effects such as grids, ripple effects, sidebar , notifications , custom context menus,
- tooltips and more.
+ adds several useful CSS classes and effects such as grids, ripple effects, sidebar , notifications , custom context menus,  tooltips and more.
 
 ### Crafter Code Example
 
@@ -59,8 +61,10 @@ Crafter.js uses Babel to ensure compatibility on older browsers
 
   })
 ```
+
 #### Custom Elements
 Create a new Custom Element using the Craft.newComponent method
+
 ```javascript
   // has to be a hyphenated tag name
   Craft.newComponent('news-element',{
@@ -89,12 +93,10 @@ Create a new Custom Element using the Craft.newComponent method
   Craft.newComponent('red-button',{
     extends : "button"
   });
-
 ```
-#### Models
 
-Crafter.js allows the creation of scoped models to manipulate your app,
-models execute after the page has loaded
+#### Models
+Crafter.js allows the creation of scoped models to manipulate your app, models execute after the page has loaded
 
 ```javascript
 
@@ -117,15 +119,71 @@ models execute after the page has loaded
   // Easily access variables from a model's scope using Craft.fromModel
   Craft.fromModel('MyModel.headline') // -> 'New Headline , this Just in...'
   Craft.fromModel('MyModel.articles[3]') // -> 'article4...'
-
-
 ```
+
 You can easily bind scope variables to the dom using the bind="ModelName.xyz" attribute and all your changes will reflect in the dom
+
 ```html
   <div>
     <header bind='MyModel.headline'> New Headline , this Just in... </header>
   </div>
 ```
+
+#### EventHandling
+  Event handeling has never been easier   On and Once are methods provided by Crafter.js to make Event Handling a breeze
+
+  The EventHandlers can use either CSS selectors or Element variables to attatch listeners to   example `On('css-selector', ...) or On('css-selector', NodeToLookWithIn , ...)`
+
+  these are the basic parameter layout options
+
+```javascript
+
+    // There are several .EventType methods for EventHandlers
+    // it is most common to use it this way
+    On(element).Click( handler_function )
+    On('.widget').Mousemove( handler_function )
+
+    //
+    On('EventType','css-selector',OptionalNodeToRunCSSselectorOn , handler_function )
+
+    // most full example
+    On(EventType, target_element_or_elements , parent_element /* optional */ , handler_function)
+```
+
+  an EventHandler always returns it self no matter how it's been accessed example
+
+```javascript
+  EventHandler.Off; // -> EventHandler with .On , .Once , .Off and .Type methods
+  EventHandler.On; // -> EventHandler with .On , .Once , .Off and .Type methods
+  EventHandler.Once; // -> EventHandler with .On , .Once , .Off and .Type methods
+
+```
+
+  here's a simple example
+
+```javascript
+    let EventHandler = On('.css-class').Click(event => {
+      // do something awesome when the element is clicked
+    });
+
+    EventHandler.Off; // turs off the listener
+    EventHandler.On; // turs on the listener
+
+    EventHandler.Type = 'mouseover'; // changes the type of event to listen for
+```
+
+  here's a more complex example
+
+```javascript
+    let NodeListEventHandler = On('mouseover,mouseout','.elements-in-list', evt => {
+      // react to multiple event types with a single EventHandler
+    });
+
+    let NodeListEventHandler = On(['doubleclick','input'],DOMnode, evt => {
+      // react to multiple event types with a single EventHandler
+    });
+```
+
 #### Websocket example
 
 ```javascript
@@ -150,16 +208,15 @@ You can easily bind scope variables to the dom using the bind="ModelName.xyz" at
 
     // Sync the value of the Input to the WebSocket
     dom("input").SyncInput(Websocket,'send');
-
 ```
 
 Display the Websocket messages in the dom
-``` html
+
+```html
   <div bind='MessageScope.msg'> </div>
 
   <input type='text'>
 ```
-
 
 #### Data Binding
 
@@ -181,8 +238,8 @@ News.addListener('Headline',(object,key,value) => {
   if(!Craft.tabActive) Craft.router.setTitle(document.title + '(1)');
 });
 ```
-If a bind does not exist it gets bound as a property of the gobal CraftScope
-Binds on `input` and `textarea` will set the property when the value changes
+
+If a bind does not exist it gets bound as a property of the gobal CraftScope Binds on `input` and `textarea` will set the property when the value changes
 
 ```html
 <textarea bind="truestory">
