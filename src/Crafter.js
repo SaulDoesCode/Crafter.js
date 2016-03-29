@@ -61,6 +61,11 @@
     return str.split('.')
   }
 
+  function joindot(arr) {
+    if (!is.Array(arr) && is.Arraylike(arr)) arr = toArr(arr);
+    return arr.join('.')
+  }
+
   // tests arguments with Array.prototype.every;
   function ta(test) {
     return function () {
@@ -70,6 +75,11 @@
 
   function rif(b, e) {
     if (b) return e
+  }
+
+  // if x then return y else return z
+  function W(x, y, z, a) {
+    return a ? (x ? y : z) + a : x ? y : z
   }
 
   let def = ta(o => typeof o !== 'undefined'),
@@ -86,9 +96,9 @@
     }
 
   /**
-  * is - Type Testing / Assertion *
-  *
-  */
+   * is - Type Testing / Assertion *
+   *
+   */
 
   root.is = {
     /**
@@ -723,7 +733,7 @@
     }
     elements.prepend = function () {
       forEach(arguments, val => {
-        forEach(elements, el => el.insertBefore((is.Node(val) ? val : docfragFromString(val)).cloneNode(!0), el.firstChild))
+        forEach(elements, el => el.insertBefore(W(is.Node(val), val, docfragFromString(val)).cloneNode(!0), el.firstChild))
       });
       return this
     }
@@ -760,11 +770,18 @@
     if (is.String(element)) element = query(element, within);
     if (element.hasDOMmethods == !0) return element;
     element.hasDOMmethods = !0;
-    /**
-     * changes or returns the innerHTML value of a Node
-     * @memberof dom
-     * @param {string=} sets the innerHTML value or when undefined gets the innerHTML value
-     */
+
+    element.newSetGet = function (key, set, get = () => ud) {
+        Object.defineProperty(this, key, {
+          set: set,
+          get: get
+        })
+      }
+      /**
+       * changes or returns the innerHTML value of a Node
+       * @memberof dom
+       * @param {string=} sets the innerHTML value or when undefined gets the innerHTML value
+       */
     element.html = Inner('innerHTML', element);
 
 
@@ -841,13 +858,13 @@
     element.Enter = (fn, type) => evlt(type)('keydown', element, (e, srcElement) => {
         if (event.which == 13 || event.keyCode == 13) fn(e, srcElement);
       }),
-      element.Escape = (fn, listen) => root[listen ? 'Once' : 'On']('keydown', element, (e, srcElement) => {
+      element.Escape = (fn, listen) => evlt(listen)('keydown', element, (e, srcElement) => {
         if (event.which == 27 || event.keyCode == 27) fn(e, srcElement);
       });
-    element.Delete = (fn, listen) => root[listen ? 'Once' : 'On']('keydown', element, (e, srcElement) => {
+    element.Delete = (fn, listen) => evlt(listen)('keydown', element, (e, srcElement) => {
       if (event.which == 46 || event.keyCode == 46) fn(e, srcElement);
     });
-    element.Space = (fn, listen) => root[listen ? 'Once' : 'On']('keydown', element, (e, srcElement) => {
+    element.Space = (fn, listen) => evlt(listen)('keydown', element, (e, srcElement) => {
       if (event.which == 32 || event.keyCode == 32) fn(e, srcElement);
     });
     /**
@@ -865,16 +882,15 @@
        * @memberof dom
        * @param {...string} name of the class to check for
        */
-    element.gotClass = function () {
-        return toArr(arguments).every(Class => {
-          element.classList.contains(Class)
-        })
-      }
-      /**
-       * Add a CSS class to the element
-       * @memberof dom
-       * @param {string} name of the class to add
-       */
+    element.gotClass = (...args) => args.every(Class => {
+      element.classList.contains(Class)
+    });
+
+    /**
+     * Add a CSS class to the element
+     * @memberof dom
+     * @param {string} name of the class to add
+     */
     element.addClass = function () {
         forEach(arguments, Class => {
           element.classList.add(Class)
@@ -900,7 +916,7 @@
        */
     element.toggleClass = function (Class, state) {
         if (!is.Bool(state)) state = element.gotClass(Class);
-        state ? element.stripClass(Class) : element.addClass(Class);
+        element[W(state, 'strip', 'add', 'Class')](Class);
         return element;
       }
       /**
@@ -922,18 +938,17 @@
        */
     element.hasAttr = function (attr) {
         if (is.String(attr)) return element.hasAttribute(attr);
-        return Craft.flatten(toArr(arguments)).every(a => element.hasAttribute(a))
+        return Craft.flatten(arguments).every(a => element.hasAttribute(a))
       }
       /**
        * Toggles an attribute on element , optionally add value when toggle is adding attribute
        * @param {string} name - name of the attribute to toggle
        * @param {string} val - value to set attribute to
-       * @param {boolean=} returnState - optionally return a bool witht the toggle state otherwise returns the element
+       * @param {boolean=} rtst - optionally return a bool witht the toggle state otherwise returns the element
        */
-    element.toggleAttr = function (name, val, returnState) {
-        if (is.Bool(val)) !val ? element.stripAttr(name) : element.setAttr(name);
-        else element.hasAttr(name) ? element.stripAttr(name) : element.setAttr(name, val);
-        return returnState ? element.hasAttr(name) : element;
+    element.toggleAttr = function (name, val, rtst) {
+        element[W(is.Bool(val) ? !val : element.hasAttr(name), 'strip', 'set', 'Attr')](name, val);
+        return rtst ? element.hasAttr(name) : element;
       }
       /**
        * Sets or adds an Attribute on the element
@@ -943,14 +958,13 @@
        */
     element.setAttr = function (attr, val) {
         if (!is.Def(val)) {
-          if (is.String(attr)) {
-            attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(Attr => {
-                is.Def(Attr.split('=')[1]) ? element.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : element.setAttribute(Attr.split('=')[0], '')
-              }) :
-              element.setAttribute(attr, '');
-          } else if (is.Object(attr)) forEach(attr, (value, Attr) => element.setAttribute(Attr, value));
-        } else element.setAttribute(attr, val);
-        return this;
+          if (is.String(attr)) attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(Attr => {
+              is.Def(Attr.split('=')[1]) ? element.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : element.setAttribute(Attr.split('=')[0], '')
+            }) :
+            element.setAttribute(attr, '');
+          else if (is.Object(attr)) forEach(attr, (value, Attr) => element.setAttribute(Attr, value));
+        } else element.setAttribute(attr, val || '');
+        return this
       }
       /**
        * Gets the value of an attribute , short alias for element.getAttribute
@@ -968,8 +982,8 @@
      * Shows and element by setting display none
      * @todo : Smooth animation
      */
-    element.show = () => element.css({
-      display: ''
+    element.show = mode => element.css({
+      display: mode || ''
     });
 
     /**
@@ -977,13 +991,15 @@
      * @param {number=} time - time to wait before self destructing the element
      */
     element.removeAfter = time => {
-      setTimeout(() => element.remove(), time || 5000);
+      setTimeout(() => {
+        element.remove()
+      }, time || 5000);
       return element;
     }
 
     Object.defineProperty(element, 'Siblings', {
         get: () => Craft.omit(element.parentNode.childNodes, element).filter(el => {
-          if (is.Element(el)) return el;
+          if (is.Element(el)) return el
         }),
         configurable: false
       })
@@ -997,40 +1013,38 @@
      * @memberof dom
      * @param {string|number=} pixel value to set
      */
-    element.Width = function (pixels) {
-        let dp = is.Def(pixels);
-        if (dp) this.style.width = pixels;
-        return dp ? this : this.getRect().width;
-      }
-      /**
-       * sets or gets the element's pixel height
-       * @memberof dom
-       * @param {string|number=} pixel value to set
-       */
-    element.Height = function (pixels) {
-        let dp = is.Def(pixels);
-        if (dp) this.style.height = pixels;
-        return dp ? this : this.getRect().height;
-      }
-      /**
-       * move the element using either css transforms or plain css possitioning
-       * @param {string|num} x - x-axis position in pixels
-       * @param {string|num} y - y-axis position in pixels
-       * @param {boolean=} transform - should move set the position using css transforms or not
-       * @param {string=} position - set the position style of the element absolute/fixed...
-       * @param {boolean=} chainable - should this method be chainable defaults to false for performance reasons
-       */
+    element.newSetGet('Width', pixels => {
+      if (is.Def(pixels)) element.style.width = pixels
+    }, () => element.getRect().with);
+
+
+    /**
+     * sets or gets the element's pixel height
+     * @memberof dom
+     * @param {string|number=} pixel value to set
+     */
+    element.newSetGet('Height', pixels => {
+      if (is.Def(pixels)) element.style.height = pixels
+    }, () => element.getRect().height);
+    /**
+     * move the element using either css transforms or plain css possitioning
+     * @param {string|num} x - x-axis position in pixels
+     * @param {string|num} y - y-axis position in pixels
+     * @param {boolean=} transform - should move set the position using css transforms or not
+     * @param {string=} position - set the position style of the element absolute/fixed...
+     * @param {boolean=} chainable - should this method be chainable defaults to false for performance reasons
+     */
     element.move = function (x, y, transform, position, chainable) {
         if (is.Bool(position)) chainable = position;
         if (is.String(transform)) position = transfrom;
-        if (is.String(position)) this.style.position = position;
-        this.css(!!transform ? {
+        if (is.String(position)) element.style.position = position;
+        element.css(transform == !0 ? {
           transform: `translateX(${x}px) translateY(${y}px)`
         } : {
           left: x + 'px',
           top: y + 'px'
         });
-        if (chainable) return this;
+        if (chainable) return element
       }
       /**
        * performs a query inside the element
@@ -1048,42 +1062,37 @@
     element.queryAll = selector => queryAll(selector, element);
 
     if (is.Input(element)) {
-      element.SyncInput = (obj, key) => element[sI] = On(element).Input(e => {
-        Craft.setDeep(obj, key, element.value)
-      });
+      element.SyncInput = (obj, key) => {
+        element[sI] = On(element).Input(e => {
+          Craft.setDeep(obj, key, element.value)
+        })
+      }
       element.disconectInputSync = () => {
         if (is.Def(element[sI])) {
           element[sI].Off;
-          delete element[sI];
+          delete element[sI]
         }
       }
     }
     element.observe = function (func, options) {
-      this.MutObserver = new MutationObserver(muts => {
+      element.MutObserver = new MutationObserver(muts => {
         forEach(muts, mut => {
-          func(mut.type, mut.target, mut.addedNodes, mut.removedNodes,mut)
+          func(mut.type, mut.target, mut.addedNodes, mut.removedNodes, mut)
         })
       });
-      this.MutObserver.observe(this, options || {
+      element.MutObserver.observe(element, options || {
         attributes: !0,
         childList: !0,
         subtree: !0
       });
     }
     element.unobserve = function () {
-      if (is.Def(this['MutObserver'])) {
-        this.MutObserver.disconnect();
-        delete this.MutObserver;
+      if (is.Def(element['MutObserver'])) {
+        element.MutObserver.disconnect();
+        delete element.MutObserver
       }
     }
-    element.newSetGet = function (key, set, get = () => ud) {
-      Object.defineProperty(this, key, {
-        set: set,
-        get: get
-      })
-    }
-
-    return element;
+    return element
   }
 
 
@@ -1095,7 +1104,7 @@
    * @param {Node|string=} within - optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
    * @param {boolean=} one - even if there are more than one elements matching a selector only return the first one
    */
-  root.dom = function(element, within, one) {
+  root.dom = function (element, within, one) {
     if (within == !0) {
       one = within;
       within = null;
@@ -1152,9 +1161,9 @@
         },
         set(target, key, value, reciever) {
           target.listeners.forEach(l => {
-            if (l.prop === '*' || l.prop === key) l.fn(target, key, value, !Object.is(Reflect.get(target, key), value));
+            if (l.prop === '*' || l.prop === key) l.fn(target, key, value, !Object.is(Reflect.get(target, key), value))
           });
-          return Reflect.set(target, key, value);
+          return Reflect.set(target, key, value)
         }
       });
     } catch (e) {
@@ -1168,7 +1177,7 @@
         });
         return obj;
       } catch (e2) {
-        console.error('Your Browser is Old Update it', e2);
+        console.error('Your Browser is Old Update it', e2)
       }
     }
   }
@@ -1207,8 +1216,16 @@
      * Splits a string at dots "."
      * @method cutdot
      * @memberof Craft
-    */
+     * @param {string} str - string to split at the dots
+     */
     cutdot: cutdot,
+    /**
+     * joins a string array with dots "."
+     * @method joindot
+     * @memberof Craft
+     * @param {Array|Arraylike} arr - array to join with dots
+     */
+    joindot: joindot,
     /**
      * Compares two arrays and determines if they are the same array
      * @method sameArray
@@ -1230,46 +1247,36 @@
      * @param {Number} len - the integer length of the array to be generated
      * @param {...function|*} val - value to set at each index , multiple value params after lenth will generate nested 2d arrays
      */
-    array(len) {
-      let arr = [],
-        val = Craft.omit(arguments, len);
-      if (val.length === 1) {
-        val = val[0];
-        forEach(len, i => {
-          arr.push(is.Func(val) ? val() : val)
-        });
-      } else forEach(val, v => {
-        let temp = [];
-        forEach(len, i => {
-          temp.push(is.Func(v) ? val() : v)
-        });
-        arr.push(temp);
-      });
-      return arr;
+    array(len, ...val) {
+      let arr = [];
+      if (val.length == 1)
+        for (; len > 0; len--) arr.push(is.Func(val[0]) ? val[0]() : val[0]);
+      else
+        for (; len > 0; len--) arr.push(Craft.array(val.length, val));
+      return arr
     },
     /**
-    * Gets all the property keys in any object even the hiden ones
-    * @method getAllKeys
-    * @memberof Craft
-    * @param {*} obj - object to list keys fromModel
-    * @returns {Array} - array containing all the property keys
-    */
+     * Gets all the property keys in any object even the hiden ones
+     * @method getAllKeys
+     * @memberof Craft
+     * @param {*} obj - object to list keys fromModel
+     * @returns {Array} - array containing all the property keys
+     */
     getAllKeys(obj) {
       let props = [];
       do {
         props = props.concat(Object.getOwnPropertyNames(obj));
       } while (obj = Object.getPrototypeOf(obj));
-      return props;
+      return props
     },
+    unique : arr => [...(new Set(Craft.flatten(arr)))],
     /**
      * Flattens any multidimentional array or arraylike object
      * @method flatten
      * @memberof Craft
      * @param {Array|Arraylike} arr - multidimentional array(like) object to flatten
      */
-    flatten(arr) {
-      return (is.Arraylike(arr) ? toArr(arr) : is.Array(arr) ? arr : []).reduce((flat, toFlatten) => flat.concat(is.Array(toFlatten) ? Craft.flatten(toFlatten) : toFlatten), [])
-    },
+    flatten:arr =>(is.Arraylike(arr) ? toArr(arr) : is.Array(arr) ? arr : []).reduce((flat, toFlatten) => flat.concat(is.Array(toFlatten) ? Craft.flatten(toFlatten) : toFlatten), []),
     /**
      * Gets a value from inside an object using a reference string
      * @method getDeep
@@ -1282,11 +1289,11 @@
       path = path.replace(/\[(\w+)\]/g, '.$1');
       path = path.replace(/^\./, '');
       try {
-        for (let i = 0, a = cutdot(path); i < a.length; ++i) a[i] in obj ? obj = obj[a[i]] : obj = ud;
+        for (let i = 0, a = cutdot(path); i < a.length; ++i) a[i] in obj ? obj = obj[a[i]] : obj = ud
       } catch (e) {
         obj = ud
       }
-      return obj;
+      return obj
     },
     /**
      * Craft.setDeep  is similar to getDeep it uses a string to reference to a value
@@ -1334,13 +1341,13 @@
       }
     },
     /**
-    * Method to merge the properties of multiple objects , it can handle getters or setters without breaking them
-    * @method concatObjects
-    * @memberof Craft
-    * @param {Object} host - main object to merge with all subsequent objects
-    * @param {...Object} objs - other objects to be merged with host object
-    * @returns {Object} resulting object after merges
-    */
+     * Method to merge the properties of multiple objects , it can handle getters or setters without breaking them
+     * @method concatObjects
+     * @memberof Craft
+     * @param {Object} host - main object to merge with all subsequent objects
+     * @param {...Object} objs - other objects to be merged with host object
+     * @returns {Object} resulting object after merges
+     */
     concatObjects(host, ...objs) {
       forEach(objs, obj => {
         forEach(Object.keys(obj), key => {
@@ -1350,12 +1357,12 @@
       return host;
     },
     /**
-    * Simply clones/duplicates any object or array/arraylike object
-    * @method clone
-    * @memberof Craft
-    * @param {Array|Object} val - array or object to be cloned
-    * @returns {Array|Object} cloned result
-    */
+     * Simply clones/duplicates any object or array/arraylike object
+     * @method clone
+     * @memberof Craft
+     * @param {Array|Object} val - array or object to be cloned
+     * @returns {Array|Object} cloned result
+     */
     clone(val) {
       is.Object(val) ? Object.create(val) : toArr(val)
     },
@@ -1364,7 +1371,7 @@
         function replace() {
           if (Arr.includes(a)) {
             Arr = Arr.replace(a, '');
-            replace();
+            replace()
           }
         }
         replace();
@@ -1372,13 +1379,13 @@
       return Arr;
     },
     /**
-    * Omits values from Objects or Arrays
-    * @method omit
-    * @memberof Craft
-    * @param {Object|Array} val - object from which things may be omitted
-    * @param {...*} args - things to omit from Object or Array
-    * @returns {Object|Array}
-    */
+     * Omits values from Objects or Arrays
+     * @method omit
+     * @memberof Craft
+     * @param {Object|Array} val - object from which things may be omitted
+     * @param {...*} args - things to omit from Object or Array
+     * @returns {Object|Array}
+     */
     omit(val, ...args) {
       if (is.Arraylike(val)) val = Craft.omitFrom.apply(this, arguments);
       if (is.Object(val) && !args.some(v => v === val)) forEach(val, (prop, key) => {
@@ -1387,9 +1394,9 @@
       return val;
     },
     /**
-    * Contains several methods for Element Creation
-    * @namespace dom
-    */
+     * Contains several methods for Element Creation
+     * @namespace dom
+     */
     dom: {
       element: craftElement,
       /**
@@ -1466,7 +1473,7 @@
           type: 'text/javascript',
           src: Craft.URLfrom(code)
         });
-        script.defer = !!defer;
+        script.defer = defer != !1;
         return script;
       },
       td: (inner, attr) => craftElement('td', inner, attr),
@@ -1552,7 +1559,7 @@
         Craft.router.handlers.push({
           link: link,
           func: func
-        });
+        })
       },
       handle(route, func) {
         if (is.String(route)) {
@@ -1633,7 +1640,7 @@
         if (is.empty(match)) throw new Error('invalid url');
         address = location.host + match[0];
       }
-      if (!address.includes('ws://')) address = (location.protocol === 'http:' ? 'ws://' : 'wss://') + address;
+      if (!address.includes('ws://') || !address.includes('wss://')) address = (location.protocol === 'http:' ? 'ws://' : 'wss://') + address;
       if (is.URL(address)) {
         let Options = {
           socket: null,
@@ -1649,7 +1656,9 @@
                   clearInterval(poll);
                 }
               }, 20);
-              setTimeout(() => clearInterval(poll), 2000);
+              setTimeout(() => {
+                clearInterval(poll)
+              }, 2000);
             }
           },
           set recieve(func) {
@@ -1952,7 +1961,7 @@
       if (is.Def(Craft.Models[cutkey[0]])) {
         let type = (is.Def(val) ? 'set' : 'get') + 'Deep';
         return cutkey.length === 1 && !is.Def(val) ? Craft.Models[cutkey[0]].scope :
-          Craft[type](Craft.Models[cutkey[0]].scope, Craft.omit(cutkey, cutkey[0]).join('.'), val);
+          Craft[type](Craft.Models[cutkey[0]].scope, joindot(Craft.omit(cutkey, cutkey[0])), val);
       }
     },
     /**
@@ -2157,19 +2166,19 @@
     try {
       let cutbind = cutdot(bind),
         prop = cutbind[cutbind.length - 1],
-        obj = is.Def(Craft.Models[cutbind[0]]) ? Craft.Models[cutbind[0]].scope : Craft.getDeep(root, Craft.omit(cutbind, prop).join('.')) || Craft.Scope,
-        val = Craft.getDeep(obj, cutbind.length > 1 ? Craft.omit(cutbind, cutbind[0]).join('.') : prop);
+        obj = is.Def(Craft.Models[cutbind[0]]) ? Craft.Models[cutbind[0]].scope : Craft.getDeep(root, joindot(Craft.omit(cutbind, prop))) || Craft.Scope,
+        val = Craft.getDeep(obj, cutbind.length > 1 ? joindot(Craft.omit(cutbind, cutbind[0])) : prop);
 
       is.Def(val) ? el.html(val) : Craft.setDeep(obj, prop, el.html());
 
-      if (is.Def(Object.getOwnPropertyDescriptor(obj, 'addListener')) && !is.Func(el['_BL'])) {
+      if (is.Def(Object.getOwnPropertyDescriptor(obj, 'addListener')) && !is.Func(el._BL)) {
         el._BL = (o, n, v) => {
           el.html(v)
         }
 
         obj.addListener(prop, el);
       }
-      if (is.Input(el)) el.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : Craft.omit(cutbind, cutbind[0]).join('.'));
+      if (is.Input(el)) el.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : joindot(Craft.omit(cutbind, cutbind[0])));
     } catch (e) {
       console.warn("couldn't bind :", el);
     }

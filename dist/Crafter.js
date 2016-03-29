@@ -57,7 +57,7 @@ function _toConsumableArray(arr) {
         },
         CrafterStyles = doc.createElement('style'),
         ua = navigator.userAgent,
-        tem = void 0,
+        tem = undefined,
         _br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
     if (_br && (tem = ua.match(/version\/([\.\d]+)/i)) !== null) _br[2] = tem[1];
     _br ? [_br[1], _br[2]] : [navigator.appName, navigator.appVersion, '-?'];
@@ -108,6 +108,11 @@ function _toConsumableArray(arr) {
         return str.split('.');
     }
 
+    function joindot(arr) {
+        if (!is.Array(arr) && is.Arraylike(arr)) arr = toArr(arr);
+        return arr.join('.');
+    }
+
     // tests arguments with Array.prototype.every;
     function ta(test) {
         return function() {
@@ -117,6 +122,11 @@ function _toConsumableArray(arr) {
 
     function rif(b, e) {
         if (b) return e;
+    }
+
+    // if x then return y else return z
+    function W(x, y, z, a) {
+        return a ? (x ? y : z) + a : x ? y : z;
     }
 
     var def = ta(function(o) {
@@ -136,9 +146,14 @@ function _toConsumableArray(arr) {
             ip: /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/
         };
 
-    /** is - Type Testing / Assertion */
+    /**
+     * is - Type Testing / Assertion *
+     *
+     */
+
     root.is = {
         /**
+         * @method Bool
          * Test if something is a boolean type
          * @param val - value to test
          */
@@ -954,7 +969,7 @@ function _toConsumableArray(arr) {
         elements.prepend = function() {
             forEach(arguments, function(val) {
                 forEach(elements, function(el) {
-                    return el.insertBefore((is.Node(val) ? val : docfragFromString(val)).cloneNode(!0), el.firstChild);
+                    return el.insertBefore(W(is.Node(val), val, docfragFromString(val)).cloneNode(!0), el.firstChild);
                 });
             });
             return this;
@@ -994,6 +1009,17 @@ function _toConsumableArray(arr) {
         if (is.String(element)) element = query(element, within);
         if (element.hasDOMmethods == !0) return element;
         element.hasDOMmethods = !0;
+
+        element.newSetGet = function(key, set) {
+            var get = arguments.length <= 2 || arguments[2] === undefined ? function() {
+                return ud;
+            } : arguments[2];
+
+            Object.defineProperty(this, key, {
+                set: set,
+                get: get
+            });
+        };
         /**
          * changes or returns the innerHTML value of a Node
          * @memberof dom
@@ -1106,17 +1132,17 @@ function _toConsumableArray(arr) {
                 if (event.which == 13 || event.keyCode == 13) fn(e, srcElement);
             });
         }, element.Escape = function(fn, listen) {
-            return root[listen ? 'Once' : 'On']('keydown', element, function(e, srcElement) {
+            return evlt(listen)('keydown', element, function(e, srcElement) {
                 if (event.which == 27 || event.keyCode == 27) fn(e, srcElement);
             });
         };
         element.Delete = function(fn, listen) {
-            return root[listen ? 'Once' : 'On']('keydown', element, function(e, srcElement) {
+            return evlt(listen)('keydown', element, function(e, srcElement) {
                 if (event.which == 46 || event.keyCode == 46) fn(e, srcElement);
             });
         };
         element.Space = function(fn, listen) {
-            return root[listen ? 'Once' : 'On']('keydown', element, function(e, srcElement) {
+            return evlt(listen)('keydown', element, function(e, srcElement) {
                 if (event.which == 32 || event.keyCode == 32) fn(e, srcElement);
             });
         };
@@ -1138,10 +1164,15 @@ function _toConsumableArray(arr) {
          * @param {...string} name of the class to check for
          */
         element.gotClass = function() {
-            return toArr(arguments).every(function(Class) {
+            for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+                args[_key] = arguments[_key];
+            }
+
+            return args.every(function(Class) {
                 element.classList.contains(Class);
             });
         };
+
         /**
          * Add a CSS class to the element
          * @memberof dom
@@ -1172,7 +1203,7 @@ function _toConsumableArray(arr) {
          */
         element.toggleClass = function(Class, state) {
             if (!is.Bool(state)) state = element.gotClass(Class);
-            state ? element.stripClass(Class) : element.addClass(Class);
+            element[W(state, 'strip', 'add', 'Class')](Class);
             return element;
         };
         /**
@@ -1194,7 +1225,7 @@ function _toConsumableArray(arr) {
          */
         element.hasAttr = function(attr) {
             if (is.String(attr)) return element.hasAttribute(attr);
-            return Craft.flatten(toArr(arguments)).every(function(a) {
+            return Craft.flatten(arguments).every(function(a) {
                 return element.hasAttribute(a);
             });
         };
@@ -1202,12 +1233,11 @@ function _toConsumableArray(arr) {
          * Toggles an attribute on element , optionally add value when toggle is adding attribute
          * @param {string} name - name of the attribute to toggle
          * @param {string} val - value to set attribute to
-         * @param {boolean=} returnState - optionally return a bool witht the toggle state otherwise returns the element
+         * @param {boolean=} rtst - optionally return a bool witht the toggle state otherwise returns the element
          */
-        element.toggleAttr = function(name, val, returnState) {
-            if (is.Bool(val)) !val ? element.stripAttr(name) : element.setAttr(name);
-            else element.hasAttr(name) ? element.stripAttr(name) : element.setAttr(name, val);
-            return returnState ? element.hasAttr(name) : element;
+        element.toggleAttr = function(name, val, rtst) {
+            element[W(is.Bool(val) ? !val : element.hasAttr(name), 'strip', 'set', 'Attr')](name, val);
+            return rtst ? element.hasAttr(name) : element;
         };
         /**
          * Sets or adds an Attribute on the element
@@ -1217,14 +1247,13 @@ function _toConsumableArray(arr) {
          */
         element.setAttr = function(attr, val) {
             if (!is.Def(val)) {
-                if (is.String(attr)) {
-                    attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(function(Attr) {
-                        is.Def(Attr.split('=')[1]) ? element.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : element.setAttribute(Attr.split('=')[0], '');
-                    }) : element.setAttribute(attr, '');
-                } else if (is.Object(attr)) forEach(attr, function(value, Attr) {
+                if (is.String(attr)) attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(function(Attr) {
+                    is.Def(Attr.split('=')[1]) ? element.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : element.setAttribute(Attr.split('=')[0], '');
+                }) : element.setAttribute(attr, '');
+                else if (is.Object(attr)) forEach(attr, function(value, Attr) {
                     return element.setAttribute(Attr, value);
                 });
-            } else element.setAttribute(attr, val);
+            } else element.setAttribute(attr, val || '');
             return this;
         };
         /**
@@ -1245,9 +1274,9 @@ function _toConsumableArray(arr) {
          * Shows and element by setting display none
          * @todo : Smooth animation
          */
-        element.show = function() {
+        element.show = function(mode) {
             return element.css({
-                display: ''
+                display: mode || ''
             });
         };
 
@@ -1257,7 +1286,7 @@ function _toConsumableArray(arr) {
          */
         element.removeAfter = function(time) {
             setTimeout(function() {
-                return element.remove();
+                element.remove();
             }, time || 5000);
             return element;
         };
@@ -1280,21 +1309,22 @@ function _toConsumableArray(arr) {
          * @memberof dom
          * @param {string|number=} pixel value to set
          */
-        element.Width = function(pixels) {
-            var dp = is.Def(pixels);
-            if (dp) this.style.width = pixels;
-            return dp ? this : this.getRect().width;
-        };
+        element.newSetGet('Width', function(pixels) {
+            if (is.Def(pixels)) element.style.width = pixels;
+        }, function() {
+            return element.getRect().with;
+        });
+
         /**
          * sets or gets the element's pixel height
          * @memberof dom
          * @param {string|number=} pixel value to set
          */
-        element.Height = function(pixels) {
-            var dp = is.Def(pixels);
-            if (dp) this.style.height = pixels;
-            return dp ? this : this.getRect().height;
-        };
+        element.newSetGet('Height', function(pixels) {
+            if (is.Def(pixels)) element.style.height = pixels;
+        }, function() {
+            return element.getRect().height;
+        });
         /**
          * move the element using either css transforms or plain css possitioning
          * @param {string|num} x - x-axis position in pixels
@@ -1306,14 +1336,14 @@ function _toConsumableArray(arr) {
         element.move = function(x, y, transform, position, chainable) {
             if (is.Bool(position)) chainable = position;
             if (is.String(transform)) position = transfrom;
-            if (is.String(position)) this.style.position = position;
-            this.css(!!transform ? {
+            if (is.String(position)) element.style.position = position;
+            element.css(transform == !0 ? {
                 transform: 'translateX(' + x + 'px) translateY(' + y + 'px)'
             } : {
                 left: x + 'px',
                 top: y + 'px'
             });
-            if (chainable) return this;
+            if (chainable) return element;
         };
         /**
          * performs a query inside the element
@@ -1336,7 +1366,7 @@ function _toConsumableArray(arr) {
 
         if (is.Input(element)) {
             element.SyncInput = function(obj, key) {
-                return element[sI] = On(element).Input(function(e) {
+                element[sI] = On(element).Input(function(e) {
                     Craft.setDeep(obj, key, element.value);
                 });
             };
@@ -1348,41 +1378,30 @@ function _toConsumableArray(arr) {
             };
         }
         element.observe = function(func, options) {
-            this.MutObserver = new MutationObserver(function(muts) {
+            element.MutObserver = new MutationObserver(function(muts) {
                 forEach(muts, function(mut) {
                     func(mut.type, mut.target, mut.addedNodes, mut.removedNodes, mut);
                 });
             });
-            this.MutObserver.observe(this, options || {
+            element.MutObserver.observe(element, options || {
                 attributes: !0,
                 childList: !0,
                 subtree: !0
             });
         };
         element.unobserve = function() {
-            if (is.Def(this['MutObserver'])) {
-                this.MutObserver.disconnect();
-                delete this.MutObserver;
+            if (is.Def(element['MutObserver'])) {
+                element.MutObserver.disconnect();
+                delete element.MutObserver;
             }
         };
-        element.newSetGet = function(key, set) {
-            var get = arguments.length <= 2 || arguments[2] === undefined ? function() {
-                return ud;
-            } : arguments[2];
-
-            Object.defineProperty(this, key, {
-                set: set,
-                get: get
-            });
-        };
-
         return element;
     }
 
     /**
      * Function that returns many useful methods for interacting with and manipulating the DOM or creating elements
      * in the absence of parameters the function will return methods for created elements
-     * @name dom
+     * @function dom
      * @param {Node|NodeList|string=} element - optional Node, NodeList or CSS Selector that will be affected by the methods returned
      * @param {Node|string=} within - optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
      * @param {boolean=} one - even if there are more than one elements matching a selector only return the first one
@@ -1467,11 +1486,16 @@ function _toConsumableArray(arr) {
 
     /**
      * Craft is Crafter.js's Core containing most functionality.
+     * @namespace Craft
      */
     root.Craft = {
-        /** Returns an object or calls a function with all the differences between two arrays
+        /**
+         * Returns an object or calls a function with all the differences between two arrays
+         * @method arrDiff
+         * @memberof Craft
          * @param {Array} arr - array to be compared
-         * @param {Array} arr - second array to be compared
+         * @param {Array} newArr - second array to be compared
+         * @param {function=} func - optional function that recieves all the info as parameters
          */
 
         arrDiff: function arrDiff(arr, newArr, func) {
@@ -1492,9 +1516,24 @@ function _toConsumableArray(arr) {
             };
         },
 
+        /**
+         * Splits a string at dots "."
+         * @method cutdot
+         * @memberof Craft
+         * @param {string} str - string to split at the dots
+         */
         cutdot: cutdot,
         /**
+         * joins a string array with dots "."
+         * @method joindot
+         * @memberof Craft
+         * @param {Array|Arraylike} arr - array to join with dots
+         */
+        joindot: joindot,
+        /**
          * Compares two arrays and determines if they are the same array
+         * @method sameArray
+         * @memberof Craft
          * @param {Array} arr1 - array one
          * @param {Array} arr2 - array two
          */
@@ -1509,26 +1548,35 @@ function _toConsumableArray(arr) {
 
         /**
          * Generates arrays of a set length , with values or values generated from functions
+         * @method array
+         * @memberof Craft
          * @param {Number} len - the integer length of the array to be generated
          * @param {...function|*} val - value to set at each index , multiple value params after lenth will generate nested 2d arrays
          */
         array: function array(len) {
-            var arr = [],
-                val = Craft.omit(arguments, len);
-            if (val.length === 1) {
-                val = val[0];
-                forEach(len, function(i) {
-                    arr.push(is.Func(val) ? val() : val);
-                });
-            } else forEach(val, function(v) {
-                var temp = [];
-                forEach(len, function(i) {
-                    temp.push(is.Func(v) ? val() : v);
-                });
-                arr.push(temp);
-            });
+            var arr = [];
+
+            for (var _len2 = arguments.length, val = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+                val[_key2 - 1] = arguments[_key2];
+            }
+
+            if (val.length == 1)
+                for (; len > 0; len--) {
+                    arr.push(is.Func(val[0]) ? val[0]() : val[0]);
+                } else
+                    for (; len > 0; len--) {
+                        arr.push(Craft.array(val.length, val));
+                    }
             return arr;
         },
+
+        /**
+         * Gets all the property keys in any object even the hiden ones
+         * @method getAllKeys
+         * @memberof Craft
+         * @param {*} obj - object to list keys fromModel
+         * @returns {Array} - array containing all the property keys
+         */
         getAllKeys: function getAllKeys(obj) {
             var props = [];
             do {
@@ -1537,19 +1585,25 @@ function _toConsumableArray(arr) {
             return props;
         },
 
+        unique: function unique(arr) {
+            return [].concat(_toConsumableArray(new Set(Craft.flatten(arr))));
+        },
         /**
          * Flattens any multidimentional array or arraylike object
-         *  @param {Array|Arraylike} arr - multidimentional array(like) object to flatten
+         * @method flatten
+         * @memberof Craft
+         * @param {Array|Arraylike} arr - multidimentional array(like) object to flatten
          */
         flatten: function flatten(arr) {
             return (is.Arraylike(arr) ? toArr(arr) : is.Array(arr) ? arr : []).reduce(function(flat, toFlatten) {
                 return flat.concat(is.Array(toFlatten) ? Craft.flatten(toFlatten) : toFlatten);
             }, []);
         },
-
         /**
          * Gets a value from inside an object using a reference string
-         * example Craft.getDeep(myObj,'Company.employees[16].person.name') -> Mr Smithers or Craft.getDeep(anObj,'Colony.Queen.brood') -> [...ants]
+         * @method getDeep
+         * @memberof Craft
+         * @example Craft.getDeep(myObj,'Company.employees[16].person.name') -> Mr Smithers or Craft.getDeep(anObj,'Colony.Queen.brood') -> [...ants]
          * @param {Object} obj - the object to extract values from
          * @param {string} path - string to reference value by simple dot notation or array refference example Craft.getDeep({ a : { b : [1,2,3] }},"a.b[2]") -> 3
          */
@@ -1568,6 +1622,8 @@ function _toConsumableArray(arr) {
 
         /**
          * Craft.setDeep  is similar to getDeep it uses a string to reference to a value
+         * @method setDeep
+         * @memberof Craft
          * @param {Object} obj - the object to set values on
          * @param {string} path - string to reference value by simple dot notation
          * @param {*} value - value to set
@@ -1587,6 +1643,16 @@ function _toConsumableArray(arr) {
             temp[path[path.length - 1]] = val;
             if (robj) return obj;
         },
+
+        /**
+         * forEachDeep is used to loop through any multi layered object - (flattens and loops through all enumerable properties in a given object)
+         * @method forEachDeep
+         * @memberof Craft
+         * @param {Object} obj - the object to loop through
+         * @param {function} fn - function to handle each iteration
+         * @param {string=} path - string to reference value by simple dot notation
+         * @example Craft.forEachDeep({ a : 1 , b : { c : 2}}, (value , key , object, currentPath) => { console.log(key) })
+         */
         forEachDeep: function forEachDeep(object, fn, path) {
             path = path || '';
             var currentPath = path,
@@ -1602,9 +1668,18 @@ function _toConsumableArray(arr) {
                 if (nestable && (is.Arr(val) || is.Object(val))) Craft.forEachDeep(val, fn, currentPath);
             }
         },
+
+        /**
+         * Method to merge the properties of multiple objects , it can handle getters or setters without breaking them
+         * @method concatObjects
+         * @memberof Craft
+         * @param {Object} host - main object to merge with all subsequent objects
+         * @param {...Object} objs - other objects to be merged with host object
+         * @returns {Object} resulting object after merges
+         */
         concatObjects: function concatObjects(host) {
-            for (var _len = arguments.length, objs = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-                objs[_key - 1] = arguments[_key];
+            for (var _len3 = arguments.length, objs = Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
+                objs[_key3 - 1] = arguments[_key3];
             }
 
             forEach(objs, function(obj) {
@@ -1614,12 +1689,20 @@ function _toConsumableArray(arr) {
             });
             return host;
         },
+
+        /**
+         * Simply clones/duplicates any object or array/arraylike object
+         * @method clone
+         * @memberof Craft
+         * @param {Array|Object} val - array or object to be cloned
+         * @returns {Array|Object} cloned result
+         */
         clone: function clone(val) {
             is.Object(val) ? Object.create(val) : toArr(val);
         },
         omitFrom: function omitFrom(Arr) {
-            for (var _len2 = arguments.length, args = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-                args[_key2 - 1] = arguments[_key2];
+            for (var _len4 = arguments.length, args = Array(_len4 > 1 ? _len4 - 1 : 0), _key4 = 1; _key4 < _len4; _key4++) {
+                args[_key4 - 1] = arguments[_key4];
             }
 
             is.String(Arr) ? forEach(args, function(a) {
@@ -1637,9 +1720,18 @@ function _toConsumableArray(arr) {
             });
             return Arr;
         },
+
+        /**
+         * Omits values from Objects or Arrays
+         * @method omit
+         * @memberof Craft
+         * @param {Object|Array} val - object from which things may be omitted
+         * @param {...*} args - things to omit from Object or Array
+         * @returns {Object|Array}
+         */
         omit: function omit(val) {
-            for (var _len3 = arguments.length, args = Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
-                args[_key3 - 1] = arguments[_key3];
+            for (var _len5 = arguments.length, args = Array(_len5 > 1 ? _len5 - 1 : 0), _key5 = 1; _key5 < _len5; _key5++) {
+                args[_key5 - 1] = arguments[_key5];
             }
 
             if (is.Arraylike(val)) val = Craft.omitFrom.apply(this, arguments);
@@ -1653,10 +1745,15 @@ function _toConsumableArray(arr) {
             return val;
         },
 
+        /**
+         * Contains several methods for Element Creation
+         * @namespace dom
+         */
         dom: {
             element: craftElement,
             /**
              * creates a div element with the options provided
+             * @method div
              * @memberof dom
              * @param {string} sets innerHTML of the div
              * @param {string|Object=} sets div attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
@@ -1666,6 +1763,7 @@ function _toConsumableArray(arr) {
             },
             /**
              * creates a span element with the options provided
+             * @method span
              * @memberof dom
              * @param {string} sets innerHTML of the span
              * @param {string|Object=} sets span attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
@@ -1675,6 +1773,7 @@ function _toConsumableArray(arr) {
             },
             /**
              * creates a label element with the options provided
+             * @method label
              * @memberof dom
              * @param {string} sets innerHTML of the label
              * @param {string|Object=} sets label attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
@@ -1684,6 +1783,7 @@ function _toConsumableArray(arr) {
             },
             /**
              * creates a p (paragraph) element with the options provided
+             * @method p
              * @memberof dom
              * @param {string} sets innerHTML of the p
              * @param {string|Object=} sets p attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
@@ -1693,6 +1793,7 @@ function _toConsumableArray(arr) {
             },
             /**
              * creates an img element with the options provided
+             * @method img
              * @memberof dom
              * @param {string} sets src of the img
              * @param {string} sets alt of the img
@@ -1748,7 +1849,7 @@ function _toConsumableArray(arr) {
                     type: 'text/javascript',
                     src: Craft.URLfrom(code)
                 });
-                script.defer = !!defer;
+                script.defer = defer != !1;
                 return script;
             },
 
@@ -1820,6 +1921,9 @@ function _toConsumableArray(arr) {
          * other options include 'cache' - determines wether to cache the resource or not , 'test' : usefull for conditional imports if test is false the resource won't load or execute ,
          * 'key' custom name to cache the resource in localStorage with instead of the resource location, 'defer' optionally load the script when the dom is loaded or load when it's ready,
          * {...object} args - Objects containing options for Script/CSS/WebComponent import
+         * @method import
+         * @param {...Object} Imports - Objects containing the properties neccesarry to import a resource
+         * @returns {Promise} returns a promise after importing the resource
          */
         Import: function Import() {
             var promises = [];
@@ -1957,7 +2061,7 @@ function _toConsumableArray(arr) {
                 if (is.empty(match)) throw new Error('invalid url');
                 address = location.host + match[0];
             }
-            if (!address.includes('ws://')) address = (location.protocol === 'http:' ? 'ws://' : 'wss://') + address;
+            if (!address.includes('ws://') || !address.includes('wss://')) address = (location.protocol === 'http:' ? 'ws://' : 'wss://') + address;
             if (is.URL(address)) {
                 var _ret = (function() {
                     var Options = {
@@ -1976,7 +2080,7 @@ function _toConsumableArray(arr) {
                                             }
                                         }, 20);
                                         setTimeout(function() {
-                                            return clearInterval(poll);
+                                            clearInterval(poll);
                                         }, 2000);
                                     })();
                                 }
@@ -2130,8 +2234,8 @@ function _toConsumableArray(arr) {
             return -1;
         },
         type: function type() {
-            for (var _len4 = arguments.length, types = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-                types[_key4] = arguments[_key4];
+            for (var _len6 = arguments.length, types = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+                types[_key6] = arguments[_key6];
             }
 
             types = types.map(function(t) {
@@ -2341,7 +2445,7 @@ function _toConsumableArray(arr) {
             var cutkey = cutdot(key);
             if (is.Def(Craft.Models[cutkey[0]])) {
                 var _type = (is.Def(val) ? 'set' : 'get') + 'Deep';
-                return cutkey.length === 1 && !is.Def(val) ? Craft.Models[cutkey[0]].scope : Craft[_type](Craft.Models[cutkey[0]].scope, Craft.omit(cutkey, cutkey[0]).join('.'), val);
+                return cutkey.length === 1 && !is.Def(val) ? Craft.Models[cutkey[0]].scope : Craft[_type](Craft.Models[cutkey[0]].scope, joindot(Craft.omit(cutkey, cutkey[0])), val);
             }
         },
 
@@ -2563,19 +2667,19 @@ function _toConsumableArray(arr) {
         try {
             var cutbind = cutdot(bind),
                 prop = cutbind[cutbind.length - 1],
-                obj = is.Def(Craft.Models[cutbind[0]]) ? Craft.Models[cutbind[0]].scope : Craft.getDeep(root, Craft.omit(cutbind, prop).join('.')) || Craft.Scope,
-                val = Craft.getDeep(obj, cutbind.length > 1 ? Craft.omit(cutbind, cutbind[0]).join('.') : prop);
+                obj = is.Def(Craft.Models[cutbind[0]]) ? Craft.Models[cutbind[0]].scope : Craft.getDeep(root, joindot(Craft.omit(cutbind, prop))) || Craft.Scope,
+                _val = Craft.getDeep(obj, cutbind.length > 1 ? joindot(Craft.omit(cutbind, cutbind[0])) : prop);
 
-            is.Def(val) ? el.html(val) : Craft.setDeep(obj, prop, el.html());
+            is.Def(_val) ? el.html(_val) : Craft.setDeep(obj, prop, el.html());
 
-            if (is.Def(Object.getOwnPropertyDescriptor(obj, 'addListener')) && !is.Func(el['_BL'])) {
+            if (is.Def(Object.getOwnPropertyDescriptor(obj, 'addListener')) && !is.Func(el._BL)) {
                 el._BL = function(o, n, v) {
                     el.html(v);
                 };
 
                 obj.addListener(prop, el);
             }
-            if (is.Input(el)) el.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : Craft.omit(cutbind, cutbind[0]).join('.'));
+            if (is.Input(el)) el.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : joindot(Craft.omit(cutbind, cutbind[0])));
         } catch (e) {
             console.warn("couldn't bind :", el);
         }
