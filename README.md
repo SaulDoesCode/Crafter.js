@@ -20,7 +20,7 @@ Crafter.js uses Babel to ensure compatibility on older browsers
 - Two Way Data Binding
 - methods like setDeep , getDeep, forEachDeep , arrDiff ,flatten , omit... for manipulating objects and arrays
 - Type assertion methods
-- JSON based WebComponent format (.wc)
+- Plain Javascript WebComponents that work!
 - Streamlined Custom Element Creation
 - Methods for defining and handling Custom Attributes
 - Useful custom attributes
@@ -92,6 +92,17 @@ Create a new Custom Element using the Craft.newComponent method
   // or Extend an existing element
   Craft.newComponent('red-button',{
     extends : "button"
+  });
+
+
+  // You can style your custom element using the css property
+  Craft.newComponent('red-button',{
+    extends : "button",
+    css : `
+      red-button {
+        background : red;
+      }
+    `
   });
 ```
 

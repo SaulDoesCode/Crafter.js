@@ -2076,6 +2076,7 @@
           key == 'destroyed' ? element.detachedCallback = config[key] :
           key == 'attr' ? element.attributeChangedCallback = config[key] :
           key == 'extends' ? settings.extends = config.extends :
+          key.toLocaleLowerCase().includes('css') && key.length == 3 ? Craft.addCSS(config[key]) :
           Object.defineProperty(element, key, Object.getOwnPropertyDescriptor(config, key))
       });
 
