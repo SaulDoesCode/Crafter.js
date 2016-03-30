@@ -109,7 +109,7 @@ Craft.newComponent('context-menu', {
 Craft.newComponent('check-box', {
   inserted() {
     let el = dom(this);
-    el.OnClick = el.Click(el.toggle.bind(this));
+    el.check = el.Click(el.toggle.bind(el));
     el.newSetGet('value', val => {
       el.toggleAttr('checked', val);
       if (is.Func(el.func)) el.func(el.hasAttr('checked'));
@@ -122,7 +122,7 @@ Craft.newComponent('check-box', {
     if (is.Func(func)) this.func = func
   },
   destroyed() {
-    this.OnClick.Off
+    this.check.Off
   }
 });
 
@@ -190,7 +190,7 @@ Craft.newComponent('material-input', {
     },() => input.value);
 
     el.hasAttr("type") ?
-      el.getAttr("type") !== "submit" && el.getAttr("type") !== "button" && el.getAttr("type") !== "range" ? input.setAttr("type", el.getAttr("type")) :
+      ["submit","button","range"].some(v => el.getAttr("type") != v) ? input.setAttr("type", el.getAttr("type")) :
       console.warn("<material-input> is only for text type inputs it will default to text if wrong type is chosen") :
       input.setAttr("type", "text");
 
@@ -205,7 +205,7 @@ Craft.newComponent('material-input', {
     el.labelEffects = () => {
       let lengthy = input.value.length > 0;
       input.toggleClass('inputhastext', !lengthy);
-      clearText.style.display = !lengthy ? '' : 'block';
+      clearText.style.display = lengthy ? 'block' : '';
       return el;
     }
 
@@ -232,7 +232,7 @@ Craft.newComponent('material-input', {
     let el = dom(this),
       input = dom('input', el);
     __InputAttributes.forEach(i => {
-      if (i === attrName) {
+      if (i == attrName) {
         if (el.hasAttr(i)) input.setAttr(i, newVal);
         else if (input.hasAttr(i) && !el.hasAttr(i)) input.stripAttr(i, newVal);
       }

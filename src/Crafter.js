@@ -1123,6 +1123,7 @@
   CrafterStyles = query('[crafterstyles]', head);
 
   function observable(obj) {
+    obj = obj || {};
     Object.defineProperty(obj, 'listeners', {
       value: [],
       enumerable: !1,
@@ -1269,14 +1270,14 @@
       } while (obj = Object.getPrototypeOf(obj));
       return props
     },
-    unique : arr => [...(new Set(Craft.flatten(arr)))],
+    unique: arr => [...(new Set(Craft.flatten(arr)))],
     /**
      * Flattens any multidimentional array or arraylike object
      * @method flatten
      * @memberof Craft
      * @param {Array|Arraylike} arr - multidimentional array(like) object to flatten
      */
-    flatten:arr =>(is.Arraylike(arr) ? toArr(arr) : is.Array(arr) ? arr : []).reduce((flat, toFlatten) => flat.concat(is.Array(toFlatten) ? Craft.flatten(toFlatten) : toFlatten), []),
+    flatten: arr => (is.Arraylike(arr) ? toArr(arr) : is.Array(arr) ? arr : []).reduce((flat, toFlatten) => flat.concat(is.Array(toFlatten) ? Craft.flatten(toFlatten) : toFlatten), []),
     /**
      * Gets a value from inside an object using a reference string
      * @method getDeep
@@ -1287,9 +1288,9 @@
      */
     getDeep(obj, path) {
       path = path.replace(/\[(\w+)\]/g, '.$1');
-      path = path.replace(/^\./, '');
+      path = cutdot(path.replace(/^\./, ''));
       try {
-        for (let i = 0, a = cutdot(path); i < a.length; ++i) a[i] in obj ? obj = obj[a[i]] : obj = ud
+        for (let i = 0; i < path.length; ++i) path[i] in obj ? obj = obj[path[i]] : obj = ud
       } catch (e) {
         obj = ud
       }
@@ -1392,6 +1393,9 @@
         if (args.some(v => v == prop || v == key)) delete val[key]
       });
       return val;
+    },
+    addCSS(css) {
+      CrafterStyles.textContent += css
     },
     /**
      * Contains several methods for Element Creation
@@ -1547,7 +1551,7 @@
       });
       return Promise.all(promises).then(src => {
         src.map(obj => {
-          if (obj.exec) obj.type === 'css' ? CrafterStyles.textContent += '\n' + obj.data : head.appendChild(dom().script('', {
+          if (obj.exec) obj.type === 'css' ? Craft.addCSS('\n' + obj.data) : head.appendChild(dom().script('', {
             src: Craft.URLfrom(obj.data),
             key: obj.key
           }, obj.defer))
@@ -1671,7 +1675,7 @@
             Options.socket.close();
           },
           reopen() {
-            if (Options.open == !1) this.socket = protocols ? new WebSocket(address, protocols) : new WebSocket(address);
+            if (!Options.open) this.socket = protocols ? new WebSocket(address, protocols) : new WebSocket(address);
             socket.onopen = e => {
               Options.open = !0
             }
@@ -1823,8 +1827,8 @@
     },
     WebComponents: [],
     CustomAttributes: [],
-    Scope: observable({}),
-    Models: observable({}),
+    Scope: observable(),
+    Models: observable(),
     tabActive: !0,
     /**
      * Convert Arraylike variables to Array
@@ -2048,15 +2052,6 @@
      */
     GenUID: len => Craft.array(len || 6, Craft.randomString).join('-'),
     /**
-     * Part of Crafter.js's own WebComponent format (.wc) it takes a json object that contains .css and .js values then imports and executes them
-     * @param {string} webcomponent - JSON string from Crafter.js's (.wc) WebComponent format
-     */
-    newWC(wc, src) {
-      wc = JSON.parse(wc);
-      CrafterStyles.textComponent += wc.css;
-      head.appendChild(dom().script(wc.js + `\nCraft.WebComponents.push('${src}');`, `${w}=${wc.name}`));
-    },
-    /**
      * method for creating custom elements configuring their lifecycle's and inheritance
      * the config Object has 5 distinct options ( created , inserted , destroyed , attr and extends )
      * Craft.newComponent('custom-element',{
@@ -2130,31 +2125,6 @@
   Craft.curry.adapt = fn => Craft.curry.adaptTo(fn.length, fn);
   Craft.loader.removeAll(!0);
 
-  Craft.newComponent(fw, {
-    inserted() {
-      let src = this.getAttribute('src');
-      if (src) {
-        let wc = null,
-          el = dom(this),
-          cc = 'cache-component';
-        if (!Craft.WebComponents.includes(src)) {
-          if (el.hasAttr(cc)) {
-            wc = localStorage.getItem(src);
-            if (!is.Null(wc)) Craft.newWC(wc, src);
-          }
-          if (is.Null(wc)) fetch(src).then(res => res.json().then(webcomponent => {
-            CrafterStyles.textContent += webcomponent.css;
-            head.appendChild(dom().script(webcomponent.js + `\nCraft.WebComponents.push('${src}');`, w + `=${webcomponent.name}`));
-            if (el.getAttr(cc) == 'true') localStorage.setItem(src, JSON.stringify(webcomponent));
-          })).catch(err => {
-            throw new Error(err + " couldn't load " + w);
-          });
-        }
-        el.removeAfter(3500);
-      }
-    }
-  });
-
 
   Craft.customAttribute('link', (el, link) => {
     On(el).Click(e => {
@@ -2202,27 +2172,20 @@
     forEach(Craft.router.links, link => {
       link()
     });
-    Craft.WebComponents.length == queryAll(fw).length ? Ready = !0 :
-      Craft.poll(() => Craft.WebComponents.length == queryAll(fw).length, 10, 5010)
-      .then(() => {
-        Ready = !0;
-        Craft.DomObserver = new MutationObserver(muts => {
-          forEach(muts, mut => {
-            forEach(mut.addedNodes, el => {
-              if (el['hasAttribute']) manageAttr(el)
-            });
-            manageAttr(mut.target)
-          })
+    Craft.DomObserver = new MutationObserver(muts => {
+      forEach(muts, mut => {
+        forEach(mut.addedNodes, el => {
+          if (el['hasAttribute']) manageAttr(el)
         });
-        Craft.DomObserver.observe(doc.body, {
-          attributes: !0,
-          childList: !0,
-          subtree: !0,
-        });
-      }).catch(() => {
-        Ready = !0;
-        console.warn('loading took too long loaded with errors :(');
-      });
+        manageAttr(mut.target)
+      })
+    });
+    Craft.DomObserver.observe(doc.body, {
+      attributes: !0,
+      childList: !0,
+      subtree: !0,
+    });
+    Ready = !0;
   }
 
   root.onhashchange = () => {

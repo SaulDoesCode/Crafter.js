@@ -134,17 +134,13 @@ gulp.task('build_webcomponents', ['mincss', 'min-extrab-bs', 'babelize_webcompon
       } catch (e) {}
 
 
-      WebComponentInner = JSON.stringify({
-        name: FileName,
-        css: StyleFile,
-        js: ScriptFile
-      });
+      WebComponentInner = `Craft.addCSS("${StyleFile}");\n${ScriptFile}`;
 
-      fs.writeFile('./dist/WebComponents/' + FileName + '.wc', WebComponentInner, 'utf8', err => err ? console.error(err) : console.log('Success -> WebComponents Created! '));
+      fs.writeFile('./dist/WebComponents/' + FileName + '.js', WebComponentInner, 'utf8', err => err ? console.error(err) : console.log('Success -> WebComponents Created! '));
       try {
         fs.unlinkSync(path + '.mss');
         fs.unlinkSync(path + '.bs');
-        if (fs.statSync(path + '-extra.bs').isFile() === true) fs.unlinkSync(path + '-extra.bs');
+        if (fs.statSync(path + '-extra.bs').isFile()) fs.unlinkSync(path + '-extra.bs');
       } catch (e) {}
 
     } else console.error("Can't make WebComponent no matching files");

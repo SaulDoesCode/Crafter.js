@@ -526,7 +526,7 @@ check-box {
   transition: all 100ms ease;
 }
 check-box[checked]:before {
-  content: '\2714';
+  content: '✔';
 }
 check-box:hover {
   border: 1px solid #797979;
