@@ -4,32 +4,36 @@
  *  @license MIT
  */
 "use strict ";
+
 (function (doc, root) {
 
-  let Ready = false,
-    w = 'webcomponent',
-    fw = 'fetch-' + w,
+  let Ready = !1,
     sI = 'Isync',
     ud = undefined,
     head = doc.head,
     Locs = test => [location.hash, location.href, location.pathname].some(test),
     CrafterStyles = doc.createElement('style'),
     ua = navigator.userAgent,
-    tem, _br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
-  if (_br && (tem = ua.match(/version\/([\.\d]+)/i)) !== null) _br[2] = tem[1];
-  _br ? [_br[1], _br[2]] : [navigator.appName, navigator.appVersion, '-?'];
+    RegExps = {
+      email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
+      timeString: /^(2[0-3]|[01]?[0-9]):([0-5]?[0-9]):([0-5]?[0-9])$/,
+      dateString: /^(1[0-2]|0?[1-9])\/(3[01]|[12][0-9]|0?[1-9])\/(?:[0-9]{2})?[0-9]{2}$/,
+      hexadecimal: /^[0-9a-fA-F]+$/,
+      hexColor: /^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/,
+      ipv4: /^(?:(?:\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.){3}(?:\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])$/,
+      ipv6: /^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/,
+      ip: /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/
+    },
+    tem, Br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
+  if (Br && (tem = ua.match(/version\/([\.\d]+)/i)) !== null) Br[2] = tem[1];
+  Br = (Br ? [Br[1], Br[2]] : [navigator.appName, navigator.appVersion, '-?']).join(' ');
 
   CrafterStyles.setAttribute('crafterstyles', '');
   head.appendChild(CrafterStyles);
 
-  function toInt(num) {
-    if (is.String(num)) num = Number(num);
-    if (isNaN(num)) return 0;
-    if (num === 0 || !isFinite(num)) return num;
-    return (num > 0 ? 1 : -1) * Math.floor(Math.abs(num));
+  function docfragFromString(html) {
+    return doc.createRange().createContextualFragment(html);
   }
-
-  root.docfragFromString = html => doc.createRange().createContextualFragment(html);
 
   function toArr(val) {
     return [...val];
@@ -37,6 +41,29 @@
 
   function type(obj, str) {
     return toString.call(obj) === str;
+  }
+
+  // tests arguments with Array.prototype.every;
+  function ta(test) {
+    return function () {
+      return arguments.length && Array.prototype.every.call(arguments, test);
+    }
+  }
+
+  function rif(b, e) {
+    if (b) return e
+  }
+
+  // if x then return y else return z
+  function W(x, y, z, a) {
+    return a ? (x ? y : z) + a : x ? y : z
+  }
+
+  function toInt(num) {
+    if (is.String(num)) num = Number(num);
+    if (isNaN(num)) return 0;
+    if (num === 0 || !isFinite(num)) return num;
+    return (num > 0 ? 1 : -1) * Math.floor(Math.abs(num));
   }
 
   function makeFn(fn, Args, totalArity) {
@@ -66,34 +93,9 @@
     return arr.join('.')
   }
 
-  // tests arguments with Array.prototype.every;
-  function ta(test) {
-    return function () {
-      return arguments.length && Array.prototype.every.call(arguments, test);
-    }
-  }
-
-  function rif(b, e) {
-    if (b) return e
-  }
-
-  // if x then return y else return z
-  function W(x, y, z, a) {
-    return a ? (x ? y : z) + a : x ? y : z
-  }
 
   let def = ta(o => typeof o !== 'undefined'),
-    nil = ta(o => o === null),
-    RegExps = {
-      email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
-      timeString: /^(2[0-3]|[01]?[0-9]):([0-5]?[0-9]):([0-5]?[0-9])$/,
-      dateString: /^(1[0-2]|0?[1-9])\/(3[01]|[12][0-9]|0?[1-9])\/(?:[0-9]{2})?[0-9]{2}$/,
-      hexadecimal: /^[0-9a-fA-F]+$/,
-      hexColor: /^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/,
-      ipv4: /^(?:(?:\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.){3}(?:\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])$/,
-      ipv6: /^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/,
-      ip: /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/
-    }
+    nil = ta(o => o === null);
 
   /**
    * is - Type Testing / Assertion *
@@ -683,8 +685,8 @@
 
   function domNodeList(elements) {
 
-    Object.getOwnPropertyNames(Array.prototype).forEach(method => {
-      if (method !== "length") elements[method] = Array.prototype[method];
+    forEach(Object.getOwnPropertyNames(Array.prototype),method => {
+      if (method != "length") elements[method] = Array.prototype[method];
     });
     /**
      * Listen for Events on the NodeList
@@ -703,25 +705,25 @@
           el.style[key] = prop
         })
       }) : console.error('styles unefined');
-      return this
+      return elements
     }
     elements.addClass = function (Class) {
       forEach(elements, el => {
         el.classList.add(Class)
       });
-      return this
+      return elements
     }
     elements.stripClass = function (Class) {
       forEach(elements, el => {
         el.classList.remove(Class)
       });
-      return this
+      return elements
     }
     elements.toggleClass = function (Class, state) {
       forEach(elements, el => {
         (is.Bool(state) ? state : el.classList.contains(Class)) ? el.classList.remove(Class): el.classList.add(Class)
       });
-      return this
+      return elements
     }
     elements.append = function () {
       forEach(arguments, val => {
@@ -729,25 +731,25 @@
           el.appendChild((is.Node(val) ? val : docfragFromString(val)).cloneNode(!0))
         })
       });
-      return this
+      return elements
     }
     elements.prepend = function () {
       forEach(arguments, val => {
         forEach(elements, el => el.insertBefore(W(is.Node(val), val, docfragFromString(val)).cloneNode(!0), el.firstChild))
       });
-      return this
+      return elements
     }
     elements.hide = function () {
       this.css({
         display: 'none'
       });
-      return this
+      return elements
     }
     elements.show = function () {
       this.css({
         display: ''
       })
-      return this
+      return elements
     }
     return elements
   }
@@ -1227,6 +1229,7 @@
      * @param {Array|Arraylike} arr - array to join with dots
      */
     joindot: joindot,
+    docfragFromString: docfragFromString,
     /**
      * Compares two arrays and determines if they are the same array
      * @method sameArray
@@ -1248,8 +1251,8 @@
      * @param {Number} len - the integer length of the array to be generated
      * @param {...function|*} val - value to set at each index , multiple value params after lenth will generate nested 2d arrays
      */
-    array(len, ...val) {
-      let arr = [];
+    array(len) {
+      let arr = [], val = Craft.omit(arguments,len);
       if (val.length == 1)
         for (; len > 0; len--) arr.push(is.Func(val[0]) ? val[0]() : val[0]);
       else
@@ -1349,13 +1352,13 @@
      * @param {...Object} objs - other objects to be merged with host object
      * @returns {Object} resulting object after merges
      */
-    concatObjects(host, ...objs) {
-      forEach(objs, obj => {
+    concatObjects(host) {
+      forEach(Craft.omit(arguments,host), obj => {
         forEach(Object.keys(obj), key => {
           Object.defineProperty(host, key, Object.getOwnPropertyDescriptor(obj, key))
         })
       });
-      return host;
+      return host
     },
     /**
      * Simply clones/duplicates any object or array/arraylike object
@@ -1367,7 +1370,8 @@
     clone(val) {
       is.Object(val) ? Object.create(val) : toArr(val)
     },
-    omitFrom(Arr, ...args) {
+    omitFrom(Arr) {
+      let args = toArr(arguments).slice(1);
       is.String(Arr) ? forEach(args, a => {
         function replace() {
           if (Arr.includes(a)) {
@@ -1387,12 +1391,13 @@
      * @param {...*} args - things to omit from Object or Array
      * @returns {Object|Array}
      */
-    omit(val, ...args) {
+    omit(val) {
       if (is.Arraylike(val)) val = Craft.omitFrom.apply(this, arguments);
-      if (is.Object(val) && !args.some(v => v === val)) forEach(val, (prop, key) => {
+      let args = toArr(arguments).slice(1);
+      if (is.Object(val) && !args.some(v => v == val)) forEach(val, (prop, key) => {
         if (args.some(v => v == prop || v == key)) delete val[key]
       });
-      return val;
+      return val
     },
     addCSS(css) {
       CrafterStyles.textContent += css
@@ -1472,6 +1477,7 @@
       a: (link, inner, attr) => craftElement('a', inner, attr, {
         href: link
       }),
+      style: (css, attr) => craftElement('style', css, attr),
       script(code, attr, defer) {
         let script = craftElement('script', '', attr, {
           type: 'text/javascript',
@@ -1489,9 +1495,9 @@
         return !node ? html : docfragFromString(html);
       },
     },
-    CurrentBrowser: {
-      is: browser => _br.join(' ').toLowerCase().includes(browser.toLowerCase()),
-      browser: _br.join(' ')
+    Browser: {
+      is: browser => Br.toLowerCase().includes(browser.toLowerCase()),
+      browser: Br
     },
     loader: {
       pre: 'craft:',
@@ -1825,7 +1831,6 @@
       months: (n, daysInMonth) => n * Craft.millis.days((daysInMonth || 30)),
       years: (n) => n * Craft.millis.days(365),
     },
-    WebComponents: [],
     CustomAttributes: [],
     Scope: observable(),
     Models: observable(),

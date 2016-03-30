@@ -47,8 +47,6 @@ function _toConsumableArray(arr) {
 (function(doc, root) {
 
     var Ready = !1,
-        w = 'webcomponent',
-        fw = 'fetch-' + w,
         sI = 'Isync',
         ud = undefined,
         head = doc.head,
@@ -57,24 +55,27 @@ function _toConsumableArray(arr) {
         },
         CrafterStyles = doc.createElement('style'),
         ua = navigator.userAgent,
+        RegExps = {
+            email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
+            timeString: /^(2[0-3]|[01]?[0-9]):([0-5]?[0-9]):([0-5]?[0-9])$/,
+            dateString: /^(1[0-2]|0?[1-9])\/(3[01]|[12][0-9]|0?[1-9])\/(?:[0-9]{2})?[0-9]{2}$/,
+            hexadecimal: /^[0-9a-fA-F]+$/,
+            hexColor: /^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/,
+            ipv4: /^(?:(?:\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.){3}(?:\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])$/,
+            ipv6: /^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/,
+            ip: /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/
+        },
         tem = undefined,
-        _br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
-    if (_br && (tem = ua.match(/version\/([\.\d]+)/i)) !== null) _br[2] = tem[1];
-    _br ? [_br[1], _br[2]] : [navigator.appName, navigator.appVersion, '-?'];
+        Br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
+    if (Br && (tem = ua.match(/version\/([\.\d]+)/i)) !== null) Br[2] = tem[1];
+    Br = (Br ? [Br[1], Br[2]] : [navigator.appName, navigator.appVersion, '-?']).join(' ');
 
     CrafterStyles.setAttribute('crafterstyles', '');
     head.appendChild(CrafterStyles);
 
-    function toInt(num) {
-        if (is.String(num)) num = Number(num);
-        if (isNaN(num)) return 0;
-        if (num === 0 || !isFinite(num)) return num;
-        return (num > 0 ? 1 : -1) * Math.floor(Math.abs(num));
-    }
-
-    root.docfragFromString = function(html) {
+    function docfragFromString(html) {
         return doc.createRange().createContextualFragment(html);
-    };
+    }
 
     function toArr(val) {
         return [].concat(_toConsumableArray(val));
@@ -82,6 +83,29 @@ function _toConsumableArray(arr) {
 
     function type(obj, str) {
         return toString.call(obj) === str;
+    }
+
+    // tests arguments with Array.prototype.every;
+    function ta(test) {
+        return function() {
+            return arguments.length && Array.prototype.every.call(arguments, test);
+        };
+    }
+
+    function rif(b, e) {
+        if (b) return e;
+    }
+
+    // if x then return y else return z
+    function W(x, y, z, a) {
+        return a ? (x ? y : z) + a : x ? y : z;
+    }
+
+    function toInt(num) {
+        if (is.String(num)) num = Number(num);
+        if (isNaN(num)) return 0;
+        if (num === 0 || !isFinite(num)) return num;
+        return (num > 0 ? 1 : -1) * Math.floor(Math.abs(num));
     }
 
     function makeFn(fn, Args, totalArity) {
@@ -113,38 +137,12 @@ function _toConsumableArray(arr) {
         return arr.join('.');
     }
 
-    // tests arguments with Array.prototype.every;
-    function ta(test) {
-        return function() {
-            return arguments.length && Array.prototype.every.call(arguments, test);
-        };
-    }
-
-    function rif(b, e) {
-        if (b) return e;
-    }
-
-    // if x then return y else return z
-    function W(x, y, z, a) {
-        return a ? (x ? y : z) + a : x ? y : z;
-    }
-
     var def = ta(function(o) {
             return typeof o !== 'undefined';
         }),
         nil = ta(function(o) {
             return o === null;
-        }),
-        RegExps = {
-            email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
-            timeString: /^(2[0-3]|[01]?[0-9]):([0-5]?[0-9]):([0-5]?[0-9])$/,
-            dateString: /^(1[0-2]|0?[1-9])\/(3[01]|[12][0-9]|0?[1-9])\/(?:[0-9]{2})?[0-9]{2}$/,
-            hexadecimal: /^[0-9a-fA-F]+$/,
-            hexColor: /^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/,
-            ipv4: /^(?:(?:\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.){3}(?:\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])$/,
-            ipv6: /^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/,
-            ip: /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/
-        };
+        });
 
     /**
      * is - Type Testing / Assertion *
@@ -916,8 +914,8 @@ function _toConsumableArray(arr) {
 
     function domNodeList(elements) {
 
-        Object.getOwnPropertyNames(Array.prototype).forEach(function(method) {
-            if (method !== "length") elements[method] = Array.prototype[method];
+        forEach(Object.getOwnPropertyNames(Array.prototype), function(method) {
+            if (method != "length") elements[method] = Array.prototype[method];
         });
         /**
          * Listen for Events on the NodeList
@@ -938,25 +936,25 @@ function _toConsumableArray(arr) {
                     el.style[key] = prop;
                 });
             }) : console.error('styles unefined');
-            return this;
+            return elements;
         };
         elements.addClass = function(Class) {
             forEach(elements, function(el) {
                 el.classList.add(Class);
             });
-            return this;
+            return elements;
         };
         elements.stripClass = function(Class) {
             forEach(elements, function(el) {
                 el.classList.remove(Class);
             });
-            return this;
+            return elements;
         };
         elements.toggleClass = function(Class, state) {
             forEach(elements, function(el) {
                 (is.Bool(state) ? state : el.classList.contains(Class)) ? el.classList.remove(Class): el.classList.add(Class);
             });
-            return this;
+            return elements;
         };
         elements.append = function() {
             forEach(arguments, function(val) {
@@ -964,7 +962,7 @@ function _toConsumableArray(arr) {
                     el.appendChild((is.Node(val) ? val : docfragFromString(val)).cloneNode(!0));
                 });
             });
-            return this;
+            return elements;
         };
         elements.prepend = function() {
             forEach(arguments, function(val) {
@@ -972,19 +970,19 @@ function _toConsumableArray(arr) {
                     return el.insertBefore(W(is.Node(val), val, docfragFromString(val)).cloneNode(!0), el.firstChild);
                 });
             });
-            return this;
+            return elements;
         };
         elements.hide = function() {
             this.css({
                 display: 'none'
             });
-            return this;
+            return elements;
         };
         elements.show = function() {
             this.css({
                 display: ''
             });
-            return this;
+            return elements;
         };
         return elements;
     }
@@ -1531,6 +1529,7 @@ function _toConsumableArray(arr) {
          * @param {Array|Arraylike} arr - array to join with dots
          */
         joindot: joindot,
+        docfragFromString: docfragFromString,
         /**
          * Compares two arrays and determines if they are the same array
          * @method sameArray
@@ -1555,12 +1554,8 @@ function _toConsumableArray(arr) {
          * @param {...function|*} val - value to set at each index , multiple value params after lenth will generate nested 2d arrays
          */
         array: function array(len) {
-            var arr = [];
-
-            for (var _len2 = arguments.length, val = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-                val[_key2 - 1] = arguments[_key2];
-            }
-
+            var arr = [],
+                val = Craft.omit(arguments, len);
             if (val.length == 1)
                 for (; len > 0; len--) {
                     arr.push(is.Func(val[0]) ? val[0]() : val[0]);
@@ -1679,11 +1674,7 @@ function _toConsumableArray(arr) {
          * @returns {Object} resulting object after merges
          */
         concatObjects: function concatObjects(host) {
-            for (var _len3 = arguments.length, objs = Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
-                objs[_key3 - 1] = arguments[_key3];
-            }
-
-            forEach(objs, function(obj) {
+            forEach(Craft.omit(arguments, host), function(obj) {
                 forEach(Object.keys(obj), function(key) {
                     Object.defineProperty(host, key, Object.getOwnPropertyDescriptor(obj, key));
                 });
@@ -1702,10 +1693,7 @@ function _toConsumableArray(arr) {
             is.Object(val) ? Object.create(val) : toArr(val);
         },
         omitFrom: function omitFrom(Arr) {
-            for (var _len4 = arguments.length, args = Array(_len4 > 1 ? _len4 - 1 : 0), _key4 = 1; _key4 < _len4; _key4++) {
-                args[_key4 - 1] = arguments[_key4];
-            }
-
+            var args = toArr(arguments).slice(1);
             is.String(Arr) ? forEach(args, function(a) {
                 function replace() {
                     if (Arr.includes(a)) {
@@ -1731,13 +1719,10 @@ function _toConsumableArray(arr) {
          * @returns {Object|Array}
          */
         omit: function omit(val) {
-            for (var _len5 = arguments.length, args = Array(_len5 > 1 ? _len5 - 1 : 0), _key5 = 1; _key5 < _len5; _key5++) {
-                args[_key5 - 1] = arguments[_key5];
-            }
-
             if (is.Arraylike(val)) val = Craft.omitFrom.apply(this, arguments);
+            var args = toArr(arguments).slice(1);
             if (is.Object(val) && !args.some(function(v) {
-                    return v === val;
+                    return v == val;
                 })) forEach(val, function(prop, key) {
                 if (args.some(function(v) {
                         return v == prop || v == key;
@@ -1848,6 +1833,9 @@ function _toConsumableArray(arr) {
                     href: link
                 });
             },
+            style: function style(css, attr) {
+                return craftElement('style', css, attr);
+            },
             script: function script(code, attr, defer) {
                 var script = craftElement('script', '', attr, {
                     type: 'text/javascript',
@@ -1874,11 +1862,11 @@ function _toConsumableArray(arr) {
                 return !node ? html : docfragFromString(html);
             }
         },
-        CurrentBrowser: {
+        Browser: {
             is: function is(browser) {
-                return _br.join(' ').toLowerCase().includes(browser.toLowerCase());
+                return Br.toLowerCase().includes(browser.toLowerCase());
             },
-            browser: _br.join(' ')
+            browser: Br
         },
         loader: {
             pre: 'craft:',
@@ -2238,8 +2226,8 @@ function _toConsumableArray(arr) {
             return -1;
         },
         type: function type() {
-            for (var _len6 = arguments.length, types = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
-                types[_key6] = arguments[_key6];
+            for (var _len2 = arguments.length, types = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+                types[_key2] = arguments[_key2];
             }
 
             types = types.map(function(t) {
@@ -2292,7 +2280,6 @@ function _toConsumableArray(arr) {
                 return n * Craft.millis.days(365);
             }
         },
-        WebComponents: [],
         CustomAttributes: [],
         Scope: observable(),
         Models: observable(),
@@ -2565,7 +2552,7 @@ function _toConsumableArray(arr) {
                 settings = {};
 
             forEach(config, function(_, key) {
-                key == 'created' ? element.createdCallback = config[key] : key == 'inserted' ? element.attachedCallback = config[key] : key == 'destroyed' ? element.detachedCallback = config[key] : key == 'attr' ? element.attributeChangedCallback = config[key] : key == 'extends' ? settings.extends = config.extends : Object.defineProperty(element, key, Object.getOwnPropertyDescriptor(config, key));
+                key == 'created' ? element.createdCallback = config[key] : key == 'inserted' ? element.attachedCallback = config[key] : key == 'destroyed' ? element.detachedCallback = config[key] : key == 'attr' ? element.attributeChangedCallback = config[key] : key == 'extends' ? settings.extends = config.extends : key.toLocaleLowerCase().includes('css') && key.length == 3 ? Craft.addCSS(config[key]) : Object.defineProperty(element, key, Object.getOwnPropertyDescriptor(config, key));
             });
 
             settings['prototype'] = element;
@@ -2631,9 +2618,9 @@ function _toConsumableArray(arr) {
             var cutbind = cutdot(bind),
                 prop = cutbind[cutbind.length - 1],
                 obj = is.Def(Craft.Models[cutbind[0]]) ? Craft.Models[cutbind[0]].scope : Craft.getDeep(root, joindot(Craft.omit(cutbind, prop))) || Craft.Scope,
-                _val = Craft.getDeep(obj, cutbind.length > 1 ? joindot(Craft.omit(cutbind, cutbind[0])) : prop);
+                val = Craft.getDeep(obj, cutbind.length > 1 ? joindot(Craft.omit(cutbind, cutbind[0])) : prop);
 
-            is.Def(_val) ? el.html(_val) : Craft.setDeep(obj, prop, el.html());
+            is.Def(val) ? el.html(val) : Craft.setDeep(obj, prop, el.html());
 
             if (is.Def(Object.getOwnPropertyDescriptor(obj, 'addListener')) && !is.Func(el._BL)) {
                 el._BL = function(o, n, v) {
