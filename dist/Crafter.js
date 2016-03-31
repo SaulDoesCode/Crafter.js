@@ -619,7 +619,7 @@ function _toConsumableArray(arr) {
          */
         Input: function Input(element) {
             return ['INPUT', 'TEXTAREA'].some(function(i) {
-                return element.tagName === i;
+                return element.tagName.includes(i);
             });
         }
     };
@@ -902,13 +902,18 @@ function _toConsumableArray(arr) {
     };
 
     function craftElement(name, inner, attributes, extraAttr, stringForm) {
-        if (is.False(is.String(inner), is.Node(inner), is.Num(inner), is.Array(inner))) is.Object(inner) ? attributes = inner : inner = is.Func(inner) ? inner() : '';
+        if (is.False(is.String(inner), is.Node(inner), is.Num(inner), is.Array(inner))) {
+            if (is.Object(inner)) {
+                attributes = inner;
+                inner = '';
+            } else inner = is.Func(inner) ? inner() : '';
+        }
         var newEl = dom(doc.createElement(name));
         is.Array(inner) ? newEl.html.apply(this, inner) : newEl.html(inner);
         if (is.Object(attributes) || is.String(attributes)) newEl.setAttr(attributes);
         if (is.Def(extraAttr)) newEl.setAttr(extraAttr);
         if (is.Bool(extraAttr)) stringForm = extraAttr;
-        if (stringForm == !0) newEl = newEl.outerHTML;
+        if (stringForm) newEl = newEl.outerHTML;
         return newEl;
     }
 
@@ -1779,6 +1784,12 @@ function _toConsumableArray(arr) {
              */
             p: function p(inner, attr) {
                 return craftElement('p', inner, attr);
+            },
+            header: function header(inner, attr) {
+                return craftElement('header', inner, attr);
+            },
+            br: function br() {
+                return craftElement('br');
             },
             /**
              * creates an img element with the options provided

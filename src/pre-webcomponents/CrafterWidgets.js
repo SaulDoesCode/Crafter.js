@@ -200,6 +200,7 @@ Craft.newComponent('material-input', {
 
     el.append(input).append(dom().span());
     input = dom('input', el);
+    this.input = input;
     let clearText = query('span', el);
 
     el.labelEffects = () => {
@@ -228,15 +229,15 @@ Craft.newComponent('material-input', {
 
     el.append(clearText);
   },
-  attr(attrName) {
+  attr(name,nv) {
     let el = dom(this),
-      input = dom('input', el);
-    __InputAttributes.forEach(i => {
-      if (i == attrName) {
-        if (el.hasAttr(i)) input.setAttr(i, newVal);
-        else if (input.hasAttr(i) && !el.hasAttr(i)) input.stripAttr(i, newVal);
+      input = el.input;
+      if(is.Def(input)) {
+        if(__InputAttributes.includes(name)) {
+          if (el.hasAttr(name)) input.setAttr(name, nv);
+          else if (input.hasAttr(i)) input.stripAttr(name);
+        }
       }
-    });
   }
 });
 
@@ -309,9 +310,6 @@ Craft.customAttribute('tooltip', (element, val) => {
     show = true;
     tooltip.mover.On;
     if (ev.target !== element || ev.target.parentNode !== element) {
-      tooltip.style.display = show ? 'block' : 'none';
-      setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10)
-    } else {
       if (element.hasAttr('tooltip-delay')) setTimeout(() => {
         tooltip.style.display = show ? 'block' : 'none';
         setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);

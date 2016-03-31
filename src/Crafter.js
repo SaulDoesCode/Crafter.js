@@ -453,7 +453,7 @@
      * Tests where a dom element is an input of some sort
      * @param {Element|Node} - element to test
      */
-    Input: element => ['INPUT', 'TEXTAREA'].some(i => element.tagName === i),
+    Input: element => ['INPUT', 'TEXTAREA'].some(i => element.tagName.includes(i)),
   };
 
   /**
@@ -673,19 +673,24 @@
   }
 
   function craftElement(name, inner, attributes, extraAttr, stringForm) {
-    if (is.False(is.String(inner), is.Node(inner), is.Num(inner), is.Array(inner))) is.Object(inner) ? attributes = inner : inner = is.Func(inner) ? inner() : '';
+    if (is.False(is.String(inner), is.Node(inner), is.Num(inner), is.Array(inner))) {
+      if (is.Object(inner)) {
+        attributes = inner;
+        inner = '';
+      } else inner = is.Func(inner) ? inner() : '';
+    }
     let newEl = dom(doc.createElement(name));
     is.Array(inner) ? newEl.html.apply(this, inner) : newEl.html(inner);
     if (is.Object(attributes) || is.String(attributes)) newEl.setAttr(attributes);
     if (is.Def(extraAttr)) newEl.setAttr(extraAttr);
     if (is.Bool(extraAttr)) stringForm = extraAttr;
-    if (stringForm == true) newEl = newEl.outerHTML;
+    if (stringForm) newEl = newEl.outerHTML;
     return newEl;
   }
 
   function domNodeList(elements) {
 
-    forEach(Object.getOwnPropertyNames(Array.prototype),method => {
+    forEach(Object.getOwnPropertyNames(Array.prototype), method => {
       if (method != "length") elements[method] = Array.prototype[method];
     });
     /**
@@ -1252,7 +1257,8 @@
      * @param {...function|*} val - value to set at each index , multiple value params after lenth will generate nested 2d arrays
      */
     array(len) {
-      let arr = [], val = Craft.omit(arguments,len);
+      let arr = [],
+        val = Craft.omit(arguments, len);
       if (val.length == 1)
         for (; len > 0; len--) arr.push(is.Func(val[0]) ? val[0]() : val[0]);
       else
@@ -1353,7 +1359,7 @@
      * @returns {Object} resulting object after merges
      */
     concatObjects(host) {
-      forEach(Craft.omit(arguments,host), obj => {
+      forEach(Craft.omit(arguments, host), obj => {
         forEach(Object.keys(obj), key => {
           Object.defineProperty(host, key, Object.getOwnPropertyDescriptor(obj, key))
         })
@@ -1440,6 +1446,8 @@
        * @param {string|Object=} sets p attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
        */
       p: (inner, attr) => craftElement('p', inner, attr),
+      header: (inner, attr) => craftElement('header', inner, attr),
+      br: () => craftElement('br'),
       /**
        * creates an img element with the options provided
        * @method img
