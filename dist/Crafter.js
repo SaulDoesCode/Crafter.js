@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 /**
  *  @overview Crafter.js , minimalist front-end library
  *  @author Saul van der Walt - https://github.com/SaulDoesCode/
@@ -46,7 +46,7 @@ function _toConsumableArray(arr) {
 
 (function(doc, root) {
 
-    var Ready = !1,
+    var Ready = document.readyState === "complete",
         sI = 'Isync',
         ud = undefined,
         head = doc.head,
@@ -609,7 +609,7 @@ function _toConsumableArray(arr) {
          * @param val - value to test
          */
         Native: function Native(val) {
-            var type = typeof val === 'undefined' ? 'undefined' : _typeof(val);
+            var type = typeof val === "undefined" ? "undefined" : _typeof(val);
             return is.Func(val) ? RegExp('^' + String(Object.prototype.toString).replace(/[.*+?^${}()|[\]\/\\]/g, '\\$&').replace(/toString|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$').test(Function.prototype.toString.call(val)) : val && type == 'object' && /^\[object .+?Constructor\]$/.test(val.toString) || !1;
         },
 
@@ -682,7 +682,7 @@ function _toConsumableArray(arr) {
          */
 
         _createClass(EventHandler, [{
-            key: 'On',
+            key: "On",
             get: function get() {
                     var evtHndl = this;
                     forEach(evtHndl.Target, function(target) {
@@ -699,7 +699,7 @@ function _toConsumableArray(arr) {
                  */
 
         }, {
-            key: 'Type',
+            key: "Type",
             set: function set(type) {
                 //  have you tried turning it on and off again? - THE IT CROWD
                 this.Off;
@@ -717,7 +717,7 @@ function _toConsumableArray(arr) {
                  */
 
         }, {
-            key: 'Off',
+            key: "Off",
             get: function get() {
                     var evtHndl = this;
                     forEach(evtHndl.Target, function(target) {
@@ -734,7 +734,7 @@ function _toConsumableArray(arr) {
                  */
 
         }, {
-            key: 'Once',
+            key: "Once",
             get: function get() {
                 var func = this.FuncWrapper,
                     target = this.Target,
@@ -1054,8 +1054,8 @@ function _toConsumableArray(arr) {
          * @param {Node} Node to replace with
          */
         element.replace = function(val) {
-            this.parentNode.replaceChild(val, this);
-            return this;
+            this.parentNode.replaceChild(val, element);
+            return element;
         };
         /**
          * append the Element to another node using either a CSS selector or a Node
@@ -1064,8 +1064,8 @@ function _toConsumableArray(arr) {
          */
         element.appendTo = function(val, within) {
             if (is.String(val)) val = query(val, within);
-            if (is.Node(val)) val.appendChild(this);
-            return this;
+            if (is.Node(val)) val.appendChild(element);
+            return element;
         };
         /**
          * append text or a Node to the element
@@ -1365,7 +1365,7 @@ function _toConsumableArray(arr) {
             if (is.String(transform)) position = transfrom;
             if (is.String(position)) element.style.position = position;
             element.css(transform == !0 ? {
-                transform: 'translateX(' + x + 'px) translateY(' + y + 'px)'
+                transform: "translateX(" + x + "px) translateY(" + y + "px)"
             } : {
                 left: x + 'px',
                 top: y + 'px'
@@ -1688,7 +1688,7 @@ function _toConsumableArray(arr) {
                 if (object.hasOwnProperty(key)) val = object[key];
                 currentPath = path;
                 nestable = !1;
-                is.Array(object) ? currentPath += '[' + key + ']' : !currentPath ? currentPath = key : currentPath += '.' + key;
+                is.Array(object) ? currentPath += "[" + key + "]" : !currentPath ? currentPath = key : currentPath += '.' + key;
                 nestable = !!fn(val, key, object, currentPath);
                 if (nestable && (is.Arr(val) || is.Object(val))) Craft.forEachDeep(val, fn, currentPath);
             }
@@ -1843,7 +1843,7 @@ function _toConsumableArray(arr) {
                 return craftElement('button', inner, attr);
             },
             list: function list(type, items, attr) {
-                var list = '';
+                var list = "";
                 if (is.Arrylike(items)) forEach(items, function(item) {
                     if (is.String(item)) list += craftElement('li', item).outerHTML;
                     else if (is.Object(items)) list += craftElement('li', item.inner, item.attr).outerHTML;
@@ -1922,7 +1922,7 @@ function _toConsumableArray(arr) {
                             pass(obj);
                         });
                     }).catch(function(err) {
-                        fail('error importing -> ' + err);
+                        fail("error importing -> " + err);
                     });
                 });
             },
@@ -2027,7 +2027,7 @@ function _toConsumableArray(arr) {
             },
             fetchView: function fetchView(selector, src, cache, position) {
                 var vh = dom(selector, !0),
-                    srcpre = 'Cr:' + src,
+                    srcpre = "Cr:" + src,
                     view = localStorage.getItem(srcpre);
                 if (!is.Def(vh.element)) return;
                 is.Null(view) ? fetch(src).then(function(res) {
@@ -2158,7 +2158,7 @@ function _toConsumableArray(arr) {
                     };
                 })();
 
-                if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
+                if ((typeof _ret === "undefined" ? "undefined" : _typeof(_ret)) === "object") return _ret.v;
             }
         },
 
@@ -2266,7 +2266,7 @@ function _toConsumableArray(arr) {
             }
 
             types = types.map(function(t) {
-                return typeof t === 'undefined' ? 'undefined' : _typeof(t);
+                return typeof t === "undefined" ? "undefined" : _typeof(t);
             });
             return types.length < 2 ? types[0] : types;
         },
@@ -2486,7 +2486,7 @@ function _toConsumableArray(arr) {
             if (is.Func(handle)) {
                 (function() {
                     var apply = function apply() {
-                        queryEach('[' + name + ']', function(el) {
+                        queryEach("[" + name + "]", function(el) {
                             el = el.hasDOMmethods ? el : dom(el);
                             if (el.hasAttr(name)) {
                                 if (!is.Array(el.customAttr)) el.customAttr = [];
@@ -2585,10 +2585,19 @@ function _toConsumableArray(arr) {
         newComponent: function newComponent(tag, config) {
             if (!is.Def(config)) throw new Error(tag + ' : config undefined');
             var element = Object.create(HTMLElement.prototype),
-                settings = {};
+                settings = {},
+                dm = undefined;
 
             forEach(config, function(_, key) {
-                key == 'created' ? element.createdCallback = config[key] : key == 'inserted' ? element.attachedCallback = config[key] : key == 'destroyed' ? element.detachedCallback = config[key] : key == 'attr' ? element.attributeChangedCallback = config[key] : key == 'extends' ? settings.extends = config.extends : key.toLocaleLowerCase().includes('css') && key.length == 3 ? Craft.addCSS(config[key]) : Object.defineProperty(element, key, Object.getOwnPropertyDescriptor(config, key));
+
+                if (is.Func(config[key])) {
+                    // Adds dom methods to element
+                    dm = function dm() {
+                        config[key].call(dom(this));
+                    };
+                }
+
+                key == 'created' ? element.createdCallback = dm : key == 'inserted' ? element.attachedCallback = dm : key == 'destroyed' ? element.detachedCallback = dm : key == 'attr' ? element.attributeChangedCallback = dm : key == 'extends' ? settings.extends = config.extends : key.toLocaleLowerCase().includes('css') && key.length == 3 ? Craft.addCSS(config[key]) : is.Func(config[key]) ? element[key] = dm : Object.defineProperty(element, key, Object.getOwnPropertyDescriptor(config, key));
             });
 
             settings['prototype'] = element;
