@@ -1,82 +1,84 @@
 Craft.newComponent('crafter-navbar', {
   inserted() {
-      let tempVal, el = dom(this),
+      let tempVal, el = this,
         selected = 0;
 
-      this.navItems = el.queryAll('navbar-item');
-      this.selected = selected + 1;
+      el.navItems = el.queryAll('navbar-item');
+      el.selected = selected + 1;
 
       let checkStates = () => {
-        if (this.selected !== selected + 1) this.selected = selected + 1;
-        this.setActive(selected);
+        if (el.selected !== selected + 1) el.selected = selected + 1;
+        el.active = selected;
       }
 
       if (el.hasAttr('select')) {
         let selectedNum = el.getAttr('select'),
           parsedNum = Number(selectedNum);
-        Number.isNaN(selectedNum) || Number.isInteger(parsedNum) === false ? console.warn('crafer-navbars - the selected attribute is not a valid number, defaulting to 1') : selected = parsedNum - 1;
+        Number.isNaN(selectedNum) || !Number.isInteger(parsedNum) ? console.warn('crafer-navbars - the selected attribute is not a valid number, defaulting to 1') : selected = parsedNum - 1;
       }
       if (!el.hasAttr('direction')) el.setAttr('direction', 'left');
-      this.setActive(selected);
+      el.active = selected;
 
-      this.Click = el.On('click', e => {
-        if (is.Node(e.target) && e.target.tagName === 'NAVBAR-ITEM') selected = Craft.toArr(this.navItems).indexOf(e.target);
+      el.Click = el.On('click', e => {
+        if (is.Node(e.target) && e.target.tagName === 'NAVBAR-ITEM') selected = Craft.toArr(el.navItems).indexOf(e.target);
         checkStates();
       });
 
-      this.Wheel = el.On('wheel', e => {
+      el.Wheel = el.On('wheel', e => {
         tempVal = selected;
         (e.deltaY < 1) ? tempVal-- : tempVal++;
         e.preventDefault();
-        if (tempVal >= this.navItems.length) tempVal = 0;
-        else if (tempVal < 0) tempVal = this.navItems.length - 1;
+        if (tempVal >= el.navItems.length) tempVal = 0;
+        else if (tempVal < 0) tempVal = el.navItems.length - 1;
         selected = tempVal;
         checkStates();
       });
 
-      forEach(this.navItems, el => el.navIndex = Craft.toArr(this.navItems).indexOf(el));
+      forEach(el.navItems, (el,i) => {
+        el.navIndex = i
+      });
     },
-    setActive(select) {
+    set active(select) {
       let el = this,
-        selected = query('[selected]', el);
+        selected = el.query('[selected]');
       if (selected !== null) selected.removeAttribute('selected');
-      this.navItems[select].setAttribute('selected', '');
+      el.navItems[select].setAttribute('selected', '');
     },
-    attr(attrName, oldVal, newVal) {
-      let el = dom(this);
+    attr(attrName, ov, nv) {
+      let el = this;
       if (attrName === 'select' && el.hasAttr('select')) {
-        let num = Number(newVal);
-        if (!is.int(newVal)) console.warn('crafter-navbar - the selected attribute is not an integer defaulting to 1');
-        else if (this.selected !== num && (num >= (this.navItems.length + 1) === false) && (num <= (this.navItems.length + 1) === false)) this.selected = num;
+        let num = Craft.toInt(nv);
+        if (!is.int(nv)) console.warn('crafter-navbar - the selected attribute is not an integer defaulting to 1');
+        else if (el.selected !== num && (num >= (el.navItems.length + 1) === !1) && (num <= (el.navItems.length + 1) === !1)) el.selected = num;
         else console.warn("crafter-navbar - selected attribute out of range");
       } else if (attrName === 'direction' && !el.hasAttr('direction')) el.setAttr('direction', 'left');
     },
     destroyed() {
-      this.Click.Off();
-      this.Wheel.Off();
+      this.Click.Off;
+      this.Wheel.Off;
     }
 });
 
 Craft.newComponent('navbar-item', {
   inserted() {
-      let el = dom(this),
+      let el = this,
         r = 'ripple';
       if (el.hasAttr(r)) el.css({
         borderColor: el.getAttr(r),
-        color: this.hasAttribute('selected') ? el.getAttr(r) : ''
+        color: el.hasAttr('selected') ? el.getAttr(r) : ''
       });
     },
     attr(name, oldVal, newVal) {
-      let el = dom(this),
+      let el = this,
         r = 'ripple',
         s = 'selected';
-      if (name === r && el.hasAttr(r)) this.style.borderColor = newVal;
+      if (name === r && el.hasAttr(r)) el.style.borderColor = newVal;
       if (name === s && el.hasAttr(s)) {
-        if (el.hasAttr(r)) this.style.color = el.getAttr(r);
-        if (is.Def(this.handleActive)) this.handleActive();
-      } else if (!el.hasAttr(s)) this.style.color = '';
+        if (el.hasAttr(r)) el.style.color = el.getAttr(r);
+        if (is.Def(el.handleActive)) el.handleActive();
+      } else if (!el.hasAttr(s)) el.style.color = '';
     },
     setActive() {
-      this.parentNode.setActive(this.navIndex);
+      this.parentNode.active = this.navIndex;
     }
 });

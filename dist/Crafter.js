@@ -869,6 +869,18 @@ function _toConsumableArray(arr) {
             },
             Space: function Space(fn) {
                 return etype('keydown', keypress(fn, 32));
+            },
+            UpArrow: function UpArrow(fn) {
+                return etype('keydown', keypress(fn, 38));
+            },
+            DownArrow: function DownArrow(fn) {
+                return etype('keydown', keypress(fn, 40));
+            },
+            LeftArrow: function LeftArrow(fn) {
+                return etype('keydown', keypress(fn, 37));
+            },
+            RightArrow: function RightArrow(fn) {
+                return etype('keydown', keypress(fn, 39));
             }
         };
     }
@@ -1130,24 +1142,36 @@ function _toConsumableArray(arr) {
         element.Scroll = function(fn, type) {
             return evlt(type)('scroll', element, fn);
         };
+
+        function keypress(type, fn, code) {
+            evlt(type)('keydown', element, function(e) {
+                if (e.which == code || e.keyCode == code) fn(e, element);
+            });
+        }
+
         element.Enter = function(fn, type) {
-            return evlt(type)('keydown', element, function(e, srcElement) {
-                if (event.which == 13 || event.keyCode == 13) fn(e, srcElement);
-            });
-        }, element.Escape = function(fn, listen) {
-            return evlt(listen)('keydown', element, function(e, srcElement) {
-                if (event.which == 27 || event.keyCode == 27) fn(e, srcElement);
-            });
+            return keypress(type, fn, 13);
         };
-        element.Delete = function(fn, listen) {
-            return evlt(listen)('keydown', element, function(e, srcElement) {
-                if (event.which == 46 || event.keyCode == 46) fn(e, srcElement);
-            });
+        element.Escape = function(fn, type) {
+            return keypress(type, fn, 27);
         };
-        element.Space = function(fn, listen) {
-            return evlt(listen)('keydown', element, function(e, srcElement) {
-                if (event.which == 32 || event.keyCode == 32) fn(e, srcElement);
-            });
+        element.Delete = function(fn, type) {
+            return keypress(type, fn, 46);
+        };
+        element.Space = function(fn, type) {
+            return keypress(type, fn, 32);
+        };
+        element.UpArrow = function(fn, type) {
+            return keypress(type, fn, 38);
+        };
+        element.DownArrow = function(fn, listen) {
+            return keypress(type, fn, 40);
+        };
+        element.LeftArrow = function(fn, listen) {
+            return keypress(type, fn, 37);
+        };
+        element.RightArrow = function(fn, listen) {
+            return keypress(type, fn, 39);
         };
         /**
          * add CSS style rules to the Element or NodeList
@@ -2435,11 +2459,12 @@ function _toConsumableArray(arr) {
                 }, 5500);
             });
         },
-        model: function model(name, func) {
+        model: function model(name, func, imediate) {
             if (is.Func(func) && is.String(name)) {
                 if (!is.Def(Craft.Models[name])) Craft.Models[name] = {
                     func: func,
-                    scope: Craft.observable({})
+                    scope: Craft.observable({}),
+                    imediate: imediate || !1
                 };
             }
         },
@@ -2600,7 +2625,7 @@ function _toConsumableArray(arr) {
     };
 
     Craft.Models.addListener(function(o, key, model, isnew) {
-        if (isnew) Ready ? model.func(model.scope) : Craft.WhenReady.then(function() {
+        if (isnew) Ready || model.imediate ? model.func(model.scope) : Craft.WhenReady.then(function() {
             model.func(model.scope);
         });
     });
