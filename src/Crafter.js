@@ -7,11 +7,10 @@
 
 (function(doc, root) {
 
-    let Ready = document.readyState === "complete",
+    let Ready = doc.readyState === "complete",
         sI = 'Isync',
-        ud = undefined,
+        ud = void 0,
         head = doc.head,
-        Locs = test => [location.hash, location.href, location.pathname].some(test),
         CrafterStyles = doc.createElement('style'),
         ua = navigator.userAgent,
         RegExps = {
@@ -31,22 +30,26 @@
     CrafterStyles.setAttribute('crafterstyles', '');
     head.appendChild(CrafterStyles);
 
+    function Locs(test) {
+        return [location.hash, location.href, location.pathname].some(test)
+    }
+
     function docfragFromString(html) {
-        return doc.createRange().createContextualFragment(html);
+        return doc.createRange().createContextualFragment(html)
     }
 
     function toArr(val) {
-        return [...val];
+        return [...val]
     }
 
     function type(obj, str) {
-        return toString.call(obj) === str;
+        return toString.call(obj) === str
     }
 
     // tests arguments with Array.prototype.every;
     function ta(test) {
         return function() {
-            return arguments.length && Array.prototype.every.call(arguments, test);
+            return arguments.length && Array.prototype.every.call(arguments, test)
         }
     }
 
@@ -681,7 +684,7 @@
             if (is.Object(inner)) {
                 attributes = inner;
                 inner = '';
-            } else inner = is.Func(inner) ? inner() : '';
+            } else inner = is.Func(inner) ? inner() : ''
         }
         let newEl = dom(doc.createElement(name));
         is.Array(inner) ? newEl.html.apply(this, inner) : newEl.html(inner);
@@ -689,7 +692,7 @@
         if (is.Def(extraAttr)) newEl.setAttr(extraAttr);
         if (is.Bool(extraAttr)) stringForm = extraAttr;
         if (stringForm) newEl = newEl.outerHTML;
-        return newEl;
+        return newEl
     }
 
     function domNodeList(elements) {
@@ -734,6 +737,65 @@
             });
             return elements
         }
+
+        /**
+         * removes a specific Attribute from the this.element
+         * @memberof dom
+         * @param {...string} name of the Attribute/s to strip
+         */
+    elements.stripAttr = function() {
+            forEach(elements,el => {
+              forEach(arguments, attr => {
+                  el.removeAttribute(attr)
+              })
+            });
+
+            return elements
+        }
+        /**
+         * checks if the element has a specific Attribute or Attributes
+         * @memberof dom
+         * @param {string|boolean} name of the Attribute or if true checks that it has some (||) of the attributes or if false checks that it has all of the attributes (&&)
+         * @param {...string} names of attributes to check for
+         */
+    elements.hasAttr = function(attr) {
+            if (is.String(attr)) return elements.every(el => el.hasAttribute(attr));
+            return elements.every(el => Craft.flatten(arguments).every(a => el.hasAttribute(a)))
+        }
+        /**
+         * Toggles an attribute on element , optionally add value when toggle is adding attribute
+         * @param {string} name - name of the attribute to toggle
+         * @param {string} val - value to set attribute to
+         * @param {boolean=} rtst - optionally return a bool witht the toggle state otherwise returns the element
+         */
+    elements.toggleAttr = function(name, val, rtst) {
+            forEach(elements,el => {
+              el[W(is.Bool(val) ? !val : el.hasAttr(name), 'strip', 'set', 'Attr')](name, val)
+            });
+            return rtst ? elements.every(el => el.hasAttr(name)) : elements
+        }
+        /**
+         * Sets or adds an Attribute on the element
+         * @memberof dom
+         * @param {string} Name of the Attribute to add/set
+         * @param {string} Value of the Attribute to add/set
+         */
+    elements.setAttr = function(attr, val) {
+            forEach(elements,element => {
+              if (!is.Def(val)) {
+                  if (is.String(attr)) attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(Attr => {
+                          let attribs = Attr.split('=');
+                          is.Def(attribs[1]) ? element.setAttribute(attribs[0], attribs[1]) : element.setAttribute(attribs[0], '')
+                      }) :
+                      element.setAttribute(attr, '');
+                  else if (is.Object(attr)) forEach(attr, (value, Attr) => {
+                    element.setAttribute(Attr, value)
+                  });
+              } else element.setAttribute(attr, val || '')
+            });
+            return this
+        }
+
         elements.append = function() {
             forEach(arguments, val => {
                 forEach(elements, el => {
@@ -744,7 +806,9 @@
         }
         elements.prepend = function() {
             forEach(arguments, val => {
-                forEach(elements, el => el.insertBefore(W(is.Node(val), val, docfragFromString(val)).cloneNode(!0), el.firstChild))
+                forEach(elements, el => {
+                    el.insertBefore(W(is.Node(val), val, docfragFromString(val)).cloneNode(!0), el.firstChild)
+                })
             });
             return elements
         }
@@ -1959,18 +2023,18 @@
          */
         get WhenReady() {
             return new Promise((pass, fail) => {
-                if (Ready) return pass();
+                if (Ready || doc.readyState === "complete") return pass();
                 let check = setInterval(() => {
-                    if (Ready) {
+                    if (Ready || doc.readyState === "complete") {
                         pass();
-                        clearInterval(check);
+                        clearInterval(check)
                     }
-                }, 30);
+                }, 20);
                 setTimeout(() => {
                     clearInterval(check);
-                    if (!Ready) fail('loading took too long loaded with errors :(');
-                }, 5500);
-            });
+                    if (!Ready || doc.readyState === "complete") fail('loading took too long loaded with errors :(')
+                }, 5500)
+            })
         },
         model(name, func, imediate) {
             if (is.Func(func) && is.String(name)) {
@@ -2004,7 +2068,7 @@
 
                 function apply() {
                     queryEach(`[${name}]`, el => {
-                        el = el.hasDOMmethods ? el : dom(el);
+                        el = dom(el);
                         if (el.hasAttr(name)) {
                             if (!is.Array(el.customAttr)) el.customAttr = [];
                             if (!el.customAttr.includes(name)) {
@@ -2015,7 +2079,7 @@
                     });
                 }
                 Ready ? apply() : Craft.WhenReady.then(() => {
-                    setTimeout(apply, 80)
+                    setTimeout(apply, 20)
                 });
             }
         },
@@ -2056,13 +2120,13 @@
                 });
                 if (!hasChars) return reasons ? '' : !1
             }
-            return !1;
+            return !1
         },
         formatBytes(bytes, decimals) {
             if (bytes == 0) return '0 Byte';
             let k = 1000,
                 i = Math.floor(Math.log(bytes) / Math.log(k));
-            return (bytes / Math.pow(k, i)).toPrecision(decimals + 1 || 3) + ' ' + ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'][i];
+            return (bytes / Math.pow(k, i)).toPrecision(decimals + 1 || 3) + ' ' + ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'][i]
         },
         /** method for generating random alphanumeric strings*/
         randomString: () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1),
@@ -2089,26 +2153,47 @@
         newComponent(tag, config) {
             if (!is.Def(config)) throw new Error(tag + ' : config undefined');
             let element = Object.create(HTMLElement.prototype),
-                settings = {}, dm;
+                settings = {},
+                dm;
 
-            forEach(config, (_, key) => {
+            element.createdCallback = function() {
+                let keys = Object.keys(config),
+                    el = dom(this);
+                for (let key, i = 0; i < keys.length; i++) {
+                    key = keys[i];
+                    if (!['attr', 'created', 'destroyed', 'extends', 'inserted'].every(e => e != key) && key.includes('css') && key.length == 3) continue;
+                    let obj = Object.getOwnPropertyDescriptor(config, key);
+                    if (is.Func(obj.get) || is.Func(obj.set)) {
+                        if (!is.Func(obj.get)) obj.get = () => ud;
+                        if (!is.Func(obj.set)) obj.set = x => {};
+                        el.newSetGet(key, obj.get.bind(el), obj.set.bind(el));
+                        delete config[key]
+                    } else if(!is.Func(obj.value)) {
+                      Object.defineProperty(element, key, obj);
+                      delete config[key]
+                    }
+                }
+                if (is.Func(config['created'])) config['created'].call(el)
+            }
 
-                if(is.Func(config[key])) {
-                  // Adds dom methods to element
-                  dm = function () {
-                    config[key].call(dom(this))
-                  }
+            for (let key in config) {
+                if (key === 'created') continue;
+
+                if (is.Func(config[key])) {
+                    // Adds dom methods to element
+                    dm = function() {
+                        config[key].call(dom(this))
+                    }
                 }
 
-                key == 'created' ? element.createdCallback = dm:
-                    key == 'inserted' ? element.attachedCallback = dm :
+
+                key == 'inserted' ? element.attachedCallback = dm :
                     key == 'destroyed' ? element.detachedCallback = dm :
                     key == 'attr' ? element.attributeChangedCallback = dm :
                     key == 'extends' ? settings.extends = config.extends :
-                    key.toLocaleLowerCase().includes('css') && key.length == 3 ? Craft.addCSS(config[key]) :
-                    is.Func(config[key]) ? element[key] =  dm :
-                    Object.defineProperty(element, key, Object.getOwnPropertyDescriptor(config, key))
-            });
+                    key.includes('css') && key.length == 3 ? Craft.addCSS(config[key]) :
+                    is.Func(config[key]) ? element[key] = dm : ud;
+            }
 
             settings['prototype'] = element;
             doc.registerElement(tag, settings);

@@ -5,7 +5,6 @@
  *  @license MIT
  */
 "use strict ";
-
 var _createClass = (function() {
     function defineProperties(target, props) {
         for (var i = 0; i < props.length; i++) {
@@ -42,17 +41,11 @@ function _toConsumableArray(arr) {
     } else {
         return Array.from(arr);
     }
-}
-
-(function(doc, root) {
-
-    var Ready = document.readyState === "complete",
+}(function(doc, root) {
+    var Ready = doc.readyState === "complete",
         sI = 'Isync',
-        ud = undefined,
+        ud = void 0,
         head = doc.head,
-        Locs = function Locs(test) {
-            return [location.hash, location.href, location.pathname].some(test);
-        },
         CrafterStyles = doc.createElement('style'),
         ua = navigator.userAgent,
         RegExps = {
@@ -69,9 +62,12 @@ function _toConsumableArray(arr) {
         Br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
     if (Br && (tem = ua.match(/version\/([\.\d]+)/i)) !== null) Br[2] = tem[1];
     Br = (Br ? [Br[1], Br[2]] : [navigator.appName, navigator.appVersion, '-?']).join(' ');
-
     CrafterStyles.setAttribute('crafterstyles', '');
     head.appendChild(CrafterStyles);
+
+    function Locs(test) {
+        return [location.hash, location.href, location.pathname].some(test);
+    }
 
     function docfragFromString(html) {
         return doc.createRange().createContextualFragment(html);
@@ -83,9 +79,7 @@ function _toConsumableArray(arr) {
 
     function type(obj, str) {
         return toString.call(obj) === str;
-    }
-
-    // tests arguments with Array.prototype.every;
+    } // tests arguments with Array.prototype.every;
     function ta(test) {
         return function() {
             return arguments.length && Array.prototype.every.call(arguments, test);
@@ -94,9 +88,7 @@ function _toConsumableArray(arr) {
 
     function rif(b, e) {
         if (b) return e;
-    }
-
-    // if x then return y else return z
+    } // if x then return y else return z
     function W(x, y, z, a) {
         return a ? (x ? y : z) + a : x ? y : z;
     }
@@ -136,19 +128,16 @@ function _toConsumableArray(arr) {
         if (!is.Array(arr) && is.Arraylike(arr)) arr = toArr(arr);
         return arr.join('.');
     }
-
     var def = ta(function(o) {
             return typeof o !== 'undefined';
         }),
         nil = ta(function(o) {
             return o === null;
         });
-
     /**
      * is - Type Testing / Assertion *
      *
      */
-
     root.is = {
         /**
          * @method Bool
@@ -192,7 +181,6 @@ function _toConsumableArray(arr) {
         Undef: function Undef() {
             return !def.apply(this, arguments);
         },
-
         /**
          * Determine whether a variable is in fact defined
          * @param args - value/values to test
@@ -395,11 +383,9 @@ function _toConsumableArray(arr) {
             function URL(_x) {
                 return _URL.apply(this, arguments);
             }
-
             URL.toString = function() {
                 return _URL.toString();
             };
-
             return URL;
         })(function(url) {
             try {
@@ -408,7 +394,6 @@ function _toConsumableArray(arr) {
             } catch (e) {}
             return !1;
         }),
-
         /**
          * Determines whether a String is a HEX-COLOR (#fff123)
          * @param {string} HexColor - variable to test
@@ -459,7 +444,6 @@ function _toConsumableArray(arr) {
             var now = new Date();
             return is.Date(obj) && obj.toDateString() === new Date(now.setDate(now.getDate() - 1)).toDateString();
         },
-
         /**
          * checks wether a date is tommorow
          * @param obj - Date to test
@@ -468,7 +452,6 @@ function _toConsumableArray(arr) {
             var now = new Date();
             return is.Date(obj) && obj.toDateString() === new Date(now.setDate(now.getDate() + 1)).toDateString();
         },
-
         /**
          * Determines if a date is in the past
          * @param obj - Date to test
@@ -479,7 +462,6 @@ function _toConsumableArray(arr) {
             } catch (e) {}
             return is.Date(obj) && obj.getTime() < new Date().getTime();
         },
-
         /**
          * Determines if a date is in the future
          * @param obj - Date to test
@@ -556,7 +538,6 @@ function _toConsumableArray(arr) {
                 return value !== val;
             });
         },
-
         /**
          * Determines if two variables are equal
          * @param a - first value to compare
@@ -612,7 +593,6 @@ function _toConsumableArray(arr) {
             var type = typeof val === "undefined" ? "undefined" : _typeof(val);
             return is.Func(val) ? RegExp('^' + String(Object.prototype.toString).replace(/[.*+?^${}()|[\]\/\\]/g, '\\$&').replace(/toString|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$').test(Function.prototype.toString.call(val)) : val && type == 'object' && /^\[object .+?Constructor\]$/.test(val.toString) || !1;
         },
-
         /**
          * Tests where a dom element is an input of some sort
          * @param {Element|Node} - element to test
@@ -623,7 +603,6 @@ function _toConsumableArray(arr) {
             });
         }
     };
-
     /**
      * Easy way to loop through Collections and Objects and Numbers as well
      * @param {Array|Object|NodeList|Number} iterable - any collection that is either an Object or has a .length value
@@ -645,7 +624,6 @@ function _toConsumableArray(arr) {
                 }
         }
     };
-
     /**
      * Converts any Query/QueryAll to an Array of Nodes even if there is only one Node , this is error proof when no arguments are present it returns an empty array
      * @param {Node|NodeList|Array|String} val - pass either a CSS Selector string , Node/NodeList or Array of Nodes
@@ -655,7 +633,6 @@ function _toConsumableArray(arr) {
         if (is.String(val)) val = queryAll(val, within);
         return is.Node(val) ? [val] : is.NodeList(val) ? toArr(val) : [];
     }
-
     /**
      * Event Handling Class
      * @param {string} EventType - set the type of event to listen for example "click" or "scroll"
@@ -663,11 +640,9 @@ function _toConsumableArray(arr) {
      * @param {function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
      * @returns Interface On,Off,Once
      */
-
     var EventHandler = (function() {
         function EventHandler(EventType, Target, func, Within) {
             _classCallCheck(this, EventHandler);
-
             this.EventType = EventType || 'click';
             this.state = !1;
             this.Target = Target !== root && Target !== doc ? NodeOrQuerytoArr(Target, Within) : [Target];
@@ -680,7 +655,6 @@ function _toConsumableArray(arr) {
         /**
          * Activates the EventHandler to start listening for the EventType on the Target/Targets
          */
-
         _createClass(EventHandler, [{
             key: "On",
             get: function get() {
@@ -697,11 +671,9 @@ function _toConsumableArray(arr) {
                  * Change the Event type to listen for
                  * {string} type - the name of the event/s to listen for
                  */
-
         }, {
             key: "Type",
-            set: function set(type) {
-                //  have you tried turning it on and off again? - THE IT CROWD
+            set: function set(type) { //  have you tried turning it on and off again? - THE IT CROWD
                 this.Off;
                 this.EventType = type.includes(',') ? type.split(',') : type;
                 if (!is.Array(this.EventType)) this.EventType = [this.EventType];
@@ -715,7 +687,6 @@ function _toConsumableArray(arr) {
                  * De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
                  * can still optionally be re-activated with On again
                  */
-
         }, {
             key: "Off",
             get: function get() {
@@ -732,7 +703,6 @@ function _toConsumableArray(arr) {
                  * Once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
                  * the Handler function will be called only Once
                  */
-
         }, {
             key: "Once",
             get: function get() {
@@ -755,21 +725,17 @@ function _toConsumableArray(arr) {
                 return evtHndl;
             }
         }]);
-
         return EventHandler;
     })();
-
     /**
      * Easy way to get a DOM Node or Node within another DOM Node using CSS selectors
      * @param {string} selector - CSS selector to query the DOM Node with
      * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
      */
-
     root.query = function(selector, element) {
         if (is.String(element)) element = doc.querySelector(element);
         return is.Node(element) ? element.querySelector(selector) : doc.querySelector(selector);
     };
-
     /**
      * Easy way to get a DOM NodeList or NodeList within another DOM Node using CSS selectors
      * @param {string} selector - CSS selector to query the DOM Nodes with
@@ -884,7 +850,6 @@ function _toConsumableArray(arr) {
             }
         };
     }
-
     /**
      * Starts listening for an EventType on the Target/Targets
      * @param {string} EventType - set the type of event to listen for example "click" or "scroll"
@@ -898,7 +863,6 @@ function _toConsumableArray(arr) {
             return is.Func(i);
         }) ? EventTypes(EventType, Target) : is.Func(element) ? new EventHandler(EventType, Target, element).On : new EventHandler(EventType, Target, func, element).On;
     };
-
     /**
      * Starts listening for an EventType on the Target/Targets ONCE after triggering the Once event Listener will stop listening
      * @param {string} EventType - set the type of event to listen for example "click" or "scroll"
@@ -930,7 +894,6 @@ function _toConsumableArray(arr) {
     }
 
     function domNodeList(elements) {
-
         forEach(Object.getOwnPropertyNames(Array.prototype), function(method) {
             if (method != "length") elements[method] = Array.prototype[method];
         });
@@ -973,6 +936,71 @@ function _toConsumableArray(arr) {
             });
             return elements;
         };
+        /**
+         * removes a specific Attribute from the this.element
+         * @memberof dom
+         * @param {...string} name of the Attribute/s to strip
+         */
+        elements.stripAttr = function() {
+            var _arguments = arguments;
+            forEach(elements, function(el) {
+                forEach(_arguments, function(attr) {
+                    el.removeAttribute(attr);
+                });
+            });
+            return elements;
+        };
+        /**
+         * checks if the element has a specific Attribute or Attributes
+         * @memberof dom
+         * @param {string|boolean} name of the Attribute or if true checks that it has some (||) of the attributes or if false checks that it has all of the attributes (&&)
+         * @param {...string} names of attributes to check for
+         */
+        elements.hasAttr = function(attr) {
+            var _arguments2 = arguments;
+            if (is.String(attr)) return elements.every(function(el) {
+                return el.hasAttribute(attr);
+            });
+            return elements.every(function(el) {
+                return Craft.flatten(_arguments2).every(function(a) {
+                    return el.hasAttribute(a);
+                });
+            });
+        };
+        /**
+         * Toggles an attribute on element , optionally add value when toggle is adding attribute
+         * @param {string} name - name of the attribute to toggle
+         * @param {string} val - value to set attribute to
+         * @param {boolean=} rtst - optionally return a bool witht the toggle state otherwise returns the element
+         */
+        elements.toggleAttr = function(name, val, rtst) {
+            forEach(elements, function(el) {
+                el[W(is.Bool(val) ? !val : el.hasAttr(name), 'strip', 'set', 'Attr')](name, val);
+            });
+            return rtst ? elements.every(function(el) {
+                return el.hasAttr(name);
+            }) : elements;
+        };
+        /**
+         * Sets or adds an Attribute on the element
+         * @memberof dom
+         * @param {string} Name of the Attribute to add/set
+         * @param {string} Value of the Attribute to add/set
+         */
+        elements.setAttr = function(attr, val) {
+            forEach(elements, function(element) {
+                if (!is.Def(val)) {
+                    if (is.String(attr)) attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(function(Attr) {
+                        var attribs = Attr.split('=');
+                        is.Def(attribs[1]) ? element.setAttribute(attribs[0], attribs[1]) : element.setAttribute(attribs[0], '');
+                    }) : element.setAttribute(attr, '');
+                    else if (is.Object(attr)) forEach(attr, function(value, Attr) {
+                        element.setAttribute(Attr, value);
+                    });
+                } else element.setAttribute(attr, val || '');
+            });
+            return this;
+        };
         elements.append = function() {
             forEach(arguments, function(val) {
                 forEach(elements, function(el) {
@@ -984,7 +1012,7 @@ function _toConsumableArray(arr) {
         elements.prepend = function() {
             forEach(arguments, function(val) {
                 forEach(elements, function(el) {
-                    return el.insertBefore(W(is.Node(val), val, docfragFromString(val)).cloneNode(!0), el.firstChild);
+                    el.insertBefore(W(is.Node(val), val, docfragFromString(val)).cloneNode(!0), el.firstChild);
                 });
             });
             return elements;
@@ -1014,8 +1042,7 @@ function _toConsumableArray(arr) {
             }).join('');
             return el;
         };
-    }
-    // evlt - Event Listener Type (On or Once)
+    } // evlt - Event Listener Type (On or Once)
     function evlt(type) {
         return root[type ? 'Once' : 'On'];
     }
@@ -1024,12 +1051,10 @@ function _toConsumableArray(arr) {
         if (is.String(element)) element = query(element, within);
         if (element.hasDOMmethods == !0) return element;
         element.hasDOMmethods = !0;
-
         element.newSetGet = function(key, set) {
             var get = arguments.length <= 2 || arguments[2] === undefined ? function() {
                 return ud;
             } : arguments[2];
-
             Object.defineProperty(this, key, {
                 set: set,
                 get: get
@@ -1041,7 +1066,6 @@ function _toConsumableArray(arr) {
          * @param {string=} sets the innerHTML value or when undefined gets the innerHTML value
          */
         element.html = Inner('innerHTML', element);
-
         /**
          * changes or returns the textContent value of a Node
          * @memberof dom
@@ -1099,7 +1123,6 @@ function _toConsumableArray(arr) {
         element.On = function(eventType, func) {
             return On(eventType, element, func);
         };
-
         element.Click = function(fn, type) {
             return evlt(type)('click', element, fn);
         };
@@ -1148,7 +1171,6 @@ function _toConsumableArray(arr) {
                 if (e.which == code || e.keyCode == code) fn(e, element);
             });
         }
-
         element.Enter = function(fn, type) {
             return keypress(type, fn, 13);
         };
@@ -1194,12 +1216,10 @@ function _toConsumableArray(arr) {
             for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
                 args[_key] = arguments[_key];
             }
-
             return args.every(function(Class) {
                 element.classList.contains(Class);
             });
         };
-
         /**
          * Add a CSS class to the element
          * @memberof dom
@@ -1306,7 +1326,6 @@ function _toConsumableArray(arr) {
                 display: mode || ''
             });
         };
-
         /**
          * Remove the element after a time in milliseconds
          * @param {number=} time - time to wait before self destructing the element
@@ -1317,7 +1336,6 @@ function _toConsumableArray(arr) {
             }, time || 5000);
             return element;
         };
-
         Object.defineProperty(element, 'Siblings', {
             get: function get() {
                 return Craft.omit(element.parentNode.childNodes, element).filter(function(el) {
@@ -1341,7 +1359,6 @@ function _toConsumableArray(arr) {
         }, function() {
             return element.getRect().with;
         });
-
         /**
          * sets or gets the element's pixel height
          * @memberof dom
@@ -1390,7 +1407,6 @@ function _toConsumableArray(arr) {
         element.queryAll = function(selector) {
             return queryAll(selector, element);
         };
-
         if (is.Input(element)) {
             element.SyncInput = function(obj, key) {
                 element[sI] = On(element).Input(function(e) {
@@ -1424,7 +1440,6 @@ function _toConsumableArray(arr) {
         };
         return element;
     }
-
     /**
      * Function that returns many useful methods for interacting with and manipulating the DOM or creating elements
      * in the absence of parameters the function will return methods for created elements
@@ -1448,7 +1463,6 @@ function _toConsumableArray(arr) {
         if (is.Node(element)) return !element['hasDOMmethods'] ? domManip(element) : element;
         return Craft.dom;
     };
-
     CrafterStyles = query('[crafterstyles]', head);
 
     function observable(obj) {
@@ -1511,7 +1525,6 @@ function _toConsumableArray(arr) {
             }
         }
     }
-
     /**
      * Craft is Crafter.js's Core containing most functionality.
      * @namespace Craft
@@ -1525,7 +1538,6 @@ function _toConsumableArray(arr) {
          * @param {Array} newArr - second array to be compared
          * @param {function=} func - optional function that recieves all the info as parameters
          */
-
         arrDiff: function arrDiff(arr, newArr, func) {
             var added = newArr.filter(function(item) {
                     if (!arr.includes(item)) return item;
@@ -1543,7 +1555,6 @@ function _toConsumableArray(arr) {
                 removed: removed
             };
         },
-
         /**
          * Splits a string at dots "."
          * @method cutdot
@@ -1574,7 +1585,6 @@ function _toConsumableArray(arr) {
             }
             return !0;
         },
-
         /**
          * Generates arrays of a set length , with values or values generated from functions
          * @method array
@@ -1594,7 +1604,6 @@ function _toConsumableArray(arr) {
                     }
             return arr;
         },
-
         /**
          * Gets all the property keys in any object even the hiden ones
          * @method getAllKeys
@@ -1609,7 +1618,6 @@ function _toConsumableArray(arr) {
             } while (obj = Object.getPrototypeOf(obj));
             return props;
         },
-
         unique: function unique(arr) {
             return [].concat(_toConsumableArray(new Set(Craft.flatten(arr))));
         },
@@ -1644,7 +1652,6 @@ function _toConsumableArray(arr) {
             }
             return obj;
         },
-
         /**
          * Craft.setDeep  is similar to getDeep it uses a string to reference to a value
          * @method setDeep
@@ -1668,7 +1675,6 @@ function _toConsumableArray(arr) {
             temp[path[path.length - 1]] = val;
             if (robj) return obj;
         },
-
         /**
          * forEachDeep is used to loop through any multi layered object - (flattens and loops through all enumerable properties in a given object)
          * @method forEachDeep
@@ -1693,7 +1699,6 @@ function _toConsumableArray(arr) {
                 if (nestable && (is.Arr(val) || is.Object(val))) Craft.forEachDeep(val, fn, currentPath);
             }
         },
-
         /**
          * Method to merge the properties of multiple objects , it can handle getters or setters without breaking them
          * @method concatObjects
@@ -1710,7 +1715,6 @@ function _toConsumableArray(arr) {
             });
             return host;
         },
-
         /**
          * Simply clones/duplicates any object or array/arraylike object
          * @method clone
@@ -1738,7 +1742,6 @@ function _toConsumableArray(arr) {
             });
             return Arr;
         },
-
         /**
          * Omits values from Objects or Arrays
          * @method omit
@@ -1762,7 +1765,6 @@ function _toConsumableArray(arr) {
         addCSS: function addCSS(css) {
             CrafterStyles.textContent += css;
         },
-
         /**
          * Contains several methods for Element Creation
          * @namespace dom
@@ -1838,7 +1840,6 @@ function _toConsumableArray(arr) {
                     type: type || 'text'
                 });
             },
-
             button: function button(inner, attr) {
                 return craftElement('button', inner, attr);
             },
@@ -1850,7 +1851,6 @@ function _toConsumableArray(arr) {
                 });
                 return craftElement(type, list, attr);
             },
-
             ul: function ul(items, attr) {
                 return Craft.dom.list('ul', items, attr);
             },
@@ -1879,7 +1879,6 @@ function _toConsumableArray(arr) {
                 script.defer = defer != !1;
                 return script;
             },
-
             td: function td(inner, attr) {
                 return craftElement('td', inner, attr);
             },
@@ -1929,7 +1928,6 @@ function _toConsumableArray(arr) {
             setPrekey: function setPrekey(str) {
                 Craft.loader.pre = str + ':';
             },
-
             get: function get(key) {
                 return JSON.parse(localStorage.getItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key) || !1);
             },
@@ -1974,7 +1972,6 @@ function _toConsumableArray(arr) {
                 });
             });
         },
-
         router: {
             addHandle: function addHandle(link, func) {
                 Craft.router.handlers.push({
@@ -1995,7 +1992,6 @@ function _toConsumableArray(arr) {
                     Craft.router.addHandle(link, func);
                 });
             },
-
             handlers: [],
             links: [],
             link: function link(Selector, _link, newtab, eventType) {
@@ -2009,16 +2005,13 @@ function _toConsumableArray(arr) {
                 function open(_x3, _x4) {
                     return _open.apply(this, arguments);
                 }
-
                 open.toString = function() {
                     return _open.toString();
                 };
-
                 return open;
             })(function(link, newtab) {
                 newtab ? open(link) : location = link;
             }),
-
             setTitle: function setTitle(title) {
                 return doc.title = title;
             },
@@ -2065,7 +2058,6 @@ function _toConsumableArray(arr) {
                 doc.cookie = encodeURIComponent(key) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT" + (domain ? "; domain=" + domain : "") + (path ? "; path=" + path : "");
                 return !0;
             },
-
             has: function has(key) {
                 return key ? new RegExp("(?:^|;\\s*)" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=").test(doc.cookie) : !1;
             },
@@ -2138,7 +2130,6 @@ function _toConsumableArray(arr) {
                             }
                         },
                         socket = protocols ? new WebSocket(address, protocols) : new WebSocket(address);
-
                     socket.onopen = function() {
                         Options.open = !0;
                     };
@@ -2152,16 +2143,13 @@ function _toConsumableArray(arr) {
                         });
                     };
                     Options.socket = socket;
-
                     return {
                         v: Options
                     };
                 })();
-
                 if ((typeof _ret === "undefined" ? "undefined" : _typeof(_ret)) === "object") return _ret.v;
             }
         },
-
         observable: observable,
         curry: function curry(fn) {
             return makeFn(fn, [], fn.length);
@@ -2234,7 +2222,6 @@ function _toConsumableArray(arr) {
                 el.style[key] = prop;
             }) : console.error('invalid args');
         },
-
         hasCapitals: function hasCapitals(string) {
             return toArr(string).some(function(c) {
                 return is.Uppercase(c);
@@ -2264,13 +2251,11 @@ function _toConsumableArray(arr) {
             for (var _len2 = arguments.length, types = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
                 types[_key2] = arguments[_key2];
             }
-
             types = types.map(function(t) {
                 return typeof t === "undefined" ? "undefined" : _typeof(t);
             });
             return types.length < 2 ? types[0] : types;
         },
-
         toggle: function toggle(bool) {
             return !bool;
         },
@@ -2287,7 +2272,6 @@ function _toConsumableArray(arr) {
                 };
             return memoized;
         },
-
         millis: {
             min: 60000,
             sec: 1000,
@@ -2353,7 +2337,6 @@ function _toConsumableArray(arr) {
             options = options || {};
             options.duration = options.duration || 400;
             options.offset = options.offset || 0;
-
             var startTime = undefined,
                 elapsedTime = undefined,
                 start = root.pageYOffset,
@@ -2378,7 +2361,6 @@ function _toConsumableArray(arr) {
                 };
             requestAnimationFrame(loop);
         },
-
         /**
          * converts Objects or URL variable strings to a FormData object
          * @param {object|string} val - values to convert
@@ -2409,7 +2391,6 @@ function _toConsumableArray(arr) {
         revokeCSSRule: function revokeCSSRule(index, sheet) {
             (sheet || CrafterStyles).sheet.deleteRule(index);
         },
-
         /**
          * Converts any text to an inline URL code (good for images , svg , scripts or css)
          * @param {string} - content to convert to an inline URL
@@ -2422,7 +2403,6 @@ function _toConsumableArray(arr) {
                 func(e.deltaY < 1, e);
             }) : console.error('no function');
         },
-
         OnResize: function OnResize(func) {
             return is.Func(func) ? Craft.ResizeHandlers.add(func) : console.error("Craft.OnResize -> no function");
         },
@@ -2446,16 +2426,16 @@ function _toConsumableArray(arr) {
          */
         get WhenReady() {
             return new Promise(function(pass, fail) {
-                if (Ready) return pass();
+                if (Ready || doc.readyState === "complete") return pass();
                 var check = setInterval(function() {
-                    if (Ready) {
+                    if (Ready || doc.readyState === "complete") {
                         pass();
                         clearInterval(check);
                     }
-                }, 30);
+                }, 20);
                 setTimeout(function() {
                     clearInterval(check);
-                    if (!Ready) fail('loading took too long loaded with errors :(');
+                    if (!Ready || doc.readyState === "complete") fail('loading took too long loaded with errors :(');
                 }, 5500);
             });
         },
@@ -2475,7 +2455,6 @@ function _toConsumableArray(arr) {
                 return cutkey.length === 1 && !is.Def(val) ? Craft.Models[cutkey[0]].scope : Craft[_type](Craft.Models[cutkey[0]].scope, joindot(Craft.omit(cutkey, cutkey[0])), val);
             }
         },
-
         /**
          * defines custom attributes
          * @param {string} name - the name of your custom attribute
@@ -2487,7 +2466,7 @@ function _toConsumableArray(arr) {
                 (function() {
                     var apply = function apply() {
                         queryEach("[" + name + "]", function(el) {
-                            el = el.hasDOMmethods ? el : dom(el);
+                            el = dom(el);
                             if (el.hasAttr(name)) {
                                 if (!is.Array(el.customAttr)) el.customAttr = [];
                                 if (!el.customAttr.includes(name)) {
@@ -2497,14 +2476,12 @@ function _toConsumableArray(arr) {
                             }
                         });
                     };
-
                     Craft.CustomAttributes.push({
                         name: name,
                         handle: handle
                     });
-
                     Ready ? apply() : Craft.WhenReady.then(function() {
-                        setTimeout(apply, 80);
+                        setTimeout(apply, 20);
                     });
                 })();
             }
@@ -2525,7 +2502,6 @@ function _toConsumableArray(arr) {
                 }, timeout);
             });
         },
-
         /**
          * Usefull method for validating passwords , example Craft.strongPassword('#MyFancyPassword18',8,true,true,"#") -> true requirements met
          * @param {string} pass - string containing the password
@@ -2555,9 +2531,7 @@ function _toConsumableArray(arr) {
                 i = Math.floor(Math.log(bytes) / Math.log(k));
             return (bytes / Math.pow(k, i)).toPrecision(decimals + 1 || 3) + ' ' + ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'][i];
         },
-
-        /** method for generating random alphanumeric strings*/
-        randomString: function randomString() {
+        /** method for generating random alphanumeric strings*/ randomString: function randomString() {
             return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
         },
         /**
@@ -2587,19 +2561,47 @@ function _toConsumableArray(arr) {
             var element = Object.create(HTMLElement.prototype),
                 settings = {},
                 dm = undefined;
-
-            forEach(config, function(_, key) {
-
-                if (is.Func(config[key])) {
-                    // Adds dom methods to element
+            element.createdCallback = function() {
+                var keys = Object.keys(config),
+                    el = dom(this);
+                var _loop = function _loop(i, _key4) {
+                    _key4 = keys[i];
+                    if (!['attr', 'created', 'destroyed', 'extends', 'inserted'].every(function(e) {
+                            return e != _key4;
+                        }) && _key4.includes('css') && _key4.length == 3) return "continue";
+                    var obj = Object.getOwnPropertyDescriptor(config, _key4);
+                    if (is.Func(obj.get) || is.Func(obj.set)) {
+                        if (!is.Func(obj.get)) obj.get = function() {
+                            return ud;
+                        };
+                        if (!is.Func(obj.set)) obj.set = function(x) {};
+                        el.newSetGet(_key4, obj.get.bind(el), obj.set.bind(el));
+                        delete config[_key4];
+                    } else if (!is.Func(obj.value)) {
+                        Object.defineProperty(element, _key4, obj);
+                        delete config[_key4];
+                    }
+                    _key3 = _key4;
+                };
+                for (var _key3, i = 0; i < keys.length; i++) {
+                    var _ret4 = _loop(i, _key3);
+                    if (_ret4 === "continue") continue;
+                }
+                if (is.Func(config['created'])) config['created'].call(el);
+            };
+            var _loop2 = function _loop2(_key5) {
+                if (_key5 === 'created') return "continue";
+                if (is.Func(config[_key5])) { // Adds dom methods to element
                     dm = function dm() {
-                        config[key].call(dom(this));
+                        config[_key5].call(dom(this));
                     };
                 }
-
-                key == 'created' ? element.createdCallback = dm : key == 'inserted' ? element.attachedCallback = dm : key == 'destroyed' ? element.detachedCallback = dm : key == 'attr' ? element.attributeChangedCallback = dm : key == 'extends' ? settings.extends = config.extends : key.toLocaleLowerCase().includes('css') && key.length == 3 ? Craft.addCSS(config[key]) : is.Func(config[key]) ? element[key] = dm : Object.defineProperty(element, key, Object.getOwnPropertyDescriptor(config, key));
-            });
-
+                _key5 == 'inserted' ? element.attachedCallback = dm : _key5 == 'destroyed' ? element.detachedCallback = dm : _key5 == 'attr' ? element.attributeChangedCallback = dm : _key5 == 'extends' ? settings.extends = config.extends : _key5.includes('css') && _key5.length == 3 ? Craft.addCSS(config[_key5]) : is.Func(config[_key5]) ? element[_key5] = dm : ud;
+            };
+            for (var _key5 in config) {
+                var _ret5 = _loop2(_key5);
+                if (_ret5 === "continue") continue;
+            }
             settings['prototype'] = element;
             doc.registerElement(tag, settings);
         },
@@ -2617,7 +2619,6 @@ function _toConsumableArray(arr) {
             }
         }
     };
-
     Craft.ForEach = Craft.tco(function(collection, func, i) {
         if (is.Undef(i)) i = 0;
         if (collection.length != i) {
@@ -2625,20 +2626,17 @@ function _toConsumableArray(arr) {
             Craft.ForEach(collection, func, i + 1);
         }
     });
-
     root.onblur = function(e) {
         Craft.tabActive = !1;
     };
     root.onfocus = function(e) {
         Craft.tabActive = !0;
     };
-
     Craft.Models.addListener(function(o, key, model, isnew) {
         if (isnew) Ready || model.imediate ? model.func(model.scope) : Craft.WhenReady.then(function() {
             model.func(model.scope);
         });
     });
-
     Craft.curry.to = Craft.curry(function(arity, fn) {
         return makeFn(fn, [], arity);
     });
@@ -2651,30 +2649,25 @@ function _toConsumableArray(arr) {
         return Craft.curry.adaptTo(fn.length, fn);
     };
     Craft.loader.removeAll(!0);
-
     Craft.customAttribute('link', function(el, link) {
         On(el).Click(function(e) {
             (el.hasAttr('newtab') ? open : Craft.router.open)(link);
         });
     });
-
     Craft.customAttribute('bind', function(el, bind) {
         try {
             var cutbind = cutdot(bind),
                 prop = cutbind[cutbind.length - 1],
-                obj = is.Def(Craft.Models[cutbind[0]]) ? Craft.Models[cutbind[0]].scope : Craft.getDeep(root, joindot(Craft.omit(cutbind, prop))) || Craft.Scope,
-                val = Craft.getDeep(obj, cutbind.length > 1 ? joindot(Craft.omit(cutbind, cutbind[0])) : prop);
-
-            is.Def(val) ? el.html(val) : Craft.setDeep(obj, prop, el.html());
-
-            if (is.Def(Object.getOwnPropertyDescriptor(obj, 'addListener')) && !is.Func(el._BL)) {
+                _obj = is.Def(Craft.Models[cutbind[0]]) ? Craft.Models[cutbind[0]].scope : Craft.getDeep(root, joindot(Craft.omit(cutbind, prop))) || Craft.Scope,
+                val = Craft.getDeep(_obj, cutbind.length > 1 ? joindot(Craft.omit(cutbind, cutbind[0])) : prop);
+            is.Def(val) ? el.html(val) : Craft.setDeep(_obj, prop, el.html());
+            if (is.Def(Object.getOwnPropertyDescriptor(_obj, 'addListener')) && !is.Func(el._BL)) {
                 el._BL = function(o, n, v) {
                     el.html(v);
                 };
-
-                obj.addListener(prop, el);
+                _obj.addListener(prop, el);
             }
-            if (is.Input(el)) el.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : joindot(Craft.omit(cutbind, cutbind[0])));
+            if (is.Input(el)) el.SyncInput(_obj, cutbind.length == 1 ? cutbind[0] : joindot(Craft.omit(cutbind, cutbind[0])));
         } catch (e) {
             console.warn("couldn't bind :", el);
         }
@@ -2693,7 +2686,6 @@ function _toConsumableArray(arr) {
             }
         }
     }
-
     root.onload = function(e) {
         forEach(Craft.router.links, function(link) {
             link();
@@ -2713,7 +2705,6 @@ function _toConsumableArray(arr) {
         });
         Ready = !0;
     };
-
     root.onhashchange = function() {
         forEach(Craft.router.handlers, function(handle) {
             if (Locs(function(l) {
