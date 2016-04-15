@@ -3,7 +3,7 @@
 
   Craft.newComponent('crafter-tabs', {
     created() {
-      let element = dom(this),
+      let element = this,
         activeTab = 0,
         tabViews = queryAll('tab-view', element);
       element.tabs = [];
@@ -20,7 +20,9 @@
 
       element.handleClick = element.Click(e => {
         if (is.Node(e.target) && e.target.tagName === 'TAB-HANDLE') {
-          queryEach('[active]', element, el => el.removeAttribute('active'));
+          queryEach('[active]', element, el => {
+            el.removeAttribute('active')
+          });
           e.target.setActive();
           activeTab = element.tabs.indexOf(e.target);
         }
@@ -89,8 +91,8 @@
       this.manageAttributes(attrName);
     },
     manageAttributes(name) {
-      if (name === 'src' && this.hasAttribute('src')) {
-        let element = dom(this);
+      if (name === 'src' && this.hasAttr('src')) {
+        let element = this;
         if (element.hasAttr('cache-view')) {
           if (localStorage.getItem('craft-tabs:' + element.getAttr('cache-view')) !== null) {
             let cachedView = JSON.parse(localStorage.getItem('craft-tabs:' + element.getAttr('cache-view')));
@@ -107,7 +109,9 @@
               url: element.getAttr('src'),
               source: txt
             }));
-          })).catch(res => console.warn(`Couldn't fetch tab-view src -> ${res}`)) : console.error('cache-view must have longer value');
+          })).catch(res => {
+            console.warn(`Couldn't fetch tab-view src -> ${res}`)
+          }) : console.error('cache-view must have longer value');
         } else {
           fetch(element.getAttr('src')).then(res => res.text().then(txt => {
             if (element.hasAttr('pre')) {

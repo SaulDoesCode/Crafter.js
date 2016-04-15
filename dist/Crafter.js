@@ -1,47 +1,15 @@
 "use strict";
+
+function _typeof(obj) {
+    return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj;
+}
 /**
  *  @overview Crafter.js , minimalist front-end library
  *  @author Saul van der Walt - https://github.com/SaulDoesCode/
  *  @license MIT
  */
-"use strict ";
-var _createClass = (function() {
-    function defineProperties(target, props) {
-        for (var i = 0; i < props.length; i++) {
-            var descriptor = props[i];
-            descriptor.enumerable = descriptor.enumerable || !1;
-            descriptor.configurable = !0;
-            if ("value" in descriptor) descriptor.writable = !0;
-            Object.defineProperty(target, descriptor.key, descriptor);
-        }
-    }
-    return function(Constructor, protoProps, staticProps) {
-        if (protoProps) defineProperties(Constructor.prototype, protoProps);
-        if (staticProps) defineProperties(Constructor, staticProps);
-        return Constructor;
-    };
-})();
-
-function _classCallCheck(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-        throw new TypeError("Cannot call a class as a function");
-    }
-}
-
-function _typeof(obj) {
-    return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj;
-}
-
-function _toConsumableArray(arr) {
-    if (Array.isArray(arr)) {
-        for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) {
-            arr2[i] = arr[i];
-        }
-        return arr2;
-    } else {
-        return Array.from(arr);
-    }
-}(function(doc, root) {
+(function(doc, root) {
+    "use strict ";
     var Ready = doc.readyState === "complete",
         sI = 'Isync',
         ud = void 0,
@@ -74,7 +42,7 @@ function _toConsumableArray(arr) {
     }
 
     function toArr(val) {
-        return [].concat(_toConsumableArray(val));
+        return Array.from(val);
     }
 
     function type(obj, str) {
@@ -634,81 +602,81 @@ function _toConsumableArray(arr) {
         return is.Node(val) ? [val] : is.NodeList(val) ? toArr(val) : [];
     }
     /**
-     * Event Handling Class
+     * Event Handler
      * @param {string} EventType - set the type of event to listen for example "click" or "scroll"
      * @param {Node|NodeList|window|document} Target - the Event Listener's target , can also be a NodeList to listen on multiple Nodes
      * @param {function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
      * @returns Interface On,Off,Once
      */
-    var EventHandler = (function() {
-        function EventHandler(EventType, Target, func, Within) {
-            _classCallCheck(this, EventHandler);
-            this.EventType = EventType || 'click';
-            this.state = !1;
-            this.Target = Target !== root && Target !== doc ? NodeOrQuerytoArr(Target, Within) : [Target];
-            this.FuncWrapper = function(e) {
-                return func(e, e.srcElement);
-            };
-            if (is.String(EventType) && EventType.includes(',')) this.EventType = EventType.split(',');
-            if (!is.Array(this.EventType)) this.EventType = [this.EventType];
-        }
+    function eventHandler(EventType, Target, func, Within) {
+        this.EventType = EventType || 'click';
+        this.state = !1;
+        this.Target = Target !== root && Target !== doc ? NodeOrQuerytoArr(Target, Within) : [Target];
+        this.FuncWrapper = function(e) {
+            func(e, e.srcElement);
+        };
+        if (is.String(EventType) && EventType.includes(',')) this.EventType = EventType.split(',');
+        if (!is.Array(this.EventType)) this.EventType = [this.EventType];
         /**
          * Activates the EventHandler to start listening for the EventType on the Target/Targets
          */
-        _createClass(EventHandler, [{
-            key: "On",
+        Object.defineProperty(this, 'On', {
             get: function get() {
-                    var evtHndl = this;
-                    forEach(evtHndl.Target, function(target) {
-                        forEach(evtHndl.EventType, function(evt) {
-                            target.addEventListener(evt, evtHndl.FuncWrapper);
-                        });
+                var evtHndl = this;
+                forEach(evtHndl.Target, function(target) {
+                    forEach(evtHndl.EventType, function(evt) {
+                        target.addEventListener(evt, evtHndl.FuncWrapper);
                     });
-                    evtHndl.state = !0;
-                    return evtHndl;
-                }
-                /**
-                 * Change the Event type to listen for
-                 * {string} type - the name of the event/s to listen for
-                 */
-        }, {
-            key: "Type",
-            set: function set(type) { //  have you tried turning it on and off again? - THE IT CROWD
-                this.Off;
-                this.EventType = type.includes(',') ? type.split(',') : type;
-                if (!is.Array(this.EventType)) this.EventType = [this.EventType];
-                this.On;
-                return this;
+                });
+                evtHndl.state = !0;
+                return evtHndl;
+            },
+            enumerable: !0
+        });
+        /**
+         * Change the Event type to listen for
+         * {string} type - the name of the event/s to listen for
+         */
+        Object.defineProperty(this, 'Type', {
+            set: function set(type) {
+                var evtHndl = this; //  have you tried turning it on and off again? - THE IT CROWD
+                evtHndl.Off;
+                evtHndl.EventType = type.includes(',') ? type.split(',') : type;
+                if (!is.Array(evtHndl.EventType)) evtHndl.EventType = [evtHndl.EventType];
+                evtHndl.On;
+                return evtHndl;
             },
             get: function get() {
-                    return this.EventType;
-                }
-                /**
-                 * De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
-                 * can still optionally be re-activated with On again
-                 */
-        }, {
-            key: "Off",
+                return this.EventType;
+            },
+            enumerable: !0
+        });
+        /**
+         * De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
+         * can still optionally be re-activated with On again
+         */
+        Object.defineProperty(this, 'Off', {
             get: function get() {
-                    var evtHndl = this;
-                    forEach(evtHndl.Target, function(target) {
-                        forEach(evtHndl.EventType, function(evt) {
-                            target.removeEventListener(evt, evtHndl.FuncWrapper);
-                        });
+                var evtHndl = this;
+                forEach(evtHndl.Target, function(target) {
+                    forEach(evtHndl.EventType, function(evt) {
+                        target.removeEventListener(evt, evtHndl.FuncWrapper);
                     });
-                    evtHndl.state = !0;
-                    return evtHndl;
-                }
-                /**
-                 * Once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
-                 * the Handler function will be called only Once
-                 */
-        }, {
-            key: "Once",
+                });
+                evtHndl.state = !0;
+                return evtHndl;
+            },
+            enumerable: !0
+        });
+        /**
+         * Once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
+         * the Handler function will be called only Once
+         */
+        Object.defineProperty(this, 'Once', {
             get: function get() {
-                var func = this.FuncWrapper,
-                    target = this.Target,
-                    evtHndl = this;
+                var evtHndl = this,
+                    func = evtHndl.FuncWrapper,
+                    target = evtHndl.Target;
                 forEach(evtHndl.EventType, function(etype) {
                     evtHndl.state = !0;
                     var listenOnce = function listenOnce(e) {
@@ -723,10 +691,13 @@ function _toConsumableArray(arr) {
                     });
                 });
                 return evtHndl;
-            }
-        }]);
-        return EventHandler;
-    })();
+            },
+            enumerable: !0
+        });
+    }
+    var EventHandler = function EventHandler(e, t, f, w) {
+        return new eventHandler(e, t, f, w);
+    };
     /**
      * Easy way to get a DOM Node or Node within another DOM Node using CSS selectors
      * @param {string} selector - CSS selector to query the DOM Node with
@@ -774,7 +745,7 @@ function _toConsumableArray(arr) {
 
     function EventTypes(Target, within, listen) {
         var etype = function etype(type, fn) {
-                return new EventHandler(type, Target, fn, within)[listen || 'On'];
+                return EventHandler(type, Target, fn, within)[listen || 'On'];
             },
             keypress = function keypress(fn, keycode) {
                 return function(e, srcElement) {
@@ -850,6 +821,15 @@ function _toConsumableArray(arr) {
             }
         };
     }
+
+    function EvtLT(ListenType) {
+        return function(EventType, Target, element, func) {
+            var args = toArr(arguments);
+            return is.Func(Target) ? EventHandler(EventType, root, Target)[ListenType] : args.length < 3 && !args.some(function(i) {
+                return is.Func(i);
+            }) ? EventTypes(EventType, Target) : is.Func(element) ? EventHandler(EventType, Target, element)[ListenType] : EventHandler(EventType, Target, func, element)[ListenType];
+        };
+    }
     /**
      * Starts listening for an EventType on the Target/Targets
      * @param {string} EventType - set the type of event to listen for example "click" or "scroll"
@@ -857,12 +837,7 @@ function _toConsumableArray(arr) {
      * @param {function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
      * @returns Off - when On is defined as a variable "var x = On(...)" it allows you to access all the EventHandler interfaces Off,Once,On
      */
-    root.On = function(EventType, Target, element, func) {
-        var args = toArr(arguments);
-        return is.Func(Target) ? new EventHandler(EventType, root, Target).On : args.length < 3 && !args.some(function(i) {
-            return is.Func(i);
-        }) ? EventTypes(EventType, Target) : is.Func(element) ? new EventHandler(EventType, Target, element).On : new EventHandler(EventType, Target, func, element).On;
-    };
+    root.On = EvtLT('On');
     /**
      * Starts listening for an EventType on the Target/Targets ONCE after triggering the Once event Listener will stop listening
      * @param {string} EventType - set the type of event to listen for example "click" or "scroll"
@@ -870,12 +845,7 @@ function _toConsumableArray(arr) {
      * @param {function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
      * @returns On,Off,Once - when Once is defined as a variable "var x = Once(...)" it allows you to access all the EventHandler interfaces Off,Once,On
      */
-    root.Once = function(EventType, Target, element, func) {
-        var args = toArr(arguments);
-        return is.Func(Target) ? new EventHandler(EventType, root, Target).Once : args.length < 3 && !args.some(function(i) {
-            return is.Func(i);
-        }) ? EventTypes(EventType, Target, 'Once') : is.Func(element) ? new EventHandler(EventType, Target, element).Once : new EventHandler(EventType, Target, func, element).Once;
-    };
+    root.Once = EvtLT('Once');
 
     function craftElement(name, inner, attributes, extraAttr, stringForm) {
         if (is.False(is.String(inner), is.Node(inner), is.Num(inner), is.Array(inner))) {
@@ -885,7 +855,7 @@ function _toConsumableArray(arr) {
             } else inner = is.Func(inner) ? inner() : '';
         }
         var newEl = dom(doc.createElement(name));
-        is.Array(inner) ? newEl.html.apply(this, inner) : newEl.html(inner);
+        newEl.html.apply(this, is.Array(inner) ? inner : [inner]);
         if (is.Object(attributes) || is.String(attributes)) newEl.setAttr(attributes);
         if (is.Def(extraAttr)) newEl.setAttr(extraAttr);
         if (is.Bool(extraAttr)) stringForm = extraAttr;
@@ -1018,16 +988,14 @@ function _toConsumableArray(arr) {
             return elements;
         };
         elements.hide = function() {
-            this.css({
+            return elements.css({
                 display: 'none'
             });
-            return elements;
         };
         elements.show = function() {
-            this.css({
+            return elements.css({
                 display: ''
             });
-            return elements;
         };
         return elements;
     }
@@ -1051,10 +1019,7 @@ function _toConsumableArray(arr) {
         if (is.String(element)) element = query(element, within);
         if (element.hasDOMmethods == !0) return element;
         element.hasDOMmethods = !0;
-        element.newSetGet = function(key, set) {
-            var get = arguments.length <= 2 || arguments[2] === undefined ? function() {
-                return ud;
-            } : arguments[2];
+        element.newSetGet = function(key, set, get) {
             Object.defineProperty(this, key, {
                 set: set,
                 get: get
@@ -1213,10 +1178,7 @@ function _toConsumableArray(arr) {
          * @param {...string} name of the class to check for
          */
         element.gotClass = function() {
-            for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-                args[_key] = arguments[_key];
-            }
-            return args.every(function(Class) {
+            return toArr(arguments).every(function(Class) {
                 element.classList.contains(Class);
             });
         };
@@ -1271,8 +1233,8 @@ function _toConsumableArray(arr) {
          * @param {...string} names of attributes to check for
          */
         element.hasAttr = function(attr) {
-            if (is.String(attr)) return element.hasAttribute(attr);
-            return Craft.flatten(arguments).every(function(a) {
+            if (is.String(attr) && arguments.length == 1) return element.hasAttribute(attr);
+            return toArr(arguments).every(function(a) {
                 return element.hasAttribute(a);
             });
         };
@@ -1301,7 +1263,7 @@ function _toConsumableArray(arr) {
                     return element.setAttribute(Attr, value);
                 });
             } else element.setAttribute(attr, val || '');
-            return this;
+            return element;
         };
         /**
          * Gets the value of an attribute , short alias for element.getAttribute
@@ -1336,13 +1298,12 @@ function _toConsumableArray(arr) {
             }, time || 5000);
             return element;
         };
-        Object.defineProperty(element, 'Siblings', {
-            get: function get() {
-                return Craft.omit(element.parentNode.childNodes, element).filter(function(el) {
-                    if (is.Element(el)) return el;
-                });
-            },
-            configurable: !1
+        element.newSetGet('Siblings', function() {
+            return ud;
+        }, function() {
+            return Craft.omit(element.parentNode.childNodes, element).filter(function(el) {
+                if (is.Element(el)) return el;
+            });
         });
         /**
          * gets all the element's dimentions (width,height,left,top,bottom,right)
@@ -1619,7 +1580,7 @@ function _toConsumableArray(arr) {
             return props;
         },
         unique: function unique(arr) {
-            return [].concat(_toConsumableArray(new Set(Craft.flatten(arr))));
+            return toArr(new Set(Craft.flatten(arr)));
         },
         /**
          * Flattens any multidimentional array or arraylike object
@@ -1628,7 +1589,7 @@ function _toConsumableArray(arr) {
          * @param {Array|Arraylike} arr - multidimentional array(like) object to flatten
          */
         flatten: function flatten(arr) {
-            return (is.Arraylike(arr) ? toArr(arr) : is.Array(arr) ? arr : []).reduce(function(flat, toFlatten) {
+            return (!is.Array(arr) && is.Arraylike(arr) ? Arrat.from(arr) : is.Array(arr) ? arr : []).reduce(function(flat, toFlatten) {
                 return flat.concat(is.Array(toFlatten) ? Craft.flatten(toFlatten) : toFlatten);
             }, []);
         },
@@ -1696,7 +1657,7 @@ function _toConsumableArray(arr) {
                 nestable = !1;
                 is.Array(object) ? currentPath += "[" + key + "]" : !currentPath ? currentPath = key : currentPath += '.' + key;
                 nestable = !!fn(val, key, object, currentPath);
-                if (nestable && (is.Arr(val) || is.Object(val))) Craft.forEachDeep(val, fn, currentPath);
+                if (nestable && (is.Array(val) || is.Object(val))) Craft.forEachDeep(val, fn, currentPath);
             }
         },
         /**
@@ -1709,9 +1670,9 @@ function _toConsumableArray(arr) {
          */
         concatObjects: function concatObjects(host) {
             forEach(Craft.omit(arguments, host), function(obj) {
-                forEach(Object.keys(obj), function(key) {
-                    Object.defineProperty(host, key, Object.getOwnPropertyDescriptor(obj, key));
-                });
+                for (var _key in obj) {
+                    Object.defineProperty(host, _key, Object.getOwnPropertyDescriptor(obj, _key));
+                }
             });
             return host;
         },
@@ -1985,7 +1946,7 @@ function _toConsumableArray(arr) {
                             return l == route;
                         })) func(route);
                     Craft.router.addHandle(route, func);
-                } else if (is.Arr(route)) route.forEach(function(link) {
+                } else if (is.Array(route)) forEach(route, function(link) {
                     if (Locs(function(l) {
                             return l == link;
                         })) func(link);
@@ -1997,12 +1958,12 @@ function _toConsumableArray(arr) {
             link: function link(Selector, _link, newtab, eventType) {
                 Craft.router.links.push(function() {
                     On(is.String(eventType) ? eventType : 'click', Selector, function(e) {
-                        newtab ? open(_link) : location = _link;
+                        Craft.router.open(_link, newtab);
                     });
                 });
             },
             open: (function(_open) {
-                function open(_x3, _x4) {
+                function open(_x2, _x3) {
                     return _open.apply(this, arguments);
                 }
                 open.toString = function() {
@@ -2062,11 +2023,10 @@ function _toConsumableArray(arr) {
                 return key ? new RegExp("(?:^|;\\s*)" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=").test(doc.cookie) : !1;
             },
             keys: function keys() {
-                var all = doc.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/);
-                forEach(all, function(c) {
+                return doc.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/).map(function(c) {
                     decodeURIComponent(c);
+                    return c;
                 });
-                return all;
             }
         },
         /**
@@ -2248,10 +2208,7 @@ function _toConsumableArray(arr) {
             return -1;
         },
         type: function type() {
-            for (var _len2 = arguments.length, types = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-                types[_key2] = arguments[_key2];
-            }
-            types = types.map(function(t) {
+            var types = toArr(arguments).map(function(t) {
                 return typeof t === "undefined" ? "undefined" : _typeof(t);
             });
             return types.length < 2 ? types[0] : types;
@@ -2399,7 +2356,7 @@ function _toConsumableArray(arr) {
             return URL.createObjectURL(new Blob([text]));
         },
         OnScroll: function OnScroll(element, func) {
-            is.Func(func) ? On('scroll', element, function(e) {
+            return is.Func(func) ? On('scroll', element, function(e) {
                 func(e.deltaY < 1, e);
             }) : console.error('no function');
         },
@@ -2562,45 +2519,20 @@ function _toConsumableArray(arr) {
                 settings = {},
                 dm = undefined;
             element.createdCallback = function() {
-                var keys = Object.keys(config),
-                    el = dom(this);
-                var _loop = function _loop(i, _key4) {
-                    _key4 = keys[i];
-                    if (!['attr', 'created', 'destroyed', 'extends', 'inserted'].every(function(e) {
-                            return e != _key4;
-                        }) && _key4.includes('css') && _key4.length == 3) return "continue";
-                    var obj = Object.getOwnPropertyDescriptor(config, _key4);
-                    if (is.Func(obj.get) || is.Func(obj.set)) {
-                        if (!is.Func(obj.get)) obj.get = function() {
-                            return ud;
-                        };
-                        if (!is.Func(obj.set)) obj.set = function(x) {};
-                        el.newSetGet(_key4, obj.get.bind(el), obj.set.bind(el));
-                        delete config[_key4];
-                    } else if (!is.Func(obj.value)) {
-                        Object.defineProperty(element, _key4, obj);
-                        delete config[_key4];
-                    }
-                    _key3 = _key4;
-                };
-                for (var _key3, i = 0; i < keys.length; i++) {
-                    var _ret4 = _loop(i, _key3);
-                    if (_ret4 === "continue") continue;
-                }
-                if (is.Func(config['created'])) config['created'].call(el);
+                if (is.Func(config['created'])) config['created'].call(dom(this));
             };
-            var _loop2 = function _loop2(_key5) {
-                if (_key5 === 'created') return "continue";
-                if (is.Func(config[_key5])) { // Adds dom methods to element
+            var _loop = function _loop(_key2) {
+                if (_key2 === 'created') return "continue";
+                if (is.Func(config[_key2])) { // Adds dom methods to element
                     dm = function dm() {
-                        config[_key5].call(dom(this));
+                        config[_key2].call(dom(this));
                     };
                 }
-                _key5 == 'inserted' ? element.attachedCallback = dm : _key5 == 'destroyed' ? element.detachedCallback = dm : _key5 == 'attr' ? element.attributeChangedCallback = dm : _key5 == 'extends' ? settings.extends = config.extends : _key5.includes('css') && _key5.length == 3 ? Craft.addCSS(config[_key5]) : is.Func(config[_key5]) ? element[_key5] = dm : ud;
+                _key2 == 'inserted' ? element.attachedCallback = dm : _key2 == 'destroyed' ? element.detachedCallback = dm : _key2 == 'attr' ? element.attributeChangedCallback = dm : _key2 == 'extends' ? settings.extends = config.extends : _key2.includes('css') && _key2.length == 3 ? Craft.addCSS(config[_key2]) : is.Func(config[_key2]) ? element[_key2] = dm : Object.defineProperty(element, _key2, Object.getOwnPropertyDescriptor(config, _key2));
             };
-            for (var _key5 in config) {
-                var _ret5 = _loop2(_key5);
-                if (_ret5 === "continue") continue;
+            for (var _key2 in config) {
+                var _ret4 = _loop(_key2);
+                if (_ret4 === "continue") continue;
             }
             settings['prototype'] = element;
             doc.registerElement(tag, settings);
@@ -2658,16 +2590,16 @@ function _toConsumableArray(arr) {
         try {
             var cutbind = cutdot(bind),
                 prop = cutbind[cutbind.length - 1],
-                _obj = is.Def(Craft.Models[cutbind[0]]) ? Craft.Models[cutbind[0]].scope : Craft.getDeep(root, joindot(Craft.omit(cutbind, prop))) || Craft.Scope,
-                val = Craft.getDeep(_obj, cutbind.length > 1 ? joindot(Craft.omit(cutbind, cutbind[0])) : prop);
-            is.Def(val) ? el.html(val) : Craft.setDeep(_obj, prop, el.html());
-            if (is.Def(Object.getOwnPropertyDescriptor(_obj, 'addListener')) && !is.Func(el._BL)) {
+                obj = is.Def(Craft.Models[cutbind[0]]) ? Craft.Models[cutbind[0]].scope : Craft.getDeep(root, joindot(Craft.omit(cutbind, prop))) || Craft.Scope,
+                val = Craft.getDeep(obj, cutbind.length > 1 ? joindot(Craft.omit(cutbind, cutbind[0])) : prop);
+            is.Def(val) ? el.html(val) : Craft.setDeep(obj, prop, el.html());
+            if (is.Def(Object.getOwnPropertyDescriptor(obj, 'addListener')) && !is.Func(el._BL)) {
                 el._BL = function(o, n, v) {
                     el.html(v);
                 };
-                _obj.addListener(prop, el);
+                obj.addListener(prop, el);
             }
-            if (is.Input(el)) el.SyncInput(_obj, cutbind.length == 1 ? cutbind[0] : joindot(Craft.omit(cutbind, cutbind[0])));
+            if (is.Input(el)) el.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : joindot(Craft.omit(cutbind, cutbind[0])));
         } catch (e) {
             console.warn("couldn't bind :", el);
         }

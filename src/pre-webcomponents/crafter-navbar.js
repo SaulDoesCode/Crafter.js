@@ -43,7 +43,7 @@ Craft.newComponent('crafter-navbar', {
     },
     destroyed() {
         this.Click.Off;
-        this.Wheel.Off;
+        this.Wheel.Off
     }
 });
 
