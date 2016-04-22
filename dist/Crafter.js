@@ -848,17 +848,21 @@ function _typeof(obj) {
     root.Once = EvtLT('Once');
 
     function craftElement(name, inner, attributes, extraAttr, stringForm) {
-        if (is.False(is.String(inner), is.Node(inner), is.Num(inner), is.Array(inner))) {
-            if (is.Object(inner)) {
-                attributes = inner;
-                inner = '';
-            } else inner = is.Func(inner) ? inner() : '';
+        var newEl = domManip(doc.createElement(name));
+        if (is.Object(inner)) {
+            attributes = inner;
+            inner = ud;
         }
-        var newEl = dom(doc.createElement(name));
-        newEl.html.apply(this, is.Array(inner) ? inner : [inner]);
+        if (inner != ud) {
+            var _type = newEl.isInput ? 'value' : 'innerHTML';
+            if (!is.Array(inner)) is.Node(inner) ? newEl.appendChild(inner) : newEl[_type] = inner;
+            else newEl[_type] = inner.map(function(val) {
+                if (is.Node(val)) newEl.append(val);
+                else return val;
+            }).join('');
+        }
         if (is.Object(attributes) || is.String(attributes)) newEl.setAttr(attributes);
-        if (is.Def(extraAttr)) newEl.setAttr(extraAttr);
-        if (is.Bool(extraAttr)) stringForm = extraAttr;
+        if (extraAttr != ud) is.Bool(extraAttr) ? stringForm = extraAttr : newEl.setAttr(extraAttr);
         if (stringForm) newEl = newEl.outerHTML;
         return newEl;
     }
@@ -881,7 +885,7 @@ function _typeof(obj) {
          * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
          */
         elements.css = function(styles) {
-            is.Def(styles) ? forEach(elements, function(el) {
+            styles != ud ? forEach(elements, function(el) {
                 forEach(styles, function(prop, key) {
                     el.style[key] = prop;
                 });
@@ -1001,12 +1005,13 @@ function _typeof(obj) {
     }
 
     function Inner(type, el) {
+        type = el.isInput ? 'value' : type;
         return function() {
             var args = toArr(arguments);
-            type = is.Input(el) ? 'value' : type;
             if (args.length == 0) return el[type];
             args.length == 1 ? is.Node(args[0]) ? el.append(args[0]) : el[type] = args[0] : el[type] = args.map(function(val) {
-                return is.Node(val) ? val.outerHTML : val;
+                if (is.Node(val)) el.append(val);
+                else return val;
             }).join('');
             return el;
         };
@@ -1019,6 +1024,7 @@ function _typeof(obj) {
         if (is.String(element)) element = query(element, within);
         if (element.hasDOMmethods == !0) return element;
         element.hasDOMmethods = !0;
+        element.isInput = is.Input(element);
         element.newSetGet = function(key, set, get) {
             Object.defineProperty(this, key, {
                 set: set,
@@ -1043,7 +1049,7 @@ function _typeof(obj) {
          * @param {Node} Node to replace with
          */
         element.replace = function(val) {
-            this.parentNode.replaceChild(val, element);
+            element.parentNode.replaceChild(val, element);
             return element;
         };
         /**
@@ -1326,7 +1332,7 @@ function _typeof(obj) {
          * @param {string|number=} pixel value to set
          */
         element.newSetGet('Height', function(pixels) {
-            if (is.Def(pixels)) element.style.height = pixels;
+            if (pixels != ud) element.style.height = pixels;
         }, function() {
             return element.getRect().height;
         });
@@ -1368,7 +1374,7 @@ function _typeof(obj) {
         element.queryAll = function(selector) {
             return queryAll(selector, element);
         };
-        if (is.Input(element)) {
+        if (element.isInput) {
             element.SyncInput = function(obj, key) {
                 element[sI] = On(element).Input(function(e) {
                     Craft.setDeep(obj, key, element.value);
@@ -2408,8 +2414,8 @@ function _typeof(obj) {
         fromModel: function fromModel(key, val) {
             var cutkey = cutdot(key);
             if (is.Def(Craft.Models[cutkey[0]])) {
-                var _type = (is.Def(val) ? 'set' : 'get') + 'Deep';
-                return cutkey.length === 1 && !is.Def(val) ? Craft.Models[cutkey[0]].scope : Craft[_type](Craft.Models[cutkey[0]].scope, joindot(Craft.omit(cutkey, cutkey[0])), val);
+                var _type2 = (is.Def(val) ? 'set' : 'get') + 'Deep';
+                return cutkey.length === 1 && !is.Def(val) ? Craft.Models[cutkey[0]].scope : Craft[_type2](Craft.Models[cutkey[0]].scope, joindot(Craft.omit(cutkey, cutkey[0])), val);
             }
         },
         /**

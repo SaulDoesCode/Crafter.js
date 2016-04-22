@@ -112,14 +112,11 @@ Craft.newComponent('check-box', {
         el.check = el.Click(el.toggle.bind(el));
         el.newSetGet('value', val => {
             el.toggleAttr('checked', val);
-            if (is.Func(el.func)) el.func(el.value);
+            if (is.Func(el.oncheck)) el.oncheck(el.value);
         }, () => el.hasAttr('checked'));
     },
     toggle(val) {
         this.value = is.Bool(val) ? val : !this.value
-    },
-    OnCheck(func) {
-        if (is.Func(func)) this.func = func
     },
     destroyed() {
         this.check.Off

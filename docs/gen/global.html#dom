@@ -38,13 +38,6 @@
 			</li>
 			
 			<li class="dropdown">
-				<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b class="caret"></b></a>
-				<ul class="dropdown-menu ">
-					<li><a href="EventHandler.html">EventHandler</a></li>
-				</ul>
-			</li>
-			
-			<li class="dropdown">
 				<a href="global.html" class="dropdown-toggle" data-toggle="dropdown">Global<b class="caret"></b></a>
 				<ul class="dropdown-menu ">
 					<li><a href="global.html#BoolTestifsomethingisabooleantype">Bool
@@ -1266,137 +1259,6 @@ Test if something is a boolean type</a></li><li><a href="global.html#import">imp
             
 
             <td class="description last"><p>of attributes to check for</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-    
-
-    
-<dl class="details">
-    
-
-	
-
-	
-
-	
-
-    
-
-    
-
-    
-
-    
-
-	
-
-	
-
-	
-
-	
-
-	
-
-
-
-	
-
-	
-
-	
-
-	
-</dl>
-
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</dd>
-
-        
-            
-<hr>
-<dt>
-    <h4 class="name" id=".element.Height"><span class="type-signature">&lt;static> </span>element.Height(pixel)</h4>
-    
-    
-</dt>
-<dd>
-
-    
-    <div class="description">
-        <p>sets or gets the element's pixel height</p>
-    </div>
-    
-
-    
-
-    
-
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params table table-striped">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>pixel</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-|
-
-<span class="param-type">number</span>
-
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>value to set</p></td>
         </tr>
 
     
@@ -2792,7 +2654,7 @@ Test if something is a boolean type</a></li><li><a href="global.html#import">imp
             
 <hr>
 <dt>
-    <h4 class="name" id=".element.Width"><span class="type-signature">&lt;static> </span>element.Width(pixel)</h4>
+    <h4 class="name" id=".elements.hasAttr"><span class="type-signature">&lt;static> </span>elements.hasAttr(name, names)</h4>
     
     
 </dt>
@@ -2800,7 +2662,182 @@ Test if something is a boolean type</a></li><li><a href="global.html#import">imp
 
     
     <div class="description">
-        <p>sets or gets the element's pixel width</p>
+        <p>checks if the element has a specific Attribute or Attributes</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>name</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+|
+
+<span class="param-type">boolean</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>of the Attribute or if true checks that it has some (||) of the attributes or if false checks that it has all of the attributes (&amp;&amp;)</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>names</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                    &lt;repeatable><br>
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>of attributes to check for</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id=".elements.setAttr"><span class="type-signature">&lt;static> </span>elements.setAttr(Name, Value)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>Sets or adds an Attribute on the element</p>
     </div>
     
 
@@ -2835,16 +2872,13 @@ Test if something is a boolean type</a></li><li><a href="global.html#import">imp
 
         <tr>
             
-                <td class="name"><code>pixel</code></td>
+                <td class="name"><code>Name</code></td>
             
 
             <td class="type">
             
                 
 <span class="param-type">string</span>
-|
-
-<span class="param-type">number</span>
 
 
 
@@ -2855,7 +2889,171 @@ Test if something is a boolean type</a></li><li><a href="global.html#import">imp
 
             
 
-            <td class="description last"><p>value to set</p></td>
+            <td class="description last"><p>of the Attribute to add/set</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>Value</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>of the Attribute to add/set</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+    
+
+    
+<dl class="details">
+    
+
+	
+
+	
+
+	
+
+    
+
+    
+
+    
+
+    
+
+	
+
+	
+
+	
+
+	
+
+	
+
+
+
+	
+
+	
+
+	
+
+	
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+<hr>
+<dt>
+    <h4 class="name" id=".elements.stripAttr"><span class="type-signature">&lt;static> </span>elements.stripAttr(name)</h4>
+    
+    
+</dt>
+<dd>
+
+    
+    <div class="description">
+        <p>removes a specific Attribute from the this.element</p>
+    </div>
+    
+
+    
+
+    
+
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params table table-striped">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Argument</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>name</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                    &lt;repeatable><br>
+                
+                </td>
+            
+
+            
+
+            <td class="description last"><p>of the Attribute/s to strip</p></td>
         </tr>
 
     
@@ -3611,7 +3809,7 @@ Test if something is a boolean type</a></li><li><a href="global.html#import">imp
 <span class="jsdoc-message">
 	Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a>
 	
-		on March 24th 2016, 7:30:15 pm
+		on April 22nd 2016, 6:11:55 am
 	
 	using the <a href="https://github.com/docstrap/docstrap">DocStrap template</a>.
 </span>

@@ -694,17 +694,21 @@
     root.Once = EvtLT('Once');
 
     function craftElement(name, inner, attributes, extraAttr, stringForm) {
-        if (is.False(is.String(inner), is.Node(inner), is.Num(inner), is.Array(inner))) {
-            if (is.Object(inner)) {
-                attributes = inner;
-                inner = '';
-            } else inner = is.Func(inner) ? inner() : ''
+        let newEl = domManip(doc.createElement(name));
+        if (is.Object(inner)) {
+            attributes = inner;
+            inner = ud;
         }
-        let newEl = dom(doc.createElement(name));
-        newEl.html.apply(this, is.Array(inner) ? inner : [inner]);
+        if (inner != ud) {
+            let type = newEl.isInput ? 'value' : 'innerHTML';
+            if (!is.Array(inner)) is.Node(inner) ? newEl.appendChild(inner) : newEl[type] = inner;
+            else newEl[type] = inner.map(val => {
+                if (is.Node(val)) newEl.append(val);
+                else return val
+            }).join('');
+        }
         if (is.Object(attributes) || is.String(attributes)) newEl.setAttr(attributes);
-        if (is.Def(extraAttr)) newEl.setAttr(extraAttr);
-        if (is.Bool(extraAttr)) stringForm = extraAttr;
+        if (extraAttr != ud) is.Bool(extraAttr) ? stringForm = extraAttr : newEl.setAttr(extraAttr);
         if (stringForm) newEl = newEl.outerHTML;
         return newEl
     }
@@ -726,7 +730,7 @@
          * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
          */
         elements.css = function(styles) {
-            is.Def(styles) ? forEach(elements, el => {
+            styles != ud ? forEach(elements, el => {
                 forEach(styles, (prop, key) => {
                     el.style[key] = prop
                 })
@@ -837,11 +841,14 @@
     }
 
     function Inner(type, el) {
+        type = el.isInput ? 'value' : type;
         return function() {
             let args = toArr(arguments);
-            type = is.Input(el) ? 'value' : type;
             if (args.length == 0) return el[type];
-            args.length == 1 ? is.Node(args[0]) ? el.append(args[0]) : el[type] = args[0] : el[type] = args.map(val => is.Node(val) ? val.outerHTML : val).join('');
+            args.length == 1 ? is.Node(args[0]) ? el.append(args[0]) : el[type] = args[0] : el[type] = args.map(val => {
+                if (is.Node(val)) el.append(val);
+                else return val
+            }).join('');
             return el;
         }
     }
@@ -854,6 +861,7 @@
         if (is.String(element)) element = query(element, within);
         if (element.hasDOMmethods == !0) return element;
         element.hasDOMmethods = !0;
+        element.isInput = is.Input(element);
 
         element.newSetGet = function(key, set, get) {
                 Object.defineProperty(this, key, {
@@ -880,8 +888,8 @@
          * @memberof dom
          * @param {Node} Node to replace with
          */
-        element.replace = function(val) {
-                this.parentNode.replaceChild(val, element);
+        element.replace = val => {
+                element.parentNode.replaceChild(val, element);
                 return element
             }
             /**
@@ -1110,7 +1118,7 @@
          * @param {string|number=} pixel value to set
          */
         element.newSetGet('Height', pixels => {
-            if (is.Def(pixels)) element.style.height = pixels
+            if (pixels != ud) element.style.height = pixels
         }, () => element.getRect().height);
         /**
          * move the element using either css transforms or plain css possitioning
@@ -1147,7 +1155,7 @@
          */
         element.queryAll = selector => queryAll(selector, element);
 
-        if (is.Input(element)) {
+        if (element.isInput) {
             element.SyncInput = (obj, key) => {
                 element[sI] = On(element).Input(e => {
                     Craft.setDeep(obj, key, element.value)
@@ -1365,7 +1373,8 @@
          * @memberof Craft
          * @param {Array|Arraylike} arr - multidimentional array(like) object to flatten
          */
-        flatten: arr => (!is.Array(arr) && is.Arraylike(arr) ? Arrat.from(arr) : is.Array(arr) ? arr : []).reduce((flat, toFlatten) => flat.concat(is.Array(toFlatten) ? Craft.flatten(toFlatten) : toFlatten), []),
+        flatten: arr => (!is.Array(arr) && is.Arraylike(arr) ? Arrat.from(arr) : is.Array(arr) ? arr : [])
+            .reduce((flat, toFlatten) => flat.concat(is.Array(toFlatten) ? Craft.flatten(toFlatten) : toFlatten), []),
         /**
          * Gets a value from inside an object using a reference string
          * @method getDeep

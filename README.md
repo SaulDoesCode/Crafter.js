@@ -6,6 +6,7 @@ Crafter.js is still very W.I.P , so tread carefully
 ## Crafter.js makes use of
 - Promises
 - Fetch API
+- Proxy
 - ES6
 - Animation API
 - WebComponents
@@ -39,8 +40,23 @@ Crafter.js uses Babel to ensure compatibility on older browsers
 
 ### Crafter Code Example
 
+create elements on the fly with ease using the ``dom()`` method!
 ```javascript
-  // WhenReady returns a promise when the DOM and WebComponents has loaded
+
+   let div = dom().div('The Div that haunts your dreams',{ class : 'fancy-div' , bind : 'model.hauntingDiv'});
+   // div -> <div class="fancy-div" bind="model.hauntingDiv"> The Div that haunts your dreams </div>
+
+   div.Click(evt => div.toggleClass('anim-wiggle'));
+
+   div
+   .prepend(dom().span({class : 'icon-haunting-div'}))
+   .appendTo(document.body);
+
+
+```
+
+```javascript
+  // WhenReady generates a promise when the DOM and WebComponents has loaded
   Craft.WhenReady.then(() => {
 
     queryEach('.menu-items',element => On('click',element,ev => dom('.page-view').append(dom().span('Hello!')));
