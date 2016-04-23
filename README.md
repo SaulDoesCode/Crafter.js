@@ -68,6 +68,8 @@ create elements on the fly with ease using the ``dom()`` method!
     // make div , span and other elements via dom()
     // add attributes with an object { title : 'x' , id : 'mydiv' }
     dom().div('New div',{ class : 'page-element'}) // -> `<div class="page-element">New div</div>`
+    // dom.e() is a short-hand method to create elements
+    dom().el('div(class=page-element) New div') // -> `<div class="page-element">New div</div>`
 
     // for less common elements or custom elements use dom().element
     // you could also add attributes URI style

@@ -33,7 +33,12 @@
         return [location.hash, location.href, location.pathname].some(test)
     }
 
-    function docfragFromString(html) {
+    function last(arr) {
+        return arr[arr.length - 1];
+    }
+
+    // document , fragment , from , string -   dffstr
+    function dffstr(html) {
         return doc.createRange().createContextualFragment(html)
     }
 
@@ -499,7 +504,7 @@
         this.state = !1;
         this.Target = (Target !== root && Target !== doc) ? NodeOrQuerytoArr(Target, Within) : [Target];
         this.FuncWrapper = e => {
-            func(e, e.srcElement);
+            func(e, e.target, Craft.deglove(this.Target));
         }
         if (is.String(EventType) && EventType.includes(',')) this.EventType = EventType.split(',');
         if (!is.Array(this.EventType)) this.EventType = [this.EventType];
@@ -715,9 +720,12 @@
 
     function domNodeList(elements) {
 
+
+
         forEach(Object.getOwnPropertyNames(Array.prototype), method => {
             if (method != "length") elements[method] = Array.prototype[method];
         });
+
         /**
          * Listen for Events on the NodeList
          * @param {string} string indicating the type of event to listen for
@@ -817,15 +825,22 @@
         elements.append = function() {
             forEach(arguments, val => {
                 forEach(elements, el => {
-                    el.appendChild((is.Node(val) ? val : docfragFromString(val)).cloneNode(!0))
+                    el.appendChild((is.Node(val) ? val : dffstr(val)).cloneNode(!0))
                 })
+            });
+            return elements
+        }
+        elements.appendTo = function(val,within) {
+            forEach(elements,el => {
+              if (is.String(val)) val = query(val, within);
+              if (is.Node(val)) val.appendChild(el);
             });
             return elements
         }
         elements.prepend = function() {
             forEach(arguments, val => {
                 forEach(elements, el => {
-                    el.insertBefore(W(is.Node(val), val, docfragFromString(val)).cloneNode(!0), el.firstChild)
+                    el.insertBefore(W(is.Node(val), val, dffstr(val)).cloneNode(!0), el.firstChild)
                 })
             });
             return elements
@@ -893,10 +908,16 @@
                 return element
             }
             /**
-             * append the Element to another node using either a CSS selector or a Node
+             * replaces a Node with another node provided as a parameter/argument
              * @memberof dom
-             * @param {Node|string} CSS selector or Node to append the this.element to
+             * @param {Node} Node to replace with
              */
+        element.clone = val => domManip(element.cloneNode(val == ud ? !0 : val));
+        /**
+         * append the Element to another node using either a CSS selector or a Node
+         * @memberof dom
+         * @param {Node|string} CSS selector or Node to append the this.element to
+         */
         element.appendTo = function(val, within) {
                 if (is.String(val)) val = query(val, within);
                 if (is.Node(val)) val.appendChild(element);
@@ -908,9 +929,11 @@
              * @param {Node|string} String or Node to append to the this.element
              */
         element.append = function() {
+                let domfrag = dom().frag();
                 forEach(arguments, val => {
-                    element.appendChild(is.Node(val) ? val : docfragFromString(val))
+                    domfrag.appendChild(is.Node(val) ? val : dffstr(val))
                 });
+                element.appendChild(domfrag);
                 return element
             }
             /**
@@ -920,7 +943,7 @@
              */
         element.prepend = function() {
                 forEach(arguments, val => {
-                    element.insertBefore(is.Node(val) ? val : docfragFromString(val), element.firstChild)
+                    element.insertBefore(is.Node(val) ? val : dffstr(val), element.firstChild)
                 });
                 return element
             }
@@ -967,7 +990,7 @@
          * @memberof dom
          * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
          */
-        element.css = function(styles) {
+        element.css = styles => {
                 if (styles == ud) throw new Error('Style properties undefined')
                 for (let style in styles) element.style[style] = styles[style];
                 return element
@@ -1206,6 +1229,7 @@
         if (!one) {
             if (is.String(element)) element = queryAll(element, within);
             if (is.NodeList(element)) {
+                element = element.filter(el => is.Def(el.setAttribute))
                 if (element.length !== 1) return domNodeList(element);
                 else element = element[0]
             }
@@ -1222,6 +1246,11 @@
             value: [],
             enumerable: !1,
         });
+        Object.defineProperty(obj, 'isObservable', {
+            value: true,
+            writable : !1,
+            enumerable: !1,
+        });
         Object.defineProperty(obj, 'removeListener', {
             value: fn => {
                 obj.listeners = obj.listeners.filter(l => {
@@ -1231,7 +1260,7 @@
             enumerable: !1,
         });
         Object.defineProperty(obj, 'addListener', {
-            value: function(prop, func) {
+            value(prop, func) {
                 if (is.Func(prop) || is.Node(prop)) {
                     func = prop;
                     prop = '*';
@@ -1307,21 +1336,23 @@
                 removed: removed
             }
         },
+        deglove: arr => is.Arraylike(arr) && arr.length == 1 ? arr[0] : arr,
+        last,
         /**
          * Splits a string at dots "."
          * @method cutdot
          * @memberof Craft
          * @param {string} str - string to split at the dots
          */
-        cutdot: cutdot,
+        cutdot,
         /**
          * joins a string array with dots "."
          * @method joindot
          * @memberof Craft
          * @param {Array|Arraylike} arr - array to join with dots
          */
-        joindot: joindot,
-        docfragFromString: docfragFromString,
+        joindot,
+        dffstr,
         /**
          * Compares two arrays and determines if they are the same array
          * @method sameArray
@@ -1452,6 +1483,7 @@
             });
             return host
         },
+        isObservable: obj => obj.isObservable === true,
         /**
          * Simply clones/duplicates any object or array/arraylike object
          * @method clone
@@ -1500,6 +1532,30 @@
          */
         dom: {
             element: craftElement,
+            frag(inner) {
+                let dfrag = doc.createDocumentFragment();
+                if (is.String(inner)) inner = dffstr(inner);
+                if (is.Node(inner)) dfrag.appendChild(dfrag);
+                return dfrag;
+            },
+            el(Str, attrs) {
+                let str = Craft.omit(Str.split(/(^([a-zA-Z-_]*)\((.*)\)\S?([\s\S]*)$)/igm), Str, ""),
+                    tag, inner;
+                if (!is.Object(attrs)) attrs = {};
+                if (!is.empty(str)) {
+                    let attr = str[1];
+                    inner = str[2] || '';
+                    attr = attr.split(',,');
+                    forEach(attr, v => {
+                        v = v.split('=');
+                        attrs[v[0]] = v[1];
+                    });
+                } else {
+                    str = Craft.omit(Str.split(/^([a-zA-Z-_]*)\s([\s\S]*)$/igm), Str, "")
+                    inner = str[1];
+                }
+                return craftElement(str[0], inner, attrs)
+            },
             /**
              * creates a div element with the options provided
              * @method div
@@ -1586,7 +1642,7 @@
             table: (rows, attr) => craftElement('table', rows, attr),
             SafeHTML(html, node) {
                 html = html.replace(/<script[^>]*?>.*?<\/script>/gi, '').replace(/<style[^>]*?>.*?<\/style>/gi, '').replace(/<![\s\S]*?--[ \t\n\r]*>/gi, '');
-                return !node ? html : docfragFromString(html)
+                return !node ? html : dffstr(html)
             },
         },
         Browser: {
@@ -1923,19 +1979,18 @@
             years: (n) => n * Craft.millis.days(365),
         },
         CustomAttributes: [],
-        Scope: observable(),
         Models: observable(),
         tabActive: !0,
         /**
          * Convert Arraylike variables to Array
          * {...*} val - arraylike variable to convert to array
          */
-        toArr: toArr,
+        toArr,
         /**
          * Convert numbers to integers
          * {number|string} val - number to convert to an integer
          */
-        toInt: toInt,
+        toInt,
         /**
          * Tail Call Optimization for recursive functional functions
          * @param fn - function that uses recursion inside
@@ -2049,9 +2104,9 @@
         model(name, func, imediate) {
             if (is.Func(func) && is.String(name)) {
                 if (!is.Def(Craft.Models[name])) Craft.Models[name] = {
-                    func: func,
-                    scope: Craft.observable({}),
-                    imediate: imediate || false
+                    func,
+                    scope : observable(),
+                    imediate: imediate || !1
                 }
             }
         },
@@ -2061,6 +2116,25 @@
                 let type = (is.Def(val) ? 'set' : 'get') + 'Deep';
                 return cutkey.length === 1 && !is.Def(val) ? Craft.Models[cutkey[0]].scope :
                     Craft[type](Craft.Models[cutkey[0]].scope, joindot(Craft.omit(cutkey, cutkey[0])), val)
+            }
+        },
+        getPath(path, full) {
+            try {
+                let cutbind = cutdot(path),
+                    prop = last(cutbind),
+                    obj = is.Def(Craft.Models[cutbind[0]]) ? Craft.Models[cutbind[0]].scope : Craft.getDeep(root, joindot(Craft.omit(cutbind, prop))),
+                    val = Craft.getDeep(obj, cutbind.length > 1 ? joindot(Craft.omit(cutbind, cutbind[0])) : prop);
+                if(full) return {
+                    cutbind,
+                    prop,
+                    obj,
+                    val
+                };
+                if (is.Def(val)) return val;
+                if (!full && cutbind[0] === prop && is.Def(obj)) return obj;
+            } catch (e) {
+                console.log(e);
+                return
             }
         },
         /**
@@ -2221,12 +2295,6 @@
         Craft.tabActive = !0
     }
 
-    Craft.Models.addListener((o, key, model, isnew) => {
-        if (isnew) Ready || model.imediate ? model.func(model.scope) : Craft.WhenReady.then(() => {
-            model.func(model.scope)
-        });
-    });
-
     Craft.curry.to = Craft.curry((arity, fn) => makeFn(fn, [], arity));
     Craft.curry.adaptTo = Craft.curry((num, fn) => Craft.curry.to(num, function(context) {
         fn.apply(null, Craft.omit(arguments, context).slice(1).concat(context))
@@ -2236,30 +2304,37 @@
 
 
     Craft.customAttribute('link', (el, link) => {
-        On(el).Click(e => {
+        el.linkevt = On(el).Click(e => {
             (el.hasAttr('newtab') ? open : Craft.router.open)(link)
         })
     });
 
-    Craft.customAttribute('bind', (el, bind) => {
+    Craft.customAttribute('bind', (element, bind) => {
         try {
-            let cutbind = cutdot(bind),
+            /*let cutbind = cutdot(bind),
                 prop = cutbind[cutbind.length - 1],
-                obj = is.Def(Craft.Models[cutbind[0]]) ? Craft.Models[cutbind[0]].scope : Craft.getDeep(root, joindot(Craft.omit(cutbind, prop))) || Craft.Scope,
-                val = Craft.getDeep(obj, cutbind.length > 1 ? joindot(Craft.omit(cutbind, cutbind[0])) : prop);
+                obj = is.Def(Craft.Models[cutbind[0]]) ? Craft.Models[cutbind[0]].scope : Craft.getDeep(root, joindot(Craft.omit(cutbind, prop))),
+                val = Craft.getDeep(obj, cutbind.length > 1 ? joindot(Craft.omit(cutbind, cutbind[0])) : prop);*/
+            let {
+                cutbind,
+                prop,
+                obj,
+                val
+            } = Craft.getPath(bind, true, true);
 
-            is.Def(val) ? el.html(val) : Craft.setDeep(obj, prop, el.html());
 
-            if (is.Def(Object.getOwnPropertyDescriptor(obj, 'addListener')) && !is.Func(el._BL)) {
-                el._BL = (o, n, v) => {
-                    el.html(v)
+            is.Def(val) ? element.html(val) : Craft.setDeep(obj, prop, element.html());
+
+            if (is.Def(Object.getOwnPropertyDescriptor(obj, 'addListener')) && !is.Func(element._BL)) {
+                element._BL = (o, n, v) => {
+                    element.html(v)
                 }
 
-                obj.addListener(prop, el);
+                obj.addListener(prop, element);
             }
-            if (is.Input(el)) el.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : joindot(Craft.omit(cutbind, cutbind[0])))
+            if (element.isInput) element.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : joindot(Craft.omit(cutbind, cutbind[0])))
         } catch (e) {
-            console.warn("couldn't bind :", el)
+            console.warn("couldn't bind : ", element)
         }
     });
 
@@ -2277,7 +2352,14 @@
         }
     }
 
-    root.onload = e => {
+    Craft.Models.addListener((o, key, model, isnew) => {
+        if (isnew) Ready || model.imediate ? model.func(model.scope) : Craft.WhenReady.then(() => {
+            model.func(model.scope)
+        });
+    });
+
+
+    Once('DOMContentLoaded', doc, e => {
         forEach(Craft.router.links, link => {
             link()
         });
@@ -2296,12 +2378,12 @@
 
         });
         Ready = !0
-    }
+    });
 
-    root.onhashchange = () => {
+    On('hashchange', () => {
         forEach(Craft.router.handlers, handle => {
             if (Locs(l => l == handle.link)) handle.func(location.hash)
         })
-    }
+    });
 
 })(document, self)

@@ -37,7 +37,10 @@ function _typeof(obj) {
         return [location.hash, location.href, location.pathname].some(test);
     }
 
-    function docfragFromString(html) {
+    function last(arr) {
+        return arr[arr.length - 1];
+    } // document , fragment , from , string -   dffstr
+    function dffstr(html) {
         return doc.createRange().createContextualFragment(html);
     }
 
@@ -609,11 +612,12 @@ function _typeof(obj) {
      * @returns Interface On,Off,Once
      */
     function eventHandler(EventType, Target, func, Within) {
+        var _this = this;
         this.EventType = EventType || 'click';
         this.state = !1;
         this.Target = Target !== root && Target !== doc ? NodeOrQuerytoArr(Target, Within) : [Target];
         this.FuncWrapper = function(e) {
-            func(e, e.srcElement);
+            func(e, e.target, Craft.deglove(_this.Target));
         };
         if (is.String(EventType) && EventType.includes(',')) this.EventType = EventType.split(',');
         if (!is.Array(this.EventType)) this.EventType = [this.EventType];
@@ -978,15 +982,22 @@ function _typeof(obj) {
         elements.append = function() {
             forEach(arguments, function(val) {
                 forEach(elements, function(el) {
-                    el.appendChild((is.Node(val) ? val : docfragFromString(val)).cloneNode(!0));
+                    el.appendChild((is.Node(val) ? val : dffstr(val)).cloneNode(!0));
                 });
+            });
+            return elements;
+        };
+        elements.appendTo = function(val, within) {
+            forEach(elements, function(el) {
+                if (is.String(val)) val = query(val, within);
+                if (is.Node(val)) val.appendChild(el);
             });
             return elements;
         };
         elements.prepend = function() {
             forEach(arguments, function(val) {
                 forEach(elements, function(el) {
-                    el.insertBefore(W(is.Node(val), val, docfragFromString(val)).cloneNode(!0), el.firstChild);
+                    el.insertBefore(W(is.Node(val), val, dffstr(val)).cloneNode(!0), el.firstChild);
                 });
             });
             return elements;
@@ -1053,6 +1064,14 @@ function _typeof(obj) {
             return element;
         };
         /**
+         * replaces a Node with another node provided as a parameter/argument
+         * @memberof dom
+         * @param {Node} Node to replace with
+         */
+        element.clone = function(val) {
+            return domManip(element.cloneNode(val == ud ? !0 : val));
+        };
+        /**
          * append the Element to another node using either a CSS selector or a Node
          * @memberof dom
          * @param {Node|string} CSS selector or Node to append the this.element to
@@ -1068,9 +1087,11 @@ function _typeof(obj) {
          * @param {Node|string} String or Node to append to the this.element
          */
         element.append = function() {
+            var domfrag = dom().frag();
             forEach(arguments, function(val) {
-                element.appendChild(is.Node(val) ? val : docfragFromString(val));
+                domfrag.appendChild(is.Node(val) ? val : dffstr(val));
             });
+            element.appendChild(domfrag);
             return element;
         };
         /**
@@ -1080,7 +1101,7 @@ function _typeof(obj) {
          */
         element.prepend = function() {
             forEach(arguments, function(val) {
-                element.insertBefore(is.Node(val) ? val : docfragFromString(val), element.firstChild);
+                element.insertBefore(is.Node(val) ? val : dffstr(val), element.firstChild);
             });
             return element;
         };
@@ -1423,6 +1444,9 @@ function _typeof(obj) {
         if (!one) {
             if (is.String(element)) element = queryAll(element, within);
             if (is.NodeList(element)) {
+                element = element.filter(function(el) {
+                    return is.Def(el.setAttribute);
+                });
                 if (element.length !== 1) return domNodeList(element);
                 else element = element[0];
             }
@@ -1436,6 +1460,11 @@ function _typeof(obj) {
         obj = obj || {};
         Object.defineProperty(obj, 'listeners', {
             value: [],
+            enumerable: !1
+        });
+        Object.defineProperty(obj, 'isObservable', {
+            value: !0,
+            writable: !1,
             enumerable: !1
         });
         Object.defineProperty(obj, 'removeListener', {
@@ -1522,6 +1551,10 @@ function _typeof(obj) {
                 removed: removed
             };
         },
+        deglove: function deglove(arr) {
+            return is.Arraylike(arr) && arr.length == 1 ? arr[0] : arr;
+        },
+        last: last,
         /**
          * Splits a string at dots "."
          * @method cutdot
@@ -1536,7 +1569,7 @@ function _typeof(obj) {
          * @param {Array|Arraylike} arr - array to join with dots
          */
         joindot: joindot,
-        docfragFromString: docfragFromString,
+        dffstr: dffstr,
         /**
          * Compares two arrays and determines if they are the same array
          * @method sameArray
@@ -1682,6 +1715,9 @@ function _typeof(obj) {
             });
             return host;
         },
+        isObservable: function isObservable(obj) {
+            return obj.isObservable === !0;
+        },
         /**
          * Simply clones/duplicates any object or array/arraylike object
          * @method clone
@@ -1738,6 +1774,31 @@ function _typeof(obj) {
          */
         dom: {
             element: craftElement,
+            frag: function frag(inner) {
+                var dfrag = doc.createDocumentFragment();
+                if (is.String(inner)) inner = dffstr(inner);
+                if (is.Node(inner)) dfrag.appendChild(dfrag);
+                return dfrag;
+            },
+            el: function el(Str, attrs) {
+                var str = Craft.omit(Str.split(/(^([a-zA-Z-_]*)\((.*)\)\S?([\s\S]*)$)/igm), Str, ""),
+                    tag = undefined,
+                    inner = undefined;
+                if (!is.Object(attrs)) attrs = {};
+                if (!is.empty(str)) {
+                    var attr = str[1];
+                    inner = str[2] || '';
+                    attr = attr.split(',,');
+                    forEach(attr, function(v) {
+                        v = v.split('=');
+                        attrs[v[0]] = v[1];
+                    });
+                } else {
+                    str = Craft.omit(Str.split(/^([a-zA-Z-_]*)\s([\s\S]*)$/igm), Str, "");
+                    inner = str[1];
+                }
+                return craftElement(str[0], inner, attrs);
+            },
             /**
              * creates a div element with the options provided
              * @method div
@@ -1860,7 +1921,7 @@ function _typeof(obj) {
             },
             SafeHTML: function SafeHTML(html, node) {
                 html = html.replace(/<script[^>]*?>.*?<\/script>/gi, '').replace(/<style[^>]*?>.*?<\/style>/gi, '').replace(/<![\s\S]*?--[ \t\n\r]*>/gi, '');
-                return !node ? html : docfragFromString(html);
+                return !node ? html : dffstr(html);
             }
         },
         Browser: {
@@ -2263,7 +2324,6 @@ function _typeof(obj) {
             }
         },
         CustomAttributes: [],
-        Scope: observable(),
         Models: observable(),
         tabActive: !0,
         /**
@@ -2406,7 +2466,7 @@ function _typeof(obj) {
             if (is.Func(func) && is.String(name)) {
                 if (!is.Def(Craft.Models[name])) Craft.Models[name] = {
                     func: func,
-                    scope: Craft.observable({}),
+                    scope: observable(),
                     imediate: imediate || !1
                 };
             }
@@ -2416,6 +2476,25 @@ function _typeof(obj) {
             if (is.Def(Craft.Models[cutkey[0]])) {
                 var _type2 = (is.Def(val) ? 'set' : 'get') + 'Deep';
                 return cutkey.length === 1 && !is.Def(val) ? Craft.Models[cutkey[0]].scope : Craft[_type2](Craft.Models[cutkey[0]].scope, joindot(Craft.omit(cutkey, cutkey[0])), val);
+            }
+        },
+        getPath: function getPath(path, full) {
+            try {
+                var cutbind = cutdot(path),
+                    prop = last(cutbind),
+                    obj = is.Def(Craft.Models[cutbind[0]]) ? Craft.Models[cutbind[0]].scope : Craft.getDeep(root, joindot(Craft.omit(cutbind, prop))),
+                    val = Craft.getDeep(obj, cutbind.length > 1 ? joindot(Craft.omit(cutbind, cutbind[0])) : prop);
+                if (full) return {
+                    cutbind: cutbind,
+                    prop: prop,
+                    obj: obj,
+                    val: val
+                };
+                if (is.Def(val)) return val;
+                if (!full && cutbind[0] === prop && is.Def(obj)) return obj;
+            } catch (e) {
+                console.log(e);
+                return;
             }
         },
         /**
@@ -2570,11 +2649,6 @@ function _typeof(obj) {
     root.onfocus = function(e) {
         Craft.tabActive = !0;
     };
-    Craft.Models.addListener(function(o, key, model, isnew) {
-        if (isnew) Ready || model.imediate ? model.func(model.scope) : Craft.WhenReady.then(function() {
-            model.func(model.scope);
-        });
-    });
     Craft.curry.to = Craft.curry(function(arity, fn) {
         return makeFn(fn, [], arity);
     });
@@ -2588,26 +2662,31 @@ function _typeof(obj) {
     };
     Craft.loader.removeAll(!0);
     Craft.customAttribute('link', function(el, link) {
-        On(el).Click(function(e) {
+        el.linkevt = On(el).Click(function(e) {
             (el.hasAttr('newtab') ? open : Craft.router.open)(link);
         });
     });
-    Craft.customAttribute('bind', function(el, bind) {
+    Craft.customAttribute('bind', function(element, bind) {
         try {
-            var cutbind = cutdot(bind),
-                prop = cutbind[cutbind.length - 1],
-                obj = is.Def(Craft.Models[cutbind[0]]) ? Craft.Models[cutbind[0]].scope : Craft.getDeep(root, joindot(Craft.omit(cutbind, prop))) || Craft.Scope,
-                val = Craft.getDeep(obj, cutbind.length > 1 ? joindot(Craft.omit(cutbind, cutbind[0])) : prop);
-            is.Def(val) ? el.html(val) : Craft.setDeep(obj, prop, el.html());
-            if (is.Def(Object.getOwnPropertyDescriptor(obj, 'addListener')) && !is.Func(el._BL)) {
-                el._BL = function(o, n, v) {
-                    el.html(v);
+            /*let cutbind = cutdot(bind),
+                           prop = cutbind[cutbind.length - 1],
+                           obj = is.Def(Craft.Models[cutbind[0]]) ? Craft.Models[cutbind[0]].scope : Craft.getDeep(root, joindot(Craft.omit(cutbind, prop))),
+                           val = Craft.getDeep(obj, cutbind.length > 1 ? joindot(Craft.omit(cutbind, cutbind[0])) : prop);*/
+            var _Craft$getPath = Craft.getPath(bind, !0, !0),
+                cutbind = _Craft$getPath.cutbind,
+                prop = _Craft$getPath.prop,
+                obj = _Craft$getPath.obj,
+                val = _Craft$getPath.val;
+            is.Def(val) ? element.html(val) : Craft.setDeep(obj, prop, element.html());
+            if (is.Def(Object.getOwnPropertyDescriptor(obj, 'addListener')) && !is.Func(element._BL)) {
+                element._BL = function(o, n, v) {
+                    element.html(v);
                 };
-                obj.addListener(prop, el);
+                obj.addListener(prop, element);
             }
-            if (is.Input(el)) el.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : joindot(Craft.omit(cutbind, cutbind[0])));
+            if (element.isInput) element.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : joindot(Craft.omit(cutbind, cutbind[0])));
         } catch (e) {
-            console.warn("couldn't bind :", el);
+            console.warn("couldn't bind : ", element);
         }
     });
 
@@ -2624,7 +2703,12 @@ function _typeof(obj) {
             }
         }
     }
-    root.onload = function(e) {
+    Craft.Models.addListener(function(o, key, model, isnew) {
+        if (isnew) Ready || model.imediate ? model.func(model.scope) : Craft.WhenReady.then(function() {
+            model.func(model.scope);
+        });
+    });
+    Once('DOMContentLoaded', doc, function(e) {
         forEach(Craft.router.links, function(link) {
             link();
         });
@@ -2642,12 +2726,12 @@ function _typeof(obj) {
             subtree: !0
         });
         Ready = !0;
-    };
-    root.onhashchange = function() {
+    });
+    On('hashchange', function() {
         forEach(Craft.router.handlers, function(handle) {
             if (Locs(function(l) {
                     return l == handle.link;
                 })) handle.func(location.hash);
         });
-    };
+    });
 })(document, self);
