@@ -39,27 +39,29 @@ Crafter.js uses Babel to ensure compatibility on older browsers
  adds several useful CSS classes and effects such as grids, ripple effects, sidebar , notifications , custom context menus,  tooltips and more.
 
 ### Crafter Code Example
+create elements on the fly with ease using the `dom()` method!
 
-create elements on the fly with ease using the ``dom()`` method!
 ```javascript
 
-   let div = dom().div('The Div that haunts your dreams',{ class : 'fancy-div' , bind : 'model.hauntingDiv'});
-   // div -> <div class="fancy-div" bind="model.hauntingDiv"> The Div that haunts your dreams </div>
+   let div = dom().div('div that haunts your dreams',{ class : 'fancy-div' , bind : 'model.hauntingDiv'})
+   // div -> <div class="fancy-div" bind="model.hauntingDiv"> div that haunts your dreams </div>
 
    div.Click(evt => div.toggleClass('anim-wiggle'));
 
    div
-   .prepend(dom().span({class : 'icon-haunting-div'}))
+   .prepend(dom().span().addClass('icon-haunting-div'}))
    .appendTo(document.body);
-
-
 ```
 
 ```javascript
   // WhenReady generates a promise when the DOM and WebComponents has loaded
   Craft.WhenReady.then(() => {
 
-    queryEach('.menu-items',element => On('click',element,ev => dom('.page-view').append(dom().span('Hello!')));
+    queryEach('.menu-items',element => {
+      On('click',element,ev => {
+        dom('.page-view').append(dom().span('Hello!'))
+      })
+    });
     // or same thing differently
     On('.menu-items').Click(ev => dom('.page-view').append(dom().span('Hello!'));
 
@@ -93,7 +95,7 @@ Create a new Custom Element using the Craft.newComponent method
     },
     inserted() {
       // when the news-element is insterted fill it with content
-      dom(this)
+      this
       .prepend( dom().h(3, this.news.headline) /* -> <h3>News Headling...</h3> */ )
       .append( dom().div(this.news.article) );
 
@@ -105,11 +107,6 @@ Create a new Custom Element using the Craft.newComponent method
       // executed when the element is no more
       // useful for stopping event listeners
     }
-  });
-
-  // or Extend an existing element
-  Craft.newComponent('red-button',{
-    extends : "button"
   });
 
 
@@ -161,7 +158,8 @@ You can easily bind scope variables to the dom using the bind="ModelName.xyz" at
 #### EventHandling
   Event handeling has never been easier   On and Once are methods provided by Crafter.js to make Event Handling a breeze
 
-  The EventHandlers can use either CSS selectors or Element variables to attatch listeners to   example `On('css-selector', ...) or On('css-selector', NodeToLookWithIn , ...)`
+  The EventHandlers can use either CSS selectors or Element variables to attatch listeners to   example
+  `On('css-selector', ...) or On('css-selector', NodeToLookWithIn , ...)`
 
   these are the basic parameter layout options
 
@@ -175,17 +173,16 @@ You can easily bind scope variables to the dom using the bind="ModelName.xyz" at
     //
     On('EventType','css-selector',OptionalNodeToRunCSSselectorOn , handler_function )
 
-    // most full example
+    // fullest example
     On(EventType, target_element_or_elements , parent_element /* optional */ , handler_function)
 ```
 
   an EventHandler always returns it self no matter how it's been accessed example
 
 ```javascript
-  EventHandler.Off; // -> EventHandler with .On , .Once , .Off and .Type methods
-  EventHandler.On; // -> EventHandler with .On , .Once , .Off and .Type methods
-  EventHandler.Once; // -> EventHandler with .On , .Once , .Off and .Type methods
-
+  EventHandler.Off // -> EventHandler with .On , .Once , .Off and .Type methods
+  EventHandler.On // -> EventHandler with .On , .Once , .Off and .Type methods
+  EventHandler.Once // -> EventHandler with .On , .Once , .Off and .Type methods
 ```
 
   here's a simple example
