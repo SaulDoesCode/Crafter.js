@@ -1115,6 +1115,9 @@ function _typeof(obj) {
         element.On = function(eventType, func) {
             return On(eventType, element, func);
         };
+        element.newSetGet('ondestroy', function(fn) {
+            if (is.Func(fn)) element.On('destroy', fn);
+        });
         element.Click = function(fn, type) {
             return evlt(type)('click', element, fn);
         };
@@ -1457,7 +1460,7 @@ function _typeof(obj) {
     CrafterStyles = query('[crafterstyles]', head);
 
     function observable(obj) {
-        obj = obj || {};
+        if (!is.Def(obj)) obj = obj || {};
         Object.defineProperty(obj, 'listeners', {
             value: [],
             enumerable: !1
@@ -1467,58 +1470,95 @@ function _typeof(obj) {
             writable: !1,
             enumerable: !1
         });
-        Object.defineProperty(obj, 'removeListener', {
-            value: function value(fn) {
-                obj.listeners = obj.listeners.filter(function(l) {
-                    if (l.fn !== fn) return l;
-                });
-            },
-            enumerable: !1
-        });
-        Object.defineProperty(obj, 'addListener', {
-            value: function value(prop, func) {
-                if (is.Func(prop) || is.Node(prop)) {
-                    func = prop;
-                    prop = '*';
-                }
-                var listener = {
-                    prop: is.String(prop) ? prop : '*'
-                };
-                if (is.Node(func)) {
-                    if (!is.Func(func['_BL'])) throw Error('_BL is not a function');
-                    listener.node = func;
-                    listener.fn = func['_BL'];
-                } else if (is.Func(func)) listener.fn = func;
-                else throw new Error('no function');
-                obj.listeners.push(listener);
-            },
-            enumerable: !1
-        });
-        try {
-            return new Proxy(obj, {
-                get: function get(target, key, reciever) {
-                    return Reflect.get(target, key);
-                },
-                set: function set(target, key, value, reciever) {
-                    target.listeners.forEach(function(l) {
-                        if (l.prop === '*' || l.prop === key) l.fn(target, key, value, !Object.is(Reflect.get(target, key), value));
+        if (is.Object(obj)) {
+            Object.defineProperty(obj, 'removeListener', {
+                value: function value(fn) {
+                    obj.listeners = obj.listeners.filter(function(l) {
+                        if (l.fn !== fn) return l;
                     });
-                    return Reflect.set(target, key, value);
-                }
+                },
+                enumerable: !1
             });
-        } catch (e) {
+            Object.defineProperty(obj, 'addListener', {
+                value: function value(prop, func) {
+                    if (is.Func(prop) || is.Node(prop)) {
+                        func = prop;
+                        prop = '*';
+                    }
+                    var listener = {
+                        prop: is.String(prop) ? prop : '*'
+                    };
+                    if (is.Node(func)) {
+                        if (!is.Func(func['_BL'])) throw Error('_BL is not a function');
+                        listener.node = func;
+                        listener.fn = func['_BL'];
+                    } else if (is.Func(func)) listener.fn = func;
+                    else throw new Error('no function');
+                    obj.listeners.push(listener);
+                },
+                enumerable: !1
+            });
             try {
-                Object.observe(obj, function(changes) {
-                    changes.forEach(function(change) {
-                        if (change.type === 'add' || change.type === 'update') forEach(obj.listeners, function(l) {
-                            if (l.prop === '*' || l.prop === change.name) l.fn(obj, change.name, obj[change.name], change.type === 'add' ? !0 : !Object.is(change.oldValue, obj[change.name]));
+                return new Proxy(obj, {
+                    get: function get(target, key, reciever) {
+                        return Reflect.get(target, key);
+                    },
+                    set: function set(target, key, value, reciever) {
+                        target.listeners.forEach(function(l) {
+                            if (l.prop === '*' || l.prop === key) l.fn(target, key, value, !Object.is(Reflect.get(target, key), value));
+                        });
+                        return Reflect.set(target, key, value);
+                    }
+                });
+            } catch (e) {
+                try {
+                    Object.observe(obj, function(changes) {
+                        changes.forEach(function(change) {
+                            if (change.type === 'add' || change.type === 'update') forEach(obj.listeners, function(l) {
+                                if (l.prop === '*' || l.prop === change.name) l.fn(obj, change.name, obj[change.name], change.type === 'add' ? !0 : !Object.is(change.oldValue, obj[change.name]));
+                            });
                         });
                     });
-                });
-                return obj;
-            } catch (e2) {
-                console.error('Your Browser is Old Update it', e2);
+                    return obj;
+                } catch (e2) {
+                    console.error('Your Browser is Old Update it', e2);
+                }
             }
+        } else if (is.Array(obj)) {
+            var _ret = (function() {
+                Object.defineProperty(obj, 'removeListener', {
+                    value: function value(fn) {
+                        obj.listeners = obj.listeners.filter(function(l) {
+                            if (l !== fn) return l;
+                        });
+                    },
+                    enumerable: !1
+                });
+                Object.defineProperty(obj, 'addListener', {
+                    value: function value(func) {
+                        if (is.Func(func)) obj.listeners.push(func);
+                        else throw new Error('no function');
+                    },
+                    enumerable: !1
+                });
+                var oldArr = obj.slice(0);
+                return {
+                    v: new Proxy(obj, {
+                        get: function get(target, key, reciever) {
+                            return target[key];
+                        },
+                        set: function set(target, key, val, reciever) {
+                            target[key] = val;
+                            target.listeners.forEach(function(l) {
+                                Craft.arrDiff(oldArr, target, l);
+                            });
+                            oldArr = Craft.clone(target);
+                            return !0;
+                        }
+                    })
+                };
+            })();
+            if ((typeof _ret === "undefined" ? "undefined" : _typeof(_ret)) === "object") return _ret.v;
         }
     }
     /**
@@ -1542,7 +1582,7 @@ function _typeof(obj) {
                     if (newArr.includes(item)) return item;
                 }),
                 diff = Craft.omit(added.concat(removed), ud);
-            if (is.Func(func)) func(arr, newArr, added, removed, diff);
+            if (is.Func(func) && !is.empty(diff)) func(arr, newArr, added, removed, diff);
             else return {
                 arr: arr,
                 newArr: newArr,
@@ -1570,6 +1610,16 @@ function _typeof(obj) {
          */
         joindot: joindot,
         dffstr: dffstr,
+        /**
+         * Convert Arraylike variables to Array
+         * {...*} val - arraylike variable to convert to array
+         */
+        toArr: toArr,
+        /**
+         * Convert numbers to integers
+         * {number|string} val - number to convert to an integer
+         */
+        toInt: toInt,
         /**
          * Compares two arrays and determines if they are the same array
          * @method sameArray
@@ -2109,7 +2159,7 @@ function _typeof(obj) {
             }
             if (!address.includes('ws://') || !address.includes('wss://')) address = (location.protocol === 'http:' ? 'ws://' : 'wss://') + address;
             if (is.URL(address)) {
-                var _ret = (function() {
+                var _ret2 = (function() {
                     var Options = {
                             socket: null,
                             open: !1,
@@ -2174,7 +2224,7 @@ function _typeof(obj) {
                         v: Options
                     };
                 })();
-                if ((typeof _ret === "undefined" ? "undefined" : _typeof(_ret)) === "object") return _ret.v;
+                if ((typeof _ret2 === "undefined" ? "undefined" : _typeof(_ret2)) === "object") return _ret2.v;
             }
         },
         observable: observable,
@@ -2326,16 +2376,6 @@ function _typeof(obj) {
         CustomAttributes: [],
         Models: observable(),
         tabActive: !0,
-        /**
-         * Convert Arraylike variables to Array
-         * {...*} val - arraylike variable to convert to array
-         */
-        toArr: toArr,
-        /**
-         * Convert numbers to integers
-         * {number|string} val - number to convert to an integer
-         */
-        toInt: toInt,
         /**
          * Tail Call Optimization for recursive functional functions
          * @param fn - function that uses recursion inside
@@ -2616,8 +2656,8 @@ function _typeof(obj) {
                 _key2 == 'inserted' ? element.attachedCallback = dm : _key2 == 'destroyed' ? element.detachedCallback = dm : _key2 == 'attr' ? element.attributeChangedCallback = dm : _key2 == 'extends' ? settings.extends = config.extends : _key2.includes('css') && _key2.length == 3 ? Craft.addCSS(config[_key2]) : is.Func(config[_key2]) ? element[_key2] = dm : Object.defineProperty(element, _key2, Object.getOwnPropertyDescriptor(config, _key2));
             };
             for (var _key2 in config) {
-                var _ret4 = _loop(_key2);
-                if (_ret4 === "continue") continue;
+                var _ret5 = _loop(_key2);
+                if (_ret5 === "continue") continue;
             }
             settings['prototype'] = element;
             doc.registerElement(tag, settings);
@@ -2708,21 +2748,28 @@ function _typeof(obj) {
             model.func(model.scope);
         });
     });
+    var DestructionEvent = new Event('destroy');
     Once('DOMContentLoaded', doc, function(e) {
         forEach(Craft.router.links, function(link) {
             link();
         });
         Craft.DomObserver = new MutationObserver(function(muts) {
             forEach(muts, function(mut) {
+                console.log(mut);
                 forEach(mut.addedNodes, function(el) {
                     if (el['hasAttribute']) manageAttr(el);
                 });
-                manageAttr(mut.target);
+                forEach(mut.removedNodes, function(el) {
+                    el.dispatchEvent(DestructionEvent);
+                });
+                if (mut.type == 'attributes' && mut.target.hasAttribute(mut.attributeName)) manageAttr(mut.target);
             });
         });
         Craft.DomObserver.observe(doc.body, {
             attributes: !0,
             childList: !0,
+            characterData: !0,
+            characterDataOldValue: !0,
             subtree: !0
         });
         Ready = !0;
