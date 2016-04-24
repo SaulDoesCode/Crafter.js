@@ -2754,8 +2754,7 @@ function _typeof(obj) {
             link();
         });
         Craft.DomObserver = new MutationObserver(function(muts) {
-            forEach(muts, function(mut) {
-                console.log(mut);
+            forEach(muts, function(mut) { //console.log(mut);
                 forEach(mut.addedNodes, function(el) {
                     if (el['hasAttribute']) manageAttr(el);
                 });

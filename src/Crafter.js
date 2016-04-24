@@ -2404,7 +2404,7 @@
         });
         Craft.DomObserver = new MutationObserver(muts => {
             forEach(muts, mut => {
-                console.log(mut);
+                //console.log(mut);
                 forEach(mut.addedNodes, el => {
                     if (el['hasAttribute']) manageAttr(el);
                 });
