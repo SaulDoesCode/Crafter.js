@@ -1190,31 +1190,37 @@
                 element[sI] = On(element).Input(e => {
                     Craft.setDeep(obj, key, element.value)
                 })
+                return element
             }
             element.disconectInputSync = () => {
                 if (is.Def(element[sI])) {
                     element[sI].Off;
                     delete element[sI]
                 }
+                return element
             }
         }
-        element.observe = function(func, options) {
-            element.MutObserver = new MutationObserver(muts => {
+        element.observe = function(func, options,name) {
+            if(!is.String(name)) name = 'MutObserver';
+            element[name] = new MutationObserver(muts => {
                 forEach(muts, mut => {
-                    func(mut.type, mut.target, mut.addedNodes, mut.removedNodes, mut)
+                    func(mut,mut.type, mut.target, mut.addedNodes, mut.removedNodes)
                 })
             });
-            element.MutObserver.observe(element, options || {
+            element[name].observe(element, options || {
                 attributes: !0,
                 childList: !0,
                 subtree: !0
             });
+            return element
         }
-        element.unobserve = function() {
-            if (is.Def(element['MutObserver'])) {
-                element.MutObserver.disconnect();
-                delete element.MutObserver
+        element.unobserve = function(name) {
+            if(!is.String(name)) name = 'MutObserver';
+            if (is.Def(element[name])) {
+                element[name].disconnect();
+                delete element[name]
             }
+            return element
         }
         return element
     }
@@ -1236,8 +1242,8 @@
         if (!one) {
             if (is.String(element)) element = queryAll(element, within);
             if (is.NodeList(element)) {
-                element = element.filter(el => is.Def(el.setAttribute))
-                if (element.length !== 1) return domNodeList(element);
+                element = toArr(element).filter(el => is.Def(el.setAttribute));
+                if (element.length != 1) return domNodeList(element);
                 else element = element[0]
             }
         } else if (is.String(element)) element = query(element, within);
@@ -2180,9 +2186,9 @@
          * defines custom attributes
          * @param {string} name - the name of your custom attribute
          * @param {function} handle - a function to handle how your custom attribute behaves
-         * @example Craft.customAttribute('turngreen', element => element.css({ background : 'green'}));
+         * @example Craft.customAttr('turngreen', element => element.css({ background : 'green'}));
          **/
-        customAttribute(name, handle) {
+        customAttr(name, handle) {
             if (is.Func(handle)) {
                 Craft.CustomAttributes.push({
                     name: name,
@@ -2342,18 +2348,14 @@
     Craft.loader.removeAll(!0);
 
 
-    Craft.customAttribute('link', (el, link) => {
+    Craft.customAttr('link', (el, link) => {
         el.linkevt = On(el).Click(e => {
             (el.hasAttr('newtab') ? open : Craft.router.open)(link)
         })
     });
 
-    Craft.customAttribute('bind', (element, bind) => {
+    Craft.customAttr('bind', (element, bind) => {
         try {
-            /*let cutbind = cutdot(bind),
-                prop = cutbind[cutbind.length - 1],
-                obj = is.Def(Craft.Models[cutbind[0]]) ? Craft.Models[cutbind[0]].scope : Craft.getDeep(root, joindot(Craft.omit(cutbind, prop))),
-                val = Craft.getDeep(obj, cutbind.length > 1 ? joindot(Craft.omit(cutbind, cutbind[0])) : prop);*/
             let {
                 cutbind,
                 prop,
@@ -2375,6 +2377,10 @@
         } catch (e) {
             console.warn("couldn't bind : ", element)
         }
+    });
+
+    Craft.customAttr('color-accent',(element,color) => {
+      if(is.Func(element.colorAccent)) element.colorAccent(color);
     });
 
     function manageAttr(el) {
@@ -2404,7 +2410,6 @@
         });
         Craft.DomObserver = new MutationObserver(muts => {
             forEach(muts, mut => {
-                //console.log(mut);
                 forEach(mut.addedNodes, el => {
                     if (el['hasAttribute']) manageAttr(el);
                 });

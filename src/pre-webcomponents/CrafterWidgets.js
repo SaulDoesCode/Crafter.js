@@ -279,24 +279,29 @@ On(document).Click(e => {
     if (e.target.parentNode.tagName !== 'CONTEXT-MENU' && e.target.tagName !== 'SECTION') forEach(__ContextMenus, el => el.Show());
 });
 
-Craft.customAttribute('ripple', (el, color) => {
+Craft.customAttr('ripple', (el, color) => {
     if (!is.Array(el.customAttr)) el.customAttr = [];
     if (!el.customAttr.includes('ripple')) el.customAttr.push('ripple');
     Craft.ripple(el, 'ripple=' + color);
 });
 
-Craft.customAttribute('tooltip', (element, val) => {
-    queryEach(`[owner="${element.parentNode.tagName}${element.tagName}${element.className}"]`, el => {
-        if (is.Def(el.TooltipOwnerObserver)) el.TooltipOwnerObserver.disconnect();
-        if (is.Def(el.EventListeners)) el.EventListeners.forEach(ev => ev.Off);
-        el.remove();
+Craft.customAttr('tooltip', (element, val) => {
+    queryEach(`.craft-tooltip`, el => {
+        if (el.owner == element) {
+            el.owner.unobserve('ttObserve');
+            forEach(el.EventListeners, ev => {
+                ev.Off
+            });
+            el.remove();
+        } else if (!is.Def(el.owner)) el.remove();
     });
-    let show = false,
-        tooltip = dom().span('', `direction=${element.hasAttr('tooltip-direction') ? element.getAttr('tooltip-direction') : 'right'}&class=craft-tooltip`);
+    let show = !1,
+        tooltip = dom()
+        .span(element.getAttr('tooltip') || '', `direction=${element.getAttr('tooltip-direction') || 'right'}&class=craft-tooltip`);
 
+    tooltip.owner = element;
     tooltip.EventListeners = [];
-    tooltip.textContent = element.getAttr('tooltip');
-    tooltip.setAttribute('owner', `${element.parentNode.tagName}${element.tagName}${element.className}`);
+
     if (element.hasAttr('ripple')) tooltip.style.borderColor = element.getAttr('ripple');
     if (element.hasAttr('color-accent')) tooltip.style.borderColor = element.getAttr('color-accent');
 
@@ -304,58 +309,54 @@ Craft.customAttribute('tooltip', (element, val) => {
         tooltip.move(e.clientX, e.clientY)
     }).Off;
 
-    tooltip.EventListeners.push(element.Mouseenter(ev => {
-        show = true;
-        tooltip.mover.On;
-        if (ev.target !== element || ev.target.parentNode !== element) {
-            if (element.hasAttr('tooltip-delay')) setTimeout(() => {
-                tooltip.style.display = show ? 'block' : 'none';
-                setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
-            }, parseInt(element.getAttr('tooltip-delay')));
-            else {
-                tooltip.style.display = show ? 'block' : 'none';
-                setTimeout(() => tooltip.style.opacity = show ? '1' : '0', 10);
-            }
-        }
-    }));
-    tooltip.EventListeners.push(On(element).Mouseleave(ev => {
-        show = false;
-        tooltip.mover.Off;
+    function toggleTT() {
         tooltip.style.display = show ? 'block' : 'none';
         setTimeout(() => {
             tooltip.style.opacity = show ? '1' : '0'
         }, 10);
+    }
+
+    tooltip.EventListeners.push(element.Mouseenter(ev => {
+        show = !0;
+        tooltip.mover.On;
+        if (ev.target !== element || ev.target.parentNode !== element) element.hasAttr('tooltip-delay') ?
+            setTimeout(toggleTT, parseInt(element.getAttr('tooltip-delay'))) :
+            toggleTT();
+
+    }));
+    tooltip.EventListeners.push(element.Mouseleave(ev => {
+        show = !1;
+        tooltip.mover.Off;
+        toggleTT()
     }));
 
-    tooltip.hostObserver = new MutationObserver(mutations => {
-        forEach(mutations, mut => {
-            if (mut.type === 'attributes') {
-                if (mut.attributeName === 'tooltip' && element.hasAttr('tooltip')) tooltip.html(element.getAttr('tooltip'));
-                else if (mut.attributeName === 'tooltip-delay' && element.hasAttr('tooltip-delay')) setTimeout(() => {
-                    tooltip.style.display = show ? 'block' : 'none';
-                    setTimeout(() => {
-                        tooltip.style.opacity = show ? '1' : '0'
-                    }, 10);
-                }, parseInt(element.getAttr('tooltip-delay')));
-                else if (mut.attributeName === 'tooltip-direction' && element.hasAttr('tooltip-direction')) tooltip.setAttribute('direction', element.getAttr('tooltip-direction'));
-                else if (!element.hasAttr('tooltip')) {
-                    if (is.Def(tooltip.hostObserver)) tooltip.hostObserver.disconnect();
-                    if (is.Def(tooltip.EventListeners)) tooltip.EventListeners.forEach(ev => {
-                        ev.Off
-                    });
-                    tooltip.remove()
-                }
+    element.observe((mut, type) => {
+        if (type === 'attributes') {
+            let name = mut.attributeName;
+            if (name === 'tooltip' && element.hasAttr('tooltip')) tooltip.html(element.getAttr('tooltip'));
+            else if (name === 'tooltip-delay' && element.hasAttr('tooltip-delay')) setTimeout(() => {
+                tooltip.style.display = show ? 'block' : 'none';
+                setTimeout(() => {
+                    tooltip.style.opacity = show ? '1' : '0'
+                }, 10);
+            }, parseInt(element.getAttr('tooltip-delay')));
+            else if (name === 'tooltip-direction' && element.hasAttr('tooltip-direction')) tooltip.setAttr('direction', element.getAttr('tooltip-direction') || 'right');
+            else if (!element.hasAttr('tooltip')) {
+                element.unobserve('ttObserve');
+                if (is.Def(tooltip.EventListeners)) forEach(tooltip.EventListeners, ev => {
+                    ev.Off
+                });
+                tooltip.remove()
             }
-        });
-    });
-    tooltip.hostObserver.observe(element, {
-        attributes: true
-    });
+        }
+    }, {
+        attributes: !0
+    }, 'ttObserve');
 
-    document.body.appendChild(tooltip);
+    tooltip.appendTo(document.body);
 });
 
-Craft.customAttribute('movable', element => {
+Craft.customAttr('movable', element => {
     element.style.position = 'absolute';
 
     let rect = element.getRect(),
