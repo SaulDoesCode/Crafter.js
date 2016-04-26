@@ -902,6 +902,22 @@ function _typeof(obj) {
             });
             return elements;
         };
+        elements.gotClass = function() {
+            var args = toArr(arguments);
+            return elements.every(function(el) {
+                return args.every(function(Class) {
+                    return el.classList.contains(Class);
+                });
+            });
+        };
+        elements.someGotClass = function() {
+            var args = toArr(arguments);
+            return elements.some(function(el) {
+                return args.every(function(Class) {
+                    return el.classList.contains(Class);
+                });
+            });
+        };
         elements.stripClass = function(Class) {
             forEach(elements, function(el) {
                 el.classList.remove(Class);
@@ -1011,6 +1027,10 @@ function _typeof(obj) {
             return elements.css({
                 display: ''
             });
+        };
+        elements.pick = function(i) {
+            if (is.int(i) && is.Def(elements[i])) return dom(elements[i]);
+            else if (elements.includes(i)) return dom(i);
         };
         return elements;
     }
@@ -1157,8 +1177,11 @@ function _typeof(obj) {
         element.Mouseleave = function(fn, type) {
             return evlt(type)('mouseleave', element, fn);
         };
-        element.Scroll = function(fn, type) {
-            return evlt(type)('scroll', element, fn);
+        element.Wheel = function(fn, type) {
+            return evlt(type)('wheel', element, fn);
+        };
+        element.OnScroll = function(func, pd) {
+            return Craft.OnScroll(element, func, pd);
         };
 
         function keypress(type, fn, code) {
@@ -1195,11 +1218,13 @@ function _typeof(obj) {
          * @memberof dom
          * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
          */
-        element.css = function(styles) {
+        element.css = function(styles, prop) {
             if (styles == ud) throw new Error('Style properties undefined');
-            for (var style in styles) {
-                element.style[style] = styles[style];
-            }
+            if (is.String(styles, prop)) element.style[styles] = prop;
+            else
+                for (var style in styles) {
+                    element.style[style] = styles[style];
+                }
             return element;
         };
         /**
@@ -1331,7 +1356,7 @@ function _typeof(obj) {
         element.newSetGet('Siblings', function() {
             return ud;
         }, function() {
-            return Craft.omit(element.parentNode.childNodes, element).filter(function(el) {
+            return Craft.omit(element.parentNode.children, element).filter(function(el) {
                 if (is.Element(el)) return el;
             });
         });
@@ -1388,6 +1413,18 @@ function _typeof(obj) {
          */
         element.query = function(selector) {
             return query(selector, element);
+        };
+        element.next = function(reset, dm) {
+            var sb = toArr(element.parentNode.children),
+                nextnode = sb.indexOf(element) + 1;
+            if (!sb[nextnode]) return reset ? dm ? dom(sb[0]) : sb[0] : null;
+            return dm ? dom(sb[nextnode]) : sb[nextnode];
+        };
+        element.previous = function(reset, dm) {
+            var sb = toArr(element.parentNode.children),
+                nextnode = sb.indexOf(element) - 1;
+            if (!sb[nextnode]) return reset ? dm ? dom(sb[sb.length - 1]) : sb[sb.length - 1] : null;
+            return dm ? dom(sb[nextnode]) : sb[nextnode];
         };
         /**
          * performs a queryAll inside the element
@@ -2467,24 +2504,25 @@ function _typeof(obj) {
         URLfrom: function URLfrom(text) {
             return URL.createObjectURL(new Blob([text]));
         },
-        OnScroll: function OnScroll(element, func) {
-            return is.Func(func) ? On('scroll', element, function(e) {
+        OnScroll: function OnScroll(element, func, pd) {
+            return On('wheel', element, function(e) {
+                if (pd) e.preventDefault();
                 func(e.deltaY < 1, e);
-            }) : console.error('no function');
+            });
         },
         OnResize: function OnResize(func) {
             return is.Func(func) ? Craft.ResizeHandlers.add(func) : console.error("Craft.OnResize -> no function");
         },
         OnScrolledTo: function OnScrolledTo(Scroll) {
             return new Promise(function(pass, fail) {
-                var ev = On('scroll', function(e) {
+                var ev = On('wheel', function(e) {
                     return pageYOffset >= Scroll ? pass(e, ev) : fail(e, ev);
                 });
             });
         },
         WhenScrolledTo: function WhenScrolledTo(Scroll) {
             return new Promise(function(pass, fail) {
-                return Once('scroll', function(e) {
+                return Once('wheel', function(e) {
                     pageYOffset >= Scroll || pageYOffset <= Scroll ? pass(e) : fail(e);
                 });
             });
@@ -2656,7 +2694,7 @@ function _typeof(obj) {
                 if (_key2 === 'created') return "continue";
                 if (is.Func(config[_key2])) { // Adds dom methods to element
                     dm = function dm() {
-                        config[_key2].call(dom(this));
+                        return config[_key2].call(dom(this));
                     };
                 }
                 _key2 == 'inserted' ? element.attachedCallback = dm : _key2 == 'destroyed' ? element.detachedCallback = dm : _key2 == 'attr' ? element.attributeChangedCallback = dm : _key2 == 'extends' ? settings.extends = config.extends : _key2.includes('css') && _key2.length == 3 ? Craft.addCSS(config[_key2]) : is.Func(config[_key2]) ? element[_key2] = dm : Object.defineProperty(element, _key2, Object.getOwnPropertyDescriptor(config, _key2));

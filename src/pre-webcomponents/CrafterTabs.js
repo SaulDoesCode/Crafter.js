@@ -75,7 +75,7 @@
       if (this.hasAttribute('color-accent')) this.style.borderColor = this.getAttribute('color-accent');
     },
     setActive() {
-      this.setAttribute('active', '');
+      this.setAttr('active');
       this.view.setAttribute('active', '');
     },
     attr(attrName) {

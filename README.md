@@ -214,8 +214,8 @@ You can easily bind scope variables to the dom using the bind="ModelName.xyz" at
 
 ```javascript
 
-    // Craft a new socket , note the ws:// or wss:// is optional
-    let Websocket = Craft.Socket('192.168.10.108:3000/socket');
+    // Craft a new socket , note the ws:// or wss:// and location is optional
+    let Websocket = Craft.Socket('/socket');
 
     Websocket.send = 'Hello'; // send via assignment
     // add a reciever function

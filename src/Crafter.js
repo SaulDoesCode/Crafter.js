@@ -751,6 +751,15 @@
             });
             return elements
         }
+        elements.gotClass = function() {
+            let args = toArr(arguments);
+            return elements.every(el => args.every(Class => el.classList.contains(Class)))
+        }
+        
+        elements.someGotClass = function() {
+            let args = toArr(arguments);
+            return elements.some(el => args.every(Class => el.classList.contains(Class)))
+        }
         elements.stripClass = function(Class) {
             forEach(elements, el => {
                 el.classList.remove(Class)
@@ -847,10 +856,15 @@
         }
         elements.hide = () => elements.css({
             display: 'none'
-        })
+        });
         elements.show = () => elements.css({
             display: ''
-        })
+        });
+
+        elements.pick = i => {
+          if(is.int(i) && is.Def(elements[i])) return dom(elements[i]);
+          else if(elements.includes(i)) return dom(i);
+        }
 
         return elements
     }
@@ -976,7 +990,9 @@
         element.Mouseout = (fn, type) => evlt(type)('mouseout', element, fn);
         element.Mouseenter = (fn, type) => evlt(type)('mouseenter', element, fn);
         element.Mouseleave = (fn, type) => evlt(type)('mouseleave', element, fn);
-        element.Scroll = (fn, type) => evlt(type)('scroll', element, fn);
+        element.Wheel = (fn, type) => evlt(type)('wheel', element, fn);
+
+        element.OnScroll = (func,pd) => Craft.OnScroll(element,func,pd);
 
         function keypress(type, fn, code) {
             evlt(type)('keydown', element, e => {
@@ -997,9 +1013,10 @@
          * @memberof dom
          * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
          */
-        element.css = styles => {
+        element.css = function(styles,prop) {
                 if (styles == ud) throw new Error('Style properties undefined')
-                for (let style in styles) element.style[style] = styles[style];
+                if(is.String(styles,prop)) element.style[styles] = prop;
+                else for (let style in styles) element.style[style] = styles[style];
                 return element
             }
             /**
@@ -1123,7 +1140,7 @@
             return element
         }
 
-        element.newSetGet('Siblings', () => ud, () => Craft.omit(element.parentNode.childNodes, element).filter(el => {
+        element.newSetGet('Siblings', () => ud, () => Craft.omit(element.parentNode.children, element).filter(el => {
             if (is.Element(el)) return el
         }));
 
@@ -1177,6 +1194,20 @@
              * @returns {Node|Null}
              */
         element.query = selector => query(selector, element);
+
+        element.next = (reset,dm) => {
+            let sb = toArr(element.parentNode.children),
+            nextnode = sb.indexOf(element) + 1;
+            if(!sb[nextnode]) return reset ? (dm ? dom(sb[0]) : sb[0]) : null;
+            return dm ? dom(sb[nextnode]) : sb[nextnode];
+        }
+        element.previous = (reset,dm) => {
+            let sb = toArr(element.parentNode.children),
+            nextnode = sb.indexOf(element) - 1;
+            if(!sb[nextnode]) return reset ? (dm ? dom(sb[sb.length - 1]) : sb[sb.length - 1]) : null;
+            return dm ? dom(sb[nextnode]) : sb[nextnode];
+        }
+
         /**
          * performs a queryAll inside the element
          * @memberof dom
@@ -1200,6 +1231,7 @@
                 return element
             }
         }
+
         element.observe = function(func, options,name) {
             if(!is.String(name)) name = 'MutObserver';
             element[name] = new MutationObserver(muts => {
@@ -2115,16 +2147,17 @@
          * @param {string} - content to convert to an inline URL
          **/
         URLfrom: text => URL.createObjectURL(new Blob([text])),
-        OnScroll(element, func) {
-            return is.Func(func) ? On('scroll', element, e => {
+        OnScroll(element, func,pd) {
+            return On('wheel', element, e => {
+                if(pd) e.preventDefault();
                 func(e.deltaY < 1, e)
-            }) : console.error('no function')
+            });
         },
         OnResize: func => is.Func(func) ? Craft.ResizeHandlers.add(func) : console.error("Craft.OnResize -> no function"),
         OnScrolledTo: Scroll => new Promise((pass, fail) => {
-            let ev = On('scroll', e => pageYOffset >= Scroll ? pass(e, ev) : fail(e, ev))
+            let ev = On('wheel', e => pageYOffset >= Scroll ? pass(e, ev) : fail(e, ev))
         }),
-        WhenScrolledTo: Scroll => new Promise((pass, fail) => Once('scroll', e => {
+        WhenScrolledTo: Scroll => new Promise((pass, fail) => Once('wheel', e => {
             pageYOffset >= Scroll || pageYOffset <= Scroll ? pass(e) : fail(e)
         })),
         /**
@@ -2294,7 +2327,7 @@
                 if (is.Func(config[key])) {
                     // Adds dom methods to element
                     dm = function() {
-                        config[key].call(dom(this))
+                        return config[key].call(dom(this))
                     }
                 }
 
