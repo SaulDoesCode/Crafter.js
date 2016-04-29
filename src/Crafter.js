@@ -12,6 +12,10 @@
         head = doc.head,
         CrafterStyles = doc.createElement('style'),
         ua = navigator.userAgent,
+        Eltypes = {
+            button: HTMLButtonElement,
+            input: HTMLInputElement
+        },
         RegExps = {
             email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
             timeString: /^(2[0-3]|[01]?[0-9]):([0-5]?[0-9]):([0-5]?[0-9])$/,
@@ -755,7 +759,7 @@
             let args = toArr(arguments);
             return elements.every(el => args.every(Class => el.classList.contains(Class)))
         }
-        
+
         elements.someGotClass = function() {
             let args = toArr(arguments);
             return elements.some(el => args.every(Class => el.classList.contains(Class)))
@@ -862,8 +866,8 @@
         });
 
         elements.pick = i => {
-          if(is.int(i) && is.Def(elements[i])) return dom(elements[i]);
-          else if(elements.includes(i)) return dom(i);
+            if (is.int(i) && is.Def(elements[i])) return dom(elements[i]);
+            else if (elements.includes(i)) return dom(i);
         }
 
         return elements
@@ -956,25 +960,25 @@
              * @param {Node|string} String or Node to prepend to the this.element
              */
         element.prepend = function() {
-                forEach(arguments, val => {
-                    element.insertBefore(is.Node(val) ? val : dffstr(val), element.firstChild)
-                });
-                return element
-            }
+            forEach(arguments, val => {
+                element.insertBefore(is.Node(val) ? val : dffstr(val), element.firstChild)
+            });
+            return element
+        }
 
 
-            /**
-             * Listen for Events on the element or on all the elements in the NodeList
-             * @memberof dom
-             * @param {string} string indicating the type of event to listen for
-             * @param {function} func - handler function for the event
-             * @returns handler (Off,Once,On)
-             */
+        /**
+         * Listen for Events on the element or on all the elements in the NodeList
+         * @memberof dom
+         * @param {string} string indicating the type of event to listen for
+         * @param {function} func - handler function for the event
+         * @returns handler (Off,Once,On)
+         */
         element.On = (eventType, func) => On(eventType, element, func);
 
 
-        element.newSetGet('ondestroy',fn => {
-          if(is.Func(fn)) element.On('destroy',fn)
+        element.newSetGet('ondestroy', fn => {
+            if (is.Func(fn)) element.On('destroy', fn)
         });
 
         element.Click = (fn, type) => evlt(type)('click', element, fn);
@@ -992,7 +996,7 @@
         element.Mouseleave = (fn, type) => evlt(type)('mouseleave', element, fn);
         element.Wheel = (fn, type) => evlt(type)('wheel', element, fn);
 
-        element.OnScroll = (func,pd) => Craft.OnScroll(element,func,pd);
+        element.OnScroll = (func, pd) => Craft.OnScroll(element, func, pd);
 
         function keypress(type, fn, code) {
             evlt(type)('keydown', element, e => {
@@ -1013,10 +1017,11 @@
          * @memberof dom
          * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
          */
-        element.css = function(styles,prop) {
+        element.css = function(styles, prop) {
                 if (styles == ud) throw new Error('Style properties undefined')
-                if(is.String(styles,prop)) element.style[styles] = prop;
-                else for (let style in styles) element.style[style] = styles[style];
+                if (is.String(styles, prop)) element.style[styles] = prop;
+                else
+                    for (let style in styles) element.style[style] = styles[style];
                 return element
             }
             /**
@@ -1195,16 +1200,16 @@
              */
         element.query = selector => query(selector, element);
 
-        element.next = (reset,dm) => {
+        element.next = (reset, dm) => {
             let sb = toArr(element.parentNode.children),
-            nextnode = sb.indexOf(element) + 1;
-            if(!sb[nextnode]) return reset ? (dm ? dom(sb[0]) : sb[0]) : null;
+                nextnode = sb.indexOf(element) + 1;
+            if (!sb[nextnode]) return reset ? (dm ? dom(sb[0]) : sb[0]) : null;
             return dm ? dom(sb[nextnode]) : sb[nextnode];
         }
-        element.previous = (reset,dm) => {
+        element.previous = (reset, dm) => {
             let sb = toArr(element.parentNode.children),
-            nextnode = sb.indexOf(element) - 1;
-            if(!sb[nextnode]) return reset ? (dm ? dom(sb[sb.length - 1]) : sb[sb.length - 1]) : null;
+                nextnode = sb.indexOf(element) - 1;
+            if (!sb[nextnode]) return reset ? (dm ? dom(sb[sb.length - 1]) : sb[sb.length - 1]) : null;
             return dm ? dom(sb[nextnode]) : sb[nextnode];
         }
 
@@ -1232,11 +1237,11 @@
             }
         }
 
-        element.observe = function(func, options,name) {
-            if(!is.String(name)) name = 'MutObserver';
+        element.observe = function(func, options, name) {
+            if (!is.String(name)) name = 'MutObserver';
             element[name] = new MutationObserver(muts => {
                 forEach(muts, mut => {
-                    func(mut,mut.type, mut.target, mut.addedNodes, mut.removedNodes)
+                    func(mut, mut.type, mut.target, mut.addedNodes, mut.removedNodes)
                 })
             });
             element[name].observe(element, options || {
@@ -1247,7 +1252,7 @@
             return element
         }
         element.unobserve = function(name) {
-            if(!is.String(name)) name = 'MutObserver';
+            if (!is.String(name)) name = 'MutObserver';
             if (is.Def(element[name])) {
                 element[name].disconnect();
                 delete element[name]
@@ -1720,7 +1725,7 @@
                     type: 'text/javascript',
                     src: Craft.URLfrom(code)
                 });
-                script.defer = defer != !1;
+                if (is.Def(defer)) script.defer = defer != !1;
                 return script
             },
             td: (inner, attr) => craftElement('td', inner, attr),
@@ -1742,9 +1747,7 @@
                 obj.key = obj.key || obj.url;
                 let now = +new Date(),
                     src = Craft.loader.get(obj.key);
-                if (src || src.expire - now > 0) return new Promise(pass => {
-                    pass(src)
-                });
+                if (src || src.expire - now > 0) return new Promise(pass => pass(src));
                 return new Promise((pass, fail) => fetch(obj.url).then(res => {
                     res.text().then(data => {
                         obj.data = data;
@@ -1787,19 +1790,14 @@
                     type: arg.css ? 'css' : 'script',
                     exec: arg.execute != !1,
                     cache: arg.cache != !1,
-                    defer: arg.defer ? 'defer' : null,
+                    defer: arg.defer || ud,
                     key: arg.key,
                     expire: arg.expire
                 }))
             });
-            return Promise.all(promises).then(src => {
-                src.map(obj => {
-                    if (obj.exec) obj.type === 'css' ? Craft.addCSS('\n' + obj.data) : head.appendChild(dom().script('', {
-                        src: Craft.URLfrom(obj.data),
-                        key: obj.key
-                    }, obj.defer))
-                })
-            })
+            return Promise.all(promises).then(src => src.map(obj => {
+                if (obj.exec) obj.type === 'css' ? Craft.addCSS('\n' + obj.data) : head.appendChild(dom().script(obj.data, 'key=' + obj.key, obj.defer))
+            }))
         },
         router: {
             addHandle(link, func) {
@@ -1820,30 +1818,32 @@
             handlers: [],
             links: [],
             link(Selector, link, newtab, eventType) {
+                if (is.String(newtab)) eventType = newtab
                 Craft.router.links.push(() => {
-                    On(is.String(eventType) ? eventType : 'click', Selector, e => {
+                    On(eventType || 'click', Selector, e => {
                         Craft.router.open(link, newtab)
                     })
                 })
             },
             open(link, newtab) {
-                newtab ? open(link) : location = link
+                !newtab ? location = link : open(link)
             },
-            setTitle: title => doc.title = title,
-            setView(selector, view) {
-                dom(selector, !0).html(view)
+            set title(title) {
+                doc.title = title
             },
-            fetchView(selector, src, cache, position) {
+            get title() {
+                return doc.title
+            },
+            fetchView(selector, src, cache) {
                 let vh = dom(selector, !0),
-                    srcpre = (`Cr:${src}`),
+                    srcpre = `Cr:${src}`,
                     view = localStorage.getItem(srcpre);
-                if (!is.Def(vh.element)) return;
                 is.Null(view) ? fetch(src).then(res => res.text().then(txt => {
-                    if (is.True(cache, is.Null(view))) localStorage.setItem(srcpre, txt);
-                    vh.html(txt, position);
+                    if (is.True(cache, nil(view))) localStorage.setItem(srcpre, txt);
+                    vh.html(txt);
                 })).catch(err => {
                     console.error("fetchView: " + err)
-                }) : vh.html(view, position)
+                }) : vh.html(view)
             },
             clearViews() {
                 for (let i in localStorage) localStorage.removeItem(localStorage.key(i).includes("Cr:"))
@@ -1868,10 +1868,12 @@
                 return !0
             },
             has: key => key ? (new RegExp("(?:^|;\\s*)" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=")).test(doc.cookie) : false,
-            keys: () => doc.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/).map(c => {
-                decodeURIComponent(c);
-                return c
-            })
+            keys() {
+                return doc.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/).map(c => {
+                    decodeURIComponent(c);
+                    return c
+                })
+            }
         },
         /**
          * Handles WebSockets in a contained manner with send and recieve methods
@@ -1886,6 +1888,23 @@
             }
             if (!address.includes('ws://') || !address.includes('wss://')) address = (location.protocol === 'http:' ? 'ws://' : 'wss://') + address;
             if (is.URL(address)) {
+                function newSock() {
+                  return protocols ? new WebSocket(address, protocols) : new WebSocket(address)
+                }
+                function OpenSock(sock) {
+                  sock.onopen = () => {
+                      Options.open = !0
+                  }
+                  sock.onclose = () => {
+                      Options.open = !1
+                  }
+                  sock.onmessage = e => {
+                      Options.message = e.data;
+                      forEach(Options.recievers, fn => {
+                          fn(e.data, e)
+                      });
+                  }
+                }
                 let Options = {
                     socket: null,
                     open: !1,
@@ -1899,7 +1918,7 @@
                                     Options.socket.send(is.Object(msg) ? JSON.stringify(msg) : msg);
                                     clearInterval(poll);
                                 }
-                            }, 20);
+                            }, 10);
                             setTimeout(() => {
                                 clearInterval(poll)
                             }, 2000);
@@ -1915,36 +1934,12 @@
                         Options.socket.close()
                     },
                     reopen() {
-                        if (!Options.open) this.socket = protocols ? new WebSocket(address, protocols) : new WebSocket(address);
-                        socket.onopen = e => {
-                            Options.open = !0
-                        }
-                        socket.onclose = e => {
-                            Options.open = !1
-                        }
-                        socket.onmessage = e => {
-                            Options.message = e.data;
-                            forEach(Options.recievers, fn => {
-                                fn(e.data, e)
-                            })
-                        }
+                        if (!Options.open) Options.socket = newSock();
+                        OpenSock(Options.socket)
                     }
                 }
-                let socket = protocols ? new WebSocket(address, protocols) : new WebSocket(address);
-                socket.onopen = () => {
-                    Options.open = !0
-                }
-                socket.onclose = () => {
-                    Options.open = !1
-                }
-                socket.onmessage = e => {
-                    Options.message = e.data;
-                    forEach(Options.recievers, fn => {
-                        fn(e.data, e)
-                    });
-                }
-                Options.socket = socket;
-
+                Options.socket = newSock();
+                OpenSock(Options.socket);
                 return Options
             }
         },
@@ -2038,7 +2033,6 @@
             let types = toArr(arguments).map(t => typeof t);
             return types.length < 2 ? types[0] : types;
         },
-        toggle: bool => !bool,
         memoize(func, resolver) {
             if (!is.Func(func) || (resolver && !is.Func(resolver))) throw new TypeError("no function");
             let cache = new WeakMap,
@@ -2091,7 +2085,7 @@
             options.offset = options.offset || 0;
 
             let startTime, elapsedTime, start = root.pageYOffset,
-                distance = is.String(target) ? options.offset + query(target).getBoundingClientRect().top : target,
+                distance = is.String(target) ? options.offset + dom(target,!0).getRect().top : target,
                 loopIteration = 0,
                 loop = time => {
                     if (loopIteration == 0) startTime = time;
@@ -2128,38 +2122,17 @@
             });
             return formData
         },
-        CSSRule(index, selector, rules, sheet) {
-            if (is.Object(rules)) {
-                let temp = '';
-                forEach(rules, (val, key) => {
-                    temp += key + ': ' + (val.includes(';') ? val : val + ';\n')
-                });
-                rules = temp
-            }
-            if (!sheet) sheet = CrafterStyles.sheet;
-            sheet.insertRule(selector + "{" + rules + "}", index)
-        },
-        revokeCSSRule(index, sheet) {
-            (sheet || CrafterStyles).sheet.deleteRule(index)
-        },
         /**
          * Converts any text to an inline URL code (good for images , svg , scripts or css)
          * @param {string} - content to convert to an inline URL
          **/
         URLfrom: text => URL.createObjectURL(new Blob([text])),
-        OnScroll(element, func,pd) {
+        OnScroll(element, func, pd) {
             return On('wheel', element, e => {
-                if(pd) e.preventDefault();
+                if (pd) e.preventDefault();
                 func(e.deltaY < 1, e)
-            });
+            })
         },
-        OnResize: func => is.Func(func) ? Craft.ResizeHandlers.add(func) : console.error("Craft.OnResize -> no function"),
-        OnScrolledTo: Scroll => new Promise((pass, fail) => {
-            let ev = On('wheel', e => pageYOffset >= Scroll ? pass(e, ev) : fail(e, ev))
-        }),
-        WhenScrolledTo: Scroll => new Promise((pass, fail) => Once('wheel', e => {
-            pageYOffset >= Scroll || pageYOffset <= Scroll ? pass(e) : fail(e)
-        })),
         /**
          * returns a promise when the DOM and WebComponents are all finished loading
          * @returns {promise} - when everything is done loading WhenReady will return a promise
@@ -2324,17 +2297,14 @@
 
             for (let key in config) {
                 if (key === 'created') continue;
-                if (is.Func(config[key])) {
-                    // Adds dom methods to element
-                    dm = function() {
-                        return config[key].call(dom(this))
-                    }
+
+                if (is.Func(config[key])) dm = function() { // Adds dom methods to element
+                    return config[key].call(dom(this))
                 }
 
                 key == 'inserted' ? element.attachedCallback = dm :
                     key == 'destroyed' ? element.detachedCallback = dm :
                     key == 'attr' ? element.attributeChangedCallback = dm :
-                    key == 'extends' ? settings.extends = config.extends :
                     key.includes('css') && key.length == 3 ? Craft.addCSS(config[key]) :
                     is.Func(config[key]) ? element[key] = dm :
                     Object.defineProperty(element, key, Object.getOwnPropertyDescriptor(config, key))
@@ -2396,7 +2366,6 @@
                 val
             } = Craft.getPath(bind, true, true);
 
-
             is.Def(val) ? element.html(val) : Craft.setDeep(obj, prop, element.html());
 
             if (is.Def(Object.getOwnPropertyDescriptor(obj, 'addListener')) && !is.Func(element._BL)) {
@@ -2412,8 +2381,8 @@
         }
     });
 
-    Craft.customAttr('color-accent',(element,color) => {
-      if(is.Func(element.colorAccent)) element.colorAccent(color);
+    Craft.customAttr('color-accent', (element, color) => {
+        if (is.Func(element.colorAccent)) element.colorAccent(color);
     });
 
     function manageAttr(el) {

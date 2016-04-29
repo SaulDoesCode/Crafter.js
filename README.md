@@ -8,7 +8,6 @@ Crafter.js is still very W.I.P , so tread carefully
 - Fetch API
 - Proxy
 - ES6
-- Animation API
 - WebComponents
 
 Crafter.js uses Babel to ensure compatibility on older browsers
@@ -111,10 +110,11 @@ Create a new Custom Element using the Craft.newComponent method
 
 
   // You can style your custom element using the css property
-  Craft.newComponent('red-button',{
-    extends : "button",
+  Craft.newComponent('red-block',{
     css : `
-      red-button {
+      red-block {
+        width:60px;
+        height:60px;
         background : red;
       }
     `
@@ -130,12 +130,14 @@ Crafter.js allows the creation of scoped models to manipulate your app, models e
   Craft.model('MyModel', scope => {
     scope.headline = 'New Headline , this Just in...';
     scope.articles = ['article1...','article2...','article3...','article4...','article5...'];
-    scope.newinfo = 'I will change when there is new info';
+
 
     // you can listen for changes on model scope variables
     scope.addListener('newinfo',(object,key,value,isValueNew) => {
       if(isValueNew) console.log('new info recieved!')
     })
+
+    scope.newinfo = 'I will change when there is new info';
 
   })
 

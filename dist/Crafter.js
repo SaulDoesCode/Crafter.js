@@ -16,6 +16,10 @@ function _typeof(obj) {
         head = doc.head,
         CrafterStyles = doc.createElement('style'),
         ua = navigator.userAgent,
+        Eltypes = {
+            button: HTMLButtonElement,
+            input: HTMLInputElement
+        },
         RegExps = {
             email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
             timeString: /^(2[0-3]|[01]?[0-9]):([0-5]?[0-9]):([0-5]?[0-9])$/,
@@ -1997,7 +2001,7 @@ function _typeof(obj) {
                     type: 'text/javascript',
                     src: Craft.URLfrom(code)
                 });
-                script.defer = defer != !1;
+                if (is.Def(defer)) script.defer = defer != !1;
                 return script;
             },
             td: function td(inner, attr) {
@@ -2030,7 +2034,7 @@ function _typeof(obj) {
                 var now = +new Date(),
                     src = Craft.loader.get(obj.key);
                 if (src || src.expire - now > 0) return new Promise(function(pass) {
-                    pass(src);
+                    return pass(src);
                 });
                 return new Promise(function(pass, fail) {
                     return fetch(obj.url).then(function(res) {
@@ -2079,17 +2083,14 @@ function _typeof(obj) {
                     type: arg.css ? 'css' : 'script',
                     exec: arg.execute != !1,
                     cache: arg.cache != !1,
-                    defer: arg.defer ? 'defer' : null,
+                    defer: arg.defer || ud,
                     key: arg.key,
                     expire: arg.expire
                 }));
             });
             return Promise.all(promises).then(function(src) {
-                src.map(function(obj) {
-                    if (obj.exec) obj.type === 'css' ? Craft.addCSS('\n' + obj.data) : head.appendChild(dom().script('', {
-                        src: Craft.URLfrom(obj.data),
-                        key: obj.key
-                    }, obj.defer));
+                return src.map(function(obj) {
+                    if (obj.exec) obj.type === 'css' ? Craft.addCSS('\n' + obj.data) : head.appendChild(dom().script(obj.data, 'key=' + obj.key, obj.defer));
                 });
             });
         },
@@ -2116,8 +2117,9 @@ function _typeof(obj) {
             handlers: [],
             links: [],
             link: function link(Selector, _link, newtab, eventType) {
+                if (is.String(newtab)) eventType = newtab;
                 Craft.router.links.push(function() {
-                    On(is.String(eventType) ? eventType : 'click', Selector, function(e) {
+                    On(eventType || 'click', Selector, function(e) {
                         Craft.router.open(_link, newtab);
                     });
                 });
@@ -2131,27 +2133,26 @@ function _typeof(obj) {
                 };
                 return open;
             })(function(link, newtab) {
-                newtab ? open(link) : location = link;
+                !newtab ? location = link : open(link);
             }),
-            setTitle: function setTitle(title) {
-                return doc.title = title;
+            set title(title) {
+                doc.title = title;
             },
-            setView: function setView(selector, view) {
-                dom(selector, !0).html(view);
+            get title() {
+                return doc.title;
             },
-            fetchView: function fetchView(selector, src, cache, position) {
+            fetchView: function fetchView(selector, src, cache) {
                 var vh = dom(selector, !0),
                     srcpre = "Cr:" + src,
                     view = localStorage.getItem(srcpre);
-                if (!is.Def(vh.element)) return;
                 is.Null(view) ? fetch(src).then(function(res) {
                     return res.text().then(function(txt) {
-                        if (is.True(cache, is.Null(view))) localStorage.setItem(srcpre, txt);
-                        vh.html(txt, position);
+                        if (is.True(cache, nil(view))) localStorage.setItem(srcpre, txt);
+                        vh.html(txt);
                     });
                 }).catch(function(err) {
                     console.error("fetchView: " + err);
-                }) : vh.html(view, position);
+                }) : vh.html(view);
             },
             clearViews: function clearViews() {
                 for (var i in localStorage) {
@@ -2203,7 +2204,24 @@ function _typeof(obj) {
             if (!address.includes('ws://') || !address.includes('wss://')) address = (location.protocol === 'http:' ? 'ws://' : 'wss://') + address;
             if (is.URL(address)) {
                 var _ret2 = (function() {
-                    var Options = {
+                    var newSock = function newSock() {
+                            return protocols ? new WebSocket(address, protocols) : new WebSocket(address);
+                        },
+                        OpenSock = function OpenSock(sock) {
+                            sock.onopen = function() {
+                                Options.open = !0;
+                            };
+                            sock.onclose = function() {
+                                Options.open = !1;
+                            };
+                            sock.onmessage = function(e) {
+                                Options.message = e.data;
+                                forEach(Options.recievers, function(fn) {
+                                    fn(e.data, e);
+                                });
+                            };
+                        },
+                        Options = {
                             socket: null,
                             open: !1,
                             recievers: [],
@@ -2217,7 +2235,7 @@ function _typeof(obj) {
                                                 Options.socket.send(is.Object(msg) ? JSON.stringify(msg) : msg);
                                                 clearInterval(poll);
                                             }
-                                        }, 20);
+                                        }, 10);
                                         setTimeout(function() {
                                             clearInterval(poll);
                                         }, 2000);
@@ -2234,35 +2252,12 @@ function _typeof(obj) {
                                 Options.socket.close();
                             },
                             reopen: function reopen() {
-                                if (!Options.open) this.socket = protocols ? new WebSocket(address, protocols) : new WebSocket(address);
-                                socket.onopen = function(e) {
-                                    Options.open = !0;
-                                };
-                                socket.onclose = function(e) {
-                                    Options.open = !1;
-                                };
-                                socket.onmessage = function(e) {
-                                    Options.message = e.data;
-                                    forEach(Options.recievers, function(fn) {
-                                        fn(e.data, e);
-                                    });
-                                };
+                                if (!Options.open) Options.socket = newSock();
+                                OpenSock(Options.socket);
                             }
-                        },
-                        socket = protocols ? new WebSocket(address, protocols) : new WebSocket(address);
-                    socket.onopen = function() {
-                        Options.open = !0;
-                    };
-                    socket.onclose = function() {
-                        Options.open = !1;
-                    };
-                    socket.onmessage = function(e) {
-                        Options.message = e.data;
-                        forEach(Options.recievers, function(fn) {
-                            fn(e.data, e);
-                        });
-                    };
-                    Options.socket = socket;
+                        };
+                    Options.socket = newSock();
+                    OpenSock(Options.socket);
                     return {
                         v: Options
                     };
@@ -2373,9 +2368,6 @@ function _typeof(obj) {
             });
             return types.length < 2 ? types[0] : types;
         },
-        toggle: function toggle(bool) {
-            return !bool;
-        },
         memoize: function memoize(func, resolver) {
             if (!is.Func(func) || resolver && !is.Func(resolver)) throw new TypeError("no function");
             var cache = new WeakMap(),
@@ -2446,7 +2438,7 @@ function _typeof(obj) {
             var startTime = undefined,
                 elapsedTime = undefined,
                 start = root.pageYOffset,
-                distance = is.String(target) ? options.offset + query(target).getBoundingClientRect().top : target,
+                distance = is.String(target) ? options.offset + dom(target, !0).getRect().top : target,
                 loopIteration = 0,
                 loop = function loop(time) {
                     if (loopIteration == 0) startTime = time;
@@ -2483,20 +2475,6 @@ function _typeof(obj) {
             });
             return formData;
         },
-        CSSRule: function CSSRule(index, selector, rules, sheet) {
-            if (is.Object(rules)) {
-                var temp = '';
-                forEach(rules, function(val, key) {
-                    temp += key + ': ' + (val.includes(';') ? val : val + ';\n');
-                });
-                rules = temp;
-            }
-            if (!sheet) sheet = CrafterStyles.sheet;
-            sheet.insertRule(selector + "{" + rules + "}", index);
-        },
-        revokeCSSRule: function revokeCSSRule(index, sheet) {
-            (sheet || CrafterStyles).sheet.deleteRule(index);
-        },
         /**
          * Converts any text to an inline URL code (good for images , svg , scripts or css)
          * @param {string} - content to convert to an inline URL
@@ -2508,23 +2486,6 @@ function _typeof(obj) {
             return On('wheel', element, function(e) {
                 if (pd) e.preventDefault();
                 func(e.deltaY < 1, e);
-            });
-        },
-        OnResize: function OnResize(func) {
-            return is.Func(func) ? Craft.ResizeHandlers.add(func) : console.error("Craft.OnResize -> no function");
-        },
-        OnScrolledTo: function OnScrolledTo(Scroll) {
-            return new Promise(function(pass, fail) {
-                var ev = On('wheel', function(e) {
-                    return pageYOffset >= Scroll ? pass(e, ev) : fail(e, ev);
-                });
-            });
-        },
-        WhenScrolledTo: function WhenScrolledTo(Scroll) {
-            return new Promise(function(pass, fail) {
-                return Once('wheel', function(e) {
-                    pageYOffset >= Scroll || pageYOffset <= Scroll ? pass(e) : fail(e);
-                });
             });
         },
         /**
@@ -2692,12 +2653,10 @@ function _typeof(obj) {
             };
             var _loop = function _loop(_key2) {
                 if (_key2 === 'created') return "continue";
-                if (is.Func(config[_key2])) { // Adds dom methods to element
-                    dm = function dm() {
-                        return config[_key2].call(dom(this));
-                    };
-                }
-                _key2 == 'inserted' ? element.attachedCallback = dm : _key2 == 'destroyed' ? element.detachedCallback = dm : _key2 == 'attr' ? element.attributeChangedCallback = dm : _key2 == 'extends' ? settings.extends = config.extends : _key2.includes('css') && _key2.length == 3 ? Craft.addCSS(config[_key2]) : is.Func(config[_key2]) ? element[_key2] = dm : Object.defineProperty(element, _key2, Object.getOwnPropertyDescriptor(config, _key2));
+                if (is.Func(config[_key2])) dm = function dm() { // Adds dom methods to element
+                    return config[_key2].call(dom(this));
+                };
+                _key2 == 'inserted' ? element.attachedCallback = dm : _key2 == 'destroyed' ? element.detachedCallback = dm : _key2 == 'attr' ? element.attributeChangedCallback = dm : _key2.includes('css') && _key2.length == 3 ? Craft.addCSS(config[_key2]) : is.Func(config[_key2]) ? element[_key2] = dm : Object.defineProperty(element, _key2, Object.getOwnPropertyDescriptor(config, _key2));
             };
             for (var _key2 in config) {
                 var _ret5 = _loop(_key2);
