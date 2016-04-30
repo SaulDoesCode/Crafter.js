@@ -1,0 +1,85 @@
+.craft-tooltip {
+  position: fixed;
+  box-sizing: content-box !important;
+  overflow: visible;
+  display: none;
+  min-width: 18px;
+  width: auto;
+  font-size: 15px;
+  height: 26px;
+  line-height: 26px;
+  padding-left: 15px;
+  padding-right: 15px;
+  background: hsl(0, 0%, 93%);
+  border-radius: 3.5px;
+  white-space: nowrap;
+  color: hsl(30, 3%, 40%);
+  -webkit-filter: drop-shadow(0 1px 2px hsla(0, 0%, 10%, .35));
+  -moz-filter: drop-shadow(0 1px 2px hsla(0, 0%, 10%, .35));
+  filter: drop-shadow(0 1px 2px hsla(0, 0%, 10%, .35));
+  -webkit-transition: opacity 450ms ease;
+  transition: opacity 450ms ease;
+  z-index: 500;
+}
+.craft-tooltip[direction='up'], .craft-tooltip[direction='down'] {
+  height: 22px;
+  line-height: 22px;
+}
+.craft-tooltip:before {
+  position: absolute;
+  content: ' ';
+  display: block;
+  pointer-events: none;
+  -webkit-pointer-events: none;
+  -moz-pointer-events: none;
+  border-style: solid;
+  width: 0;
+  height: 0;
+  z-index: 1;
+}
+.craft-tooltip[direction='right'] {
+  border-right: 3px solid dimgrey;
+  -webkit-transform: translateY(-15px) translateX(25px);
+  -ms-transform: translateY(-15px) translateX(25px);
+  transform: translateY(-15px) translateX(25px);
+}
+.craft-tooltip[direction='left'] {
+  border-left: 3px solid dimgrey;
+  -webkit-transform: translateY(-15px) translateX(calc(-100% - 25px));
+  -ms-transform: translateY(-15px) translateX(calc(-100% - 25px));
+  transform: translateY(-15px) translateX(calc(-100% - 25px));
+}
+.craft-tooltip[direction='down'] {
+  border-bottom: 2px solid dimgrey;
+  -webkit-transform: translateY(38px) translateX(-50%);
+  -ms-transform: translateY(38px) translateX(-50%);
+  transform: translateY(38px) translateX(-50%);
+}
+.craft-tooltip[direction='up'] {
+  border-top: 2px solid dimgrey;
+  -webkit-transform: translateY(-38px) translateX(-50%);
+  -ms-transform: translateY(-38px) translateX(-50%);
+  transform: translateY(-38px) translateX(-50%);
+}
+.craft-tooltip[direction='right']:before {
+  left: -20px;
+  border-width: 13px 22.5px 13px 0;
+  border-color: transparent hsl(0, 0%, 93%) transparent transparent;
+}
+.craft-tooltip[direction='left']:before {
+  right: -20px;
+  border-width: 13px 0 13px 22.5px;
+  border-color: transparent transparent transparent hsl(0, 0%, 93%);
+}
+.craft-tooltip[direction='down']:before {
+  top: -12px;
+  left: calc(50% - 12.5px);
+  border-width: 0 12.5px 12px 12.5px;
+  border-color: transparent transparent hsl(0, 0%, 93%) transparent;
+}
+.craft-tooltip[direction='up']:before {
+  bottom: -12px;
+  left: calc(50% - 12.5px);
+  border-width: 12px 12.5px 0 12.5px;
+  border-color: hsl(0, 0%, 93%) transparent transparent transparent;
+}
