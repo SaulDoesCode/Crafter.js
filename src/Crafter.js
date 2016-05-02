@@ -2114,6 +2114,27 @@
                 return result
             }
         },
+        animFrame(func) {
+            return new class {
+                constructor(fn) {
+                    this.fn = fn
+                }
+                start() {
+                    this.fn();
+                    this.interval = requestAnimationFrame(this.start.bind(this));
+                    return this
+                }
+                stop() {
+                    if (is.Def(this.interval)) cancelAnimationFrame(this.interval);
+                    return this
+                }
+                reset(fn) {
+                    this.stop();
+                    this.fn = fn;
+                    return this.start()
+                }
+            }(func)
+        },
         JumpTo(target, options) {
             options = options || {};
             options.duration = options.duration || 400;
@@ -2189,11 +2210,19 @@
         },
         model(name, func) {
             if (is.Func(func) && is.String(name)) {
-                if (!is.Def(Craft.Models[name])) Craft.Models[name] = {
-                    func,
-                    scope: observable(),
+                let scope;
+                if (!is.Def(Craft.Models[name])) {
+                  scope = observable();
+                  Craft.Models[name] = {
+                    func : func.bind(scope),
+                    scope,
+                  }
                 }
-                return Craft.Models[name].scope
+                return {
+                  view(fn) {
+                    Craft.WhenReady.then(fn.bind(scope,scope))
+                  }
+                }
             }
         },
         fromModel(key, val) {

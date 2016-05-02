@@ -1,4 +1,26 @@
 "use strict";
+var _createClass = (function() {
+    function defineProperties(target, props) {
+        for (var i = 0; i < props.length; i++) {
+            var descriptor = props[i];
+            descriptor.enumerable = descriptor.enumerable || !1;
+            descriptor.configurable = !0;
+            if ("value" in descriptor) descriptor.writable = !0;
+            Object.defineProperty(target, descriptor.key, descriptor);
+        }
+    }
+    return function(Constructor, protoProps, staticProps) {
+        if (protoProps) defineProperties(Constructor.prototype, protoProps);
+        if (staticProps) defineProperties(Constructor, staticProps);
+        return Constructor;
+    };
+})();
+
+function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+        throw new TypeError("Cannot call a class as a function");
+    }
+}
 
 function _typeof(obj) {
     return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj;
@@ -2462,6 +2484,36 @@ function _typeof(obj) {
                 return result;
             };
         },
+        animFrame: function animFrame(func) {
+            return new((function() {
+                function _class(fn) {
+                    _classCallCheck(this, _class);
+                    this.fn = fn;
+                }
+                _createClass(_class, [{
+                    key: "start",
+                    value: function start() {
+                        this.fn();
+                        this.interval = requestAnimationFrame(this.start.bind(this));
+                        return this;
+                    }
+                }, {
+                    key: "stop",
+                    value: function stop() {
+                        if (is.Def(this.interval)) cancelAnimationFrame(this.interval);
+                        return this;
+                    }
+                }, {
+                    key: "reset",
+                    value: function reset(fn) {
+                        this.stop();
+                        this.fn = fn;
+                        return this.start();
+                    }
+                }]);
+                return _class;
+            })())(func);
+        },
         JumpTo: function JumpTo(target, options) {
             options = options || {};
             options.duration = options.duration || 400;
@@ -2540,11 +2592,24 @@ function _typeof(obj) {
         },
         model: function model(name, func) {
             if (is.Func(func) && is.String(name)) {
-                if (!is.Def(Craft.Models[name])) Craft.Models[name] = {
-                    func: func,
-                    scope: observable()
-                };
-                return Craft.Models[name].scope;
+                var _ret4 = (function() {
+                    var scope = undefined;
+                    if (!is.Def(Craft.Models[name])) {
+                        scope = observable();
+                        Craft.Models[name] = {
+                            func: func.bind(scope),
+                            scope: scope
+                        };
+                    }
+                    return {
+                        v: {
+                            view: function view(fn) {
+                                Craft.WhenReady.then(fn.bind(scope, scope));
+                            }
+                        }
+                    };
+                })();
+                if ((typeof _ret4 === "undefined" ? "undefined" : _typeof(_ret4)) === "object") return _ret4.v;
             }
         },
         fromModel: function fromModel(key, val) {
@@ -2705,8 +2770,8 @@ function _typeof(obj) {
                 _key3 == 'inserted' ? element.attachedCallback = dm : _key3 == 'destroyed' ? element.detachedCallback = dm : _key3 == 'attr' ? element.attributeChangedCallback = dm : _key3.includes('css') && _key3.length == 3 ? Craft.addCSS(config[_key3]) : is.Func(config[_key3]) ? element[_key3] = dm : Object.defineProperty(element, _key3, Object.getOwnPropertyDescriptor(config, _key3));
             };
             for (var _key3 in config) {
-                var _ret5 = _loop(_key3);
-                if (_ret5 === "continue") continue;
+                var _ret6 = _loop(_key3);
+                if (_ret6 === "continue") continue;
             }
             settings['prototype'] = element;
             doc.registerElement(tag, settings);
