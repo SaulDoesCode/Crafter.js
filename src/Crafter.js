@@ -966,7 +966,30 @@
             return element
         }
 
+        element.bind = function(bind) {
+          try {
+              let {
+                  cutbind,
+                  prop,
+                  obj,
+                  val
+              } = Craft.getPath(bind, true, true);
 
+              is.Def(val) ? element.html(val) : Craft.setDeep(obj, prop, element.html());
+
+              if (is.Def(Object.getOwnPropertyDescriptor(obj, 'addListener')) && !is.Func(element._BL)) {
+                  element._BL = (o, n, v) => {
+                      element.html(v)
+                  }
+
+                  obj.addListener(prop, element);
+              }
+              if (element.isInput) element.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : joindot(Craft.omit(cutbind, cutbind[0])))
+          } catch (e) {
+              console.warn("couldn't bind : ", element)
+          }
+          return element;
+        }
         /**
          * Listen for Events on the element or on all the elements in the NodeList
          * @memberof dom
@@ -1301,7 +1324,15 @@
             writable: !1,
             enumerable: !1,
         });
-        if (is.Object(obj)) {
+        if (!is.Array(obj)) {
+            Object.defineProperty(obj, 'setVal', {
+                value(path,val) {
+                   Craft.setDeep(obj,path,val);
+                   return obj;
+                },
+                writable: !1,
+                enumerable: !1,
+            });
             Object.defineProperty(obj, 'removeListener', {
                 value: fn => {
                     obj.listeners = obj.listeners.filter(l => {
@@ -1335,6 +1366,7 @@
                         return Reflect.get(target, key)
                     },
                     set(target, key, value, reciever) {
+                        //if(value.NoTrigger) return Reflect.set(target, key, value.val); else
                         target.listeners.forEach(l => {
                             if (l.prop === '*' || l.prop === key) l.fn(target, key, value, !Object.is(Reflect.get(target, key), value))
                         });
@@ -1355,7 +1387,7 @@
                     console.error('Your Browser is Old Update it', e2)
                 }
             }
-        } else if (is.Array(obj)) {
+        } else {
             Object.defineProperty(obj, 'removeListener', {
                 value: fn => {
                     obj.listeners = obj.listeners.filter(l => {
@@ -1893,16 +1925,19 @@
                 }
                 function OpenSock(sock) {
                   sock.onopen = () => {
-                      Options.open = !0
+                      Options.open = !0;
+                      sock.onmessage = e => {
+                          Options.message = e.data;
+                          forEach(Options.recievers, fn => {
+                              fn(e.data, e)
+                          });
+                      }
                   }
                   sock.onclose = () => {
                       Options.open = !1
                   }
-                  sock.onmessage = e => {
-                      Options.message = e.data;
-                      forEach(Options.recievers, fn => {
-                          fn(e.data, e)
-                      });
+                  sock.onerror = e => {
+                    console.error(e);
                   }
                 }
                 let Options = {
@@ -1943,7 +1978,6 @@
                 return Options
             }
         },
-        observable: observable,
         curry: fn => makeFn(fn, [], fn.length),
         after(n, func) {
             !is.Func(func) && is.Func(n) ? func = n : console.error("after: no function");
@@ -2059,6 +2093,7 @@
             months: (n, daysInMonth) => n * Craft.millis.days((daysInMonth || 30)),
             years: (n) => n * Craft.millis.days(365),
         },
+        observable,
         CustomAttributes: [],
         Models: observable(),
         tabActive: !0,
@@ -2152,13 +2187,13 @@
                 }, 5500)
             })
         },
-        model(name, func, imediate) {
+        model(name, func) {
             if (is.Func(func) && is.String(name)) {
                 if (!is.Def(Craft.Models[name])) Craft.Models[name] = {
                     func,
                     scope: observable(),
-                    imediate: imediate || !1
                 }
+                return Craft.Models[name].scope
             }
         },
         fromModel(key, val) {
@@ -2292,11 +2327,25 @@
                 dm;
 
             element.createdCallback = function() {
-                if (is.Func(config['created'])) config['created'].call(dom(this))
+                let el = dom(this), dealtWith = [];
+                for (let key in config) {
+                  if(!dealtWith.includes(key)) {
+                    if(key.includes("set_")) {
+                        let sgKey = key.split("_")[1];
+                        dealtWith.push(key,"get_"+sgKey);
+                        el.newSetGet(sgKey,config[key],config["get_"+sgKey]);
+                    } else if(key.includes("get_")) {
+                      let sgKey = key.split("_")[1];
+                      dealtWith.push(key,"set_"+sgKey);
+                      el.newSetGet(sgKey,(is.Func(config["set_"+sgKey]) ? config["set_"+sgKey] : x => {}),config[key]);
+                    }
+                  }
+                }
+                if (is.Func(config['created'])) return config['created'].call(el)
             }
 
             for (let key in config) {
-                if (key === 'created') continue;
+                if (key === 'created' || (key.includes('set_') || key.includes('get_'))) continue;
 
                 if (is.Func(config[key])) dm = function() { // Adds dom methods to element
                     return config[key].call(dom(this))
@@ -2358,27 +2407,7 @@
     });
 
     Craft.customAttr('bind', (element, bind) => {
-        try {
-            let {
-                cutbind,
-                prop,
-                obj,
-                val
-            } = Craft.getPath(bind, true, true);
-
-            is.Def(val) ? element.html(val) : Craft.setDeep(obj, prop, element.html());
-
-            if (is.Def(Object.getOwnPropertyDescriptor(obj, 'addListener')) && !is.Func(element._BL)) {
-                element._BL = (o, n, v) => {
-                    element.html(v)
-                }
-
-                obj.addListener(prop, element);
-            }
-            if (element.isInput) element.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : joindot(Craft.omit(cutbind, cutbind[0])))
-        } catch (e) {
-            console.warn("couldn't bind : ", element)
-        }
+        element.bind(bind)
     });
 
     Craft.customAttr('color-accent', (element, color) => {
@@ -2400,9 +2429,7 @@
     }
 
     Craft.Models.addListener((o, key, model, isnew) => {
-        if (isnew) Ready || model.imediate ? model.func(model.scope) : Craft.WhenReady.then(() => {
-            model.func(model.scope)
-        });
+        model.func(model.scope)
     });
 
     let DestructionEvent = new Event('destroy');

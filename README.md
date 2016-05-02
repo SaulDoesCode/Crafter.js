@@ -108,17 +108,50 @@ Create a new Custom Element using the Craft.newComponent method
     }
   });
 
-
-  // You can style your custom element using the css property
-  Craft.newComponent('red-block',{
-    css : `
-      red-block {
-        width:60px;
-        height:60px;
-        background : red;
+  // You can add style to your custom element using the css property
+  Craft.newComponent('check-box', {
+      css : `
+      check-box {
+        box-sizing: border-box;
+        position: relative;
+        vertical-align: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+        display: inline-block;
+        width: 15px;
+        height: 15px;
+        line-height: 15px;
+        margin: 0 2px;
+        background: hsl(0, 0%, 90%);
+        border: 1px solid silver;
+        color: hsl(0, 0%, 30%);
+        transition: all 100ms ease;
       }
-    `
+      check-box[checked]:before {
+        content: '✔';
+      }
+      check-box:hover {
+        border: 1px solid #797979;
+      }
+      `,
+      inserted() {
+          this.check = this.Click(this.toggle.bind(this))
+      },
+      set_value(val) {
+        this.toggleAttr('checked', val)
+      },
+      get_value() {
+        return this.hasAttr('checked')
+      },
+      toggle(val) {
+          this.value = is.Bool(val) ? val : !this.value
+      },
+      destroyed() {
+          this.check.Off
+      }
   });
+
 ```
 
 #### Models

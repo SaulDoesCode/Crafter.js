@@ -1129,6 +1129,26 @@ function _typeof(obj) {
             });
             return element;
         };
+        element.bind = function(bind) {
+            try {
+                var _Craft$getPath = Craft.getPath(bind, !0, !0),
+                    cutbind = _Craft$getPath.cutbind,
+                    prop = _Craft$getPath.prop,
+                    obj = _Craft$getPath.obj,
+                    val = _Craft$getPath.val;
+                is.Def(val) ? element.html(val) : Craft.setDeep(obj, prop, element.html());
+                if (is.Def(Object.getOwnPropertyDescriptor(obj, 'addListener')) && !is.Func(element._BL)) {
+                    element._BL = function(o, n, v) {
+                        element.html(v);
+                    };
+                    obj.addListener(prop, element);
+                }
+                if (element.isInput) element.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : joindot(Craft.omit(cutbind, cutbind[0])));
+            } catch (e) {
+                console.warn("couldn't bind : ", element);
+            }
+            return element;
+        };
         /**
          * Listen for Events on the element or on all the elements in the NodeList
          * @memberof dom
@@ -1517,7 +1537,15 @@ function _typeof(obj) {
             writable: !1,
             enumerable: !1
         });
-        if (is.Object(obj)) {
+        if (!is.Array(obj)) {
+            Object.defineProperty(obj, 'setVal', {
+                value: function value(path, val) {
+                    Craft.setDeep(obj, path, val);
+                    return obj;
+                },
+                writable: !1,
+                enumerable: !1
+            });
             Object.defineProperty(obj, 'removeListener', {
                 value: function value(fn) {
                     obj.listeners = obj.listeners.filter(function(l) {
@@ -1550,7 +1578,7 @@ function _typeof(obj) {
                     get: function get(target, key, reciever) {
                         return Reflect.get(target, key);
                     },
-                    set: function set(target, key, value, reciever) {
+                    set: function set(target, key, value, reciever) { //if(value.NoTrigger) return Reflect.set(target, key, value.val); else
                         target.listeners.forEach(function(l) {
                             if (l.prop === '*' || l.prop === key) l.fn(target, key, value, !Object.is(Reflect.get(target, key), value));
                         });
@@ -1571,7 +1599,7 @@ function _typeof(obj) {
                     console.error('Your Browser is Old Update it', e2);
                 }
             }
-        } else if (is.Array(obj)) {
+        } else {
             var _ret = (function() {
                 Object.defineProperty(obj, 'removeListener', {
                     value: function value(fn) {
@@ -2210,15 +2238,18 @@ function _typeof(obj) {
                         OpenSock = function OpenSock(sock) {
                             sock.onopen = function() {
                                 Options.open = !0;
+                                sock.onmessage = function(e) {
+                                    Options.message = e.data;
+                                    forEach(Options.recievers, function(fn) {
+                                        fn(e.data, e);
+                                    });
+                                };
                             };
                             sock.onclose = function() {
                                 Options.open = !1;
                             };
-                            sock.onmessage = function(e) {
-                                Options.message = e.data;
-                                forEach(Options.recievers, function(fn) {
-                                    fn(e.data, e);
-                                });
+                            sock.onerror = function(e) {
+                                console.error(e);
                             };
                         },
                         Options = {
@@ -2265,7 +2296,6 @@ function _typeof(obj) {
                 if ((typeof _ret2 === "undefined" ? "undefined" : _typeof(_ret2)) === "object") return _ret2.v;
             }
         },
-        observable: observable,
         curry: function curry(fn) {
             return makeFn(fn, [], fn.length);
         },
@@ -2408,6 +2438,7 @@ function _typeof(obj) {
                 return n * Craft.millis.days(365);
             }
         },
+        observable: observable,
         CustomAttributes: [],
         Models: observable(),
         tabActive: !0,
@@ -2507,13 +2538,13 @@ function _typeof(obj) {
                 }, 5500);
             });
         },
-        model: function model(name, func, imediate) {
+        model: function model(name, func) {
             if (is.Func(func) && is.String(name)) {
                 if (!is.Def(Craft.Models[name])) Craft.Models[name] = {
                     func: func,
-                    scope: observable(),
-                    imediate: imediate || !1
+                    scope: observable()
                 };
+                return Craft.Models[name].scope;
             }
         },
         fromModel: function fromModel(key, val) {
@@ -2649,17 +2680,32 @@ function _typeof(obj) {
                 settings = {},
                 dm = undefined;
             element.createdCallback = function() {
-                if (is.Func(config['created'])) config['created'].call(dom(this));
+                var el = dom(this),
+                    dealtWith = [];
+                for (var _key2 in config) {
+                    if (!dealtWith.includes(_key2)) {
+                        if (_key2.includes("set_")) {
+                            var sgKey = _key2.split("_")[1];
+                            dealtWith.push(_key2, "get_" + sgKey);
+                            el.newSetGet(sgKey, config[_key2], config["get_" + sgKey]);
+                        } else if (_key2.includes("get_")) {
+                            var _sgKey = _key2.split("_")[1];
+                            dealtWith.push(_key2, "set_" + _sgKey);
+                            el.newSetGet(_sgKey, is.Func(config["set_" + _sgKey]) ? config["set_" + _sgKey] : function(x) {}, config[_key2]);
+                        }
+                    }
+                }
+                if (is.Func(config['created'])) return config['created'].call(el);
             };
-            var _loop = function _loop(_key2) {
-                if (_key2 === 'created') return "continue";
-                if (is.Func(config[_key2])) dm = function dm() { // Adds dom methods to element
-                    return config[_key2].call(dom(this));
+            var _loop = function _loop(_key3) {
+                if (_key3 === 'created' || _key3.includes('set_') || _key3.includes('get_')) return "continue";
+                if (is.Func(config[_key3])) dm = function dm() { // Adds dom methods to element
+                    return config[_key3].call(dom(this));
                 };
-                _key2 == 'inserted' ? element.attachedCallback = dm : _key2 == 'destroyed' ? element.detachedCallback = dm : _key2 == 'attr' ? element.attributeChangedCallback = dm : _key2.includes('css') && _key2.length == 3 ? Craft.addCSS(config[_key2]) : is.Func(config[_key2]) ? element[_key2] = dm : Object.defineProperty(element, _key2, Object.getOwnPropertyDescriptor(config, _key2));
+                _key3 == 'inserted' ? element.attachedCallback = dm : _key3 == 'destroyed' ? element.detachedCallback = dm : _key3 == 'attr' ? element.attributeChangedCallback = dm : _key3.includes('css') && _key3.length == 3 ? Craft.addCSS(config[_key3]) : is.Func(config[_key3]) ? element[_key3] = dm : Object.defineProperty(element, _key3, Object.getOwnPropertyDescriptor(config, _key3));
             };
-            for (var _key2 in config) {
-                var _ret5 = _loop(_key2);
+            for (var _key3 in config) {
+                var _ret5 = _loop(_key3);
                 if (_ret5 === "continue") continue;
             }
             settings['prototype'] = element;
@@ -2710,23 +2756,7 @@ function _typeof(obj) {
         });
     });
     Craft.customAttr('bind', function(element, bind) {
-        try {
-            var _Craft$getPath = Craft.getPath(bind, !0, !0),
-                cutbind = _Craft$getPath.cutbind,
-                prop = _Craft$getPath.prop,
-                obj = _Craft$getPath.obj,
-                val = _Craft$getPath.val;
-            is.Def(val) ? element.html(val) : Craft.setDeep(obj, prop, element.html());
-            if (is.Def(Object.getOwnPropertyDescriptor(obj, 'addListener')) && !is.Func(element._BL)) {
-                element._BL = function(o, n, v) {
-                    element.html(v);
-                };
-                obj.addListener(prop, element);
-            }
-            if (element.isInput) element.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : joindot(Craft.omit(cutbind, cutbind[0])));
-        } catch (e) {
-            console.warn("couldn't bind : ", element);
-        }
+        element.bind(bind);
     });
     Craft.customAttr('color-accent', function(element, color) {
         if (is.Func(element.colorAccent)) element.colorAccent(color);
@@ -2746,9 +2776,7 @@ function _typeof(obj) {
         }
     }
     Craft.Models.addListener(function(o, key, model, isnew) {
-        if (isnew) Ready || model.imediate ? model.func(model.scope) : Craft.WhenReady.then(function() {
-            model.func(model.scope);
-        });
+        model.func(model.scope);
     });
     var DestructionEvent = new Event('destroy');
     Once('DOMContentLoaded', doc, function(e) {

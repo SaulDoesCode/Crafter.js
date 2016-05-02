@@ -252,27 +252,6 @@ craft-notification > .notification-close {
   cursor: not-allowed;
   z-index: 5;
 }
-.craft-grid, grid-host {
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-box-align: center;
-  -webkit-align-items: center;
-  -ms-flex-align: center;
-  align-items: center;
-  -webkit-align-content: flex-start;
-  -ms-flex-line-pack: start;
-  align-content: flex-start;
-  -webkit-box-pack: center;
-  -webkit-justify-content: center;
-  -ms-flex-pack: center;
-  justify-content: center;
-  -webkit-flex-flow: row wrap;
-  -ms-flex-flow: row wrap;
-  flex-flow: row wrap;
-  box-sizing: border-box;
-}
 .biscuit-tall, .biscuit-double, .biscuit-big, .biscuit {
   -webkit-box-flex: 0;
   -webkit-flex: 0 0 auto;
@@ -319,32 +298,6 @@ craft-notification > .notification-close {
   text-align: center;
   font-size: 0.8em;
   margin: 5px;
-}
-.large-title {
-  font-size: 35px;
-  margin: 5px auto;
-}
-.panel {
-  position: relative;
-  overflow: hidden;
-  width: 100%;
-  height: 2cm;
-  margin: 5px auto;
-  background: #fff;
-  color: hsl(0, 0%, 55%);
-  box-shadow: 0 0 4px hsla(0, 0%, 30%, 0.5);
-}
-.panel-80 {
-  position: relative;
-  overflow: hidden;
-  margin: 5px auto;
-  width: 80%;
-  height: 2cm;
-  line-height: 18mm;
-  background: #fff;
-  color: hsl(0, 0%, 55%);
-  box-shadow: 0 1px 3px hsla(0, 0%, 10%, 0.25);
-  border-radius: 2px;
 }
 [class^=flatbutton], [class^=pushbutton] {
   position: relative;
@@ -505,31 +458,6 @@ li {
 }
 check-box, radio-button, radio-button > *, material-input, material-input > * {
   box-sizing: border-box;
-}
-check-box {
-  box-sizing: border-box;
-  position: relative;
-  vertical-align: middle;
-  -ms-user-select: none;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  display: inline-block;
-  width: 15px;
-  height: 15px;
-  line-height: 15px;
-  margin: 0 2px;
-  background: hsl(0, 0%, 90%);
-  border: 1px solid silver;
-  color: hsl(0, 0%, 30%);
-  -webkit-transition: all 100ms ease;
-  transition: all 100ms ease;
-}
-check-box[checked]:before {
-  content: '✔';
-}
-check-box:hover {
-  border: 1px solid #797979;
 }
 radio-button {
   position: relative;

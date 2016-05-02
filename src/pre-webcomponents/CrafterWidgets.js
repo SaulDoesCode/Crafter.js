@@ -60,11 +60,11 @@ Craft.notification = (msg, state, side, duration) => {
         document.body.insertBefore(dom().div('', `class=notifications-${side}`), document.body.firstChild);
         host = query(`.notifications-${side}`);
     }
-    host.appendChild(dom().element('craft-notification', msg, {
-        duration: duration,
-        side: side,
-        state: state
-    }));
+    dom().element('craft-notification', msg, {
+        duration,
+        side,
+        state
+    }).appendTo(host);
 }
 
 Craft.newComponent('craft-notification', {
@@ -107,13 +107,43 @@ Craft.newComponent('context-menu', {
 });
 
 Craft.newComponent('check-box', {
+    css : `
+    check-box {
+      box-sizing: border-box;
+      position: relative;
+      vertical-align: middle;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      display: inline-block;
+      width: 15px;
+      height: 15px;
+      line-height: 15px;
+      margin: 0 2px;
+      background: hsl(0, 0%, 90%);
+      border: 1px solid silver;
+      color: hsl(0, 0%, 30%);
+      -webkit-transition: all 100ms ease;
+      transition: all 100ms ease;
+    }
+    check-box[checked]:before {
+      content: '✔';
+    }
+    check-box:hover {
+      border: 1px solid #797979;
+    }
+    `,
     inserted() {
-        let el = this;
-        el.check = el.Click(el.toggle.bind(el));
-        el.newSetGet('value', val => {
-            el.toggleAttr('checked', val);
-            if (is.Func(el.oncheck)) el.oncheck(el.value);
-        }, () => el.hasAttr('checked'));
+        this.check = this.Click(this.toggle.bind(this))
+    },
+    set_value(val) {
+      let el = this;
+      el.toggleAttr('checked', val);
+      if (is.Func(el.oncheck)) el.oncheck(el.value);
+    },
+    get_value() {
+      return this.hasAttr('checked');
     },
     toggle(val) {
         this.value = is.Bool(val) ? val : !this.value

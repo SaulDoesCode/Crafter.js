@@ -29,7 +29,7 @@ Craft.customAttr('tooltip', (element, val) => {
         tooltip.style.display = show ? 'block' : 'none';
         setTimeout(() => {
             tooltip.style.opacity = show ? '1' : '0'
-        }, 10);
+        }, 10)
     }
 
     tooltip.EventListeners.push(element.Mouseenter(ev => {
@@ -37,8 +37,7 @@ Craft.customAttr('tooltip', (element, val) => {
         tooltip.mover.On;
         if (ev.target != element || ev.target.parentNode != element) element.hasAttr('tooltip-delay') ?
             setTimeout(toggleTT, parseInt(element.getAttr('tooltip-delay'))) :
-            toggleTT();
-
+            toggleTT()
     }));
     tooltip.EventListeners.push(element.Mouseleave(ev => {
         show = !1;
@@ -64,5 +63,5 @@ Craft.customAttr('tooltip', (element, val) => {
         attributes: !0
     }, 'ttObserve');
 
-    tooltip.appendTo(document.body);
+    tooltip.appendTo(document.body)
 });
