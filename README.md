@@ -155,7 +155,7 @@ Create a new Custom Element using the Craft.newComponent method
 ```
 
 #### Models
-Crafter.js allows the creation of scoped models to manipulate your app, models execute after the page has loaded
+Crafter.js allows the creation of scoped models to manipulate your app, models execute immediately then the views they return executes after the page has loaded
 
 ```javascript
 
@@ -172,6 +172,9 @@ Crafter.js allows the creation of scoped models to manipulate your app, models e
 
     scope.newinfo = 'I will change when there is new info';
 
+  }).view(scope => {
+    // do any dom manips or post DOM load code here
+    dom().element('article','class=news-article').bind('MyModel.articles[2]').appendTo('div.news')
   })
 
   // You can assign to variables from the model scope via Craft.fromModel
@@ -185,8 +188,9 @@ Crafter.js allows the creation of scoped models to manipulate your app, models e
 You can easily bind scope variables to the dom using the bind="ModelName.xyz" attribute and all your changes will reflect in the dom
 
 ```html
-  <div>
-    <header bind='MyModel.headline'> New Headline , this Just in... </header>
+  <div class="news">
+    <header bind='MyModel.headline' class='news'> New Headline , this Just in... </header>
+    <article class="news-article"> article3... </article>
   </div>
 ```
 
