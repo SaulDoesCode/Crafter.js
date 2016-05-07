@@ -897,16 +897,32 @@
         element.isInput = is.Input(element);
 
         element.newSetGet = function(key, set, get) {
-                Object.defineProperty(this, key, {
-                    set: set,
-                    get: get
-                })
+            Object.defineProperty(this, key, {
+                set: set,
+                get: get
+            })
+        }
+
+        element.newSetGet('colorAccent', func => {
+            if (element.hasAttr('color-accent')) {
+                func(element.getAttr('color-accent'));
+                element._cah = {
+                    fn: func,
+                    dw: true
+                }
+            } else {
+                element._cah = {
+                    fn: func,
+                    dw: false
+                }
             }
-            /**
-             * changes or returns the innerHTML value of a Node
-             * @memberof dom
-             * @param {string=} sets the innerHTML value or when undefined gets the innerHTML value
-             */
+        }, () => element._cah);
+
+        /**
+         * changes or returns the innerHTML value of a Node
+         * @memberof dom
+         * @param {string=} sets the innerHTML value or when undefined gets the innerHTML value
+         */
         element.html = Inner('innerHTML', element);
 
 
@@ -967,36 +983,41 @@
         }
 
         element.bind = function(bind) {
-          try {
-              let {
-                  cutbind,
-                  prop,
-                  obj,
-                  val
-              } = Craft.getPath(bind, true, true);
+                function attemptBind() {
+                    let {
+                        cutbind,
+                        prop,
+                        obj,
+                        val
+                    } = Craft.getPath(bind, true, true);
 
-              is.Def(val) ? element.html(val) : Craft.setDeep(obj, prop, element.html());
+                    is.Def(val) ? element.html(val) : Craft.setDeep(obj, prop, element.html());
+                    if (is.Def(Object.getOwnPropertyDescriptor(obj, 'addListener')) && !is.Func(element._BL)) {
+                        element._BL = (o, n, v) => {
+                            element.html(v)
+                        }
+                        obj.addListener(prop, element)
+                    }
+                    if (element.isInput) element.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : joindot(Craft.omit(cutbind, cutbind[0])))
+                }
 
-              if (is.Def(Object.getOwnPropertyDescriptor(obj, 'addListener')) && !is.Func(element._BL)) {
-                  element._BL = (o, n, v) => {
-                      element.html(v)
-                  }
+                try {
+                    attemptBind()
+                } catch (e) {
+                    Craft.Models.addListener(cutdot(bind)[0], () => {
+                        setTimeout(attemptBind, 20)
+                    })
+                }
 
-                  obj.addListener(prop, element);
-              }
-              if (element.isInput) element.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : joindot(Craft.omit(cutbind, cutbind[0])))
-          } catch (e) {
-              console.warn("couldn't bind : ", element)
-          }
-          return element;
-        }
-        /**
-         * Listen for Events on the element or on all the elements in the NodeList
-         * @memberof dom
-         * @param {string} string indicating the type of event to listen for
-         * @param {function} func - handler function for the event
-         * @returns handler (Off,Once,On)
-         */
+                return element
+            }
+            /**
+             * Listen for Events on the element or on all the elements in the NodeList
+             * @memberof dom
+             * @param {string} string indicating the type of event to listen for
+             * @param {function} func - handler function for the event
+             * @returns handler (Off,Once,On)
+             */
         element.On = (eventType, func) => On(eventType, element, func);
 
 
@@ -1326,9 +1347,9 @@
         });
         if (!is.Array(obj)) {
             Object.defineProperty(obj, 'setVal', {
-                value(path,val) {
-                   Craft.setDeep(obj,path,val);
-                   return obj;
+                value(path, val) {
+                    Craft.setDeep(obj, path, val);
+                    return obj;
                 },
                 writable: !1,
                 enumerable: !1,
@@ -1752,12 +1773,13 @@
                 href: link
             }),
             style: (css, attr) => craftElement('style', css, attr),
-            script(code, attr, defer) {
+            script(code, attr, defer, onload) {
                 let script = craftElement('script', '', attr, {
-                    type: 'text/javascript',
-                    src: Craft.URLfrom(code)
+                    type: 'text/javascript'
                 });
-                if (is.Def(defer)) script.defer = defer != !1;
+                script.src = Craft.URLfrom(code);
+                if (defer == !0) script.defer = defer != !1;
+                if (is.Func(onload)) script.onload = onload;
                 return script
             },
             td: (inner, attr) => craftElement('td', inner, attr),
@@ -1795,7 +1817,9 @@
             setPrekey(str) {
                 Craft.loader.pre = str + ':'
             },
-            get: key => JSON.parse(localStorage.getItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key) || !1),
+            get(key) {
+                return JSON.parse(localStorage.getItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key) || !1)
+            },
             remove(key) {
                 localStorage.removeItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key)
             },
@@ -1921,24 +1945,25 @@
             if (!address.includes('ws://') || !address.includes('wss://')) address = (location.protocol === 'http:' ? 'ws://' : 'wss://') + address;
             if (is.URL(address)) {
                 function newSock() {
-                  return protocols ? new WebSocket(address, protocols) : new WebSocket(address)
+                    return protocols ? new WebSocket(address, protocols) : new WebSocket(address)
                 }
+
                 function OpenSock(sock) {
-                  sock.onopen = () => {
-                      Options.open = !0;
-                      sock.onmessage = e => {
-                          Options.message = e.data;
-                          forEach(Options.recievers, fn => {
-                              fn(e.data, e)
-                          });
-                      }
-                  }
-                  sock.onclose = () => {
-                      Options.open = !1
-                  }
-                  sock.onerror = e => {
-                    console.error(e);
-                  }
+                    sock.onopen = () => {
+                        Options.open = !0;
+                        sock.onmessage = e => {
+                            Options.message = e.data;
+                            forEach(Options.recievers, fn => {
+                                fn(e.data, e)
+                            });
+                        }
+                    }
+                    sock.onclose = () => {
+                        Options.open = !1
+                    }
+                    sock.onerror = e => {
+                        console.error(e);
+                    }
                 }
                 let Options = {
                     socket: null,
@@ -2125,7 +2150,7 @@
                     return this
                 }
                 stop() {
-                    if (is.Def(this.interval)) cancelAnimationFrame(this.interval);
+                    if (is.int(this.interval)) cancelAnimationFrame(this.interval);
                     return this
                 }
                 reset(fn) {
@@ -2141,7 +2166,7 @@
             options.offset = options.offset || 0;
 
             let startTime, elapsedTime, start = root.pageYOffset,
-                distance = is.String(target) ? options.offset + dom(target,!0).getRect().top : target,
+                distance = is.String(target) ? options.offset + dom(target, !0).getRect().top : target,
                 loopIteration = 0,
                 loop = time => {
                     if (loopIteration == 0) startTime = time;
@@ -2210,19 +2235,19 @@
         },
         model(name, func) {
             if (is.Func(func) && is.String(name)) {
-                let scope;
                 if (!is.Def(Craft.Models[name])) {
-                  scope = observable();
-                  Craft.Models[name] = {
-                    func : func.bind(scope),
-                    scope,
-                  }
+                    let scope = observable();
+                    Craft.Models[name] = {
+                        func: func.bind(scope),
+                        scope,
+                    }
+                    return {
+                        view(fn) {
+                            Craft.WhenReady.then(fn.bind(scope, scope))
+                        }
+                    }
                 }
-                return {
-                  view(fn) {
-                    Craft.WhenReady.then(fn.bind(scope,scope))
-                  }
-                }
+                throw Error('Craft Model already exists');
             }
         },
         fromModel(key, val) {
@@ -2356,19 +2381,20 @@
                 dm;
 
             element.createdCallback = function() {
-                let el = dom(this), dealtWith = [];
+                let el = dom(this),
+                    dealtWith = [];
                 for (let key in config) {
-                  if(!dealtWith.includes(key)) {
-                    if(key.includes("set_")) {
-                        let sgKey = key.split("_")[1];
-                        dealtWith.push(key,"get_"+sgKey);
-                        el.newSetGet(sgKey,config[key],config["get_"+sgKey]);
-                    } else if(key.includes("get_")) {
-                      let sgKey = key.split("_")[1];
-                      dealtWith.push(key,"set_"+sgKey);
-                      el.newSetGet(sgKey,(is.Func(config["set_"+sgKey]) ? config["set_"+sgKey] : x => {}),config[key]);
+                    if (!dealtWith.includes(key)) {
+                        if (key.includes("set_")) {
+                            let sgKey = key.split("_")[1];
+                            dealtWith.push(key, "get_" + sgKey);
+                            el.newSetGet(sgKey, config[key], config["get_" + sgKey]);
+                        } else if (key.includes("get_")) {
+                            let sgKey = key.split("_")[1];
+                            dealtWith.push(key, "set_" + sgKey);
+                            el.newSetGet(sgKey, (is.Func(config["set_" + sgKey]) ? config["set_" + sgKey] : x => {}), config[key]);
+                        }
                     }
-                  }
                 }
                 if (is.Func(config['created'])) return config['created'].call(el)
             }
@@ -2414,12 +2440,16 @@
         }
     });
 
-    root.onblur = e => {
+    Craft.customAttr('bind', (element, bind) => {
+        element.bind(bind)
+    });
+
+    On('blur', e => {
         Craft.tabActive = !1
-    }
-    root.onfocus = e => {
+    });
+    On('focus', e => {
         Craft.tabActive = !0
-    }
+    });
 
     Craft.curry.to = Craft.curry((arity, fn) => makeFn(fn, [], arity));
     Craft.curry.adaptTo = Craft.curry((num, fn) => Craft.curry.to(num, function(context) {
@@ -2428,19 +2458,20 @@
     Craft.curry.adapt = fn => Craft.curry.adaptTo(fn.length, fn);
     Craft.loader.removeAll(!0);
 
-
     Craft.customAttr('link', (el, link) => {
         el.linkevt = On(el).Click(e => {
             (el.hasAttr('newtab') ? open : Craft.router.open)(link)
         })
     });
 
-    Craft.customAttr('bind', (element, bind) => {
-        element.bind(bind)
-    });
-
     Craft.customAttr('color-accent', (element, color) => {
         if (is.Func(element.colorAccent)) element.colorAccent(color);
+        else if (is.Object(element.colorAccent)) {
+            if (!element._cah.dw) {
+                element._cah.fn(color);
+                element._cah.dw = !1;
+            }
+        }
     });
 
     function manageAttr(el) {
@@ -2462,7 +2493,8 @@
     });
 
     let DestructionEvent = new Event('destroy');
-    Once('DOMContentLoaded', doc, e => {
+
+    function init() {
         forEach(Craft.router.links, link => {
             link()
         });
@@ -2486,7 +2518,9 @@
             subtree: !0
         });
         Ready = !0
-    });
+    }
+
+    doc.readyState != "complete" ? Once("DOMContentLoaded", doc, init) : init();
 
     On('hashchange', () => {
         forEach(Craft.router.handlers, handle => {
