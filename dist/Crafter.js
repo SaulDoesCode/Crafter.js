@@ -1088,6 +1088,22 @@ function _typeof(obj) {
                 get: get
             });
         };
+        element.newSetGet('colorAccent', function(func) {
+            if (element.hasAttr('color-accent')) {
+                func(element.getAttr('color-accent'));
+                element._cah = {
+                    fn: func,
+                    dw: !0
+                };
+            } else {
+                element._cah = {
+                    fn: func,
+                    dw: !1
+                };
+            }
+        }, function() {
+            return element._cah;
+        });
         /**
          * changes or returns the innerHTML value of a Node
          * @memberof dom
@@ -1152,7 +1168,7 @@ function _typeof(obj) {
             return element;
         };
         element.bind = function(bind) {
-            try {
+            function attemptBind() {
                 var _Craft$getPath = Craft.getPath(bind, !0, !0),
                     cutbind = _Craft$getPath.cutbind,
                     prop = _Craft$getPath.prop,
@@ -1166,8 +1182,13 @@ function _typeof(obj) {
                     obj.addListener(prop, element);
                 }
                 if (element.isInput) element.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : joindot(Craft.omit(cutbind, cutbind[0])));
+            }
+            try {
+                attemptBind();
             } catch (e) {
-                console.warn("couldn't bind : ", element);
+                Craft.Models.addListener(cutdot(bind)[0], function() {
+                    setTimeout(attemptBind, 20);
+                });
             }
             return element;
         };
@@ -2046,12 +2067,13 @@ function _typeof(obj) {
             style: function style(css, attr) {
                 return craftElement('style', css, attr);
             },
-            script: function script(code, attr, defer) {
+            script: function script(code, attr, defer, onload) {
                 var script = craftElement('script', '', attr, {
-                    type: 'text/javascript',
-                    src: Craft.URLfrom(code)
+                    type: 'text/javascript'
                 });
-                if (is.Def(defer)) script.defer = defer != !1;
+                script.src = Craft.URLfrom(code);
+                if (defer == !0) script.defer = defer != !1;
+                if (is.Func(onload)) script.onload = onload;
                 return script;
             },
             td: function td(inner, attr) {
@@ -2500,7 +2522,7 @@ function _typeof(obj) {
                 }, {
                     key: "stop",
                     value: function stop() {
-                        if (is.Def(this.interval)) cancelAnimationFrame(this.interval);
+                        if (is.int(this.interval)) cancelAnimationFrame(this.interval);
                         return this;
                     }
                 }, {
@@ -2592,24 +2614,24 @@ function _typeof(obj) {
         },
         model: function model(name, func) {
             if (is.Func(func) && is.String(name)) {
-                var _ret4 = (function() {
-                    var scope = undefined;
-                    if (!is.Def(Craft.Models[name])) {
-                        scope = observable();
+                if (!is.Def(Craft.Models[name])) {
+                    var _ret4 = (function() {
+                        var scope = observable();
                         Craft.Models[name] = {
                             func: func.bind(scope),
                             scope: scope
                         };
-                    }
-                    return {
-                        v: {
-                            view: function view(fn) {
-                                Craft.WhenReady.then(fn.bind(scope, scope));
+                        return {
+                            v: {
+                                view: function view(fn) {
+                                    Craft.WhenReady.then(fn.bind(scope, scope));
+                                }
                             }
-                        }
-                    };
-                })();
-                if ((typeof _ret4 === "undefined" ? "undefined" : _typeof(_ret4)) === "object") return _ret4.v;
+                        };
+                    })();
+                    if ((typeof _ret4 === "undefined" ? "undefined" : _typeof(_ret4)) === "object") return _ret4.v;
+                }
+                throw Error('Craft Model already exists');
             }
         },
         fromModel: function fromModel(key, val) {
@@ -2797,12 +2819,15 @@ function _typeof(obj) {
             Craft.ForEach(collection, func, i + 1);
         }
     });
-    root.onblur = function(e) {
+    Craft.customAttr('bind', function(element, bind) {
+        element.bind(bind);
+    });
+    On('blur', function(e) {
         Craft.tabActive = !1;
-    };
-    root.onfocus = function(e) {
+    });
+    On('focus', function(e) {
         Craft.tabActive = !0;
-    };
+    });
     Craft.curry.to = Craft.curry(function(arity, fn) {
         return makeFn(fn, [], arity);
     });
@@ -2820,11 +2845,14 @@ function _typeof(obj) {
             (el.hasAttr('newtab') ? open : Craft.router.open)(link);
         });
     });
-    Craft.customAttr('bind', function(element, bind) {
-        element.bind(bind);
-    });
     Craft.customAttr('color-accent', function(element, color) {
         if (is.Func(element.colorAccent)) element.colorAccent(color);
+        else if (is.Object(element.colorAccent)) {
+            if (!element._cah.dw) {
+                element._cah.fn(color);
+                element._cah.dw = !1;
+            }
+        }
     });
 
     function manageAttr(el) {
@@ -2844,7 +2872,8 @@ function _typeof(obj) {
         model.func(model.scope);
     });
     var DestructionEvent = new Event('destroy');
-    Once('DOMContentLoaded', doc, function(e) {
+
+    function init() {
         forEach(Craft.router.links, function(link) {
             link();
         });
@@ -2867,7 +2896,8 @@ function _typeof(obj) {
             subtree: !0
         });
         Ready = !0;
-    });
+    }
+    doc.readyState != "complete" ? Once("DOMContentLoaded", doc, init) : init();
     On('hashchange', function() {
         forEach(Craft.router.handlers, function(handle) {
             if (Locs(function(l) {
