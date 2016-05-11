@@ -1,26 +1,4 @@
 "use strict";
-var _createClass = (function() {
-    function defineProperties(target, props) {
-        for (var i = 0; i < props.length; i++) {
-            var descriptor = props[i];
-            descriptor.enumerable = descriptor.enumerable || !1;
-            descriptor.configurable = !0;
-            if ("value" in descriptor) descriptor.writable = !0;
-            Object.defineProperty(target, descriptor.key, descriptor);
-        }
-    }
-    return function(Constructor, protoProps, staticProps) {
-        if (protoProps) defineProperties(Constructor.prototype, protoProps);
-        if (staticProps) defineProperties(Constructor, staticProps);
-        return Constructor;
-    };
-})();
-
-function _classCallCheck(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-        throw new TypeError("Cannot call a class as a function");
-    }
-}
 
 function _typeof(obj) {
     return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj;
@@ -33,15 +11,15 @@ function _typeof(obj) {
 (function(doc, root) {
     "use strict ";
     var Ready = doc.readyState === "complete",
+        CrafterStyles = doc.createElement('style'),
+        ua = navigator.userAgent,
+        tabActive = !0,
+        tabListeners = [],
+        tem = undefined,
+        Br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i),
         sI = 'Isync',
         ud = void 0,
         head = doc.head,
-        CrafterStyles = doc.createElement('style'),
-        ua = navigator.userAgent,
-        Eltypes = {
-            button: HTMLButtonElement,
-            input: HTMLInputElement
-        },
         RegExps = {
             email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
             timeString: /^(2[0-3]|[01]?[0-9]):([0-5]?[0-9]):([0-5]?[0-9])$/,
@@ -51,9 +29,7 @@ function _typeof(obj) {
             ipv4: /^(?:(?:\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.){3}(?:\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])$/,
             ipv6: /^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/,
             ip: /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/
-        },
-        tem = undefined,
-        Br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
+        };
     if (Br && (tem = ua.match(/version\/([\.\d]+)/i)) !== null) Br[2] = tem[1];
     Br = (Br ? [Br[1], Br[2]] : [navigator.appName, navigator.appVersion, '-?']).join(' ');
     CrafterStyles.setAttribute('crafterstyles', '');
@@ -638,28 +614,28 @@ function _typeof(obj) {
      * @returns Interface On,Off,Once
      */
     function eventHandler(EventType, Target, func, Within) {
-        var _this = this;
-        this.EventType = EventType || 'click';
+        EventType = EventType || 'click';
         this.state = !1;
-        this.Target = Target !== root && Target !== doc ? NodeOrQuerytoArr(Target, Within) : [Target];
-        this.FuncWrapper = function(e) {
-            func(e, e.target, Craft.deglove(_this.Target));
-        };
-        if (is.String(EventType) && EventType.includes(',')) this.EventType = EventType.split(',');
-        if (!is.Array(this.EventType)) this.EventType = [this.EventType];
+        Target = Target !== root && Target !== doc ? NodeOrQuerytoArr(Target, Within) : [Target];
+        if (is.String(EventType) && EventType.includes(',')) EventType = EventType.split(',');
+        if (!is.Array(EventType)) EventType = [EventType];
+
+        function FuncWrapper(e) {
+            func(e, e.target, Craft.deglove(Target));
+        }
         /**
          * Activates the EventHandler to start listening for the EventType on the Target/Targets
          */
         Object.defineProperty(this, 'On', {
             get: function get() {
-                var evtHndl = this;
-                forEach(evtHndl.Target, function(target) {
-                    forEach(evtHndl.EventType, function(evt) {
-                        target.addEventListener(evt, evtHndl.FuncWrapper);
+                var ehdl = this;
+                forEach(Target, function(target) {
+                    forEach(EventType, function(evt) {
+                        target.addEventListener(evt, FuncWrapper);
                     });
                 });
-                evtHndl.state = !0;
-                return evtHndl;
+                ehdl.state = !0;
+                return ehdl;
             },
             enumerable: !0
         });
@@ -669,15 +645,15 @@ function _typeof(obj) {
          */
         Object.defineProperty(this, 'Type', {
             set: function set(type) {
-                var evtHndl = this; //  have you tried turning it on and off again? - THE IT CROWD
-                evtHndl.Off;
-                evtHndl.EventType = type.includes(',') ? type.split(',') : type;
-                if (!is.Array(evtHndl.EventType)) evtHndl.EventType = [evtHndl.EventType];
-                evtHndl.On;
-                return evtHndl;
+                var ehdl = this; //  have you tried turning it on and off again? - THE IT CROWD
+                ehdl.Off;
+                EventType = type.includes(',') ? type.split(',') : type;
+                if (!is.Array(EventType)) EventType = [EventType];
+                ehdl.On;
+                return ehdl;
             },
             get: function get() {
-                return this.EventType;
+                return EventType;
             },
             enumerable: !0
         });
@@ -687,14 +663,14 @@ function _typeof(obj) {
          */
         Object.defineProperty(this, 'Off', {
             get: function get() {
-                var evtHndl = this;
-                forEach(evtHndl.Target, function(target) {
-                    forEach(evtHndl.EventType, function(evt) {
-                        target.removeEventListener(evt, evtHndl.FuncWrapper);
+                var ehdl = this;
+                forEach(Target, function(target) {
+                    forEach(EventType, function(evt) {
+                        target.removeEventListener(evt, FuncWrapper);
                     });
                 });
-                evtHndl.state = !0;
-                return evtHndl;
+                ehdl.state = !1;
+                return ehdl;
             },
             enumerable: !0
         });
@@ -704,23 +680,22 @@ function _typeof(obj) {
          */
         Object.defineProperty(this, 'Once', {
             get: function get() {
-                var evtHndl = this,
-                    func = evtHndl.FuncWrapper,
-                    target = evtHndl.Target;
-                forEach(evtHndl.EventType, function(etype) {
-                    evtHndl.state = !0;
+                var ehdl = this,
+                    func = FuncWrapper;
+                forEach(EventType, function(etype) {
+                    ehdl.state = !0;
                     var listenOnce = function listenOnce(e) {
-                        evtHndl.state = !1;
+                        ehdl.state = !1;
                         func(e);
-                        forEach(target, function(t) {
+                        forEach(Target, function(t) {
                             t.removeEventListener(etype, listenOnce);
                         });
                     };
-                    forEach(target, function(t) {
+                    forEach(Target, function(t) {
                         t.addEventListener(etype, listenOnce);
                     });
                 });
-                return evtHndl;
+                return ehdl;
             },
             enumerable: !0
         });
@@ -1863,7 +1838,7 @@ function _typeof(obj) {
                 currentPath = path;
                 nestable = !1;
                 is.Array(object) ? currentPath += "[" + key + "]" : !currentPath ? currentPath = key : currentPath += '.' + key;
-                nestable = !!fn(val, key, object, currentPath);
+                nestable = fn(val, key, object, currentPath) == !1;
                 if (nestable && (is.Array(val) || is.Object(val))) Craft.forEachDeep(val, fn, currentPath);
             }
         },
@@ -2407,9 +2382,9 @@ function _typeof(obj) {
             };
         },
         css: function css(el, styles) {
-            is.Def(styles) && is.Node(el) ? forEach(styles, function(prop, key) {
+            if (is.Object(styles) && is.Element(el)) forEach(styles, function(prop, key) {
                 el.style[key] = prop;
-            }) : console.error('invalid args');
+            });
         },
         hasCapitals: function hasCapitals(string) {
             return toArr(string).some(function(c) {
@@ -2507,34 +2482,24 @@ function _typeof(obj) {
             };
         },
         animFrame: function animFrame(func) {
-            return new((function() {
-                function _class(fn) {
-                    _classCallCheck(this, _class);
-                    this.fn = fn;
-                }
-                _createClass(_class, [{
-                    key: "start",
-                    value: function start() {
-                        this.fn();
-                        this.interval = requestAnimationFrame(this.start.bind(this));
-                        return this;
+            var interval = undefined,
+                options = {
+                    start: function start() {
+                        func();
+                        interval = requestAnimationFrame(options.start);
+                        return options;
+                    },
+                    stop: function stop() {
+                        if (is.int(interval)) cancelAnimationFrame(interval);
+                        return options;
+                    },
+                    reset: function reset(fn) {
+                        options.stop();
+                        if (is.Func(fn)) func = fn;
+                        return options.start();
                     }
-                }, {
-                    key: "stop",
-                    value: function stop() {
-                        if (is.int(this.interval)) cancelAnimationFrame(this.interval);
-                        return this;
-                    }
-                }, {
-                    key: "reset",
-                    value: function reset(fn) {
-                        this.stop();
-                        this.fn = fn;
-                        return this.start();
-                    }
-                }]);
-                return _class;
-            })())(func);
+                };
+            return options;
         },
         JumpTo: function JumpTo(target, options) {
             options = options || {};
@@ -2631,22 +2596,25 @@ function _typeof(obj) {
                     })();
                     if ((typeof _ret4 === "undefined" ? "undefined" : _typeof(_ret4)) === "object") return _ret4.v;
                 }
-                throw Error('Craft Model already exists');
+                throw new Error('Craft Model already exists');
             }
         },
         fromModel: function fromModel(key, val) {
-            var cutkey = cutdot(key);
-            if (is.Def(Craft.Models[cutkey[0]])) {
-                var _type2 = (is.Def(val) ? 'set' : 'get') + 'Deep';
-                return cutkey.length === 1 && !is.Def(val) ? Craft.Models[cutkey[0]].scope : Craft[_type2](Craft.Models[cutkey[0]].scope, joindot(Craft.omit(cutkey, cutkey[0])), val);
+            var cutkey = cutdot(key),
+                ck = cutkey[0];
+            if (is.Def(Craft.Models[ck])) {
+                var vd = is.Def(val),
+                    _type2 = (vd ? 'set' : 'get') + 'Deep';
+                return cutkey.length == 1 && !vd ? Craft.Models[ck].scope : Craft[_type2](Craft.Models[ck].scope, joindot(Craft.omit(cutkey, ck)), val);
             }
         },
         getPath: function getPath(path, full) {
             try {
                 var cutbind = cutdot(path),
                     prop = last(cutbind),
-                    obj = is.Def(Craft.Models[cutbind[0]]) ? Craft.Models[cutbind[0]].scope : Craft.getDeep(root, joindot(Craft.omit(cutbind, prop))),
-                    val = Craft.getDeep(obj, cutbind.length > 1 ? joindot(Craft.omit(cutbind, cutbind[0])) : prop);
+                    first = cutbind[0],
+                    obj = is.Def(Craft.Models[first]) ? Craft.Models[first].scope : Craft.getDeep(root, joindot(Craft.omit(cutbind, prop))),
+                    val = Craft.getDeep(obj, cutbind.length > 1 ? joindot(Craft.omit(cutbind, first)) : prop);
                 if (full) return {
                     cutbind: cutbind,
                     prop: prop,
@@ -2654,7 +2622,7 @@ function _typeof(obj) {
                     val: val
                 };
                 if (is.Def(val)) return val;
-                if (!full && cutbind[0] === prop && is.Def(obj)) return obj;
+                if (!full && first === prop && is.Def(obj)) return obj;
             } catch (e) {
                 console.log(e);
                 return;
@@ -2749,15 +2717,7 @@ function _typeof(obj) {
         },
         /**
          * method for creating custom elements configuring their lifecycle's and inheritance
-         * the config Object has 5 distinct options ( created , inserted , destroyed , attr and extends )
-         * Craft.newComponent('custom-element',{
-         * // note : inside each lifecycle method the "this" is a reference to the element being created -> this === element
-         *    created() { ... }, // this method gets called when the custom-element is first instanciated
-         *    inserted() { ... }, // this method gets called when the custom-element is first inserted into the DOM
-         *    destroyed() { ... }, // this method gets called when the custom-element removed from the DOM (AKA. destroyed)
-         *    attr(attributeChangedName , oldValue , newValue) { ... }, // attr method gets called when attributes are changed on the element
-         *    extends : 'button' //tagName of element being inherited from should you want to
-         * });
+         * the config Object has 7 distinct options ( created , inserted , destroyed , attr, css, set_X and get_X )
          * @param {string} tag - a hyphenated custom HTML tagname for the new element -> "custom-element"
          * @param {object} config - Object containing all the element's lifecycle methods / extends and attached methods or properties
          */
@@ -2810,8 +2770,33 @@ function _typeof(obj) {
                 input[sI].Off;
                 delete input[sI];
             }
+        },
+        get tabActive() {
+            return tabActive;
+        },
+        onTabChange: function onTabChange(fn) {
+            var options = {get Off() {
+                    tabListners = Craft.omit(tabListeners, fn);
+                    return options;
+                },
+                get On() {
+                    tabListeners.push(fn);
+                    return options;
+                }
+            };
+            return options.On;
         }
     };
+    var TabChange = function TabChange(ta) {
+        return function() {
+            tabActive = ta;
+            forEach(tabListeners, function(tl) {
+                tl(tabActive);
+            });
+        };
+    };
+    On('blur', TabChange(!1));
+    On('focus', TabChange(!0));
     Craft.ForEach = Craft.tco(function(collection, func, i) {
         if (is.Undef(i)) i = 0;
         if (collection.length != i) {
@@ -2819,15 +2804,7 @@ function _typeof(obj) {
             Craft.ForEach(collection, func, i + 1);
         }
     });
-    Craft.customAttr('bind', function(element, bind) {
-        element.bind(bind);
-    });
-    On('blur', function(e) {
-        Craft.tabActive = !1;
-    });
-    On('focus', function(e) {
-        Craft.tabActive = !0;
-    });
+    Craft.loader.removeAll(!0);
     Craft.curry.to = Craft.curry(function(arity, fn) {
         return makeFn(fn, [], arity);
     });
@@ -2839,7 +2816,9 @@ function _typeof(obj) {
     Craft.curry.adapt = function(fn) {
         return Craft.curry.adaptTo(fn.length, fn);
     };
-    Craft.loader.removeAll(!0);
+    Craft.customAttr('bind', function(element, bind) {
+        element.bind(bind);
+    });
     Craft.customAttr('link', function(el, link) {
         el.linkevt = On(el).Click(function(e) {
             (el.hasAttr('newtab') ? open : Craft.router.open)(link);

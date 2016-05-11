@@ -7,15 +7,14 @@
 (function(doc, root) {
     "use strict ";
     let Ready = doc.readyState === "complete",
-        sI = 'Isync',
-        ud = void 0,
-        head = doc.head,
         CrafterStyles = doc.createElement('style'),
         ua = navigator.userAgent,
-        Eltypes = {
-            button: HTMLButtonElement,
-            input: HTMLInputElement
-        },
+        tabActive = !0,
+        tabListeners = [],
+        tem, Br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
+    const sI = 'Isync',
+        ud = void 0,
+        head = doc.head,
         RegExps = {
             email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
             timeString: /^(2[0-3]|[01]?[0-9]):([0-5]?[0-9]):([0-5]?[0-9])$/,
@@ -25,8 +24,8 @@
             ipv4: /^(?:(?:\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.){3}(?:\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])$/,
             ipv6: /^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/,
             ip: /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/
-        },
-        tem, Br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
+        };
+
     if (Br && (tem = ua.match(/version\/([\.\d]+)/i)) !== null) Br[2] = tem[1];
     Br = (Br ? [Br[1], Br[2]] : [navigator.appName, navigator.appVersion, '-?']).join(' ');
 
@@ -34,7 +33,7 @@
     head.appendChild(CrafterStyles);
 
     function Locs(test) {
-        return [location.hash, location.href, location.pathname].some(test)
+        return [location.hash, location.href, location.pathname].some(test);
     }
 
     function last(arr) {
@@ -504,28 +503,28 @@
      * @returns Interface On,Off,Once
      */
     function eventHandler(EventType, Target, func, Within) {
-        this.EventType = EventType || 'click';
+        EventType = EventType || 'click';
         this.state = !1;
-        this.Target = (Target !== root && Target !== doc) ? NodeOrQuerytoArr(Target, Within) : [Target];
-        this.FuncWrapper = e => {
-            func(e, e.target, Craft.deglove(this.Target));
-        }
-        if (is.String(EventType) && EventType.includes(',')) this.EventType = EventType.split(',');
-        if (!is.Array(this.EventType)) this.EventType = [this.EventType];
+        Target = (Target !== root && Target !== doc) ? NodeOrQuerytoArr(Target, Within) : [Target];
+        if (is.String(EventType) && EventType.includes(',')) EventType = EventType.split(',');
+        if (!is.Array(EventType)) EventType = [EventType];
 
+        function FuncWrapper(e) {
+            func(e, e.target, Craft.deglove(Target));
+        }
         /**
          * Activates the EventHandler to start listening for the EventType on the Target/Targets
          */
         Object.defineProperty(this, 'On', {
             get() {
-                let evtHndl = this;
-                forEach(evtHndl.Target, target => {
-                    forEach(evtHndl.EventType, evt => {
-                        target.addEventListener(evt, evtHndl.FuncWrapper)
+                let ehdl = this;
+                forEach(Target, target => {
+                    forEach(EventType, evt => {
+                        target.addEventListener(evt, FuncWrapper)
                     })
                 });
-                evtHndl.state = !0;
-                return evtHndl
+                ehdl.state = !0;
+                return ehdl
             },
             enumerable: true
         });
@@ -535,18 +534,18 @@
          */
         Object.defineProperty(this, 'Type', {
                 set(type) {
-                    let evtHndl = this;
+                    let ehdl = this;
                     //  have you tried turning it on and off again? - THE IT CROWD
-                    evtHndl.Off;
-                    evtHndl.EventType = type.includes(',') ? type.split(',') : type;
-                    if (!is.Array(evtHndl.EventType)) evtHndl.EventType = [evtHndl.EventType];
-                    evtHndl.On;
-                    return evtHndl
+                    ehdl.Off;
+                    EventType = type.includes(',') ? type.split(',') : type;
+                    if (!is.Array(EventType)) EventType = [EventType];
+                    ehdl.On;
+                    return ehdl
                 },
                 get() {
-                    return this.EventType
+                    return EventType
                 },
-                enumerable: true
+                enumerable: !0
             })
             /**
              * De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
@@ -554,16 +553,16 @@
              */
         Object.defineProperty(this, 'Off', {
             get() {
-                let evtHndl = this;
-                forEach(evtHndl.Target, target => {
-                    forEach(evtHndl.EventType, evt => {
-                        target.removeEventListener(evt, evtHndl.FuncWrapper)
+                let ehdl = this;
+                forEach(Target, target => {
+                    forEach(EventType, evt => {
+                        target.removeEventListener(evt, FuncWrapper)
                     })
                 });
-                evtHndl.state = !0;
-                return evtHndl
+                ehdl.state = !1;
+                return ehdl
             },
-            enumerable: true
+            enumerable: !0
         });
 
         /**
@@ -572,23 +571,22 @@
          */
         Object.defineProperty(this, 'Once', {
             get() {
-                let evtHndl = this,
-                    func = evtHndl.FuncWrapper,
-                    target = evtHndl.Target;
-                forEach(evtHndl.EventType, etype => {
-                    evtHndl.state = !0;
+                let ehdl = this,
+                    func = FuncWrapper;
+                forEach(EventType, etype => {
+                    ehdl.state = !0;
                     let listenOnce = e => {
-                        evtHndl.state = !1;
+                        ehdl.state = !1;
                         func(e);
-                        forEach(target, t => {
+                        forEach(Target, t => {
                             t.removeEventListener(etype, listenOnce)
                         })
                     }
-                    forEach(target, t => {
+                    forEach(Target, t => {
                         t.addEventListener(etype, listenOnce)
                     })
                 });
-                return evtHndl
+                return ehdl
             },
             enumerable: true
         });
@@ -982,14 +980,14 @@
             return element
         }
 
-        element.bind = function(bind) {
+        element.bind = bind => {
                 function attemptBind() {
                     let {
                         cutbind,
                         prop,
                         obj,
                         val
-                    } = Craft.getPath(bind, true, true);
+                    } = Craft.getPath(bind, !0, !0);
 
                     is.Def(val) ? element.html(val) : Craft.setDeep(obj, prop, element.html());
                     if (is.Def(Object.getOwnPropertyDescriptor(obj, 'addListener')) && !is.Func(element._BL)) {
@@ -1315,7 +1313,7 @@
      * @param {Node|string=} within - optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
      * @param {boolean=} one - even if there are more than one elements matching a selector only return the first one
      */
-    root.dom = function(element, within, one) {
+    root.dom = (element, within, one) => {
         if (within == !0) {
             one = within;
             within = null;
@@ -1405,7 +1403,7 @@
                     });
                     return obj
                 } catch (e2) {
-                    console.error('Your Browser is Old Update it', e2)
+                    console.error('Your Browser is Old Update it', e2);
                 }
             }
         } else {
@@ -1435,7 +1433,7 @@
                         Craft.arrDiff(oldArr, target, l);
                     });
                     oldArr = Craft.clone(target);
-                    return true
+                    return !0
                 }
             });
         }
@@ -1549,8 +1547,7 @@
          * @memberof Craft
          * @param {Array|Arraylike} arr - multidimentional array(like) object to flatten
          */
-        flatten: arr => (!is.Array(arr) && is.Arraylike(arr) ? Arrat.from(arr) : is.Array(arr) ? arr : [])
-            .reduce((flat, toFlatten) => flat.concat(is.Array(toFlatten) ? Craft.flatten(toFlatten) : toFlatten), []),
+        flatten: arr => (!is.Array(arr) && is.Arraylike(arr) ? Arrat.from(arr) : is.Array(arr) ? arr : []).reduce((flat, toFlatten) => flat.concat(is.Array(toFlatten) ? Craft.flatten(toFlatten) : toFlatten), []),
         /**
          * Gets a value from inside an object using a reference string
          * @method getDeep
@@ -1610,7 +1607,7 @@
                 currentPath = path;
                 nestable = !1;
                 is.Array(object) ? currentPath += `[${key}]` : !currentPath ? currentPath = key : currentPath += '.' + key;
-                nestable = !!fn(val, key, object, currentPath);
+                nestable = fn(val, key, object, currentPath) == !1;
                 if (nestable && (is.Array(val) || is.Object(val))) Craft.forEachDeep(val, fn, currentPath);
             }
         },
@@ -1664,9 +1661,9 @@
             if (is.Arraylike(val)) val = Craft.omitFrom.apply(this, arguments);
             let args = toArr(arguments).slice(1);
             if (is.Object(val) && !args.some(v => v == val)) forEach(val, (prop, key) => {
-                if (args.some(v => v == prop || v == key)) delete val[key]
+                if (args.some(v => v == prop || v == key)) delete val[key];
             });
-            return val
+            return val;
         },
         addCSS(css) {
             CrafterStyles.textContent += css
@@ -1696,10 +1693,10 @@
                         attrs[v[0]] = v[1];
                     });
                 } else {
-                    str = Craft.omit(Str.split(/^([a-zA-Z-_]*)\s([\s\S]*)$/igm), Str, "")
+                    str = Craft.omit(Str.split(/^([a-zA-Z-_]*)\s([\s\S]*)$/igm), Str, "");
                     inner = str[1];
                 }
-                return craftElement(str[0], inner, attrs)
+                return craftElement(str[0], inner, attrs);
             },
             /**
              * creates a div element with the options provided
@@ -1754,7 +1751,7 @@
                 }
                 return craftElement('input', '', attributes, {
                     type: type || 'text'
-                })
+                });
             },
             button: (inner, attr) => craftElement('button', inner, attr),
             list(type, items, attr) {
@@ -1763,7 +1760,7 @@
                     if (is.String(item)) list += craftElement('li', item).outerHTML;
                     else if (is.Object(items)) list += craftElement('li', item.inner, item.attr).outerHTML;
                 });
-                return craftElement(type, list, attr)
+                return craftElement(type, list, attr);
             },
             ul: (items, attr) => Craft.dom.list('ul', items, attr),
             ol: (items, attr) => Craft.dom.list('ol', items, attr),
@@ -1780,7 +1777,7 @@
                 script.src = Craft.URLfrom(code);
                 if (defer == !0) script.defer = defer != !1;
                 if (is.Func(onload)) script.onload = onload;
-                return script
+                return script;
             },
             td: (inner, attr) => craftElement('td', inner, attr),
             th: (inner, attr) => craftElement('th', inner, attr),
@@ -1959,7 +1956,7 @@
                         }
                     }
                     sock.onclose = () => {
-                        Options.open = !1
+                        Options.open = !1;
                     }
                     sock.onerror = e => {
                         console.error(e);
@@ -1980,27 +1977,27 @@
                                 }
                             }, 10);
                             setTimeout(() => {
-                                clearInterval(poll)
+                                clearInterval(poll);
                             }, 2000);
                         }
                     },
                     set recieve(func) {
-                        if (is.Func(func)) Options.recievers.push(func)
+                        if (is.Func(func)) Options.recievers.push(func);
                     },
                     get recieve() {
-                        return Options.message
+                        return Options.message;
                     },
                     close() {
-                        Options.socket.close()
+                        Options.socket.close();
                     },
                     reopen() {
                         if (!Options.open) Options.socket = newSock();
-                        OpenSock(Options.socket)
+                        OpenSock(Options.socket);
                     }
                 }
                 Options.socket = newSock();
                 OpenSock(Options.socket);
-                return Options
+                return Options;
             }
         },
         curry: fn => makeFn(fn, [], fn.length),
@@ -2066,9 +2063,9 @@
             }
         },
         css(el, styles) {
-            is.Def(styles) && is.Node(el) ? forEach(styles, (prop, key) => {
+            if (is.Object(styles) && is.Element(el)) forEach(styles, (prop, key) => {
                 el.style[key] = prop
-            }) : console.error('invalid args')
+            })
         },
         hasCapitals: string => toArr(string).some(c => is.Uppercase(c)),
         OverrideFunction(funcName, Func, ContextObject) {
@@ -2086,7 +2083,7 @@
         indexOfDate(Collection, date) {
             for (let i = 0; i < Collection.length; i++)
                 if (+Collection[i] === +date) return i;
-            return -1
+            return -1;
         },
         type() {
             let types = toArr(arguments).map(t => typeof t);
@@ -2140,25 +2137,23 @@
             }
         },
         animFrame(func) {
-            return new class {
-                constructor(fn) {
-                    this.fn = fn
-                }
+            let interval, options = {
                 start() {
-                    this.fn();
-                    this.interval = requestAnimationFrame(this.start.bind(this));
-                    return this
-                }
+                    func();
+                    interval = requestAnimationFrame(options.start);
+                    return options
+                },
                 stop() {
-                    if (is.int(this.interval)) cancelAnimationFrame(this.interval);
-                    return this
-                }
+                    if (is.int(interval)) cancelAnimationFrame(interval);
+                    return options
+                },
                 reset(fn) {
-                    this.stop();
-                    this.fn = fn;
-                    return this.start()
+                    options.stop();
+                    if (is.Func(fn)) func = fn;
+                    return options.start();
                 }
-            }(func)
+            }
+            return options;
         },
         JumpTo(target, options) {
             options = options || {};
@@ -2224,7 +2219,7 @@
                 let check = setInterval(() => {
                     if (Ready || doc.readyState === "complete") {
                         pass();
-                        clearInterval(check)
+                        clearInterval(check);
                     }
                 }, 20);
                 setTimeout(() => {
@@ -2247,23 +2242,25 @@
                         }
                     }
                 }
-                throw Error('Craft Model already exists');
+                throw new Error('Craft Model already exists');
             }
         },
         fromModel(key, val) {
-            let cutkey = cutdot(key);
-            if (is.Def(Craft.Models[cutkey[0]])) {
-                let type = (is.Def(val) ? 'set' : 'get') + 'Deep';
-                return cutkey.length === 1 && !is.Def(val) ? Craft.Models[cutkey[0]].scope :
-                    Craft[type](Craft.Models[cutkey[0]].scope, joindot(Craft.omit(cutkey, cutkey[0])), val)
+            let cutkey = cutdot(key),
+                ck = cutkey[0];
+            if (is.Def(Craft.Models[ck])) {
+                let vd = is.Def(val),
+                    type = (vd ? 'set' : 'get') + 'Deep';
+                return cutkey.length == 1 && !vd ? Craft.Models[ck].scope : Craft[type](Craft.Models[ck].scope, joindot(Craft.omit(cutkey, ck)), val);
             }
         },
         getPath(path, full) {
             try {
                 let cutbind = cutdot(path),
                     prop = last(cutbind),
-                    obj = is.Def(Craft.Models[cutbind[0]]) ? Craft.Models[cutbind[0]].scope : Craft.getDeep(root, joindot(Craft.omit(cutbind, prop))),
-                    val = Craft.getDeep(obj, cutbind.length > 1 ? joindot(Craft.omit(cutbind, cutbind[0])) : prop);
+                    first = cutbind[0],
+                    obj = is.Def(Craft.Models[first]) ? Craft.Models[first].scope : Craft.getDeep(root, joindot(Craft.omit(cutbind, prop))),
+                    val = Craft.getDeep(obj, cutbind.length > 1 ? joindot(Craft.omit(cutbind, first)) : prop);
                 if (full) return {
                     cutbind,
                     prop,
@@ -2271,7 +2268,7 @@
                     val
                 };
                 if (is.Def(val)) return val;
-                if (!full && cutbind[0] === prop && is.Def(obj)) return obj;
+                if (!full && first === prop && is.Def(obj)) return obj;
             } catch (e) {
                 console.log(e);
                 return
@@ -2286,8 +2283,8 @@
         customAttr(name, handle) {
             if (is.Func(handle)) {
                 Craft.CustomAttributes.push({
-                    name: name,
-                    handle: handle
+                    name,
+                    handle
                 });
 
                 function apply() {
@@ -2362,15 +2359,7 @@
         GenUID: len => Craft.array(len || 6, Craft.randomString).join('-'),
         /**
          * method for creating custom elements configuring their lifecycle's and inheritance
-         * the config Object has 5 distinct options ( created , inserted , destroyed , attr and extends )
-         * Craft.newComponent('custom-element',{
-         * // note : inside each lifecycle method the "this" is a reference to the element being created -> this === element
-         *    created() { ... }, // this method gets called when the custom-element is first instanciated
-         *    inserted() { ... }, // this method gets called when the custom-element is first inserted into the DOM
-         *    destroyed() { ... }, // this method gets called when the custom-element removed from the DOM (AKA. destroyed)
-         *    attr(attributeChangedName , oldValue , newValue) { ... }, // attr method gets called when attributes are changed on the element
-         *    extends : 'button' //tagName of element being inherited from should you want to
-         * });
+         * the config Object has 7 distinct options ( created , inserted , destroyed , attr, css, set_X and get_X )
          * @param {string} tag - a hyphenated custom HTML tagname for the new element -> "custom-element"
          * @param {object} config - Object containing all the element's lifecycle methods / extends and attached methods or properties
          */
@@ -2430,7 +2419,36 @@
                 delete input[sI]
             }
         },
-    };
+        get tabActive() {
+          return tabActive;
+        },
+        onTabChange(fn) {
+            let options = {
+                get Off() {
+                    tabListners = Craft.omit(tabListeners, fn);
+                    return options;
+                },
+                get On() {
+                    tabListeners.push(fn);
+                    return options;
+                }
+            }
+            return options.On;
+        },
+    }
+
+    let TabChange = ta => {
+        return () => {
+            tabActive = ta;
+            forEach(tabListeners, tl => {
+                tl(tabActive);
+            });
+        }
+    }
+
+    On('blur', TabChange(!1));
+    On('focus', TabChange(!0));
+
 
     Craft.ForEach = Craft.tco((collection, func, i) => {
         if (is.Undef(i)) i = 0;
@@ -2440,23 +2458,17 @@
         }
     });
 
-    Craft.customAttr('bind', (element, bind) => {
-        element.bind(bind)
-    });
-
-    On('blur', e => {
-        Craft.tabActive = !1
-    });
-    On('focus', e => {
-        Craft.tabActive = !0
-    });
-
+    Craft.loader.removeAll(!0);
     Craft.curry.to = Craft.curry((arity, fn) => makeFn(fn, [], arity));
     Craft.curry.adaptTo = Craft.curry((num, fn) => Craft.curry.to(num, function(context) {
         fn.apply(null, Craft.omit(arguments, context).slice(1).concat(context))
     }));
     Craft.curry.adapt = fn => Craft.curry.adaptTo(fn.length, fn);
-    Craft.loader.removeAll(!0);
+
+
+    Craft.customAttr('bind', (element, bind) => {
+        element.bind(bind)
+    });
 
     Craft.customAttr('link', (el, link) => {
         el.linkevt = On(el).Click(e => {
@@ -2507,7 +2519,6 @@
                     el.dispatchEvent(DestructionEvent);
                 });
                 if (mut.type == 'attributes' && mut.target.hasAttribute(mut.attributeName)) manageAttr(mut.target);
-
             })
         });
         Craft.DomObserver.observe(doc.body, {

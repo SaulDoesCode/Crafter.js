@@ -1,14 +1,16 @@
 "use strict";
 Craft.dom.ripple = attr => dom().element('ripple-effect', '', attr);
 
-Craft.ripple = (selector, options) => queryEach(selector, element => On(element).Mousedown(e => {
-    if (e.buttons == 1) {
-        let ripple = dom().ripple(options);
-        ripple.Rx = e.clientX;
-        ripple.Ry = e.clientY;
-        element.appendChild(ripple);
-    }
-}));
+Craft.ripple = (selector, options) => queryEach(selector, element => {
+    On(element).Mousedown(e => {
+        if (e.buttons == 1) {
+            let ripple = dom().ripple(options);
+            ripple.Rx = e.clientX;
+            ripple.Ry = e.clientY;
+            ripple.appendTo(element);
+        }
+    })
+});
 
 Craft.newComponent('ripple-effect', {
     inserted() {
@@ -19,21 +21,14 @@ Craft.newComponent('ripple-effect', {
             diameter = Math.max(rect.width, rect.height);
         if (ripple.hasAttr("color-accent")) color = ripple.getAttr("color-accent");
         else if (ripple.hasAttr("color")) color = ripple.getAttr("color");
-        else if (par.hasAttr("ripple")) color = par.getAttr("ripple");
         else if (par.hasAttr("color-accent")) color = par.getAttr("color-accent");
 
         ripple.css({
-                width: diameter + 'px',
-                height: diameter + 'px',
-                backgroundColor: color || ''
-            })
-            .move(parseInt(ripple.Rx) - rect.left - (diameter / 2), parseInt(ripple.Ry) - rect.top - (diameter / 2), false, true);
-        ripple.animate([{
-            opacity: 0,
-            transform: 'scale(2.5)'
-        }], timing).finished.then(e => {
-            ripple.remove()
-        });
+            width: diameter + 'px',
+            height: diameter + 'px',
+            backgroundColor: color || '',
+            animation: `rippleanim ${timing}ms`
+        }).removeAfter(timing).move(parseInt(ripple.Rx) - rect.left - (diameter / 2), parseInt(ripple.Ry) - rect.top - (diameter / 2), false, true);
 
     }
 });
@@ -89,61 +84,41 @@ let __ContextMenus = [];
 Craft.newComponent('context-menu', {
     inserted() {
         let el = this;
+        if (el.hasAttr('scope')) el.Contextmenu = On('contextmenu', el.getAttr('scope'), e => {
+                el.Show(!0, e)
+            });
 
-        el.hasAttr('scope') ? el.Contextmenu = On('contextmenu', el.getAttr('scope'), e => {
-            el.Show(true, e)
-        }) : console.error('context-menu : No Scope Attribute found');
-        __ContextMenus.push(this);
+
+        __ContextMenus.push(el);
     },
     destroyed() {
         __ContextMenus = Craft.omit(__ContextMenus, this);
-        this.Contextmenu.Off;
+        this.Contextmenu.Off
     },
     Show(Show, ev) {
         if (is.Def(ev)) ev.preventDefault();
         let el = this;
-        Show ? el.addClass('context-menu-active').move((ev.clientX + 5), (ev.clientY + 5), true) : el.stripClass('context-menu-active');
+        Show ? el.addClass('context-menu-active').move((ev.clientX + 5), (ev.clientY + 5), !0) : el.stripClass('context-menu-active');
     }
 });
 
 Craft.newComponent('check-box', {
-    css : `
-    check-box {
-      box-sizing: border-box;
-      position: relative;
-      vertical-align: middle;
-      -ms-user-select: none;
-      user-select: none;
-      -webkit-user-select: none;
-      -moz-user-select: none;
-      display: inline-block;
-      width: 15px;
-      height: 15px;
-      line-height: 15px;
-      margin: 0 2px;
-      background: hsl(0, 0%, 90%);
-      border: 1px solid silver;
-      color: hsl(0, 0%, 30%);
-      -webkit-transition: all 100ms ease;
-      transition: all 100ms ease;
-    }
-    check-box[checked]:before {
-      content: '✔';
-    }
-    check-box:hover {
-      border: 1px solid #797979;
-    }
-    `,
     inserted() {
-        this.check = this.Click(this.toggle.bind(this))
+        let el = this;
+        el.check = el.Click(el.toggle.bind(el));
+        el.colorAccent = color => {
+            el.css({
+                borderColor: color
+            })
+        }
     },
     set_value(val) {
-      let el = this;
-      el.toggleAttr('checked', val);
-      if (is.Func(el.oncheck)) el.oncheck(el.value);
+        let el = this;
+        el.toggleAttr('checked', val);
+        if (is.Func(el.oncheck)) el.oncheck(el.value);
     },
     get_value() {
-      return this.hasAttr('checked');
+        return this.hasAttr('checked');
     },
     toggle(val) {
         this.value = is.Bool(val) ? val : !this.value
@@ -161,7 +136,7 @@ Craft.newComponent('toggle-button', {
         el.newSetGet('on', v => el.toggle(v), () => el.hasAttr('on'));
         el.append(dom().span('', 'class=toggle'));
     },
-    set ontoggle(func) {
+    set_ontoggle(func) {
         if (is.Func(func)) this.func = func;
     },
     toggle(on) {
@@ -169,16 +144,11 @@ Craft.newComponent('toggle-button', {
     },
     attr(name) {
         let el = this;
-        if (name == 'on')
-            if (is.Func(el.func)) el.func(el.hasAttr('on'))
+        if (name == 'on') el.func(el.hasAttr('on'))
     },
     destroyed() {
         this.click.Off
     }
-});
-
-Craft.newComponent('grid-host', {
-    extends: 'div'
 });
 
 Craft.newComponent('text-collapser', {
@@ -253,7 +223,6 @@ Craft.newComponent('material-input', {
             el.value = '';
             labelEffects();
         });
-
         el.append(clearText);
     },
     attr(name, nv) {
@@ -310,9 +279,8 @@ On(document).Click(e => {
 });
 
 Craft.customAttr('ripple', (el, color) => {
-    if (!is.Array(el.customAttr)) el.customAttr = [];
-    if (!el.customAttr.includes('ripple')) el.customAttr.push('ripple');
-    Craft.ripple(el, 'ripple=' + color);
+    if(color == '') color = el.getAttr('color-accent') || el.getAttr('color');
+    Craft.ripple(el, 'color=' + color);
 });
 
 Craft.customAttr('tooltip', (element, val) => {
@@ -334,6 +302,8 @@ Craft.customAttr('tooltip', (element, val) => {
 
     if (element.hasAttr('ripple')) tooltip.style.borderColor = element.getAttr('ripple');
     if (element.hasAttr('color-accent')) tooltip.style.borderColor = element.getAttr('color-accent');
+    if (element.hasAttr('color')) tooltip.style.borderColor = element.getAttr('color');
+    if(element.hasAttr('text-color')) tooltip.style.color = element.getAttr('text-color');
 
     tooltip.mover = element.Mousemove(e => {
         tooltip.move(e.clientX, e.clientY)
@@ -387,17 +357,19 @@ Craft.customAttr('tooltip', (element, val) => {
 });
 
 Craft.customAttr('movable', element => {
-    element.style.position = 'absolute';
+    element.style.position = 'fixed';
 
     let rect = element.getRect(),
         movehandle = query('[movehandle]', element),
         cx = 0,
         cy = 0,
-        move = On(window).Mousemove(e => el.move(e.clientX - cx + rect.left, e.clientY - cy + rect.top)).Off;
+        move = On(window).Mousemove(e => {
+          element.move(e.clientX - cx + rect.left, e.clientY - cy + rect.top)
+        }).Off;
 
     On(movehandle == null ? element : movehandle).Mousedown(e => {
-        if (e.button == 1) {
-            rect = el.getRect();
+        if (e.button == 1 || e.buttons == 1) {
+            rect = element.getRect();
             cx = e.clientX;
             cy = e.clientY;
             move.On
