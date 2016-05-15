@@ -69,25 +69,21 @@ context-menu > section:hover {
 .craft-tooltip[direction='right'] {
     border-right: 3px solid dimgrey;
     -webkit-transform: translateY(-15px) translateX(25px);
-    -ms-transform: translateY(-15px) translateX(25px);
     transform: translateY(-15px) translateX(25px);
 }
 .craft-tooltip[direction='left'] {
     border-left: 3px solid dimgrey;
     -webkit-transform: translateY(-15px) translateX(calc(-100% - 25px));
-    -ms-transform: translateY(-15px) translateX(calc(-100% - 25px));
     transform: translateY(-15px) translateX(calc(-100% - 25px));
 }
 .craft-tooltip[direction='down'] {
     border-bottom: 2px solid dimgrey;
     -webkit-transform: translateY(38px) translateX(-50%);
-    -ms-transform: translateY(38px) translateX(-50%);
     transform: translateY(38px) translateX(-50%);
 }
 .craft-tooltip[direction='up'] {
     border-top: 2px solid dimgrey;
     -webkit-transform: translateY(-38px) translateX(-50%);
-    -ms-transform: translateY(-38px) translateX(-50%);
     transform: translateY(-38px) translateX(-50%);
 }
 .craft-tooltip[direction='right']:before {

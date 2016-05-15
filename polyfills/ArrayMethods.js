@@ -1,3 +1,4 @@
+if (!indexedDB) var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB || window.shimIndexedDB;
 if (!Array.from) Array.from = (function () {
   var toStr = Object.prototype.toString,
     isFunc = function (fn) {return typeof fn === 'function' || toStr.call(fn) === '[object Function]'},

@@ -1612,6 +1612,11 @@
             }
         },
         /**
+         * Converts any text to an inline URL code (good for images , svg , scripts or css)
+         * @param {string} - content to convert to an inline URL
+         **/
+        URLfrom: (text,type) => URL.createObjectURL(new Blob([text],type)),
+        /**
          * Method to merge the properties of multiple objects , it can handle getters or setters without breaking them
          * @method concatObjects
          * @memberof Craft
@@ -1625,7 +1630,7 @@
             });
             return host
         },
-        isObservable: obj => obj.isObservable === true,
+        isObservable: obj => obj.isObservable || !1,
         /**
          * Simply clones/duplicates any object or array/arraylike object
          * @method clone
@@ -1649,6 +1654,9 @@
             }) : Arr = (is.Arraylike(Arr) ? toArr(Arr) : Arr).filter(e => rif(!args.some(v => v == e), e));
             return Arr
         },
+        has(str) {
+          return Craft.omit(arguments,str).some(e => str.includes(e))
+        },
         /**
          * Omits values from Objects or Arrays
          * @method omit
@@ -1666,7 +1674,7 @@
             return val;
         },
         addCSS(css) {
-            CrafterStyles.textContent += css
+            CrafterStyles.textContent += `@import url("${Craft.URLfrom(css,{type : 'text/css'})}");\n`;
         },
         /**
          * Contains several methods for Element Creation
@@ -1681,6 +1689,7 @@
                 return dfrag;
             },
             el(Str, attrs) {
+                if(!Craft.has(Str,' ','(',')',',,')) return craftElement(Str,'',attrs);
                 let str = Craft.omit(Str.split(/(^([a-zA-Z-_]*)\((.*)\)\S?([\s\S]*)$)/igm), Str, ""),
                     tag, inner;
                 if (!is.Object(attrs)) attrs = {};
@@ -2198,11 +2207,6 @@
             });
             return formData
         },
-        /**
-         * Converts any text to an inline URL code (good for images , svg , scripts or css)
-         * @param {string} - content to convert to an inline URL
-         **/
-        URLfrom: text => URL.createObjectURL(new Blob([text])),
         OnScroll(element, func, pd) {
             return On('wheel', element, e => {
                 if (pd) e.preventDefault();

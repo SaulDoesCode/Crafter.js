@@ -1843,6 +1843,13 @@ function _typeof(obj) {
             }
         },
         /**
+         * Converts any text to an inline URL code (good for images , svg , scripts or css)
+         * @param {string} - content to convert to an inline URL
+         **/
+        URLfrom: function URLfrom(text, type) {
+            return URL.createObjectURL(new Blob([text], type));
+        },
+        /**
          * Method to merge the properties of multiple objects , it can handle getters or setters without breaking them
          * @method concatObjects
          * @memberof Craft
@@ -1859,7 +1866,7 @@ function _typeof(obj) {
             return host;
         },
         isObservable: function isObservable(obj) {
-            return obj.isObservable === !0;
+            return obj.isObservable || !1;
         },
         /**
          * Simply clones/duplicates any object or array/arraylike object
@@ -1888,6 +1895,11 @@ function _typeof(obj) {
             });
             return Arr;
         },
+        has: function has(str) {
+            return Craft.omit(arguments, str).some(function(e) {
+                return str.includes(e);
+            });
+        },
         /**
          * Omits values from Objects or Arrays
          * @method omit
@@ -1909,7 +1921,9 @@ function _typeof(obj) {
             return val;
         },
         addCSS: function addCSS(css) {
-            CrafterStyles.textContent += css;
+            CrafterStyles.textContent += "@import url(\"" + Craft.URLfrom(css, {
+                type: 'text/css'
+            }) + "\");\n";
         },
         /**
          * Contains several methods for Element Creation
@@ -1924,6 +1938,7 @@ function _typeof(obj) {
                 return dfrag;
             },
             el: function el(Str, attrs) {
+                if (!Craft.has(Str, ' ', '(', ')', ',,')) return craftElement(Str, '', attrs);
                 var str = Craft.omit(Str.split(/(^([a-zA-Z-_]*)\((.*)\)\S?([\s\S]*)$)/igm), Str, ""),
                     tag = undefined,
                     inner = undefined;
@@ -2544,13 +2559,6 @@ function _typeof(obj) {
                 } else formData.append(key, v);
             });
             return formData;
-        },
-        /**
-         * Converts any text to an inline URL code (good for images , svg , scripts or css)
-         * @param {string} - content to convert to an inline URL
-         **/
-        URLfrom: function URLfrom(text) {
-            return URL.createObjectURL(new Blob([text]));
         },
         OnScroll: function OnScroll(element, func, pd) {
             return On('wheel', element, function(e) {
