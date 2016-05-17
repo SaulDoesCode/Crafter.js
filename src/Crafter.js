@@ -961,7 +961,7 @@
              * @param {Node|string} String or Node to append to the this.element
              */
         element.append = function() {
-                let domfrag = dom().frag();
+                let domfrag = dom.frag();
                 forEach(arguments, val => {
                     domfrag.appendChild(is.Node(val) ? val : dffstr(val))
                 });
@@ -1313,7 +1313,7 @@
      * @param {Node|string=} within - optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
      * @param {boolean=} one - even if there are more than one elements matching a selector only return the first one
      */
-    root.dom = (element, within, one) => {
+    root.dom = function dom(element, within, one) {
         if (within == !0) {
             one = within;
             within = null;
@@ -1858,7 +1858,7 @@
                 }))
             });
             return Promise.all(promises).then(src => src.map(obj => {
-                if (obj.exec) obj.type === 'css' ? Craft.addCSS('\n' + obj.data) : head.appendChild(dom().script(obj.data, 'key=' + obj.key, obj.defer))
+                if (obj.exec) obj.type === 'css' ? Craft.addCSS('\n' + obj.data) : head.appendChild(dom.script(obj.data, 'key=' + obj.key, obj.defer))
             }))
         },
         router: {
@@ -2468,7 +2468,7 @@
         fn.apply(null, Craft.omit(arguments, context).slice(1).concat(context))
     }));
     Craft.curry.adapt = fn => Craft.curry.adaptTo(fn.length, fn);
-
+    Craft.concatObjects(dom,Craft.dom);
 
     Craft.customAttr('bind', (element, bind) => {
         element.bind(bind)

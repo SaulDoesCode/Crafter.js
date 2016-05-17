@@ -38,17 +38,17 @@ Crafter.js uses Babel to ensure compatibility on older browsers
  adds several useful CSS classes and effects such as grids, ripple effects, sidebar , notifications , custom context menus,  tooltips and more.
 
 ### Crafter Code Example
-create elements on the fly with ease using the `dom()` method!
+create elements on the fly with ease using the `dom` method!
 
 ```javascript
 
-   let div = dom().div('div that haunts your dreams',{ class : 'fancy-div' , bind : 'model.hauntingDiv'})
+   let div = dom.div('div that haunts your dreams',{ class : 'fancy-div' , bind : 'model.hauntingDiv'})
    // div -> <div class="fancy-div" bind="model.hauntingDiv"> div that haunts your dreams </div>
 
    div.Click(evt => div.toggleClass('anim-wiggle'));
 
    div
-   .prepend(dom().span().addClass('icon-haunting-div'}))
+   .prepend(dom.span().addClass('icon-haunting-div'}))
    .appendTo(document.body);
 ```
 
@@ -58,24 +58,24 @@ create elements on the fly with ease using the `dom()` method!
 
     queryEach('.menu-items',element => {
       On('click',element,ev => {
-        dom('.page-view').append(dom().span('Hello!'))
+        dom('.page-view').append(dom.span('Hello!'))
       })
     });
     // or same thing differently
-    On('.menu-items').Click(ev => dom('.page-view').append(dom().span('Hello!'));
+    On('.menu-items').Click(ev => dom('.page-view').append(dom.span('Hello!'));
 
     // Element Methods
     dom('.text').prepend('Prepend Some Text to an element').append('Append Text to Same Element');
-    // make div , span and other elements via dom()
+    // make div , span and other elements via dom
     // add attributes with an object { title : 'x' , id : 'mydiv' }
-    dom().div('New div',{ class : 'page-element'}) // -> `<div class="page-element">New div</div>`
+    dom.div('New div',{ class : 'page-element'}) // -> `<div class="page-element">New div</div>`
     // dom.e() is a short-hand method to create elements
-    dom().el('div(class=page-element) New div') // -> `<div class="page-element">New div</div>`
+    dom.el('div(class=page-element) New div') // -> `<div class="page-element">New div</div>`
 
-    // for less common elements or custom elements use dom().element
+    // for less common elements or custom elements use dom.element
     // you could also add attributes URI style
 
-    dom().element('aside','text to go inside','id=asidecontent&class=side-content');
+    dom.element('aside','text to go inside','id=asidecontent&class=side-content');
     // -> <aside id="aside2" class="side-content"> text to go inside </aside>
 
   })
@@ -95,8 +95,8 @@ Create a new Custom Element using the Craft.newComponent method
     inserted() {
       // when the news-element is insterted fill it with content
       this
-      .prepend( dom().h(3, this.news.headline) /* -> <h3>News Headling...</h3> */ )
-      .append( dom().div(this.news.article) );
+      .prepend( dom.h(3, this.news.headline) /* -> <h3>News Headling...</h3> */ )
+      .append( dom.div(this.news.article) );
 
     },
     attr(name, oldValue , newValue) {
@@ -174,7 +174,7 @@ Crafter.js allows the creation of scoped models to manipulate your app, models e
 
   }).view(scope => {
     // do any dom manips or post DOM load code here
-    dom().element('article','class=news-article').bind('MyModel.articles[2]').appendTo('div.news')
+    dom.element('article','class=news-article').bind('MyModel.articles[2]').appendTo('div.news')
   })
 
   // You can assign to variables from the model scope via Craft.fromModel
