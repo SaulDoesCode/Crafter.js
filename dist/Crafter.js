@@ -1124,7 +1124,7 @@ function _typeof(obj) {
          * @param {Node|string} String or Node to append to the this.element
          */
         element.append = function() {
-            var domfrag = dom().frag();
+            var domfrag = dom.frag();
             forEach(arguments, function(val) {
                 domfrag.appendChild(is.Node(val) ? val : dffstr(val));
             });
@@ -1524,7 +1524,7 @@ function _typeof(obj) {
      * @param {Node|string=} within - optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
      * @param {boolean=} one - even if there are more than one elements matching a selector only return the first one
      */
-    root.dom = function(element, within, one) {
+    root.dom = function dom(element, within, one) {
         if (within == !0) {
             one = within;
             within = null;
@@ -2152,7 +2152,7 @@ function _typeof(obj) {
             });
             return Promise.all(promises).then(function(src) {
                 return src.map(function(obj) {
-                    if (obj.exec) obj.type === 'css' ? Craft.addCSS('\n' + obj.data) : head.appendChild(dom().script(obj.data, 'key=' + obj.key, obj.defer));
+                    if (obj.exec) obj.type === 'css' ? Craft.addCSS('\n' + obj.data) : head.appendChild(dom.script(obj.data, 'key=' + obj.key, obj.defer));
                 });
             });
         },
@@ -2824,6 +2824,7 @@ function _typeof(obj) {
     Craft.curry.adapt = function(fn) {
         return Craft.curry.adaptTo(fn.length, fn);
     };
+    Craft.concatObjects(dom, Craft.dom);
     Craft.customAttr('bind', function(element, bind) {
         element.bind(bind);
     });
