@@ -1,10 +1,10 @@
 "use strict";
-Craft.dom.ripple = attr => dom().element('ripple-effect', '', attr);
+dom.ripple = attr => dom.element('ripple-effect', '', attr);
 
 Craft.ripple = (selector, options) => queryEach(selector, element => {
     On(element).Mousedown(e => {
         if (e.buttons == 1) {
-            let ripple = dom().ripple(options);
+            let ripple = dom.ripple(options);
             ripple.Rx = e.clientX;
             ripple.Ry = e.clientY;
             ripple.appendTo(element);
@@ -28,7 +28,7 @@ Craft.newComponent('ripple-effect', {
             height: diameter + 'px',
             backgroundColor: color || '',
             animation: `rippleanim ${timing}ms`
-        }).removeAfter(timing).move(parseInt(ripple.Rx) - rect.left - (diameter / 2), parseInt(ripple.Ry) - rect.top - (diameter / 2), false, true);
+        }).removeAfter(timing).move(parseInt(ripple.Rx) - rect.left - (diameter / 2), parseInt(ripple.Ry) - rect.top - (diameter / 2), !1, !0);
 
     }
 });
@@ -52,10 +52,10 @@ Craft.notification = (msg, state, side, duration) => {
 
     let host = query(`.notifications-${side}`);
     if (host == null) {
-        document.body.insertBefore(dom().div('', `class=notifications-${side}`), document.body.firstChild);
+        document.body.insertBefore(dom.div('', `class=notifications-${side}`), document.body.firstChild);
         host = query(`.notifications-${side}`);
     }
-    dom().element('craft-notification', msg, {
+    dom.element('craft-notification',msg, {
         duration,
         side,
         state
@@ -69,7 +69,7 @@ Craft.newComponent('craft-notification', {
             note.remove()
         }, parseInt(note.getAttr('duration'), 10) || 3000);
         if (note.hasAttr('message')) note.html(note.getAttr('message'));
-        note.append(dom().div('X', 'class=notification-close'));
+        note.append(dom.div('X', 'class=notification-close'));
         note.clickEvent = On('.notification-close', note).Click(e => {
             note.remove()
         });
@@ -134,7 +134,7 @@ Craft.newComponent('toggle-button', {
         el.toggleAttr('on', el.hasAttr('on'));
         el.click = el.Click(el.toggle.bind(el));
         el.newSetGet('on', v => el.toggle(v), () => el.hasAttr('on'));
-        el.append(dom().span('', 'class=toggle'));
+        el.append(dom.span('', 'class=toggle'));
     },
     set_ontoggle(func) {
         if (is.Func(func)) this.func = func;
@@ -156,7 +156,7 @@ Craft.newComponent('text-collapser', {
         let el = this,
             txt = el.html();
         el.html("");
-        el.append(dom().label(el.getAttr('summary'), 'class=indicator')).append(dom().label(txt, 'class=text'));
+        el.append(dom.label(el.getAttr('summary'), 'class=indicator')).append(dom.label(txt, 'class=text'));
         el.newSetGet('open', val => el.toggleAttr('open', val), () => el.hasAttr('open'));
         el.onClick = On('.indicator', el).Click(e => {
             el.toggle()
@@ -178,7 +178,7 @@ let __InputAttributes = ["name", "pattern", "value", "max", "maxlength", "min", 
 Craft.newComponent('material-input', {
     inserted() {
         let el = this,
-            input = dom().input();
+            input = dom.input();
         el.html("");
 
         el.newSetGet('value', val => {
@@ -195,7 +195,7 @@ Craft.newComponent('material-input', {
             if (el.hasAttr(attr)) input.setAttr(attr, el.getAttr(attr));
         });
 
-        el.append(input, dom().span());
+        el.append(input, dom.span());
         input = dom('input', el);
         el.input = input;
         let clearText = query('span', el),
@@ -210,7 +210,7 @@ Craft.newComponent('material-input', {
         el.onblur = labelEffects;
 
         if (el.hasAttr("label") || el.hasAttr("placeholder")) {
-            let label = dom().label(el.getAttr("label") || el.getAttr("placeholder"));
+            let label = dom.label(el.getAttr("label") || el.getAttr("placeholder"));
             el.append(label);
             labelEffects();
         }
@@ -241,9 +241,9 @@ Craft.newComponent('radio-button', {
     created() {
         let element = this;
 
-        if (element.hasAttr('name') || element.hasAttr('label')) element.append(dom().label(element.getAttr('name') || element.getAttr('label')));
+        if (element.hasAttr('name') || element.hasAttr('label')) element.append(dom.label(element.getAttr('name') || element.getAttr('label')));
 
-        element.prepend(dom().span('', 'radio'));
+        element.prepend(dom.span('', 'radio'));
 
         element.CheckGroup = active => {
             let Group = [];
@@ -251,7 +251,7 @@ Craft.newComponent('radio-button', {
                 if (rb.hasAttr('checked')) Group.push(rb);
             });
             if (Group.length > 1) forEach(Group, rb => {
-                if (rb !== active) rb.checked = false
+                if (rb != active) rb.checked = false
             });
         }
 
@@ -294,7 +294,7 @@ Craft.customAttr('tooltip', (element, val) => {
         } else if (!is.Def(el.owner)) el.remove();
     });
     let show = !1,
-        tooltip = dom()
+        tooltip = dom
         .span(element.getAttr('tooltip') || '', `direction=${element.getAttr('tooltip-direction') || 'right'}&class=craft-tooltip`);
 
     tooltip.owner = element;

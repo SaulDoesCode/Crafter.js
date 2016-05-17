@@ -11,7 +11,6 @@ function _typeof(obj) {
 (function(doc, root) {
     "use strict ";
     var Ready = doc.readyState === "complete",
-        CrafterStyles = doc.createElement('style'),
         ua = navigator.userAgent,
         tabActive = !0,
         tabListeners = [],
@@ -32,8 +31,6 @@ function _typeof(obj) {
         };
     if (Br && (tem = ua.match(/version\/([\.\d]+)/i)) !== null) Br[2] = tem[1];
     Br = (Br ? [Br[1], Br[2]] : [navigator.appName, navigator.appVersion, '-?']).join(' ');
-    CrafterStyles.setAttribute('crafterstyles', '');
-    head.appendChild(CrafterStyles);
 
     function Locs(test) {
         return [location.hash, location.href, location.pathname].some(test);
@@ -556,7 +553,10 @@ function _typeof(obj) {
          * @param {Object|Array|string} val - value to test if empty
          */
         empty: ta(function(val) {
-            return !Craft.len(val) || val === '';
+            try {
+                return !(is.Object(val) ? Object.keys(val).length : is.Map(val) || is.Set(val) ? val.size : val.length) || val === '';
+            } catch (e) {}
+            return !1;
         }),
         /**
          * Test if something is a Native JavaScript feature
@@ -871,6 +871,144 @@ function _typeof(obj) {
         if (stringForm) newEl = newEl.outerHTML;
         return newEl;
     }
+    /**
+     * Contains several methods for Element Creation
+     * @namespace dom
+     */
+    var Dom = {
+        element: craftElement,
+        frag: function frag(inner) {
+            var dfrag = doc.createDocumentFragment();
+            if (is.String(inner)) inner = dffstr(inner);
+            if (is.Node(inner)) dfrag.appendChild(dfrag);
+            return dfrag;
+        },
+        /**
+         * creates a div element with the options provided
+         * @method div
+         * @memberof dom
+         * @param {string} sets innerHTML of the div
+         * @param {string|Object=} sets div attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
+         */
+        div: function div(inner, attr) {
+            return craftElement('div', inner, attr);
+        },
+        /**
+         * creates a span element with the options provided
+         * @method span
+         * @memberof dom
+         * @param {string} sets innerHTML of the span
+         * @param {string|Object=} sets span attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
+         */
+        span: function span(inner, attr) {
+            return craftElement('span', inner, attr);
+        },
+        /**
+         * creates a label element with the options provided
+         * @method label
+         * @memberof dom
+         * @param {string} sets innerHTML of the label
+         * @param {string|Object=} sets label attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
+         */
+        label: function label(inner, attr) {
+            return craftElement('label', inner, attr);
+        },
+        /**
+         * creates a p (paragraph) element with the options provided
+         * @method p
+         * @memberof dom
+         * @param {string} sets innerHTML of the p
+         * @param {string|Object=} sets p attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
+         */
+        p: function p(inner, attr) {
+            return craftElement('p', inner, attr);
+        },
+        header: function header(inner, attr) {
+            return craftElement('header', inner, attr);
+        },
+        br: function br() {
+            return craftElement('br');
+        },
+        /**
+         * creates an img element with the options provided
+         * @method img
+         * @memberof dom
+         * @param {string} sets src of the img
+         * @param {string} sets alt of the img
+         * @param {string|Object=} sets p attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
+         */
+        img: function img(src, alt, attr) {
+            return craftElement('img', '', attr, {
+                src: src,
+                alt: alt
+            });
+        },
+        input: function input(type, attributes) {
+            if (is.Object(type)) {
+                attributes = type;
+                type = 'text';
+            }
+            return craftElement('input', '', attributes, {
+                type: type || 'text'
+            });
+        },
+        button: function button(inner, attr) {
+            return craftElement('button', inner, attr);
+        },
+        list: function list(type, items, attr) {
+            var list = "";
+            if (is.Arrylike(items)) forEach(items, function(item) {
+                if (is.String(item)) list += craftElement('li', item).outerHTML;
+                else if (is.Object(items)) list += craftElement('li', item.inner, item.attr).outerHTML;
+            });
+            return craftElement(type, list, attr);
+        },
+        ul: function ul(items, attr) {
+            return Dom.list('ul', items, attr);
+        },
+        ol: function ol(items, attr) {
+            return Dom.list('ol', items, attr);
+        },
+        li: function li(inner, attr) {
+            return craftElement('li', inner, attr);
+        },
+        h: function h(level, inner, attr) {
+            return craftElement('h' + level, inner, attr);
+        },
+        a: function a(link, inner, attr) {
+            return craftElement('a', inner, attr, {
+                href: link
+            });
+        },
+        style: function style(css, attr) {
+            return craftElement('style', css, attr);
+        },
+        script: function script(code, attr, defer, onload) {
+            var script = craftElement('script', '', attr, {
+                type: 'text/javascript'
+            });
+            script.src = Craft.URLfrom(code);
+            if (defer == !0) script.defer = defer != !1;
+            if (is.Func(onload)) script.onload = onload;
+            return script;
+        },
+        td: function td(inner, attr) {
+            return craftElement('td', inner, attr);
+        },
+        th: function th(inner, attr) {
+            return craftElement('th', inner, attr);
+        },
+        tr: function tr(inner, attr) {
+            return craftElement('tr', inner, attr);
+        },
+        table: function table(rows, attr) {
+            return craftElement('table', rows, attr);
+        },
+        SafeHTML: function SafeHTML(html, node) {
+            html = html.replace(/<script[^>]*?>.*?<\/script>/gi, '').replace(/<style[^>]*?>.*?<\/style>/gi, '').replace(/<![\s\S]*?--[ \t\n\r]*>/gi, '');
+            return !node ? html : dffstr(html);
+        }
+    };
 
     function domNodeList(elements) {
         forEach(Object.getOwnPropertyNames(Array.prototype), function(method) {
@@ -1515,7 +1653,7 @@ function _typeof(obj) {
             return element;
         };
         return element;
-    }
+    };
     /**
      * Function that returns many useful methods for interacting with and manipulating the DOM or creating elements
      * in the absence of parameters the function will return methods for created elements
@@ -1540,9 +1678,22 @@ function _typeof(obj) {
             }
         } else if (is.String(element)) element = query(element, within);
         if (is.Node(element)) return !element['hasDOMmethods'] ? domManip(element) : element;
-        return Craft.dom;
+        return Dom;
     };
-    CrafterStyles = query('[crafterstyles]', head);
+    for (var _key in Dom) {
+        Object.defineProperty(dom, _key, Object.getOwnPropertyDescriptor(Dom, _key));
+    }
+    if (root.Proxy) dom = new Proxy(dom, {
+        get: function get(obj, key) {
+            if (!obj.hasOwnProperty(key)) {
+                if (Dom.hasOwnProperty(key)) return Dom[key];
+                return function(inner, attr, eattr, str) {
+                    return craftElement(key, inner, attr, eattr, str);
+                };
+            }
+            return obj[key];
+        }
+    });
 
     function observable(obj) {
         if (!is.Def(obj)) obj = obj || {};
@@ -1593,10 +1744,10 @@ function _typeof(obj) {
             });
             try {
                 return new Proxy(obj, {
-                    get: function get(target, key, reciever) {
+                    get: function get(target, key) {
                         return Reflect.get(target, key);
                     },
-                    set: function set(target, key, value, reciever) { //if(value.NoTrigger) return Reflect.set(target, key, value.val); else
+                    set: function set(target, key, value) { //if(value.NoTrigger) return Reflect.set(target, key, value.val); else
                         target.listeners.forEach(function(l) {
                             if (l.prop === '*' || l.prop === key) l.fn(target, key, value, !Object.is(Reflect.get(target, key), value));
                         });
@@ -1859,8 +2010,8 @@ function _typeof(obj) {
          */
         concatObjects: function concatObjects(host) {
             forEach(Craft.omit(arguments, host), function(obj) {
-                for (var _key in obj) {
-                    Object.defineProperty(host, _key, Object.getOwnPropertyDescriptor(obj, _key));
+                for (var _key2 in obj) {
+                    Object.defineProperty(host, _key2, Object.getOwnPropertyDescriptor(obj, _key2));
                 }
             });
             return host;
@@ -1921,167 +2072,9 @@ function _typeof(obj) {
             return val;
         },
         addCSS: function addCSS(css) {
-            CrafterStyles.textContent += "@import url(\"" + Craft.URLfrom(css, {
+            query('[crafterstyles]', head).textContent += "@import url(\"" + Craft.URLfrom(css, {
                 type: 'text/css'
             }) + "\");\n";
-        },
-        /**
-         * Contains several methods for Element Creation
-         * @namespace dom
-         */
-        dom: {
-            element: craftElement,
-            frag: function frag(inner) {
-                var dfrag = doc.createDocumentFragment();
-                if (is.String(inner)) inner = dffstr(inner);
-                if (is.Node(inner)) dfrag.appendChild(dfrag);
-                return dfrag;
-            },
-            el: function el(Str, attrs) {
-                if (!Craft.has(Str, ' ', '(', ')', ',,')) return craftElement(Str, '', attrs);
-                var str = Craft.omit(Str.split(/(^([a-zA-Z-_]*)\((.*)\)\S?([\s\S]*)$)/igm), Str, ""),
-                    tag = undefined,
-                    inner = undefined;
-                if (!is.Object(attrs)) attrs = {};
-                if (!is.empty(str)) {
-                    var attr = str[1];
-                    inner = str[2] || '';
-                    attr = attr.split(',,');
-                    forEach(attr, function(v) {
-                        v = v.split('=');
-                        attrs[v[0]] = v[1];
-                    });
-                } else {
-                    str = Craft.omit(Str.split(/^([a-zA-Z-_]*)\s([\s\S]*)$/igm), Str, "");
-                    inner = str[1];
-                }
-                return craftElement(str[0], inner, attrs);
-            },
-            /**
-             * creates a div element with the options provided
-             * @method div
-             * @memberof dom
-             * @param {string} sets innerHTML of the div
-             * @param {string|Object=} sets div attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
-             */
-            div: function div(inner, attr) {
-                return craftElement('div', inner, attr);
-            },
-            /**
-             * creates a span element with the options provided
-             * @method span
-             * @memberof dom
-             * @param {string} sets innerHTML of the span
-             * @param {string|Object=} sets span attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
-             */
-            span: function span(inner, attr) {
-                return craftElement('span', inner, attr);
-            },
-            /**
-             * creates a label element with the options provided
-             * @method label
-             * @memberof dom
-             * @param {string} sets innerHTML of the label
-             * @param {string|Object=} sets label attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
-             */
-            label: function label(inner, attr) {
-                return craftElement('label', inner, attr);
-            },
-            /**
-             * creates a p (paragraph) element with the options provided
-             * @method p
-             * @memberof dom
-             * @param {string} sets innerHTML of the p
-             * @param {string|Object=} sets p attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
-             */
-            p: function p(inner, attr) {
-                return craftElement('p', inner, attr);
-            },
-            header: function header(inner, attr) {
-                return craftElement('header', inner, attr);
-            },
-            br: function br() {
-                return craftElement('br');
-            },
-            /**
-             * creates an img element with the options provided
-             * @method img
-             * @memberof dom
-             * @param {string} sets src of the img
-             * @param {string} sets alt of the img
-             * @param {string|Object=} sets p attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
-             */
-            img: function img(src, alt, attr) {
-                return craftElement('img', '', attr, {
-                    src: src,
-                    alt: alt
-                });
-            },
-            input: function input(type, attributes) {
-                if (is.Object(type)) {
-                    attributes = type;
-                    type = 'text';
-                }
-                return craftElement('input', '', attributes, {
-                    type: type || 'text'
-                });
-            },
-            button: function button(inner, attr) {
-                return craftElement('button', inner, attr);
-            },
-            list: function list(type, items, attr) {
-                var list = "";
-                if (is.Arrylike(items)) forEach(items, function(item) {
-                    if (is.String(item)) list += craftElement('li', item).outerHTML;
-                    else if (is.Object(items)) list += craftElement('li', item.inner, item.attr).outerHTML;
-                });
-                return craftElement(type, list, attr);
-            },
-            ul: function ul(items, attr) {
-                return Craft.dom.list('ul', items, attr);
-            },
-            ol: function ol(items, attr) {
-                return Craft.dom.list('ol', items, attr);
-            },
-            li: function li(inner, attr) {
-                return craftElement('li', inner, attr);
-            },
-            h: function h(level, inner, attr) {
-                return craftElement('h' + level, inner, attr);
-            },
-            a: function a(link, inner, attr) {
-                return craftElement('a', inner, attr, {
-                    href: link
-                });
-            },
-            style: function style(css, attr) {
-                return craftElement('style', css, attr);
-            },
-            script: function script(code, attr, defer, onload) {
-                var script = craftElement('script', '', attr, {
-                    type: 'text/javascript'
-                });
-                script.src = Craft.URLfrom(code);
-                if (defer == !0) script.defer = defer != !1;
-                if (is.Func(onload)) script.onload = onload;
-                return script;
-            },
-            td: function td(inner, attr) {
-                return craftElement('td', inner, attr);
-            },
-            th: function th(inner, attr) {
-                return craftElement('th', inner, attr);
-            },
-            tr: function tr(inner, attr) {
-                return craftElement('tr', inner, attr);
-            },
-            table: function table(rows, attr) {
-                return craftElement('table', rows, attr);
-            },
-            SafeHTML: function SafeHTML(html, node) {
-                html = html.replace(/<script[^>]*?>.*?<\/script>/gi, '').replace(/<style[^>]*?>.*?<\/style>/gi, '').replace(/<![\s\S]*?--[ \t\n\r]*>/gi, '');
-                return !node ? html : dffstr(html);
-            }
         },
         Browser: {
             is: function is(browser) {
@@ -2089,6 +2082,7 @@ function _typeof(obj) {
             },
             browser: Br
         },
+        dom: Dom,
         loader: {
             pre: 'craft:',
             fetchImport: function fetchImport(obj) {
@@ -2737,30 +2731,30 @@ function _typeof(obj) {
             element.createdCallback = function() {
                 var el = dom(this),
                     dealtWith = [];
-                for (var _key2 in config) {
-                    if (!dealtWith.includes(_key2)) {
-                        if (_key2.includes("set_")) {
-                            var sgKey = _key2.split("_")[1];
-                            dealtWith.push(_key2, "get_" + sgKey);
-                            el.newSetGet(sgKey, config[_key2], config["get_" + sgKey]);
-                        } else if (_key2.includes("get_")) {
-                            var _sgKey = _key2.split("_")[1];
-                            dealtWith.push(_key2, "set_" + _sgKey);
-                            el.newSetGet(_sgKey, is.Func(config["set_" + _sgKey]) ? config["set_" + _sgKey] : function(x) {}, config[_key2]);
+                for (var _key3 in config) {
+                    if (!dealtWith.includes(_key3)) {
+                        if (_key3.includes("set_")) {
+                            var sgKey = _key3.split("_")[1];
+                            dealtWith.push(_key3, "get_" + sgKey);
+                            el.newSetGet(sgKey, config[_key3], config["get_" + sgKey]);
+                        } else if (_key3.includes("get_")) {
+                            var _sgKey = _key3.split("_")[1];
+                            dealtWith.push(_key3, "set_" + _sgKey);
+                            el.newSetGet(_sgKey, is.Func(config["set_" + _sgKey]) ? config["set_" + _sgKey] : function(x) {}, config[_key3]);
                         }
                     }
                 }
                 if (is.Func(config['created'])) return config['created'].call(el);
             };
-            var _loop = function _loop(_key3) {
-                if (_key3 === 'created' || _key3.includes('set_') || _key3.includes('get_')) return "continue";
-                if (is.Func(config[_key3])) dm = function dm() { // Adds dom methods to element
-                    return config[_key3].call(dom(this));
+            var _loop = function _loop(_key4) {
+                if (_key4 === 'created' || _key4.includes('set_') || _key4.includes('get_')) return "continue";
+                if (is.Func(config[_key4])) dm = function dm() { // Adds dom methods to element
+                    return config[_key4].call(dom(this));
                 };
-                _key3 == 'inserted' ? element.attachedCallback = dm : _key3 == 'destroyed' ? element.detachedCallback = dm : _key3 == 'attr' ? element.attributeChangedCallback = dm : _key3.includes('css') && _key3.length == 3 ? Craft.addCSS(config[_key3]) : is.Func(config[_key3]) ? element[_key3] = dm : Object.defineProperty(element, _key3, Object.getOwnPropertyDescriptor(config, _key3));
+                _key4 == 'inserted' ? element.attachedCallback = dm : _key4 == 'destroyed' ? element.detachedCallback = dm : _key4 == 'attr' ? element.attributeChangedCallback = dm : _key4.includes('css') && _key4.length == 3 ? Craft.addCSS(config[_key4]) : is.Func(config[_key4]) ? element[_key4] = dm : Object.defineProperty(element, _key4, Object.getOwnPropertyDescriptor(config, _key4));
             };
-            for (var _key3 in config) {
-                var _ret6 = _loop(_key3);
+            for (var _key4 in config) {
+                var _ret6 = _loop(_key4);
                 if (_ret6 === "continue") continue;
             }
             settings['prototype'] = element;
@@ -2795,6 +2789,7 @@ function _typeof(obj) {
             return options.On;
         }
     };
+    head.appendChild(dom.style('', 'crafterstyles'));
     var TabChange = function TabChange(ta) {
         return function() {
             tabActive = ta;
@@ -2824,7 +2819,6 @@ function _typeof(obj) {
     Craft.curry.adapt = function(fn) {
         return Craft.curry.adaptTo(fn.length, fn);
     };
-    Craft.concatObjects(dom, Craft.dom);
     Craft.customAttr('bind', function(element, bind) {
         element.bind(bind);
     });

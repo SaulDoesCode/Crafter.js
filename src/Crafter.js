@@ -7,7 +7,6 @@
 (function(doc, root) {
     "use strict ";
     let Ready = doc.readyState === "complete",
-        CrafterStyles = doc.createElement('style'),
         ua = navigator.userAgent,
         tabActive = !0,
         tabListeners = [],
@@ -28,9 +27,6 @@
 
     if (Br && (tem = ua.match(/version\/([\.\d]+)/i)) !== null) Br[2] = tem[1];
     Br = (Br ? [Br[1], Br[2]] : [navigator.appName, navigator.appVersion, '-?']).join(' ');
-
-    CrafterStyles.setAttribute('crafterstyles', '');
-    head.appendChild(CrafterStyles);
 
     function Locs(test) {
         return [location.hash, location.href, location.pathname].some(test);
@@ -450,7 +446,12 @@
          * Determine if a given collection or string is empty
          * @param {Object|Array|string} val - value to test if empty
          */
-        empty: ta(val => !Craft.len(val) || val === ''),
+        empty: ta(val => {
+          try {
+              return !(is.Object(val) ? Object.keys(val).length : is.Map(val) || is.Set(val) ? val.size : val.length) || val === ''
+          } catch (e) {}
+          return !1
+        }),
         /**
          * Test if something is a Native JavaScript feature
          * @param val - value to test
@@ -718,6 +719,109 @@
         if (extraAttr != ud) is.Bool(extraAttr) ? stringForm = extraAttr : newEl.setAttr(extraAttr);
         if (stringForm) newEl = newEl.outerHTML;
         return newEl
+    }
+
+    /**
+     * Contains several methods for Element Creation
+     * @namespace dom
+     */
+    let Dom = {
+        element: craftElement,
+        frag(inner) {
+            let dfrag = doc.createDocumentFragment();
+            if (is.String(inner)) inner = dffstr(inner);
+            if (is.Node(inner)) dfrag.appendChild(dfrag);
+            return dfrag;
+        },
+        /**
+         * creates a div element with the options provided
+         * @method div
+         * @memberof dom
+         * @param {string} sets innerHTML of the div
+         * @param {string|Object=} sets div attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
+         */
+        div: (inner, attr) => craftElement('div', inner, attr),
+        /**
+         * creates a span element with the options provided
+         * @method span
+         * @memberof dom
+         * @param {string} sets innerHTML of the span
+         * @param {string|Object=} sets span attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
+         */
+        span: (inner, attr) => craftElement('span', inner, attr),
+        /**
+         * creates a label element with the options provided
+         * @method label
+         * @memberof dom
+         * @param {string} sets innerHTML of the label
+         * @param {string|Object=} sets label attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
+         */
+        label: (inner, attr) => craftElement('label', inner, attr),
+        /**
+         * creates a p (paragraph) element with the options provided
+         * @method p
+         * @memberof dom
+         * @param {string} sets innerHTML of the p
+         * @param {string|Object=} sets p attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
+         */
+        p: (inner, attr) => craftElement('p', inner, attr),
+        header: (inner, attr) => craftElement('header', inner, attr),
+        br: () => craftElement('br'),
+        /**
+         * creates an img element with the options provided
+         * @method img
+         * @memberof dom
+         * @param {string} sets src of the img
+         * @param {string} sets alt of the img
+         * @param {string|Object=} sets p attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
+         */
+        img: (src, alt, attr) => craftElement('img', '', attr, {
+            src: src,
+            alt: alt
+        }),
+        input(type, attributes) {
+            if (is.Object(type)) {
+                attributes = type;
+                type = 'text';
+            }
+            return craftElement('input', '', attributes, {
+                type: type || 'text'
+            });
+        },
+        button: (inner, attr) => craftElement('button', inner, attr),
+        list(type, items, attr) {
+            let list = ``;
+            if (is.Arrylike(items)) forEach(items, item => {
+                if (is.String(item)) list += craftElement('li', item).outerHTML;
+                else if (is.Object(items)) list += craftElement('li', item.inner, item.attr).outerHTML;
+            });
+            return craftElement(type, list, attr);
+        },
+        ul: (items, attr) => Dom.list('ul', items, attr),
+        ol: (items, attr) => Dom.list('ol', items, attr),
+        li: (inner, attr) => craftElement('li', inner, attr),
+        h: (level, inner, attr) => craftElement('h' + level, inner, attr),
+        a: (link, inner, attr) => craftElement('a', inner, attr, {
+            href: link
+        }),
+        style: (css, attr) => craftElement('style', css, attr),
+        script(code, attr, defer, onload) {
+            let script = craftElement('script', '', attr, {
+                type: 'text/javascript'
+            });
+            script.src = Craft.URLfrom(code);
+            if (defer == !0) script.defer = defer != !1;
+            if (is.Func(onload)) script.onload = onload;
+            return script;
+        },
+        td: (inner, attr) => craftElement('td', inner, attr),
+        th: (inner, attr) => craftElement('th', inner, attr),
+        tr: (inner, attr) => craftElement('tr', inner, attr),
+        table: (rows, attr) => craftElement('table', rows, attr),
+        SafeHTML(html, node) {
+            html = html.replace(/<script[^>]*?>.*?<\/script>/gi, '').replace(/<style[^>]*?>.*?<\/style>/gi, '').replace(/<![\s\S]*?--[ \t\n\r]*>/gi, '');
+            return !node ? html : dffstr(html)
+        }
     }
 
     function domNodeList(elements) {
@@ -1302,7 +1406,7 @@
             return element
         }
         return element
-    }
+    };
 
 
     /**
@@ -1327,10 +1431,21 @@
             }
         } else if (is.String(element)) element = query(element, within);
         if (is.Node(element)) return !element['hasDOMmethods'] ? domManip(element) : element;
-        return Craft.dom
+        return Dom
     }
+    for (let key in Dom) Object.defineProperty(dom, key, Object.getOwnPropertyDescriptor(Dom, key));
+    if(root.Proxy) dom = new Proxy(dom,{
+        get(obj,key) {
+          if(!obj.hasOwnProperty(key)) {
+            if(Dom.hasOwnProperty(key)) return Dom[key];
+            return function(inner,attr,eattr,str) {
+              return craftElement(key,inner,attr,eattr,str)
+            }
+          }
+          return obj[key]
+        }
+    });
 
-    CrafterStyles = query('[crafterstyles]', head);
 
     function observable(obj) {
         if (!is.Def(obj)) obj = obj || {};
@@ -1381,10 +1496,10 @@
             });
             try {
                 return new Proxy(obj, {
-                    get(target, key, reciever) {
+                    get(target, key) {
                         return Reflect.get(target, key)
                     },
-                    set(target, key, value, reciever) {
+                    set(target, key, value) {
                         //if(value.NoTrigger) return Reflect.set(target, key, value.val); else
                         target.listeners.forEach(l => {
                             if (l.prop === '*' || l.prop === key) l.fn(target, key, value, !Object.is(Reflect.get(target, key), value))
@@ -1674,133 +1789,13 @@
             return val;
         },
         addCSS(css) {
-            CrafterStyles.textContent += `@import url("${Craft.URLfrom(css,{type : 'text/css'})}");\n`;
-        },
-        /**
-         * Contains several methods for Element Creation
-         * @namespace dom
-         */
-        dom: {
-            element: craftElement,
-            frag(inner) {
-                let dfrag = doc.createDocumentFragment();
-                if (is.String(inner)) inner = dffstr(inner);
-                if (is.Node(inner)) dfrag.appendChild(dfrag);
-                return dfrag;
-            },
-            el(Str, attrs) {
-                if(!Craft.has(Str,' ','(',')',',,')) return craftElement(Str,'',attrs);
-                let str = Craft.omit(Str.split(/(^([a-zA-Z-_]*)\((.*)\)\S?([\s\S]*)$)/igm), Str, ""),
-                    tag, inner;
-                if (!is.Object(attrs)) attrs = {};
-                if (!is.empty(str)) {
-                    let attr = str[1];
-                    inner = str[2] || '';
-                    attr = attr.split(',,');
-                    forEach(attr, v => {
-                        v = v.split('=');
-                        attrs[v[0]] = v[1];
-                    });
-                } else {
-                    str = Craft.omit(Str.split(/^([a-zA-Z-_]*)\s([\s\S]*)$/igm), Str, "");
-                    inner = str[1];
-                }
-                return craftElement(str[0], inner, attrs);
-            },
-            /**
-             * creates a div element with the options provided
-             * @method div
-             * @memberof dom
-             * @param {string} sets innerHTML of the div
-             * @param {string|Object=} sets div attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
-             */
-            div: (inner, attr) => craftElement('div', inner, attr),
-            /**
-             * creates a span element with the options provided
-             * @method span
-             * @memberof dom
-             * @param {string} sets innerHTML of the span
-             * @param {string|Object=} sets span attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
-             */
-            span: (inner, attr) => craftElement('span', inner, attr),
-            /**
-             * creates a label element with the options provided
-             * @method label
-             * @memberof dom
-             * @param {string} sets innerHTML of the label
-             * @param {string|Object=} sets label attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
-             */
-            label: (inner, attr) => craftElement('label', inner, attr),
-            /**
-             * creates a p (paragraph) element with the options provided
-             * @method p
-             * @memberof dom
-             * @param {string} sets innerHTML of the p
-             * @param {string|Object=} sets p attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
-             */
-            p: (inner, attr) => craftElement('p', inner, attr),
-            header: (inner, attr) => craftElement('header', inner, attr),
-            br: () => craftElement('br'),
-            /**
-             * creates an img element with the options provided
-             * @method img
-             * @memberof dom
-             * @param {string} sets src of the img
-             * @param {string} sets alt of the img
-             * @param {string|Object=} sets p attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
-             */
-            img: (src, alt, attr) => craftElement('img', '', attr, {
-                src: src,
-                alt: alt
-            }),
-            input(type, attributes) {
-                if (is.Object(type)) {
-                    attributes = type;
-                    type = 'text';
-                }
-                return craftElement('input', '', attributes, {
-                    type: type || 'text'
-                });
-            },
-            button: (inner, attr) => craftElement('button', inner, attr),
-            list(type, items, attr) {
-                let list = ``;
-                if (is.Arrylike(items)) forEach(items, item => {
-                    if (is.String(item)) list += craftElement('li', item).outerHTML;
-                    else if (is.Object(items)) list += craftElement('li', item.inner, item.attr).outerHTML;
-                });
-                return craftElement(type, list, attr);
-            },
-            ul: (items, attr) => Craft.dom.list('ul', items, attr),
-            ol: (items, attr) => Craft.dom.list('ol', items, attr),
-            li: (inner, attr) => craftElement('li', inner, attr),
-            h: (level, inner, attr) => craftElement('h' + level, inner, attr),
-            a: (link, inner, attr) => craftElement('a', inner, attr, {
-                href: link
-            }),
-            style: (css, attr) => craftElement('style', css, attr),
-            script(code, attr, defer, onload) {
-                let script = craftElement('script', '', attr, {
-                    type: 'text/javascript'
-                });
-                script.src = Craft.URLfrom(code);
-                if (defer == !0) script.defer = defer != !1;
-                if (is.Func(onload)) script.onload = onload;
-                return script;
-            },
-            td: (inner, attr) => craftElement('td', inner, attr),
-            th: (inner, attr) => craftElement('th', inner, attr),
-            tr: (inner, attr) => craftElement('tr', inner, attr),
-            table: (rows, attr) => craftElement('table', rows, attr),
-            SafeHTML(html, node) {
-                html = html.replace(/<script[^>]*?>.*?<\/script>/gi, '').replace(/<style[^>]*?>.*?<\/style>/gi, '').replace(/<![\s\S]*?--[ \t\n\r]*>/gi, '');
-                return !node ? html : dffstr(html)
-            },
+            query('[crafterstyles]', head).textContent += `@import url("${Craft.URLfrom(css,{type : 'text/css'})}");\n`;
         },
         Browser: {
             is: browser => Br.toLowerCase().includes(browser.toLowerCase()),
             browser: Br
         },
+        dom : Dom,
         loader: {
             pre: 'craft:',
             fetchImport(obj) {
@@ -2440,7 +2435,7 @@
             return options.On;
         },
     }
-
+    head.appendChild(dom.style('','crafterstyles'));
     let TabChange = ta => {
         return () => {
             tabActive = ta;
@@ -2468,8 +2463,6 @@
         fn.apply(null, Craft.omit(arguments, context).slice(1).concat(context))
     }));
     Craft.curry.adapt = fn => Craft.curry.adaptTo(fn.length, fn);
-    Craft.concatObjects(dom,Craft.dom);
-
     Craft.customAttr('bind', (element, bind) => {
         element.bind(bind)
     });

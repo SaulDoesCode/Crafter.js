@@ -69,8 +69,14 @@ create elements on the fly with ease using the `dom` method!
     // make div , span and other elements via dom
     // add attributes with an object { title : 'x' , id : 'mydiv' }
     dom.div('New div',{ class : 'page-element'}) // -> `<div class="page-element">New div</div>`
-    // dom.e() is a short-hand method to create elements
-    dom.el('div(class=page-element) New div') // -> `<div class="page-element">New div</div>`
+
+    /* if your browser supports Proxy
+     * then you may use this method to create elements that are not available by default in the dom object
+    */
+    // for hyphenated names use the square brackets and string notation
+    dom['my-element']('inner html', { id : 'element-one', class : 'fancy-el'});
+    // otherwise normal dot notation will work for more excentric tag names
+    dom.address('2 mainstreet codeshire','class=address-fancy')
 
     // for less common elements or custom elements use dom.element
     // you could also add attributes URI style
