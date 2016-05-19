@@ -280,7 +280,7 @@ On(document).Click(e => {
 
 Craft.customAttr('ripple', (el, color) => {
     if(color == '') color = el.getAttr('color-accent') || el.getAttr('color');
-    Craft.ripple(el, 'color=' + color);
+    Craft.ripple(el, {color});
 });
 
 Craft.customAttr('tooltip', (element, val) => {

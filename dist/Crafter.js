@@ -891,7 +891,7 @@ function _typeof(obj) {
          * @param {string|Object=} sets div attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
          */
         div: function div(inner, attr) {
-            return craftElement('div', inner, attr);
+            return Dom.element('div', inner, attr);
         },
         /**
          * creates a span element with the options provided
@@ -901,7 +901,7 @@ function _typeof(obj) {
          * @param {string|Object=} sets span attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
          */
         span: function span(inner, attr) {
-            return craftElement('span', inner, attr);
+            return Dom.element('span', inner, attr);
         },
         /**
          * creates a label element with the options provided
@@ -911,7 +911,7 @@ function _typeof(obj) {
          * @param {string|Object=} sets label attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
          */
         label: function label(inner, attr) {
-            return craftElement('label', inner, attr);
+            return Dom.element('label', inner, attr);
         },
         /**
          * creates a p (paragraph) element with the options provided
@@ -921,13 +921,13 @@ function _typeof(obj) {
          * @param {string|Object=} sets p attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
          */
         p: function p(inner, attr) {
-            return craftElement('p', inner, attr);
+            return Dom.element('p', inner, attr);
         },
         header: function header(inner, attr) {
-            return craftElement('header', inner, attr);
+            return Dom.element('header', inner, attr);
         },
         br: function br() {
-            return craftElement('br');
+            return Dom.element('br');
         },
         /**
          * creates an img element with the options provided
@@ -938,30 +938,30 @@ function _typeof(obj) {
          * @param {string|Object=} sets p attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
          */
         img: function img(src, alt, attr) {
-            return craftElement('img', '', attr, {
+            return Dom.element('img', '', attr, {
                 src: src,
                 alt: alt
             });
         },
-        input: function input(type, attributes) {
+        input: function input(type, attr) {
             if (is.Object(type)) {
                 attributes = type;
                 type = 'text';
             }
-            return craftElement('input', '', attributes, {
+            return Dom.element('input', '', attr, {
                 type: type || 'text'
             });
         },
         button: function button(inner, attr) {
-            return craftElement('button', inner, attr);
+            return Dom.element('button', inner, attr);
         },
         list: function list(type, items, attr) {
             var list = "";
             if (is.Arrylike(items)) forEach(items, function(item) {
-                if (is.String(item)) list += craftElement('li', item).outerHTML;
-                else if (is.Object(items)) list += craftElement('li', item.inner, item.attr).outerHTML;
+                if (is.String(item)) list += Dom.element('li', item).outerHTML;
+                else if (is.Object(items)) list += Dom.element('li', item.inner, item.attr).outerHTML;
             });
-            return craftElement(type, list, attr);
+            return Dom.element(type, list, attr);
         },
         ul: function ul(items, attr) {
             return Dom.list('ul', items, attr);
@@ -970,21 +970,21 @@ function _typeof(obj) {
             return Dom.list('ol', items, attr);
         },
         li: function li(inner, attr) {
-            return craftElement('li', inner, attr);
+            return Dom.element('li', inner, attr);
         },
         h: function h(level, inner, attr) {
-            return craftElement('h' + level, inner, attr);
+            return Dom.element('h' + level, inner, attr);
         },
         a: function a(link, inner, attr) {
-            return craftElement('a', inner, attr, {
+            return Dom.element('a', inner, attr, {
                 href: link
             });
         },
         style: function style(css, attr) {
-            return craftElement('style', css, attr);
+            return Dom.element('style', css, attr);
         },
         script: function script(code, attr, defer, onload) {
-            var script = craftElement('script', '', attr, {
+            var script = Dom.element('script', '', attr, {
                 type: 'text/javascript'
             });
             script.src = Craft.URLfrom(code);
@@ -993,16 +993,16 @@ function _typeof(obj) {
             return script;
         },
         td: function td(inner, attr) {
-            return craftElement('td', inner, attr);
+            return Dom.element('td', inner, attr);
         },
         th: function th(inner, attr) {
-            return craftElement('th', inner, attr);
+            return Dom.element('th', inner, attr);
         },
         tr: function tr(inner, attr) {
-            return craftElement('tr', inner, attr);
+            return Dom.element('tr', inner, attr);
         },
         table: function table(rows, attr) {
-            return craftElement('table', rows, attr);
+            return Dom.element('table', rows, attr);
         },
         SafeHTML: function SafeHTML(html, node) {
             html = html.replace(/<script[^>]*?>.*?<\/script>/gi, '').replace(/<style[^>]*?>.*?<\/style>/gi, '').replace(/<![\s\S]*?--[ \t\n\r]*>/gi, '');
@@ -1288,18 +1288,17 @@ function _typeof(obj) {
                     obj = _Craft$getPath.obj,
                     val = _Craft$getPath.val;
                 is.Def(val) ? element.html(val) : Craft.setDeep(obj, prop, element.html());
-                if (is.Def(Object.getOwnPropertyDescriptor(obj, 'addListener')) && !is.Func(element._BL)) {
-                    element._BL = function(o, n, v) {
+                if (obj.isObservable) {
+                    element._BoundObservable = obj.$set(prop, function(k, v, o) {
                         element.html(v);
-                    };
-                    obj.addListener(prop, element);
+                    });
                 }
                 if (element.isInput) element.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : joindot(Craft.omit(cutbind, cutbind[0])));
             }
             try {
                 attemptBind();
             } catch (e) {
-                Craft.Models.addListener(cutdot(bind)[0], function() {
+                Craft.Models.$set(cutdot(bind)[0], function() {
                     setTimeout(attemptBind, 20);
                 });
             }
@@ -1688,7 +1687,7 @@ function _typeof(obj) {
             if (!obj.hasOwnProperty(key)) {
                 if (Dom.hasOwnProperty(key)) return Dom[key];
                 return function(inner, attr, eattr, str) {
-                    return craftElement(key, inner, attr, eattr, str);
+                    return Dom.element(key, inner, attr, eattr, str);
                 };
             }
             return obj[key];
@@ -1696,114 +1695,127 @@ function _typeof(obj) {
     });
 
     function observable(obj) {
-        if (!is.Def(obj)) obj = obj || {};
+        if (!is.Def(obj)) obj = {};
         Object.defineProperty(obj, 'listeners', {
-            value: [],
-            enumerable: !1
+            value: {
+                Get: new Set(),
+                Set: new Set()
+            },
+            enumerable: !1,
+            writable: !0
         });
         Object.defineProperty(obj, 'isObservable', {
             value: !0,
-            writable: !1,
-            enumerable: !1
+            enumerable: !1,
+            writable: !1
         });
-        if (!is.Array(obj)) {
-            Object.defineProperty(obj, 'setVal', {
-                value: function value(path, val) {
-                    Craft.setDeep(obj, path, val);
-                    return obj;
-                },
-                writable: !1,
-                enumerable: !1
-            });
-            Object.defineProperty(obj, 'removeListener', {
-                value: function value(fn) {
-                    obj.listeners = obj.listeners.filter(function(l) {
-                        if (l.fn !== fn) return l;
-                    });
-                },
-                enumerable: !1
-            });
-            Object.defineProperty(obj, 'addListener', {
+        ['$get', '$set'].forEach(function(t) {
+            var Type = 'Set';
+            if (t == '$get') Type = 'Get';
+            Object.defineProperty(obj, t, {
                 value: function value(prop, func) {
-                    if (is.Func(prop) || is.Node(prop)) {
+                    if (is.Func(prop)) {
                         func = prop;
                         prop = '*';
                     }
+                    if (!is.Func(func)) throw new Error('no function');
                     var listener = {
-                        prop: is.String(prop) ? prop : '*'
-                    };
-                    if (is.Node(func)) {
-                        if (!is.Func(func['_BL'])) throw Error('_BL is not a function');
-                        listener.node = func;
-                        listener.fn = func['_BL'];
-                    } else if (is.Func(func)) listener.fn = func;
-                    else throw new Error('no function');
-                    obj.listeners.push(listener);
-                },
-                enumerable: !1
-            });
-            try {
-                return new Proxy(obj, {
-                    get: function get(target, key) {
-                        return Reflect.get(target, key);
-                    },
-                    set: function set(target, key, value) { //if(value.NoTrigger) return Reflect.set(target, key, value.val); else
-                        target.listeners.forEach(function(l) {
-                            if (l.prop === '*' || l.prop === key) l.fn(target, key, value, !Object.is(Reflect.get(target, key), value));
-                        });
-                        return Reflect.set(target, key, value);
-                    }
-                });
-            } catch (e) {
-                try {
-                    Object.observe(obj, function(changes) {
-                        changes.forEach(function(change) {
-                            if (change.type === 'add' || change.type === 'update') forEach(obj.listeners, function(l) {
-                                if (l.prop === '*' || l.prop === change.name) l.fn(obj, change.name, obj[change.name], change.type === 'add' ? !0 : !Object.is(change.oldValue, obj[change.name]));
-                            });
-                        });
-                    });
-                    return obj;
-                } catch (e2) {
-                    console.error('Your Browser is Old Update it', e2);
-                }
-            }
-        } else {
-            var _ret = (function() {
-                Object.defineProperty(obj, 'removeListener', {
-                    value: function value(fn) {
-                        obj.listeners = obj.listeners.filter(function(l) {
-                            if (l !== fn) return l;
-                        });
-                    },
-                    enumerable: !1
-                });
-                Object.defineProperty(obj, 'addListener', {
-                    value: function value(func) {
-                        if (is.Func(func)) obj.listeners.push(func);
-                        else throw new Error('no function');
-                    },
-                    enumerable: !1
-                });
-                var oldArr = obj.slice(0);
-                return {
-                    v: new Proxy(obj, {
-                        get: function get(target, key, reciever) {
-                            return target[key];
+                            prop: is.String(prop) ? prop : '*',
+                            fn: func
                         },
-                        set: function set(target, key, val, reciever) {
-                            target[key] = val;
-                            target.listeners.forEach(function(l) {
-                                Craft.arrDiff(oldArr, target, l);
-                            });
-                            oldArr = Craft.clone(target);
-                            return !0;
+                        options = {get on() {
+                                obj.listeners[Type].add(listener);
+                                return options;
+                            },
+                            get off() {
+                                obj.listeners[Type].delete(listener);
+                                return options;
+                            }
+                        };
+                    return options.on;
+                },
+                enumerable: !1,
+                writable: !0
+            });
+        });
+        Object.defineProperty(obj, '$change', {
+            value: function value(prop, func) {
+                if (!is.Func(func)) throw new Error('no function');
+                var listener = {
+                        prop: is.String(prop) ? prop : '*',
+                        fn: func,
+                        multi: !0
+                    },
+                    options = {get on() {
+                            obj.listeners.Get.add(listener);
+                            obj.listeners.Set.add(listener);
+                            return options;
+                        },
+                        get off() {
+                            obj.listeners.Get.delete(listener);
+                            obj.listeners.Set.delete(listener);
+                            return options;
                         }
-                    })
-                };
-            })();
-            if ((typeof _ret === "undefined" ? "undefined" : _typeof(_ret)) === "object") return _ret.v;
-        }
+                    };
+                return options.on;
+            },
+            enumerable: !1,
+            writable: !0
+        });
+        return new Proxy(obj, {
+            get: function get(target, key) {
+                var val = undefined;
+                var _iteratorNormalCompletion = !0,
+                    _didIteratorError = !1,
+                    _iteratorError = undefined;
+                try {
+                    for (var _iterator = target.listeners.Get[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = !0) {
+                        var ln = _step.value;
+                        if (ln.prop === '*' || ln.prop === key) val = ln.multi ? ln.fn('get', key, target) : ln.fn(key, target);
+                    }
+                } catch (err) {
+                    _didIteratorError = !0;
+                    _iteratorError = err;
+                } finally {
+                    try {
+                        if (!_iteratorNormalCompletion && _iterator.return) {
+                            _iterator.return();
+                        }
+                    } finally {
+                        if (_didIteratorError) {
+                            throw _iteratorError;
+                        }
+                    }
+                }
+                return is.Def(val) ? val : Reflect.get(target, key);
+            },
+            set: function set(target, key, value) {
+                var val = undefined;
+                var _iteratorNormalCompletion2 = !0,
+                    _didIteratorError2 = !1,
+                    _iteratorError2 = undefined;
+                try {
+                    for (var _iterator2 = target.listeners.Set[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = !0) {
+                        var ln = _step2.value;
+                        if (ln.prop === '*' || ln.prop === key) val = ln.multi ? ln.fn('set', key, value, target, !Reflect.has(target, key)) : ln.fn(key, value, target, !Reflect.has(target, key));
+                    }
+                } catch (err) {
+                    _didIteratorError2 = !0;
+                    _iteratorError2 = err;
+                } finally {
+                    try {
+                        if (!_iteratorNormalCompletion2 && _iterator2.return) {
+                            _iterator2.return();
+                        }
+                    } finally {
+                        if (_didIteratorError2) {
+                            throw _iteratorError2;
+                        }
+                    }
+                }
+                return is.Def(val) ? val : Reflect.set(target, key, value);
+            }
+        });
     }
     /**
      * Craft is Crafter.js's Core containing most functionality.
@@ -2259,7 +2271,7 @@ function _typeof(obj) {
             }
             if (!address.includes('ws://') || !address.includes('wss://')) address = (location.protocol === 'http:' ? 'ws://' : 'wss://') + address;
             if (is.URL(address)) {
-                var _ret2 = (function() {
+                var _ret = (function() {
                     var newSock = function newSock() {
                             return protocols ? new WebSocket(address, protocols) : new WebSocket(address);
                         },
@@ -2321,7 +2333,7 @@ function _typeof(obj) {
                         v: Options
                     };
                 })();
-                if ((typeof _ret2 === "undefined" ? "undefined" : _typeof(_ret2)) === "object") return _ret2.v;
+                if ((typeof _ret === "undefined" ? "undefined" : _typeof(_ret)) === "object") return _ret.v;
             }
         },
         curry: function curry(fn) {
@@ -2582,7 +2594,7 @@ function _typeof(obj) {
         model: function model(name, func) {
             if (is.Func(func) && is.String(name)) {
                 if (!is.Def(Craft.Models[name])) {
-                    var _ret4 = (function() {
+                    var _ret3 = (function() {
                         var scope = observable();
                         Craft.Models[name] = {
                             func: func.bind(scope),
@@ -2596,7 +2608,7 @@ function _typeof(obj) {
                             }
                         };
                     })();
-                    if ((typeof _ret4 === "undefined" ? "undefined" : _typeof(_ret4)) === "object") return _ret4.v;
+                    if ((typeof _ret3 === "undefined" ? "undefined" : _typeof(_ret3)) === "object") return _ret3.v;
                 }
                 throw new Error('Craft Model already exists');
             }
@@ -2626,8 +2638,7 @@ function _typeof(obj) {
                 if (is.Def(val)) return val;
                 if (!full && first === prop && is.Def(obj)) return obj;
             } catch (e) {
-                console.log(e);
-                return;
+                throw new Error(e);
             }
         },
         /**
@@ -2747,15 +2758,15 @@ function _typeof(obj) {
                 if (is.Func(config['created'])) return config['created'].call(el);
             };
             var _loop = function _loop(_key4) {
-                if (_key4 === 'created' || _key4.includes('set_') || _key4.includes('get_')) return "continue";
+                if (_key4 == 'created' || _key4.includes('set_') || _key4.includes('get_')) return "continue";
                 if (is.Func(config[_key4])) dm = function dm() { // Adds dom methods to element
                     return config[_key4].call(dom(this));
                 };
                 _key4 == 'inserted' ? element.attachedCallback = dm : _key4 == 'destroyed' ? element.detachedCallback = dm : _key4 == 'attr' ? element.attributeChangedCallback = dm : _key4.includes('css') && _key4.length == 3 ? Craft.addCSS(config[_key4]) : is.Func(config[_key4]) ? element[_key4] = dm : Object.defineProperty(element, _key4, Object.getOwnPropertyDescriptor(config, _key4));
             };
             for (var _key4 in config) {
-                var _ret6 = _loop(_key4);
-                if (_ret6 === "continue") continue;
+                var _ret5 = _loop(_key4);
+                if (_ret5 === "continue") continue;
             }
             settings['prototype'] = element;
             doc.registerElement(tag, settings);
@@ -2850,7 +2861,7 @@ function _typeof(obj) {
             }
         }
     }
-    Craft.Models.addListener(function(o, key, model, isnew) {
+    Craft.Models.$set(function(key, model) {
         model.func(model.scope);
     });
     var DestructionEvent = new Event('destroy');

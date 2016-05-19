@@ -740,7 +740,7 @@
          * @param {string} sets innerHTML of the div
          * @param {string|Object=} sets div attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
          */
-        div: (inner, attr) => craftElement('div', inner, attr),
+        div: (inner, attr) => Dom.element('div', inner, attr),
         /**
          * creates a span element with the options provided
          * @method span
@@ -748,7 +748,7 @@
          * @param {string} sets innerHTML of the span
          * @param {string|Object=} sets span attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
          */
-        span: (inner, attr) => craftElement('span', inner, attr),
+        span: (inner, attr) => Dom.element('span', inner, attr),
         /**
          * creates a label element with the options provided
          * @method label
@@ -756,7 +756,7 @@
          * @param {string} sets innerHTML of the label
          * @param {string|Object=} sets label attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
          */
-        label: (inner, attr) => craftElement('label', inner, attr),
+        label: (inner, attr) => Dom.element('label', inner, attr),
         /**
          * creates a p (paragraph) element with the options provided
          * @method p
@@ -764,9 +764,9 @@
          * @param {string} sets innerHTML of the p
          * @param {string|Object=} sets p attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
          */
-        p: (inner, attr) => craftElement('p', inner, attr),
-        header: (inner, attr) => craftElement('header', inner, attr),
-        br: () => craftElement('br'),
+        p: (inner, attr) => Dom.element('p', inner, attr),
+        header: (inner, attr) => Dom.element('header', inner, attr),
+        br: () => Dom.element('br'),
         /**
          * creates an img element with the options provided
          * @method img
@@ -775,38 +775,38 @@
          * @param {string} sets alt of the img
          * @param {string|Object=} sets p attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
          */
-        img: (src, alt, attr) => craftElement('img', '', attr, {
+        img: (src, alt, attr) => Dom.element('img', '', attr, {
             src: src,
             alt: alt
         }),
-        input(type, attributes) {
+        input(type, attr) {
             if (is.Object(type)) {
                 attributes = type;
                 type = 'text';
             }
-            return craftElement('input', '', attributes, {
+            return Dom.element('input', '', attr, {
                 type: type || 'text'
             });
         },
-        button: (inner, attr) => craftElement('button', inner, attr),
+        button: (inner, attr) => Dom.element('button', inner, attr),
         list(type, items, attr) {
             let list = ``;
             if (is.Arrylike(items)) forEach(items, item => {
-                if (is.String(item)) list += craftElement('li', item).outerHTML;
-                else if (is.Object(items)) list += craftElement('li', item.inner, item.attr).outerHTML;
+                if (is.String(item)) list += Dom.element('li', item).outerHTML;
+                else if (is.Object(items)) list += Dom.element('li', item.inner, item.attr).outerHTML;
             });
-            return craftElement(type, list, attr);
+            return Dom.element(type, list, attr);
         },
         ul: (items, attr) => Dom.list('ul', items, attr),
         ol: (items, attr) => Dom.list('ol', items, attr),
-        li: (inner, attr) => craftElement('li', inner, attr),
-        h: (level, inner, attr) => craftElement('h' + level, inner, attr),
-        a: (link, inner, attr) => craftElement('a', inner, attr, {
+        li: (inner, attr) => Dom.element('li', inner, attr),
+        h: (level, inner, attr) => Dom.element('h' + level, inner, attr),
+        a: (link, inner, attr) => Dom.element('a', inner, attr, {
             href: link
         }),
-        style: (css, attr) => craftElement('style', css, attr),
+        style: (css, attr) => Dom.element('style', css, attr),
         script(code, attr, defer, onload) {
-            let script = craftElement('script', '', attr, {
+            let script = Dom.element('script', '', attr, {
                 type: 'text/javascript'
             });
             script.src = Craft.URLfrom(code);
@@ -814,10 +814,10 @@
             if (is.Func(onload)) script.onload = onload;
             return script;
         },
-        td: (inner, attr) => craftElement('td', inner, attr),
-        th: (inner, attr) => craftElement('th', inner, attr),
-        tr: (inner, attr) => craftElement('tr', inner, attr),
-        table: (rows, attr) => craftElement('table', rows, attr),
+        td: (inner, attr) => Dom.element('td', inner, attr),
+        th: (inner, attr) => Dom.element('th', inner, attr),
+        tr: (inner, attr) => Dom.element('tr', inner, attr),
+        table: (rows, attr) => Dom.element('table', rows, attr),
         SafeHTML(html, node) {
             html = html.replace(/<script[^>]*?>.*?<\/script>/gi, '').replace(/<style[^>]*?>.*?<\/style>/gi, '').replace(/<![\s\S]*?--[ \t\n\r]*>/gi, '');
             return !node ? html : dffstr(html)
@@ -825,8 +825,6 @@
     }
 
     function domNodeList(elements) {
-
-
 
         forEach(Object.getOwnPropertyNames(Array.prototype), method => {
             if (method != "length") elements[method] = Array.prototype[method];
@@ -843,7 +841,7 @@
          * add CSS style rules to NodeList
          * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
          */
-        elements.css = function(styles) {
+        elements.css = styles => {
             styles != ud ? forEach(elements, el => {
                 forEach(styles, (prop, key) => {
                     el.style[key] = prop
@@ -1094,11 +1092,10 @@
                     } = Craft.getPath(bind, !0, !0);
 
                     is.Def(val) ? element.html(val) : Craft.setDeep(obj, prop, element.html());
-                    if (is.Def(Object.getOwnPropertyDescriptor(obj, 'addListener')) && !is.Func(element._BL)) {
-                        element._BL = (o, n, v) => {
+                    if (obj.isObservable) {
+                        element._BoundObservable = obj.$set(prop, (k, v, o) => {
                             element.html(v)
-                        }
-                        obj.addListener(prop, element)
+                        });
                     }
                     if (element.isInput) element.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : joindot(Craft.omit(cutbind, cutbind[0])))
                 }
@@ -1106,7 +1103,7 @@
                 try {
                     attemptBind()
                 } catch (e) {
-                    Craft.Models.addListener(cutdot(bind)[0], () => {
+                    Craft.Models.$set(cutdot(bind)[0], () => {
                         setTimeout(attemptBind, 20)
                     })
                 }
@@ -1397,7 +1394,7 @@
             });
             return element
         }
-        element.unobserve = function(name) {
+        element.unobserve = name => {
             if (!is.String(name)) name = 'MutObserver';
             if (is.Def(element[name])) {
                 element[name].disconnect();
@@ -1439,7 +1436,7 @@
           if(!obj.hasOwnProperty(key)) {
             if(Dom.hasOwnProperty(key)) return Dom[key];
             return function(inner,attr,eattr,str) {
-              return craftElement(key,inner,attr,eattr,str)
+              return Dom.element(key,inner,attr,eattr,str)
             }
           }
           return obj[key]
@@ -1448,110 +1445,90 @@
 
 
     function observable(obj) {
-        if (!is.Def(obj)) obj = obj || {};
+        if(!is.Def(obj)) obj = {};
         Object.defineProperty(obj, 'listeners', {
-            value: [],
+            value: {
+                Get: new Set(),
+                Set: new Set(),
+            },
             enumerable: !1,
+            writable: !0,
         });
         Object.defineProperty(obj, 'isObservable', {
-            value: true,
-            writable: !1,
+            value:!0,
             enumerable: !1,
+            writable: !1,
         });
-        if (!is.Array(obj)) {
-            Object.defineProperty(obj, 'setVal', {
-                value(path, val) {
-                    Craft.setDeep(obj, path, val);
-                    return obj;
-                },
-                writable: !1,
-                enumerable: !1,
-            });
-            Object.defineProperty(obj, 'removeListener', {
-                value: fn => {
-                    obj.listeners = obj.listeners.filter(l => {
-                        if (l.fn !== fn) return l;
-                    })
-                },
-                enumerable: !1,
-            });
-            Object.defineProperty(obj, 'addListener', {
-                value(prop, func) {
-                    if (is.Func(prop) || is.Node(prop)) {
-                        func = prop;
-                        prop = '*';
-                    }
-                    let listener = {
-                        prop: is.String(prop) ? prop : '*'
-                    }
-                    if (is.Node(func)) {
-                        if (!is.Func(func['_BL'])) throw Error('_BL is not a function');
-                        listener.node = func;
-                        listener.fn = func['_BL'];
-                    } else if (is.Func(func)) listener.fn = func;
-                    else throw new Error('no function');
-                    obj.listeners.push(listener);
-                },
-                enumerable: !1,
-            });
-            try {
-                return new Proxy(obj, {
-                    get(target, key) {
-                        return Reflect.get(target, key)
+        ['$get','$set'].forEach(t => {
+          let Type = 'Set';
+          if(t == '$get') Type = 'Get';
+          Object.defineProperty(obj,t, {
+              value(prop, func) {
+                  if(is.Func(prop)) {
+                    func = prop;
+                    prop = '*';
+                  }
+                  if (!is.Func(func)) throw new Error('no function');
+                  let listener = {
+                      prop: is.String(prop) ? prop : '*',
+                      fn: func,
+                  }
+                  let options = {
+                      get on() {
+                          obj.listeners[Type].add(listener);
+                          return options
+                      },
+                      get off() {
+                          obj.listeners[Type].delete(listener);
+                          return options
+                      },
+                  };
+                  return options.on;
+              },
+              enumerable: !1,
+              writable: !0,
+          });
+        });
+
+        Object.defineProperty(obj,'$change', {
+            value(prop, func) {
+                if (!is.Func(func)) throw new Error('no function');
+                let listener = {
+                    prop: is.String(prop) ? prop : '*',
+                    fn: func,
+                    multi : !0,
+                }
+                let options = {
+                    get on() {
+                        obj.listeners.Get.add(listener);
+                        obj.listeners.Set.add(listener);
+                        return options
                     },
-                    set(target, key, value) {
-                        //if(value.NoTrigger) return Reflect.set(target, key, value.val); else
-                        target.listeners.forEach(l => {
-                            if (l.prop === '*' || l.prop === key) l.fn(target, key, value, !Object.is(Reflect.get(target, key), value))
-                        });
-                        return Reflect.set(target, key, value)
-                    }
-                });
-            } catch (e) {
-                try {
-                    Object.observe(obj, changes => {
-                        changes.forEach(change => {
-                            if (change.type === 'add' || change.type === 'update') forEach(obj.listeners, l => {
-                                if (l.prop === '*' || l.prop === change.name) l.fn(obj, change.name, obj[change.name], change.type === 'add' ? !0 : !Object.is(change.oldValue, obj[change.name]));
-                            });
-                        })
-                    });
-                    return obj
-                } catch (e2) {
-                    console.error('Your Browser is Old Update it', e2);
-                }
+                    get off() {
+                        obj.listeners.Get.delete(listener);
+                        obj.listeners.Set.delete(listener);
+                        return options
+                    },
+                };
+                return options.on;
+            },
+            enumerable: !1,
+            writable: !0,
+        });
+
+        return new Proxy(obj,{
+            get(target, key) {
+                let val;
+                for (let ln of target.listeners.Get) if (ln.prop === '*' || ln.prop === key) val = ln.multi ? ln.fn('get',key, target) : ln.fn(key, target);
+                return is.Def(val) ? val : Reflect.get(target, key);
+            },
+            set(target, key, value) {
+                let val;
+                for (let ln of target.listeners.Set) if (ln.prop === '*' || ln.prop === key) val = ln.multi ? ln.fn('set',key, value, target,!Reflect.has(target,key)) :
+                ln.fn(key, value, target,!Reflect.has(target,key));
+                return is.Def(val) ? val : Reflect.set(target, key, value)
             }
-        } else {
-            Object.defineProperty(obj, 'removeListener', {
-                value: fn => {
-                    obj.listeners = obj.listeners.filter(l => {
-                        if (l !== fn) return l;
-                    })
-                },
-                enumerable: !1,
-            });
-            Object.defineProperty(obj, 'addListener', {
-                value(func) {
-                    if (is.Func(func)) obj.listeners.push(func);
-                    else throw new Error('no function');
-                },
-                enumerable: !1,
-            });
-            let oldArr = obj.slice(0);
-            return new Proxy(obj, {
-                get(target, key, reciever) {
-                    return target[key]
-                },
-                set(target, key, val, reciever) {
-                    target[key] = val;
-                    target.listeners.forEach(l => {
-                        Craft.arrDiff(oldArr, target, l);
-                    });
-                    oldArr = Craft.clone(target);
-                    return !0
-                }
-            });
-        }
+        })
     }
 
     /**
@@ -2269,8 +2246,7 @@
                 if (is.Def(val)) return val;
                 if (!full && first === prop && is.Def(obj)) return obj;
             } catch (e) {
-                console.log(e);
-                return
+                throw new Error(e);
             }
         },
         /**
@@ -2388,7 +2364,7 @@
             }
 
             for (let key in config) {
-                if (key === 'created' || (key.includes('set_') || key.includes('get_'))) continue;
+                if (key == 'created' || (key.includes('set_') || key.includes('get_'))) continue;
 
                 if (is.Func(config[key])) dm = function() { // Adds dom methods to element
                     return config[key].call(dom(this))
@@ -2497,7 +2473,7 @@
         }
     }
 
-    Craft.Models.addListener((o, key, model, isnew) => {
+    Craft.Models.$set((key,model) => {
         model.func(model.scope)
     });
 
