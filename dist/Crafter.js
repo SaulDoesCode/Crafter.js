@@ -13,7 +13,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   var Ready = doc.readyState === "complete",
     ua = navigator.userAgent,
     tabActive = !0,
-    tabListeners = [],
+    tabListeners = new Set(),
     tem = void 0,
     Br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i),
     sI = 'Isync',
@@ -1204,7 +1204,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           element._BoundObservable = obj.$set(prop, function(k, v, o) {
             setTimeout(function() {
               element.html(obj.get(k));
-            }, 1);
+            }, 10);
           });
         }
         if (element.isInput) element.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : joindot(Craft.omit(cutbind, cutbind[0])));
@@ -2691,12 +2691,12 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
     },
     onTabChange: function onTabChange(fn) {
-      var options = {get Off() {
-          tabListners = Craft.omit(tabListeners, fn);
+      var options = {get off() {
+          tabListeners.delete(fn);
           return options;
         },
-        get On() {
-          tabListeners.push(fn);
+        get on() {
+          tabListeners.add(fn);
           return options;
         }
       };
@@ -2707,7 +2707,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   var TabChange = function TabChange(ta) {
     return function() {
       tabActive = ta;
-      forEach(tabListeners, function(tl) {
+      tabListeners.forEach(function(tl) {
         tl(tabActive);
       });
     };

@@ -6,10 +6,11 @@
 
 (function(doc, root) {
     "use strict ";
-    let Ready = doc.readyState === "complete",
+    let Ready = !1,
+        ready = () => Ready || doc.readyState == "complete",
         ua = navigator.userAgent,
         tabActive = !0,
-        tabListeners = [],
+        tabListeners = new Set(),
         tem, Br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
     const sI = 'Isync',
         ud = void 0,
@@ -1045,7 +1046,7 @@
                         element._BoundObservable = obj.$set(prop, (k, v, o) => {
                             setTimeout(() => {
                                 element.html(obj.get(k))
-                            }, 1)
+                            },10)
                         });
                     }
                     if (element.isInput) element.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : joindot(Craft.omit(cutbind, cutbind[0])))
@@ -2161,9 +2162,9 @@
          */
         get WhenReady() {
             return new Promise((pass, fail) => {
-                if (Ready || doc.readyState === "complete") return pass();
+                if (ready()) return pass();
                 let check = setInterval(() => {
-                    if (Ready || doc.readyState === "complete") {
+                    if (ready()) {
                         pass();
                         clearInterval(check);
                     }
@@ -2244,7 +2245,7 @@
                         }
                     });
                 }
-                Ready ? apply() : Craft.WhenReady.then(() => {
+                ready() ? apply() : Craft.WhenReady.then(() => {
                     setTimeout(apply, 20)
                 });
             }
@@ -2366,12 +2367,12 @@
         },
         onTabChange(fn) {
             let options = {
-                get Off() {
-                    tabListners = Craft.omit(tabListeners, fn);
+                get off() {
+                    tabListeners.delete(fn);
                     return options;
                 },
-                get On() {
-                    tabListeners.push(fn);
+                get on() {
+                    tabListeners.add(fn);
                     return options;
                 }
             }
@@ -2381,7 +2382,7 @@
     head.appendChild(dom.style('', 'crafterstyles'));
     let TabChange = ta => () => {
         tabActive = ta;
-        forEach(tabListeners, tl => {
+        tabListeners.forEach(tl => {
             tl(tabActive)
         });
     }
@@ -2473,7 +2474,7 @@
         Ready = !0
     }
 
-    doc.readyState != "complete" ? Once("DOMContentLoaded", doc, init) : init();
+    !ready() ? Once("DOMContentLoaded", doc, init) : init();
 
     On('hashchange', () => {
         Craft.router.handlers.forEach(handle => {
