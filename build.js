@@ -18,7 +18,7 @@ babel.transformFile("./src/Crafter.js", {
     plugins: [
         "transform-es2015-template-literals",
         "transform-es2015-literals",
-        "transform-es2015-function-name",
+        //"transform-es2015-function-name",
         //"transform-es2015-for-of",
         "transform-merge-sibling-variables",
         "transform-es2015-arrow-functions",
