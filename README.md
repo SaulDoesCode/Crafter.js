@@ -299,14 +299,20 @@ Display the Websocket messages in the dom
 
 // Craft.observer creates an observable object
 var News = Craft.observable({
-  Headline : 'New Headline , this Just in...'
+  Headline : 'New Headline , this Just in...',
+  Article : `raw text article`
 });
 // The Changes will be instantly reflected in the DOM
 News.Headline = 'New information, data-binding is a thing';
 
+// you can change the output of any get by returning a value
+News.$get('Article',(key,value,object) => {
+  return dom.article(value);
+});
+
 // You can also optionally add change listeners for a specific property or properties
-News.addListener('Headline',(object,key,value) => {
-  if(!Craft.tabActive) Craft.router.setTitle(document.title + '(1)');
+News.$set('Headline',(key,value,object) => {
+  if(!Craft.tabActive) Craft.router.title = '(1) ' + document.title
 });
 ```
 

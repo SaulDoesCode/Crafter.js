@@ -24,14 +24,14 @@ gulp.task('document', cb => {
 gulp.task('babel', () => {
     gulp.src('./src/*.js')
         .pipe(babel({
-            presets: ['movio']
+            presets: ['es2015']
         })).pipe(prettify({}))
         .pipe(gulp.dest('./dist/'));
     console.log('\t babel be done!');
 });
 
 gulp.task('BabelUgly', () => gulp.src('./src/*.js').pipe(babel({
-    presets: ['movio']
+    presets: ['es2015']
 })).pipe(uglify({
     mangle: true,
     compress: true,
@@ -150,50 +150,6 @@ gulp.task('build_webcomponents', ['mincss', 'min-extrab-bs', 'babelize_webcompon
     });
 });
 
-gulp.task('buble', () => {
-    let source = fs.readFileSync('./src/Crafter.js', 'utf8');
-    fs.writeFile('./src/Crafter' + '.xjs', buble.transform(source).code, 'utf8', err => {
-        err ? console.error(err) : console.log('Success -> Crafter.js transpiled! ')
-    });
-    gulp.src('./src/Crafter.xjs')
-        .pipe(rename({
-            extname: ".js"
-        }))
-        .pipe(gulp.dest('./dist/'));
-
-    try {
-        gulp.src('./dist/Crafter.js').pipe(uglify({
-            mangle: true,
-            compress: true,
-            compressor: {
-                if_return: true,
-                evaluate: true,
-                loops: true,
-                conditionals: true,
-                booleans: true,
-                hoist_funs: true,
-                comparisons: true,
-                side_effects: true,
-                unsafe: true,
-                sequences: true
-            },
-            output: {
-                comments: false,
-                bracketize: false,
-            }
-        })).pipe(gulp.dest('./dist/min/'));
-    } catch (e) {
-        console.error('Couln\'t minify Crafter.js something broke :(');
-    }
-
-
-    setTimeout(() => {
-        try {
-            fs.unlinkSync('./src/Crafter.xjs');
-        } catch (e) {}
-    }, 4000);
-
-});
 
 gulp.task('watchWebComponents', () => gulp.watch(['./src/pre-webcomponents/*.js', './src/pre-webcomponents/*.css'], ['build_webcomponents']));
 gulp.task('watchSource', () => gulp.watch('./src/*.js', ['babel']));
