@@ -936,9 +936,6 @@
             return el;
         }
     }
-    // evlt - Event Listener Type (On or Once)
-    let evlt = type => root[type ? 'Once' : 'On'];
-
 
     function domManip(element, within) {
         if (is.String(element)) element = query(element, within);
@@ -1043,10 +1040,12 @@
 
                     is.Def(val) ? element.html(val) : Craft.setDeep(obj, prop, element.html());
                     if (obj.isObservable) {
+                        let firstTime = !0;
                         element._BoundObservable = obj.$set(prop, (k, v, o) => {
-                            setTimeout(() => {
+                            firstTime ? setTimeout(() => {
                                 element.html(obj.get(k))
-                            },10)
+                                firstTime = !1;
+                            },30) : element.html(obj.get(k));
                         });
                     }
                     if (element.isInput) element.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : joindot(Craft.omit(cutbind, cutbind[0])))
@@ -1076,26 +1075,29 @@
             if (is.Func(fn)) element.On('destroy', fn)
         });
 
-        element.Click = (fn, type) => evlt(type)('click', element, fn);
-        element.Input = (fn, type) => evlt(type)('input', element, fn);
-        element.DoubleClick = (fn, type) => evlt(type)('dblclick', element, fn);
-        element.Focus = (fn, type) => evlt(type)('focus', element, fn);
-        element.Blur = (fn, type) => evlt(type)('blur', element, fn);
-        element.Keydown = (fn, type) => evlt(type)('keydown', element, fn);
-        element.Mousemove = (fn, type) => evlt(type)('mousemove', element, fn);
-        element.Mousedown = (fn, type) => evlt(type)('mousedown', element, fn);
-        element.Mouseup = (fn, type) => evlt(type)('mouseup', element, fn);
-        element.Mouseover = (fn, type) => evlt(type)('mouseover', element, fn);
-        element.Mouseout = (fn, type) => evlt(type)('mouseout', element, fn);
-        element.Mouseenter = (fn, type) => evlt(type)('mouseenter', element, fn);
-        element.Mouseleave = (fn, type) => evlt(type)('mouseleave', element, fn);
-        element.Wheel = (fn, type) => evlt(type)('wheel', element, fn);
+        function evlt(type) {
+           return (fn,ltype) => root[ltype ? 'Once' : 'On'](type,element,fn)
+        }
+
+        element.Click = evlt('click');
+        element.Input = evlt('input');
+        element.DoubleClick = evlt('dblclick');
+        element.Focus = evlt('focus');
+        element.Blur = evlt('blur');
+        element.Keydown = evlt('keydown');
+        element.Mousemove = evlt('mousemove');
+        element.Mousedown = evlt('mousedown');
+        element.Mouseup = evlt('mouseup');
+        element.Mouseover = evlt('mouseover');
+        element.Mouseout = evlt('mouseout');
+        element.Mouseenter = evlt('mouseenter');
+        element.Mouseleave = evlt('mouseleave');
 
         element.OnScroll = (func, pd) => Craft.OnScroll(element, func, pd);
 
-        let keypress = code => (fn,type) => evlt(type)('keydown', element, e => {
-                if (e.which == code || e.keyCode == code) fn(e, element)
-        });
+        let keypress = code => (fn,type) => evlt('keydown')(element, e => {
+              if (e.which == code || e.keyCode == code) fn(e, element)
+        },type);
 
         element.Enter = keypress(13);
         element.Escape = keypress(27);

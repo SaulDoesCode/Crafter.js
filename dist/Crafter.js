@@ -1086,10 +1086,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }).join('');
       return el;
     };
-  } // evlt - Event Listener Type (On or Once)
-  var evlt = function(type) {
-    return root[type ? 'Once' : 'On'];
-  };
+  }
 
   function domManip(element, within) {
     if (is.String(element)) element = query(element, within);
@@ -1196,11 +1193,15 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           val = _Craft$getPath.val;
         is.Def(val) ? element.html(val) : Craft.setDeep(obj, prop, element.html());
         if (obj.isObservable) {
-          element._BoundObservable = obj.$set(prop, function(k, v, o) {
-            setTimeout(function() {
-              element.html(obj.get(k));
-            }, 10);
-          });
+          (function() {
+            var firstTime = !0;
+            element._BoundObservable = obj.$set(prop, function(k, v, o) {
+              firstTime ? setTimeout(function() {
+                element.html(obj.get(k));
+                firstTime = !1;
+              }, 30) : element.html(obj.get(k));
+            });
+          })();
         }
         if (element.isInput) element.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : joindot(Craft.omit(cutbind, cutbind[0])));
       }
@@ -1226,56 +1227,33 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     element.newSetGet('ondestroy', function(fn) {
       if (is.Func(fn)) element.On('destroy', fn);
     });
-    element.Click = function(fn, type) {
-      return evlt(type)('click', element, fn);
-    };
-    element.Input = function(fn, type) {
-      return evlt(type)('input', element, fn);
-    };
-    element.DoubleClick = function(fn, type) {
-      return evlt(type)('dblclick', element, fn);
-    };
-    element.Focus = function(fn, type) {
-      return evlt(type)('focus', element, fn);
-    };
-    element.Blur = function(fn, type) {
-      return evlt(type)('blur', element, fn);
-    };
-    element.Keydown = function(fn, type) {
-      return evlt(type)('keydown', element, fn);
-    };
-    element.Mousemove = function(fn, type) {
-      return evlt(type)('mousemove', element, fn);
-    };
-    element.Mousedown = function(fn, type) {
-      return evlt(type)('mousedown', element, fn);
-    };
-    element.Mouseup = function(fn, type) {
-      return evlt(type)('mouseup', element, fn);
-    };
-    element.Mouseover = function(fn, type) {
-      return evlt(type)('mouseover', element, fn);
-    };
-    element.Mouseout = function(fn, type) {
-      return evlt(type)('mouseout', element, fn);
-    };
-    element.Mouseenter = function(fn, type) {
-      return evlt(type)('mouseenter', element, fn);
-    };
-    element.Mouseleave = function(fn, type) {
-      return evlt(type)('mouseleave', element, fn);
-    };
-    element.Wheel = function(fn, type) {
-      return evlt(type)('wheel', element, fn);
-    };
+
+    function evlt(type) {
+      return function(fn, ltype) {
+        return root[ltype ? 'Once' : 'On'](type, element, fn);
+      };
+    }
+    element.Click = evlt('click');
+    element.Input = evlt('input');
+    element.DoubleClick = evlt('dblclick');
+    element.Focus = evlt('focus');
+    element.Blur = evlt('blur');
+    element.Keydown = evlt('keydown');
+    element.Mousemove = evlt('mousemove');
+    element.Mousedown = evlt('mousedown');
+    element.Mouseup = evlt('mouseup');
+    element.Mouseover = evlt('mouseover');
+    element.Mouseout = evlt('mouseout');
+    element.Mouseenter = evlt('mouseenter');
+    element.Mouseleave = evlt('mouseleave');
     element.OnScroll = function(func, pd) {
       return Craft.OnScroll(element, func, pd);
     };
     var keypress = function(code) {
       return function(fn, type) {
-        return evlt(type)('keydown', element, function(e) {
+        return evlt('keydown')(element, function(e) {
           if (e.which == code || e.keyCode == code) fn(e, element);
-        });
+        }, type);
       };
     };
     element.Enter = keypress(13);
@@ -2167,7 +2145,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
       if (!address.includes('ws://') || !address.includes('wss://')) address = (location.protocol === 'http:' ? 'ws://' : 'wss://') + address;
       if (is.URL(address)) {
-        var _ret = function() {
+        var _ret2 = function() {
           var newSock = function() {
               return protocols ? new WebSocket(address, protocols) : new WebSocket(address);
             },
@@ -2225,7 +2203,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
             v: Options
           };
         }();
-        if ((typeof _ret === "undefined" ? "undefined" : _typeof(_ret)) === "object") return _ret.v;
+        if ((typeof _ret2 === "undefined" ? "undefined" : _typeof(_ret2)) === "object") return _ret2.v;
       }
     },
     curry: function(fn) {
@@ -2484,7 +2462,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     model: function(name, func) {
       if (is.Func(func) && is.String(name)) {
         if (!is.Def(Craft.Models[name])) {
-          var _ret3 = function() {
+          var _ret4 = function() {
             var scope = observable();
             Craft.Models[name] = {
               func: func.bind(scope),
@@ -2498,7 +2476,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
               }
             };
           }();
-          if ((typeof _ret3 === "undefined" ? "undefined" : _typeof(_ret3)) === "object") return _ret3.v;
+          if ((typeof _ret4 === "undefined" ? "undefined" : _typeof(_ret4)) === "object") return _ret4.v;
         }
         throw new Error('Craft Model already exists');
       }
@@ -2658,8 +2636,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         _key21 == 'inserted' ? element.attachedCallback = dm : _key21 == 'destroyed' ? element.detachedCallback = dm : _key21 == 'attr' ? element.attributeChangedCallback = dm : _key21.includes('css') && _key21.length == 3 ? Craft.addCSS(config[_key21]) : is.Func(config[_key21]) ? element[_key21] = dm : Object.defineProperty(element, _key21, Object.getOwnPropertyDescriptor(config, _key21));
       };
       for (var _key21 in config) {
-        var _ret5 = _loop(_key21);
-        if (_ret5 === "continue") continue;
+        var _ret6 = _loop(_key21);
+        if (_ret6 === "continue") continue;
       }
       settings['prototype'] = element;
       doc.registerElement(tag, settings);
