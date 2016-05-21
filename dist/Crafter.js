@@ -753,85 +753,46 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   };
 
   function EventTypes(Target, within, listen) {
-    var etype = function etype(type, fn) {
-        return EventHandler(type, Target, fn, within)[listen || 'On'];
+    var etype = function etype(type) {
+        return function(fn) {
+          return EventHandler(type, Target, fn, within)[listen || 'On'];
+        };
       },
-      keypress = function keypress(fn, keycode) {
-        return function(e, srcElement) {
-          if (event.which == keycode || event.keyCode == keycode) fn(e, srcElement);
+      keypress = function keypress(keycode) {
+        return function(fn) {
+          return EventHandler('keydown', Target, function(e, el) {
+            if (event.which == keycode || event.keyCode == keycode) fn(e, el);
+          }, within)[listen || 'On'];
         };
       };
     return {
-      Click: function Click(fn) {
-        return etype('click', fn);
-      },
-      Input: function Input(fn) {
-        return etype('input', fn);
-      },
-      DoubleClick: function DoubleClick(fn) {
-        return etype('dblclick', fn);
-      },
-      Focus: function Focus(fn) {
-        return etype('focus', fn);
-      },
-      Blur: function Blur(fn) {
-        return etype('blur', fn);
-      },
-      Keydown: function Keydown(fn) {
-        return etype('keydown', fn);
-      },
-      Mousemove: function Mousemove(fn) {
-        return etype('mousemove', fn);
-      },
-      Mousedown: function Mousedown(fn) {
-        return etype('mousedown', fn);
-      },
-      Mouseup: function Mouseup(fn) {
-        return etype('mouseup', fn);
-      },
-      Mouseover: function Mouseover(fn) {
-        return etype('mouseover', fn);
-      },
-      Mouseout: function Mouseout(fn) {
-        return etype('mouseout', fn);
-      },
-      Mouseenter: function Mouseenter(fn) {
-        return etype('mouseenter', fn);
-      },
-      Mouseleave: function Mouseleave(fn) {
-        return etype('mouseleave', fn);
-      },
-      Scroll: function Scroll(fn) {
-        return etype('scroll', fn);
-      },
-      Enter: function Enter(fn) {
-        return etype('keydown', keypress(fn, 13));
-      },
-      Escape: function Escape(fn) {
-        return etype('keydown', keypress(fn, 27));
-      },
-      Delete: function Delete(fn) {
-        return etype('keydown', keypress(fn, 46));
-      },
-      Space: function Space(fn) {
-        return etype('keydown', keypress(fn, 32));
-      },
-      UpArrow: function UpArrow(fn) {
-        return etype('keydown', keypress(fn, 38));
-      },
-      DownArrow: function DownArrow(fn) {
-        return etype('keydown', keypress(fn, 40));
-      },
-      LeftArrow: function LeftArrow(fn) {
-        return etype('keydown', keypress(fn, 37));
-      },
-      RightArrow: function RightArrow(fn) {
-        return etype('keydown', keypress(fn, 39));
-      }
+      Click: etype('click'),
+      Input: etype('input'),
+      DoubleClick: etype('dblclick'),
+      Focus: etype('focus'),
+      Blur: etype('blur'),
+      Keydown: etype('keydown'),
+      Mousemove: etype('mousemove'),
+      Mousedown: etype('mousedown'),
+      Mouseup: etype('mouseup'),
+      Mouseover: etype('mouseover'),
+      Mouseout: etype('mouseout'),
+      Mouseenter: etype('mouseenter'),
+      Mouseleave: etype('mouseleave'),
+      Scroll: etype('scroll'),
+      Enter: keypress(13),
+      Escape: keypress(27),
+      Delete: keypress(46),
+      Space: keypress(32),
+      UpArrow: keypress(38),
+      DownArrow: keypress(40),
+      LeftArrow: keypress(37),
+      RightArrow: keypress(39)
     };
   }
 
-  function EvtLT(ListenType) {
+  function EvtLT() {
+    var ListenType = arguments.length <= 0 || arguments[0] === undefined ? 'On' : arguments[0];
     return function(EventType, Target, element, func) {
       var args = toArr(arguments);
       return is.Func(Target) ? EventHandler(EventType, root, Target)[ListenType] : args.length < 3 && !args.some(function(i) {
@@ -846,7 +807,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
    * @param {function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
    * @returns Off - when On is defined as a variable "var x = On(...)" it allows you to access all the EventHandler interfaces Off,Once,On
    */
-  root.On = EvtLT('On');
+  root.On = EvtLT();
   /**
    * Starts listening for an EventType on the Target/Targets ONCE after triggering the Once event Listener will stop listening
    * @param {string} EventType - set the type of event to listen for example "click" or "scroll"
@@ -965,16 +926,16 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      */
     elements.css = function(styles) {
       if (styles != ud) {
-        forEach(elements, function(el) {
+        elements.forEach(function(el) {
           forEach(styles, function(prop, key) {
             el.style[key] = prop;
           });
         });
-      } else console.error('styles unefined');
+      } else throw new Error('styles unefined');
       return elements;
     };
     elements.addClass = function(Class) {
-      forEach(elements, function(el) {
+      elements.forEach(function(el) {
         el.classList.add(Class);
       });
       return elements;
@@ -1000,7 +961,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       });
     };
     elements.stripClass = function(Class) {
-      forEach(elements, function(el) {
+      elements.forEach(function(el) {
         el.classList.remove(Class);
       });
       return elements;
@@ -1020,7 +981,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       for (var _len5 = arguments.length, args = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
         args[_key5] = arguments[_key5];
       }
-      forEach(elements, function(el) {
+      elements.forEach(function(el) {
         args.forEach(function(attr) {
           el.removeAttribute(attr);
         });
@@ -1127,9 +1088,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   function Inner(type, el) {
     type = el.isInput ? 'value' : type;
     return function() {
-      for (var _len8 = arguments.length, args = Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
-        args[_key8] = arguments[_key8];
-      }
+      var args = toArr(arguments);
       if (args.length == 0) return el[type];
       args.length == 1 ? is.Node(args[0]) ? el.append(args[0]) : el[type] = args[0] : el[type] = args.map(function(val) {
         if (is.Node(val)) el.append(val);
@@ -1214,8 +1173,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {Node|string} String or Node to append to the this.element
      */
     element.append = function() {
-      for (var _len9 = arguments.length, args = Array(_len9), _key9 = 0; _key9 < _len9; _key9++) {
-        args[_key9] = arguments[_key9];
+      for (var _len8 = arguments.length, args = Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
+        args[_key8] = arguments[_key8];
       }
       var domfrag = dom.frag();
       args.forEach(function(val) {
@@ -1230,8 +1189,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {Node|string} String or Node to prepend to the this.element
      */
     element.prepend = function() {
-      for (var _len10 = arguments.length, args = Array(_len10), _key10 = 0; _key10 < _len10; _key10++) {
-        args[_key10] = arguments[_key10];
+      for (var _len9 = arguments.length, args = Array(_len9), _key9 = 0; _key9 < _len9; _key9++) {
+        args[_key9] = arguments[_key9];
       }
       args.forEach(function(val) {
         element.insertBefore(is.Node(val) ? val : dffstr(val), element.firstChild);
@@ -1249,7 +1208,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         if (obj.isObservable) {
           element._BoundObservable = obj.$set(prop, function(k, v, o) {
             setTimeout(function() {
-              element.html(obj[k]);
+              element.html(obj.Get(k));
             }, 1);
           });
         }
@@ -1322,36 +1281,21 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     element.OnScroll = function(func, pd) {
       return Craft.OnScroll(element, func, pd);
     };
-
-    function keypress(type, fn, code) {
-      evlt(type)('keydown', element, function(e) {
-        if (e.which == code || e.keyCode == code) fn(e, element);
-      });
-    }
-    element.Enter = function(fn, type) {
-      return keypress(type, fn, 13);
+    var keypress = function keypress(code) {
+      return function(fn, type) {
+        return evlt(type)('keydown', element, function(e) {
+          if (e.which == code || e.keyCode == code) fn(e, element);
+        });
+      };
     };
-    element.Escape = function(fn, type) {
-      return keypress(type, fn, 27);
-    };
-    element.Delete = function(fn, type) {
-      return keypress(type, fn, 46);
-    };
-    element.Space = function(fn, type) {
-      return keypress(type, fn, 32);
-    };
-    element.UpArrow = function(fn, type) {
-      return keypress(type, fn, 38);
-    };
-    element.DownArrow = function(fn, listen) {
-      return keypress(type, fn, 40);
-    };
-    element.LeftArrow = function(fn, listen) {
-      return keypress(type, fn, 37);
-    };
-    element.RightArrow = function(fn, listen) {
-      return keypress(type, fn, 39);
-    };
+    element.Enter = keypress(13);
+    element.Escape = keypress(27);
+    element.Delete = keypress(46);
+    element.Space = keypress(32);
+    element.UpArrow = keypress(38);
+    element.DownArrow = keypress(40);
+    element.LeftArrow = keypress(37);
+    element.RightArrow = keypress(39);
     /**
      * add CSS style rules to the Element or NodeList
      * @memberof dom
@@ -1360,9 +1304,10 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     element.css = function(styles, prop) {
       if (styles == ud) throw new Error('Style properties undefined');
       if (is.String(styles, prop)) element.style[styles] = prop;
-      else forEach(styles, function(style) {
-        element.style[style] = styles[style];
-      });
+      else
+        for (var style in styles) {
+          element.style[style] = styles[style];
+        }
       return element;
     };
     /**
@@ -1371,8 +1316,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {...string} name of the class to check for
      */
     element.gotClass = function() {
-      for (var _len11 = arguments.length, args = Array(_len11), _key11 = 0; _key11 < _len11; _key11++) {
-        args[_key11] = arguments[_key11];
+      for (var _len10 = arguments.length, args = Array(_len10), _key10 = 0; _key10 < _len10; _key10++) {
+        args[_key10] = arguments[_key10];
       }
       return args.every(function(Class) {
         return element.classList.contains(Class);
@@ -1384,8 +1329,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {string} name of the class to add
      */
     element.addClass = function() {
-      for (var _len12 = arguments.length, args = Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
-        args[_key12] = arguments[_key12];
+      for (var _len11 = arguments.length, args = Array(_len11), _key11 = 0; _key11 < _len11; _key11++) {
+        args[_key11] = arguments[_key11];
       }
       args.forEach(function(Class) {
         element.classList.add(Class);
@@ -1398,8 +1343,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {...string} name of the class to strip
      */
     element.stripClass = function() {
-      for (var _len13 = arguments.length, args = Array(_len13), _key13 = 0; _key13 < _len13; _key13++) {
-        args[_key13] = arguments[_key13];
+      for (var _len12 = arguments.length, args = Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
+        args[_key12] = arguments[_key12];
       }
       args.forEach(function(Class) {
         element.classList.remove(Class);
@@ -1423,8 +1368,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {...string} name of the Attribute/s to strip
      */
     element.stripAttr = function() {
-      for (var _len14 = arguments.length, args = Array(_len14), _key14 = 0; _key14 < _len14; _key14++) {
-        args[_key14] = arguments[_key14];
+      for (var _len13 = arguments.length, args = Array(_len13), _key13 = 0; _key13 < _len13; _key13++) {
+        args[_key13] = arguments[_key13];
       }
       args.forEach(function(attr) {
         element.removeAttribute(attr);
@@ -1438,8 +1383,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {...string} names of attributes to check for
      */
     element.hasAttr = function() {
-      for (var _len15 = arguments.length, args = Array(_len15), _key15 = 0; _key15 < _len15; _key15++) {
-        args[_key15] = arguments[_key15];
+      for (var _len14 = arguments.length, args = Array(_len14), _key14 = 0; _key14 < _len14; _key14++) {
+        args[_key14] = arguments[_key14];
       }
       if (is.String(args[0]) && args.length == 1) return element.hasAttribute(args[0]);
       return args.every(function(a) {
@@ -1635,7 +1580,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
    * @param {Node|string=} within - optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
    * @param {boolean=} one - even if there are more than one elements matching a selector only return the first one
    */
-  root.dom = function dom(element, within, one) {
+  root.dom = function(element, within, one) {
     if (within == !0) {
       one = within;
       within = null;
@@ -1653,8 +1598,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     if (is.Node(element)) return !element['_DOMM'] ? domManip(element) : element;
     return Dom;
   };
-  for (var _key16 in Dom) {
-    Object.defineProperty(dom, _key16, Object.getOwnPropertyDescriptor(Dom, _key16));
+  for (var _key15 in Dom) {
+    Object.defineProperty(dom, _key15, Object.getOwnPropertyDescriptor(Dom, _key15));
   }
   if (root.Proxy) dom = new Proxy(dom, {
     get: function get(obj, key) {
@@ -1736,7 +1681,29 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       enumerable: !1,
       writable: !0
     });
-    return new Proxy(obj, {
+    Object.defineProperty(obj, 'get', {
+      value: function value(key) {
+        var val = void 0;
+        obj.listeners.Get.forEach(function(ln) {
+          if (ln.prop === '*' || ln.prop === key) val = ln.multi ? ln.fn('get', key, obj) : ln.fn(key, obj);
+        });
+        return obj[key];
+      },
+      writable: !1,
+      enumerable: !1
+    });
+    Object.defineProperty(obj, 'set', {
+      value: function value(key, _value) {
+        var val = void 0;
+        obj.listeners.Set.forEach(function(ln) {
+          if (ln.prop === '*' || ln.prop === key) val = ln.multi ? ln.fn('set', key, _value, obj, !is.Def(obj[key])) : ln.fn(key, _value, obj, !is.Def(obj[key]));
+        });
+        obj[key] = is.Def(val) ? val : _value;
+      },
+      writable: !1,
+      enumerable: !1
+    });
+    if (Proxy) return new Proxy(obj, {
       get: function get(target, key) {
         var val = void 0;
         target.listeners.Get.forEach(function(ln) {
@@ -1752,6 +1719,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         return is.Def(val) ? val : Reflect.set(target, key, value);
       }
     });
+    else return obj;
   }
   /**
    * Craft is Crafter.js's Core containing most functionality.
@@ -1957,12 +1925,12 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @returns {Object} resulting object after merges
      */
     concatObjects: function concatObjects(host) {
-      for (var _len16 = arguments.length, objs = Array(_len16 > 1 ? _len16 - 1 : 0), _key17 = 1; _key17 < _len16; _key17++) {
-        objs[_key17 - 1] = arguments[_key17];
+      for (var _len15 = arguments.length, objs = Array(_len15 > 1 ? _len15 - 1 : 0), _key16 = 1; _key16 < _len15; _key16++) {
+        objs[_key16 - 1] = arguments[_key16];
       }
       objs.forEach(function(obj) {
-        for (var _key18 in obj) {
-          Object.defineProperty(host, _key18, Object.getOwnPropertyDescriptor(obj, _key18));
+        for (var _key17 in obj) {
+          Object.defineProperty(host, _key17, Object.getOwnPropertyDescriptor(obj, _key17));
         }
       });
       return host;
@@ -1981,8 +1949,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return is.Object(val) ? Object.create(val) : toArr(val);
     },
     omitFrom: function omitFrom(Arr) {
-      for (var _len17 = arguments.length, args = Array(_len17 > 1 ? _len17 - 1 : 0), _key19 = 1; _key19 < _len17; _key19++) {
-        args[_key19 - 1] = arguments[_key19];
+      for (var _len16 = arguments.length, args = Array(_len16 > 1 ? _len16 - 1 : 0), _key18 = 1; _key18 < _len16; _key18++) {
+        args[_key18 - 1] = arguments[_key18];
       }
       if (is.String(Arr)) args.forEach(function(a) {
         Craft.tco(function replace() {
@@ -2000,8 +1968,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return Arr;
     },
     has: function has(str) {
-      for (var _len18 = arguments.length, args = Array(_len18 > 1 ? _len18 - 1 : 0), _key20 = 1; _key20 < _len18; _key20++) {
-        args[_key20 - 1] = arguments[_key20];
+      for (var _len17 = arguments.length, args = Array(_len17 > 1 ? _len17 - 1 : 0), _key19 = 1; _key19 < _len17; _key19++) {
+        args[_key19 - 1] = arguments[_key19];
       }
       return args.some(function(e) {
         return str.includes(e);
@@ -2016,8 +1984,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @returns {Object|Array}
      */
     omit: function omit(val) {
-      for (var _len19 = arguments.length, args = Array(_len19 > 1 ? _len19 - 1 : 0), _key21 = 1; _key21 < _len19; _key21++) {
-        args[_key21 - 1] = arguments[_key21];
+      for (var _len18 = arguments.length, args = Array(_len18 > 1 ? _len18 - 1 : 0), _key20 = 1; _key20 < _len18; _key20++) {
+        args[_key20 - 1] = arguments[_key20];
       }
       if (is.Arraylike(val)) val = Craft.omitFrom.apply(this, arguments);
       if (is.Object(val) && !args.some(function(v) {
@@ -2139,7 +2107,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         });
       },
       open: function(_open) {
-        function open(_x2, _x3) {
+        function open(_x3, _x4) {
           return _open.apply(this, arguments);
         }
         open.toString = function() {
@@ -2642,8 +2610,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       if (pass.length <= length - 1) return reasons ? pw + 'too short' : !1;
       if (caps === !0 && Craft.hasCapitals(pass) === !1) return reasons ? pw + 'should have a Capital letter' : !1;
       if (number === !0 && /\d/g.test(pass) === !1) return reasons ? pw + 'should have a number' : !1;
-      for (var _len20 = arguments.length, includeChars = Array(_len20 > 5 ? _len20 - 5 : 0), _key22 = 5; _key22 < _len20; _key22++) {
-        includeChars[_key22 - 5] = arguments[_key22];
+      for (var _len19 = arguments.length, includeChars = Array(_len19 > 5 ? _len19 - 5 : 0), _key21 = 5; _key21 < _len19; _key21++) {
+        includeChars[_key21 - 5] = arguments[_key21];
       }
       if (includeChars.length) {
         var hasChars = !0;
@@ -2685,30 +2653,30 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       element.createdCallback = function() {
         var el = dom(this),
           dealtWith = [];
-        for (var _key23 in config) {
-          if (!dealtWith.includes(_key23)) {
-            if (_key23.includes("set_")) {
-              var sgKey = _key23.split("_")[1];
-              dealtWith.push(_key23, "get_" + sgKey);
-              el.newSetGet(sgKey, config[_key23], config["get_" + sgKey]);
-            } else if (_key23.includes("get_")) {
-              var _sgKey = _key23.split("_")[1];
-              dealtWith.push(_key23, "set_" + _sgKey);
-              el.newSetGet(_sgKey, is.Func(config["set_" + _sgKey]) ? config["set_" + _sgKey] : function(x) {}, config[_key23]);
+        for (var _key22 in config) {
+          if (!dealtWith.includes(_key22)) {
+            if (_key22.includes("set_")) {
+              var sgKey = _key22.split("_")[1];
+              dealtWith.push(_key22, "get_" + sgKey);
+              el.newSetGet(sgKey, config[_key22], config["get_" + sgKey]);
+            } else if (_key22.includes("get_")) {
+              var _sgKey = _key22.split("_")[1];
+              dealtWith.push(_key22, "set_" + _sgKey);
+              el.newSetGet(_sgKey, is.Func(config["set_" + _sgKey]) ? config["set_" + _sgKey] : function(x) {}, config[_key22]);
             }
           }
         }
         if (is.Func(config['created'])) return config['created'].call(el);
       };
-      var _loop = function _loop(_key24) {
-        if (_key24 == 'created' || _key24.includes('set_') || _key24.includes('get_')) return "continue";
-        if (is.Func(config[_key24])) dm = function dm() { // Adds dom methods to element
-          return config[_key24].call(dom(this));
+      var _loop = function _loop(_key23) {
+        if (_key23 == 'created' || _key23.includes('set_') || _key23.includes('get_')) return "continue";
+        if (is.Func(config[_key23])) dm = function dm() { // Adds dom methods to element
+          return config[_key23].call(dom(this));
         };
-        _key24 == 'inserted' ? element.attachedCallback = dm : _key24 == 'destroyed' ? element.detachedCallback = dm : _key24 == 'attr' ? element.attributeChangedCallback = dm : _key24.includes('css') && _key24.length == 3 ? Craft.addCSS(config[_key24]) : is.Func(config[_key24]) ? element[_key24] = dm : Object.defineProperty(element, _key24, Object.getOwnPropertyDescriptor(config, _key24));
+        _key23 == 'inserted' ? element.attachedCallback = dm : _key23 == 'destroyed' ? element.detachedCallback = dm : _key23 == 'attr' ? element.attributeChangedCallback = dm : _key23.includes('css') && _key23.length == 3 ? Craft.addCSS(config[_key23]) : is.Func(config[_key23]) ? element[_key23] = dm : Object.defineProperty(element, _key23, Object.getOwnPropertyDescriptor(config, _key23));
       };
-      for (var _key24 in config) {
-        var _ret5 = _loop(_key24);
+      for (var _key23 in config) {
+        var _ret5 = _loop(_key23);
         if (_ret5 === "continue") continue;
       }
       settings['prototype'] = element;
