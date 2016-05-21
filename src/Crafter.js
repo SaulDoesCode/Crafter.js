@@ -93,7 +93,7 @@
     }
 
     function joindot(arr) {
-        if (!is.Array(arr) && is.Arraylike(arr)) arr = toArr(arr);
+        if (!is.Arr(arr) && is.Arraylike(arr)) arr = toArr(arr);
         return arr.join('.')
     }
     let def = ta(o => typeof o !== 'undefined'),
@@ -497,12 +497,13 @@
      * @param {function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
      * @returns Interface On,Off,Once
      */
-    function eventHandler(EventType, Target, func, Within) {
+    function EventHandler(EventType, Target, func, Within) {
+        return new function() {
         EventType = EventType || 'click';
         this.state = !1;
         Target = (Target !== root && Target !== doc) ? NodeOrQuerytoArr(Target, Within) : [Target];
         if (is.String(EventType) && EventType.includes(',')) EventType = EventType.split(',');
-        if (!is.Array(EventType)) EventType = [EventType];
+        if (!is.Arr(EventType)) EventType = [EventType];
 
         function FuncWrapper(e) {
             func(e, e.target, Craft.deglove(Target))
@@ -533,7 +534,7 @@
                     //  have you tried turning it on and off again? - THE IT CROWD
                     ehdl.Off;
                     EventType = type.includes(',') ? type.split(',') : type;
-                    if (!is.Array(EventType)) EventType = [EventType];
+                    if (!is.Arr(EventType)) EventType = [EventType];
                     ehdl.On;
                     return ehdl
                 },
@@ -585,10 +586,8 @@
             },
             enumerable: !0
         });
-
+      }
     }
-
-    let EventHandler = (e, t, f, w) => new eventHandler(e, t, f, w);
 
     /**
      * Easy way to get a DOM Node or Node within another DOM Node using CSS selectors
@@ -608,7 +607,7 @@
     root.queryAll = (selector, element) => {
             if (is.String(element)) element = queryAll(element);
             let list;
-            if (Craft.len(element) !== 1 && (is.Array(element) || is.NodeList(element))) {
+            if (Craft.len(element) !== 1 && (is.Arr(element) || is.NodeList(element))) {
                 list = [];
                 forEach(element, el => {
                     if (is.String(el)) el = query(el);
@@ -618,7 +617,7 @@
                     }
                 })
             } else list = is.NodeList(element) ? element[0].querySelectorAll(selector) : is.Node(element) ? element.querySelectorAll(selector) : doc.querySelectorAll(selector);
-            return is.Null(list) ? list : is.Array(list) ? list : toArr(list);
+            return is.Null(list) ? list : is.Arr(list) ? list : toArr(list);
         }
         /**
          * Easy way to loop through Nodes in the DOM using a CSS Selector or a NodeList
@@ -701,7 +700,7 @@
         }
         if (inner != ud) {
             let type = newEl.isInput ? 'value' : 'innerHTML';
-            if (!is.Array(inner)) is.Node(inner) ? newEl.appendChild(inner) : newEl[type] = inner;
+            if (!is.Arr(inner)) is.Node(inner) ? newEl.appendChild(inner) : newEl[type] = inner;
             else newEl[type] = inner.map(val => {
                 if (is.Node(val)) newEl.append(val);
                 else return val
@@ -884,7 +883,8 @@
             return elements
         }
 
-        elements.append = (...args) => {
+        elements.append = function() {
+            let args = toArr(arguments);
             args.forEach(arg => {
                 forEach(elements, el => {
                     el.appendChild((is.Node(val) ? val : dffstr(val)).cloneNode(!0));
@@ -899,7 +899,8 @@
             });
             return elements
         }
-        elements.prepend = (...args) => {
+        elements.prepend = function() {
+            let args = toArr(arguments);
             args.forEach(val => {
                 forEach(elements, el => {
                     el.insertBefore(W(is.Node(val), val, dffstr(val)).cloneNode(!0), el.firstChild);
@@ -1043,7 +1044,7 @@
                     if (obj.isObservable) {
                         element._BoundObservable = obj.$set(prop, (k, v, o) => {
                             setTimeout(() => {
-                                element.html(obj.Get(k))
+                                element.html(obj.get(k))
                             }, 1)
                         });
                     }
@@ -1613,7 +1614,7 @@
          * @memberof Craft
          * @param {Array|Arraylike} arr - multidimentional array(like) object to flatten
          */
-        flatten: arr => (!is.Array(arr) && is.Arraylike(arr) ? Arrat.from(arr) : is.Array(arr) ? arr : []).reduce((flat, toFlatten) => flat.concat(is.Array(toFlatten) ? Craft.flatten(toFlatten) : toFlatten), []),
+        flatten: arr => (!is.Arr(arr) && is.Arraylike(arr) ? Arrat.from(arr) : is.Arr(arr) ? arr : []).reduce((flat, toFlatten) => flat.concat(is.Arr(toFlatten) ? Craft.flatten(toFlatten) : toFlatten), []),
         /**
          * Gets a value from inside an object using a reference string
          * @method getDeep
@@ -1672,9 +1673,9 @@
                 if (object.hasOwnProperty(key)) val = object[key];
                 currentPath = path;
                 nestable = !1;
-                is.Array(object) ? currentPath += `[${key}]` : !currentPath ? currentPath = key : currentPath += '.' + key;
+                is.Arr(object) ? currentPath += `[${key}]` : !currentPath ? currentPath = key : currentPath += '.' + key;
                 nestable = fn(val, key, object, currentPath) == !1;
-                if (nestable && (is.Array(val) || is.Object(val))) Craft.forEachDeep(val, fn, currentPath);
+                if (nestable && (is.Arr(val) || is.Object(val))) Craft.forEachDeep(val, fn, currentPath);
             }
         },
         /**
@@ -1815,7 +1816,7 @@
                 if (is.String(route)) {
                     if (Locs(l => l == route)) func(route);
                     Craft.router.addHandle(route, func)
-                } else if (is.Array(route))
+                } else if (is.Arr(route))
                     route.forEach(link => {
                         if (Locs(l => l == link)) func(link);
                         Craft.router.addHandle(link, func)
@@ -2235,7 +2236,7 @@
                     queryEach(`[${name}]`, el => {
                         el = dom(el);
                         if (el.hasAttr(name)) {
-                            if (!is.Array(el.customAttr)) el.customAttr = [];
+                            if (!is.Arr(el.customAttr)) el.customAttr = [];
                             if (!el.customAttr.includes(name)) {
                                 el.customAttr.push(name);
                                 handle(el, el.getAttr(name));

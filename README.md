@@ -172,15 +172,15 @@ Crafter.js allows the creation of scoped models to manipulate your app, models e
 
 
     // you can listen for changes on model scope variables
-    scope.addListener('newinfo',(object,key,value,isValueNew) => {
+    scope.$set('newinfo',(key,value,object,isValueNew) => {
       if(isValueNew) console.log('new info recieved!')
-    })
+    });
 
     scope.newinfo = 'I will change when there is new info';
 
   }).view(scope => {
     // do any dom manips or post DOM load code here
-    dom.element('article','class=news-article').bind('MyModel.articles[2]').appendTo('div.news')
+    dom.article('class=news-article').bind('MyModel.articles[2]').appendTo('div.news')
   })
 
   // You can assign to variables from the model scope via Craft.fromModel

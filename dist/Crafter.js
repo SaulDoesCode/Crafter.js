@@ -98,7 +98,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   }
 
   function joindot(arr) {
-    if (!is.Array(arr) && is.Arraylike(arr)) arr = toArr(arr);
+    if (!is.Arr(arr) && is.Arraylike(arr)) arr = toArr(arr);
     return arr.join('.');
   }
   var def = ta(function(o) {
@@ -619,96 +619,95 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
    * @param {function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
    * @returns Interface On,Off,Once
    */
-  function eventHandler(EventType, Target, func, Within) {
-    EventType = EventType || 'click';
-    this.state = !1;
-    Target = Target !== root && Target !== doc ? NodeOrQuerytoArr(Target, Within) : [Target];
-    if (is.String(EventType) && EventType.includes(',')) EventType = EventType.split(',');
-    if (!is.Array(EventType)) EventType = [EventType];
+  function EventHandler(EventType, Target, func, Within) {
+    return new function() {
+      EventType = EventType || 'click';
+      this.state = !1;
+      Target = Target !== root && Target !== doc ? NodeOrQuerytoArr(Target, Within) : [Target];
+      if (is.String(EventType) && EventType.includes(',')) EventType = EventType.split(',');
+      if (!is.Arr(EventType)) EventType = [EventType];
 
-    function FuncWrapper(e) {
-      func(e, e.target, Craft.deglove(Target));
-    }
-    /**
-     * Activates the EventHandler to start listening for the EventType on the Target/Targets
-     */
-    Object.defineProperty(this, 'On', {
-      get: function get() {
-        var ehdl = this;
-        Target.forEach(function(target) {
-          EventType.forEach(function(evt) {
-            target.addEventListener(evt, FuncWrapper);
-          });
-        });
-        ehdl.state = !0;
-        return ehdl;
-      },
-      enumerable: !0
-    });
-    /**
-     * Change the Event type to listen for
-     * {string} type - the name of the event/s to listen for
-     */
-    Object.defineProperty(this, 'Type', {
-      set: function set(type) {
-        var ehdl = this; //  have you tried turning it on and off again? - THE IT CROWD
-        ehdl.Off;
-        EventType = type.includes(',') ? type.split(',') : type;
-        if (!is.Array(EventType)) EventType = [EventType];
-        ehdl.On;
-        return ehdl;
-      },
-      get: function get() {
-        return EventType;
-      },
-      enumerable: !0
-    });
-    /**
-     * De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
-     * can still optionally be re-activated with On again
-     */
-    Object.defineProperty(this, 'Off', {
-      get: function get() {
-        var ehdl = this;
-        Target.forEach(function(target) {
-          EventType.forEach(function(evt) {
-            target.removeEventListener(evt, FuncWrapper);
-          });
-        });
-        ehdl.state = !1;
-        return ehdl;
-      },
-      enumerable: !0
-    });
-    /**
-     * Once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
-     * the Handler function will be called only Once
-     */
-    Object.defineProperty(this, 'Once', {
-      get: function get() {
-        var ehdl = this,
-          func = FuncWrapper;
-        EventType.forEach(function(evt) {
-          ehdl.state = !0;
-          var listenOnce = function listenOnce(e) {
-            ehdl.state = !1;
-            func(e);
-            Target.forEach(function(t) {
-              t.removeEventListener(evt, listenOnce);
+      function FuncWrapper(e) {
+        func(e, e.target, Craft.deglove(Target));
+      }
+      /**
+       * Activates the EventHandler to start listening for the EventType on the Target/Targets
+       */
+      Object.defineProperty(this, 'On', {
+        get: function get() {
+          var ehdl = this;
+          Target.forEach(function(target) {
+            EventType.forEach(function(evt) {
+              target.addEventListener(evt, FuncWrapper);
             });
-          };
-          Target.forEach(function(t) {
-            t.addEventListener(evt, listenOnce);
           });
-        });
-        return ehdl;
-      },
-      enumerable: !0
-    });
+          ehdl.state = !0;
+          return ehdl;
+        },
+        enumerable: !0
+      });
+      /**
+       * Change the Event type to listen for
+       * {string} type - the name of the event/s to listen for
+       */
+      Object.defineProperty(this, 'Type', {
+        set: function set(type) {
+          var ehdl = this; //  have you tried turning it on and off again? - THE IT CROWD
+          ehdl.Off;
+          EventType = type.includes(',') ? type.split(',') : type;
+          if (!is.Arr(EventType)) EventType = [EventType];
+          ehdl.On;
+          return ehdl;
+        },
+        get: function get() {
+          return EventType;
+        },
+        enumerable: !0
+      });
+      /**
+       * De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
+       * can still optionally be re-activated with On again
+       */
+      Object.defineProperty(this, 'Off', {
+        get: function get() {
+          var ehdl = this;
+          Target.forEach(function(target) {
+            EventType.forEach(function(evt) {
+              target.removeEventListener(evt, FuncWrapper);
+            });
+          });
+          ehdl.state = !1;
+          return ehdl;
+        },
+        enumerable: !0
+      });
+      /**
+       * Once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
+       * the Handler function will be called only Once
+       */
+      Object.defineProperty(this, 'Once', {
+        get: function get() {
+          var ehdl = this,
+            func = FuncWrapper;
+          EventType.forEach(function(evt) {
+            ehdl.state = !0;
+            var listenOnce = function listenOnce(e) {
+              ehdl.state = !1;
+              func(e);
+              Target.forEach(function(t) {
+                t.removeEventListener(evt, listenOnce);
+              });
+            };
+            Target.forEach(function(t) {
+              t.addEventListener(evt, listenOnce);
+            });
+          });
+          return ehdl;
+        },
+        enumerable: !0
+      });
+    }();
   }
-  var EventHandler = function EventHandler(e, t, f, w) {
-    return new eventHandler(e, t, f, w);
-  };
   /**
    * Easy way to get a DOM Node or Node within another DOM Node using CSS selectors
    * @param {string} selector - CSS selector to query the DOM Node with
@@ -726,7 +725,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   root.queryAll = function(selector, element) {
     if (is.String(element)) element = queryAll(element);
     var list = void 0;
-    if (Craft.len(element) !== 1 && (is.Array(element) || is.NodeList(element))) {
+    if (Craft.len(element) !== 1 && (is.Arr(element) || is.NodeList(element))) {
       list = [];
       forEach(element, function(el) {
         if (is.String(el)) el = query(el);
@@ -736,7 +735,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         }
       });
     } else list = is.NodeList(element) ? element[0].querySelectorAll(selector) : is.Node(element) ? element.querySelectorAll(selector) : doc.querySelectorAll(selector);
-    return is.Null(list) ? list : is.Array(list) ? list : toArr(list);
+    return is.Null(list) ? list : is.Arr(list) ? list : toArr(list);
   };
   /**
    * Easy way to loop through Nodes in the DOM using a CSS Selector or a NodeList
@@ -825,7 +824,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     }
     if (inner != ud) {
       var _type = newEl.isInput ? 'value' : 'innerHTML';
-      if (!is.Array(inner)) is.Node(inner) ? newEl.appendChild(inner) : newEl[_type] = inner;
+      if (!is.Arr(inner)) is.Node(inner) ? newEl.appendChild(inner) : newEl[_type] = inner;
       else newEl[_type] = inner.map(function(val) {
         if (is.Node(val)) newEl.append(val);
         else return val;
@@ -1040,9 +1039,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return elements;
     };
     elements.append = function() {
-      for (var _len6 = arguments.length, args = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
-        args[_key6] = arguments[_key6];
-      }
+      var args = toArr(arguments);
       args.forEach(function(arg) {
         forEach(elements, function(el) {
           el.appendChild((is.Node(val) ? val : dffstr(val)).cloneNode(!0));
@@ -1058,9 +1055,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return elements;
     };
     elements.prepend = function() {
-      for (var _len7 = arguments.length, args = Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
-        args[_key7] = arguments[_key7];
-      }
+      var args = toArr(arguments);
       args.forEach(function(val) {
         forEach(elements, function(el) {
           el.insertBefore(W(is.Node(val), val, dffstr(val)).cloneNode(!0), el.firstChild);
@@ -1173,8 +1168,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {Node|string} String or Node to append to the this.element
      */
     element.append = function() {
-      for (var _len8 = arguments.length, args = Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
-        args[_key8] = arguments[_key8];
+      for (var _len6 = arguments.length, args = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+        args[_key6] = arguments[_key6];
       }
       var domfrag = dom.frag();
       args.forEach(function(val) {
@@ -1189,8 +1184,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {Node|string} String or Node to prepend to the this.element
      */
     element.prepend = function() {
-      for (var _len9 = arguments.length, args = Array(_len9), _key9 = 0; _key9 < _len9; _key9++) {
-        args[_key9] = arguments[_key9];
+      for (var _len7 = arguments.length, args = Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
+        args[_key7] = arguments[_key7];
       }
       args.forEach(function(val) {
         element.insertBefore(is.Node(val) ? val : dffstr(val), element.firstChild);
@@ -1208,7 +1203,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         if (obj.isObservable) {
           element._BoundObservable = obj.$set(prop, function(k, v, o) {
             setTimeout(function() {
-              element.html(obj.Get(k));
+              element.html(obj.get(k));
             }, 1);
           });
         }
@@ -1316,8 +1311,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {...string} name of the class to check for
      */
     element.gotClass = function() {
-      for (var _len10 = arguments.length, args = Array(_len10), _key10 = 0; _key10 < _len10; _key10++) {
-        args[_key10] = arguments[_key10];
+      for (var _len8 = arguments.length, args = Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
+        args[_key8] = arguments[_key8];
       }
       return args.every(function(Class) {
         return element.classList.contains(Class);
@@ -1329,8 +1324,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {string} name of the class to add
      */
     element.addClass = function() {
-      for (var _len11 = arguments.length, args = Array(_len11), _key11 = 0; _key11 < _len11; _key11++) {
-        args[_key11] = arguments[_key11];
+      for (var _len9 = arguments.length, args = Array(_len9), _key9 = 0; _key9 < _len9; _key9++) {
+        args[_key9] = arguments[_key9];
       }
       args.forEach(function(Class) {
         element.classList.add(Class);
@@ -1343,8 +1338,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {...string} name of the class to strip
      */
     element.stripClass = function() {
-      for (var _len12 = arguments.length, args = Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
-        args[_key12] = arguments[_key12];
+      for (var _len10 = arguments.length, args = Array(_len10), _key10 = 0; _key10 < _len10; _key10++) {
+        args[_key10] = arguments[_key10];
       }
       args.forEach(function(Class) {
         element.classList.remove(Class);
@@ -1368,8 +1363,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {...string} name of the Attribute/s to strip
      */
     element.stripAttr = function() {
-      for (var _len13 = arguments.length, args = Array(_len13), _key13 = 0; _key13 < _len13; _key13++) {
-        args[_key13] = arguments[_key13];
+      for (var _len11 = arguments.length, args = Array(_len11), _key11 = 0; _key11 < _len11; _key11++) {
+        args[_key11] = arguments[_key11];
       }
       args.forEach(function(attr) {
         element.removeAttribute(attr);
@@ -1383,8 +1378,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {...string} names of attributes to check for
      */
     element.hasAttr = function() {
-      for (var _len14 = arguments.length, args = Array(_len14), _key14 = 0; _key14 < _len14; _key14++) {
-        args[_key14] = arguments[_key14];
+      for (var _len12 = arguments.length, args = Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
+        args[_key12] = arguments[_key12];
       }
       if (is.String(args[0]) && args.length == 1) return element.hasAttribute(args[0]);
       return args.every(function(a) {
@@ -1598,8 +1593,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     if (is.Node(element)) return !element['_DOMM'] ? domManip(element) : element;
     return Dom;
   };
-  for (var _key15 in Dom) {
-    Object.defineProperty(dom, _key15, Object.getOwnPropertyDescriptor(Dom, _key15));
+  for (var _key13 in Dom) {
+    Object.defineProperty(dom, _key13, Object.getOwnPropertyDescriptor(Dom, _key13));
   }
   if (root.Proxy) dom = new Proxy(dom, {
     get: function get(obj, key) {
@@ -1838,8 +1833,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {Array|Arraylike} arr - multidimentional array(like) object to flatten
      */
     flatten: function flatten(arr) {
-      return (!is.Array(arr) && is.Arraylike(arr) ? Arrat.from(arr) : is.Array(arr) ? arr : []).reduce(function(flat, toFlatten) {
-        return flat.concat(is.Array(toFlatten) ? Craft.flatten(toFlatten) : toFlatten);
+      return (!is.Arr(arr) && is.Arraylike(arr) ? Arrat.from(arr) : is.Arr(arr) ? arr : []).reduce(function(flat, toFlatten) {
+        return flat.concat(is.Arr(toFlatten) ? Craft.flatten(toFlatten) : toFlatten);
       }, []);
     },
     /**
@@ -1904,9 +1899,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         if (object.hasOwnProperty(key)) val = object[key];
         currentPath = path;
         nestable = !1;
-        is.Array(object) ? currentPath += "[" + key + "]" : !currentPath ? currentPath = key : currentPath += '.' + key;
+        is.Arr(object) ? currentPath += "[" + key + "]" : !currentPath ? currentPath = key : currentPath += '.' + key;
         nestable = fn(val, key, object, currentPath) == !1;
-        if (nestable && (is.Array(val) || is.Object(val))) Craft.forEachDeep(val, fn, currentPath);
+        if (nestable && (is.Arr(val) || is.Object(val))) Craft.forEachDeep(val, fn, currentPath);
       }
     },
     /**
@@ -1925,12 +1920,12 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @returns {Object} resulting object after merges
      */
     concatObjects: function concatObjects(host) {
-      for (var _len15 = arguments.length, objs = Array(_len15 > 1 ? _len15 - 1 : 0), _key16 = 1; _key16 < _len15; _key16++) {
-        objs[_key16 - 1] = arguments[_key16];
+      for (var _len13 = arguments.length, objs = Array(_len13 > 1 ? _len13 - 1 : 0), _key14 = 1; _key14 < _len13; _key14++) {
+        objs[_key14 - 1] = arguments[_key14];
       }
       objs.forEach(function(obj) {
-        for (var _key17 in obj) {
-          Object.defineProperty(host, _key17, Object.getOwnPropertyDescriptor(obj, _key17));
+        for (var _key15 in obj) {
+          Object.defineProperty(host, _key15, Object.getOwnPropertyDescriptor(obj, _key15));
         }
       });
       return host;
@@ -1949,8 +1944,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return is.Object(val) ? Object.create(val) : toArr(val);
     },
     omitFrom: function omitFrom(Arr) {
-      for (var _len16 = arguments.length, args = Array(_len16 > 1 ? _len16 - 1 : 0), _key18 = 1; _key18 < _len16; _key18++) {
-        args[_key18 - 1] = arguments[_key18];
+      for (var _len14 = arguments.length, args = Array(_len14 > 1 ? _len14 - 1 : 0), _key16 = 1; _key16 < _len14; _key16++) {
+        args[_key16 - 1] = arguments[_key16];
       }
       if (is.String(Arr)) args.forEach(function(a) {
         Craft.tco(function replace() {
@@ -1968,8 +1963,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return Arr;
     },
     has: function has(str) {
-      for (var _len17 = arguments.length, args = Array(_len17 > 1 ? _len17 - 1 : 0), _key19 = 1; _key19 < _len17; _key19++) {
-        args[_key19 - 1] = arguments[_key19];
+      for (var _len15 = arguments.length, args = Array(_len15 > 1 ? _len15 - 1 : 0), _key17 = 1; _key17 < _len15; _key17++) {
+        args[_key17 - 1] = arguments[_key17];
       }
       return args.some(function(e) {
         return str.includes(e);
@@ -1984,8 +1979,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @returns {Object|Array}
      */
     omit: function omit(val) {
-      for (var _len18 = arguments.length, args = Array(_len18 > 1 ? _len18 - 1 : 0), _key20 = 1; _key20 < _len18; _key20++) {
-        args[_key20 - 1] = arguments[_key20];
+      for (var _len16 = arguments.length, args = Array(_len16 > 1 ? _len16 - 1 : 0), _key18 = 1; _key18 < _len16; _key18++) {
+        args[_key18 - 1] = arguments[_key18];
       }
       if (is.Arraylike(val)) val = Craft.omitFrom.apply(this, arguments);
       if (is.Object(val) && !args.some(function(v) {
@@ -2089,7 +2084,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
               return l == route;
             })) func(route);
           Craft.router.addHandle(route, func);
-        } else if (is.Array(route)) route.forEach(function(link) {
+        } else if (is.Arr(route)) route.forEach(function(link) {
           if (Locs(function(l) {
               return l == link;
             })) func(link);
@@ -2562,7 +2557,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
             queryEach("[" + name + "]", function(el) {
               el = dom(el);
               if (el.hasAttr(name)) {
-                if (!is.Array(el.customAttr)) el.customAttr = [];
+                if (!is.Arr(el.customAttr)) el.customAttr = [];
                 if (!el.customAttr.includes(name)) {
                   el.customAttr.push(name);
                   handle(el, el.getAttr(name));
@@ -2610,8 +2605,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       if (pass.length <= length - 1) return reasons ? pw + 'too short' : !1;
       if (caps === !0 && Craft.hasCapitals(pass) === !1) return reasons ? pw + 'should have a Capital letter' : !1;
       if (number === !0 && /\d/g.test(pass) === !1) return reasons ? pw + 'should have a number' : !1;
-      for (var _len19 = arguments.length, includeChars = Array(_len19 > 5 ? _len19 - 5 : 0), _key21 = 5; _key21 < _len19; _key21++) {
-        includeChars[_key21 - 5] = arguments[_key21];
+      for (var _len17 = arguments.length, includeChars = Array(_len17 > 5 ? _len17 - 5 : 0), _key19 = 5; _key19 < _len17; _key19++) {
+        includeChars[_key19 - 5] = arguments[_key19];
       }
       if (includeChars.length) {
         var hasChars = !0;
@@ -2653,30 +2648,30 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       element.createdCallback = function() {
         var el = dom(this),
           dealtWith = [];
-        for (var _key22 in config) {
-          if (!dealtWith.includes(_key22)) {
-            if (_key22.includes("set_")) {
-              var sgKey = _key22.split("_")[1];
-              dealtWith.push(_key22, "get_" + sgKey);
-              el.newSetGet(sgKey, config[_key22], config["get_" + sgKey]);
-            } else if (_key22.includes("get_")) {
-              var _sgKey = _key22.split("_")[1];
-              dealtWith.push(_key22, "set_" + _sgKey);
-              el.newSetGet(_sgKey, is.Func(config["set_" + _sgKey]) ? config["set_" + _sgKey] : function(x) {}, config[_key22]);
+        for (var _key20 in config) {
+          if (!dealtWith.includes(_key20)) {
+            if (_key20.includes("set_")) {
+              var sgKey = _key20.split("_")[1];
+              dealtWith.push(_key20, "get_" + sgKey);
+              el.newSetGet(sgKey, config[_key20], config["get_" + sgKey]);
+            } else if (_key20.includes("get_")) {
+              var _sgKey = _key20.split("_")[1];
+              dealtWith.push(_key20, "set_" + _sgKey);
+              el.newSetGet(_sgKey, is.Func(config["set_" + _sgKey]) ? config["set_" + _sgKey] : function(x) {}, config[_key20]);
             }
           }
         }
         if (is.Func(config['created'])) return config['created'].call(el);
       };
-      var _loop = function _loop(_key23) {
-        if (_key23 == 'created' || _key23.includes('set_') || _key23.includes('get_')) return "continue";
-        if (is.Func(config[_key23])) dm = function dm() { // Adds dom methods to element
-          return config[_key23].call(dom(this));
+      var _loop = function _loop(_key21) {
+        if (_key21 == 'created' || _key21.includes('set_') || _key21.includes('get_')) return "continue";
+        if (is.Func(config[_key21])) dm = function dm() { // Adds dom methods to element
+          return config[_key21].call(dom(this));
         };
-        _key23 == 'inserted' ? element.attachedCallback = dm : _key23 == 'destroyed' ? element.detachedCallback = dm : _key23 == 'attr' ? element.attributeChangedCallback = dm : _key23.includes('css') && _key23.length == 3 ? Craft.addCSS(config[_key23]) : is.Func(config[_key23]) ? element[_key23] = dm : Object.defineProperty(element, _key23, Object.getOwnPropertyDescriptor(config, _key23));
+        _key21 == 'inserted' ? element.attachedCallback = dm : _key21 == 'destroyed' ? element.detachedCallback = dm : _key21 == 'attr' ? element.attributeChangedCallback = dm : _key21.includes('css') && _key21.length == 3 ? Craft.addCSS(config[_key21]) : is.Func(config[_key21]) ? element[_key21] = dm : Object.defineProperty(element, _key21, Object.getOwnPropertyDescriptor(config, _key21));
       };
-      for (var _key23 in config) {
-        var _ret5 = _loop(_key23);
+      for (var _key21 in config) {
+        var _ret5 = _loop(_key21);
         if (_ret5 === "continue") continue;
       }
       settings['prototype'] = element;
