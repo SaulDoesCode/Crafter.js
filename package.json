@@ -1,6 +1,6 @@
 {
   "name": "crafter.js",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "es6 front-end library",
   "main": "gulpfile.js",
   "scripts": {
@@ -17,6 +17,7 @@
     "babel-core": "^6.9.0",
     "babel-plugin-transform-merge-sibling-variables": "^6.8.0",
     "babel-preset-es2015": "^6.1.2",
+    "clean-css": "^3.4.12",
     "google-closure-compiler": "^20160517.1.0",
     "js-beautify": "^1.6.2"
   },

@@ -5,7 +5,7 @@
  */
 
 (function(doc, root) {
-    "use strict ";
+    "use strict";
     let Ready = !1,
         ready = () => Ready || doc.readyState == "complete",
         ua = navigator.userAgent,
@@ -82,7 +82,7 @@
         } : ((fn, args, arity) => {
             let a = [];
             for (let i = arity; 0 > i; i--) a.push('a' + i.toString());
-            return (...args) => doInvok(fn, args.concat(a));
+            return function() {  return doInvok(fn, toArr(arguments).concat(a)) }
         })(fn, args, remainingArity);
     }
 
@@ -408,7 +408,9 @@
          * @param {*} value - inital value to compare all other params with
          * @param {...*} arguments to compare with value
          */
-        neither: (value, ...args) => args.every(val => value !== val),
+        neither(value) {
+            return toArr(arguments).slice(1).every(val => value !== val);
+        },
         /**
          * Determines if two variables are equal
          * @param a - first value to compare
@@ -502,84 +504,84 @@
      */
     function EventHandler(EventType, Target, func, Within) {
         return new function() {
-        EventType = EventType || 'click';
-        this.state = !1;
-        Target = (Target !== root && Target !== doc) ? NodeOrQuerytoArr(Target, Within) : [Target];
-        if (is.String(EventType) && EventType.includes(',')) EventType = EventType.split(',');
-        if (!is.Arr(EventType)) EventType = [EventType];
+            EventType = EventType || 'click';
+            this.state = !1;
+            Target = (Target !== root && Target !== doc) ? NodeOrQuerytoArr(Target, Within) : [Target];
+            if (is.String(EventType) && EventType.includes(',')) EventType = EventType.split(',');
+            if (!is.Arr(EventType)) EventType = [EventType];
 
-        let FuncWrapper = e => {
-            func(e, e.target, Craft.deglove(Target))
-        }
-        /**
-         * Change the Event type to listen for
-         * {string} type - the name of the event/s to listen for
-         */
-        dp(this, 'Type', {
-                set(type) {
+            let FuncWrapper = e => {
+                    func(e, e.target, Craft.deglove(Target))
+                }
+                /**
+                 * Change the Event type to listen for
+                 * {string} type - the name of the event/s to listen for
+                 */
+            dp(this, 'Type', {
+                    set(type) {
+                        let ehdl = this;
+                        //  have you tried turning it on and off again? - THE IT CROWD
+                        ehdl.Off;
+                        EventType = type.includes(',') ? type.split(',') : type;
+                        if (!is.Arr(EventType)) EventType = [EventType];
+                        ehdl.On;
+                        return ehdl
+                    },
+                    get() {
+                        return EventType
+                    },
+                    enumerable: !0
+                })
+                /**
+                 * Activates the EventHandler to start listening for the EventType on the Target/Targets
+                 */
+            dp(this, 'On', {
+                get() {
                     let ehdl = this;
-                    //  have you tried turning it on and off again? - THE IT CROWD
-                    ehdl.Off;
-                    EventType = type.includes(',') ? type.split(',') : type;
-                    if (!is.Arr(EventType)) EventType = [EventType];
-                    ehdl.On;
+                    Target.forEach(target => {
+                        EventType.forEach(evt => {
+                            target.addEventListener(evt, FuncWrapper)
+                        });
+                    });
+                    ehdl.state = !0;
                     return ehdl
                 },
-                get() {
-                    return EventType
-                },
                 enumerable: !0
-            })
-        /**
-         * Activates the EventHandler to start listening for the EventType on the Target/Targets
-         */
-        dp(this, 'On', {
-            get() {
-                let ehdl = this;
-                Target.forEach(target => {
-                    EventType.forEach(evt => {
-                        target.addEventListener(evt, FuncWrapper)
-                    });
-                });
-                ehdl.state = !0;
-                return ehdl
-            },
-            enumerable: !0
-        });
+            });
             /**
              * De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
              * can still optionally be re-activated with On again
              */
-        dp(this, 'Off', {
-            get() {
-                let ehdl = this;
-                Target.forEach(target => {
-                    EventType.forEach(evt => {
-                        target.removeEventListener(evt, FuncWrapper)
+            dp(this, 'Off', {
+                get() {
+                    let ehdl = this;
+                    Target.forEach(target => {
+                        EventType.forEach(evt => {
+                            target.removeEventListener(evt, FuncWrapper)
+                        });
                     });
-                });
-                ehdl.state = !1;
-                return ehdl
-            },
-            enumerable: !0
-        });
+                    ehdl.state = !1;
+                    return ehdl
+                },
+                enumerable: !0
+            });
 
-        /**
-         * Once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
-         * the Handler function will be called only Once
-         */
-        dp(this, 'Once', {
-            get() {
-                let ehdl = this;
-                FuncWrapper = e => {
-                  func(e, e.target, Craft.deglove(Target));
-                  ehdl.Off.state = !1;
-                }
-                return ehdl.On;
-            },
-            enumerable: !0
-        });
-      }
+            /**
+             * Once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
+             * the Handler function will be called only Once
+             */
+            dp(this, 'Once', {
+                get() {
+                    let ehdl = this;
+                    FuncWrapper = e => {
+                        func(e, e.target, Craft.deglove(Target));
+                        ehdl.Off.state = !1;
+                    }
+                    return ehdl.On;
+                },
+                enumerable: !0
+            });
+        }
     }
 
     /**
@@ -629,8 +631,8 @@
     function EventTypes(Target, within, listen) {
         listen = listen || 'On';
         let etype = type => fn => EventHandler(type, Target, fn, within)[listen],
-            keypress = keycode => fn => EventHandler('keydown', Target, (e, el,t) => {
-                if (event.which == keycode || event.keyCode == keycode) fn(e, el,t)
+            keypress = keycode => fn => EventHandler('keydown', Target, (e, el, t) => {
+                if (event.which == keycode || event.keyCode == keycode) fn(e, el, t)
             }, within)[listen];
         return {
             Click: etype('click'),
@@ -662,7 +664,7 @@
         return function(EventType, Target, element, func) {
             let args = toArr(arguments);
             return is.Func(Target) ? EventHandler(EventType, root, Target)[ListenType] :
-                args.length < 3 && !args.some(i => is.Func(i)) ? EventTypes(EventType, Target,ListenType) :
+                args.length < 3 && !args.some(i => is.Func(i)) ? EventTypes(EventType, Target, ListenType) :
                 is.Func(element) ? EventHandler(EventType, Target, element)[ListenType] :
                 EventHandler(EventType, Target, func, element)[ListenType];
         }
@@ -803,9 +805,13 @@
             });
             return elements
         }
-        elements.gotClass = (...args) => elements.every(el => args.every(Class => el.classList.contains(Class)));
+        elements.gotClass = function() {
+          return elements.every(el => toArr(arguments).every(Class => el.classList.contains(Class)))
+        }
 
-        elements.someGotClass = (...args) => elements.some(el => args.every(Class => el.classList.contains(Class)));
+        elements.someGotClass = function() {
+          return elements.some(el => toArr(arguments).every(Class => el.classList.contains(Class)))
+        }
 
         elements.stripClass = Class => {
             elements.forEach(el => {
@@ -813,7 +819,7 @@
             });
             return elements
         }
-        elements.toggleClass = function(Class, state) {
+        elements.toggleClass = (Class, state) => {
             forEach(elements, el => {
                 (is.Bool(state) ? state : el.classList.contains(Class)) ? el.classList.remove(Class): el.classList.add(Class);
             });
@@ -825,9 +831,9 @@
          * @memberof dom
          * @param {...string} name of the Attribute/s to strip
          */
-        elements.stripAttr = (...args) => {
+        elements.stripAttr = function() {
                 elements.forEach(el => {
-                    args.forEach(attr => {
+                    forEach(arguments, attr => {
                         el.removeAttribute(attr)
                     })
                 });
@@ -878,8 +884,7 @@
         }
 
         elements.append = function() {
-            let args = toArr(arguments);
-            args.forEach(arg => {
+            forEach(arguments, arg => {
                 forEach(elements, el => {
                     el.appendChild((is.Node(val) ? val : dffstr(val)).cloneNode(!0));
                 });
@@ -894,8 +899,7 @@
             return elements
         }
         elements.prepend = function() {
-            let args = toArr(arguments);
-            args.forEach(val => {
+            forEach(arguments, val => {
                 forEach(elements, el => {
                     el.insertBefore(W(is.Node(val), val, dffstr(val)).cloneNode(!0), el.firstChild);
                 });
@@ -1002,9 +1006,9 @@
              * @memberof dom
              * @param {Node|string} String or Node to append to the this.element
              */
-        element.append = (...args) => {
+        element.append = function() {
                 let domfrag = dom.frag();
-                args.forEach(val => {
+                forEach(arguments, val => {
                     domfrag.appendChild(is.Node(val) ? val : dffstr(val))
                 });
                 element.appendChild(domfrag);
@@ -1015,8 +1019,8 @@
              * @memberof dom
              * @param {Node|string} String or Node to prepend to the this.element
              */
-        element.prepend = (...args) => {
-            args.forEach(val => {
+        element.prepend = function() {
+            forEach(arguments, val => {
                 element.insertBefore(is.Node(val) ? val : dffstr(val), element.firstChild);
             });
             return element
@@ -1038,7 +1042,7 @@
                             firstTime ? setTimeout(() => {
                                 element.html(obj.get(k))
                                 firstTime = !1;
-                            },30) : element.html(obj.get(k));
+                            }, 30) : element.html(obj.get(k));
                         });
                     }
                     if (element.isInput) element.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : joindot(Craft.omit(cutbind, cutbind[0])))
@@ -1069,7 +1073,7 @@
         });
 
         function evlt(type) {
-           return (fn,ltype) => root[ltype ? 'Once' : 'On'](type,element,fn)
+            return (fn, ltype) => root[ltype ? 'Once' : 'On'](type, element, fn)
         }
 
         element.Click = evlt('click');
@@ -1088,9 +1092,9 @@
 
         element.OnScroll = (func, pd) => Craft.OnScroll(element, func, pd);
 
-        let keypress = code => (fn,type) => evlt('keydown')(element, e => {
-              if (e.which == code || e.keyCode == code) fn(e, element)
-        },type);
+        let keypress = code => (fn, type) => evlt('keydown')(element, e => {
+            if (e.which == code || e.keyCode == code) fn(e, element)
+        }, type);
 
         element.Enter = keypress(13);
         element.Escape = keypress(27);
@@ -1117,7 +1121,9 @@
              * @memberof dom
              * @param {...string} name of the class to check for
              */
-        element.gotClass = (...args) => args.every(Class => element.classList.contains(Class));
+        element.gotClass = function() {
+          return toArr(arguments).every(Class => element.classList.contains(Class));
+        }
 
 
         /**
@@ -1125,8 +1131,8 @@
          * @memberof dom
          * @param {string} name of the class to add
          */
-        element.addClass = (...args) => {
-                args.forEach(Class => {
+        element.addClass = function() {
+                forEach(arguments,Class => {
                     element.classList.add(Class)
                 });
                 return element
@@ -1136,8 +1142,8 @@
              * @memberof dom
              * @param {...string} name of the class to strip
              */
-        element.stripClass = (...args) => {
-                args.forEach(Class => {
+        element.stripClass = function() {
+                forEach(arguments,Class => {
                     element.classList.remove(Class)
                 });
                 return element
@@ -1158,8 +1164,8 @@
              * @memberof dom
              * @param {...string} name of the Attribute/s to strip
              */
-        element.stripAttr = (...args) => {
-                args.forEach(attr => {
+        element.stripAttr = function() {
+                forEach(arguments,attr => {
                     element.removeAttribute(attr)
                 });
                 return element
@@ -1170,7 +1176,8 @@
              * @param {string|boolean} name of the Attribute or if true checks that it has some (||) of the attributes or if false checks that it has all of the attributes (&&)
              * @param {...string} names of attributes to check for
              */
-        element.hasAttr = (...args) => {
+        element.hasAttr = function() {
+                let args = toArr(arguments);
                 if (is.String(args[0]) && args.length == 1) return element.hasAttribute(args[0]);
                 return args.every(a => element.hasAttribute(a))
             }
@@ -1360,7 +1367,7 @@
      * @param {Node|string=} within - optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
      * @param {boolean=} one - even if there are more than one elements matching a selector only return the first one
      */
-    root.dom = function (element, within, one) {
+    root.dom = function(element, within, one) {
         if (within == !0) {
             one = within;
             within = null;
@@ -1687,8 +1694,8 @@
          * @param {...Object} objs - other objects to be merged with host object
          * @returns {Object} resulting object after merges
          */
-        concatObjects(host, ...objs) {
-            objs.forEach(obj => {
+        concatObjects(host) {
+            Craft.omit(arguments, host).forEach(obj => {
                 for (let key in obj) dp(host, key, gpd(obj, key));
             });
             return host
@@ -1704,7 +1711,8 @@
         clone(val) {
             return is.Object(val) ? Object.create(val) : toArr(val)
         },
-        omitFrom(Arr, ...args) {
+        omitFrom(Arr) {
+            let args = toArr(arguments).slice(1);
             if (is.String(Arr))
                 args.forEach(a => {
                     Craft.tco(function replace() {
@@ -1717,7 +1725,9 @@
             else Arr = (is.Arraylike(Arr) ? toArr(Arr) : Arr).filter(e => rif(!args.some(v => v == e), e));
             return Arr
         },
-        has: (str, ...args) => args.some(e => str.includes(e)),
+        has(str) {
+          return Craft.omit(arguments,str).some(e => str.includes(e))
+        },
         /**
          * Omits values from Objects or Arrays
          * @method omit
@@ -1726,8 +1736,9 @@
          * @param {...*} args - things to omit from Object or Array
          * @returns {Object|Array}
          */
-        omit(val, ...args) {
+        omit(val) {
             if (is.Arraylike(val)) val = Craft.omitFrom.apply(this, arguments);
+            let args = toArr(arguments).slice(1);
             if (is.Object(val) && !args.some(v => v == val)) forEach(val, (prop, key) => {
                 if (args.some(v => v == prop || v == key)) delete val[key];
             });
@@ -2270,8 +2281,8 @@
          * @param {Boolean} reasons - should the function return a short string explaining the reason exept when it's a pass then it gives a bool;
          * @param {...string} includeChars - every extra argument should be a string containing a character you want the password to include
          */
-        strongPassword(pass, length, caps, number, reasons, ...includeChars) {
-            let pw = 'Password ';
+        strongPassword(pass, length, caps, number, reasons) {
+            let pw = 'Password ', includeChars = toArr(arguments).slice(5);
             if (pass.length <= length - 1) return reasons ? pw + 'too short' : !1;
             if (caps === !0 && Craft.hasCapitals(pass) === !1) return reasons ? pw + 'should have a Capital letter' : !1;
             if (number === !0 && /\d/g.test(pass) === !1) return reasons ? pw + 'should have a number' : !1;

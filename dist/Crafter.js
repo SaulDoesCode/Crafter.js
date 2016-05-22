@@ -9,7 +9,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
  *  @license MIT
  */
 (function(doc, root) {
-  "use strict ";
+  "use strict";
   var Ready = !1,
     ready = function() {
       return Ready || doc.readyState == "complete";
@@ -85,10 +85,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         a.push('a' + i.toString());
       }
       return function() {
-        for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-          args[_key] = arguments[_key];
-        }
-        return doInvok(fn, args.concat(a));
+        return doInvok(fn, toArr(arguments).concat(a));
       };
     }(fn, args, remainingArity);
   }
@@ -504,10 +501,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {...*} arguments to compare with value
      */
     neither: function(value) {
-      for (var _len2 = arguments.length, args = Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-        args[_key2 - 1] = arguments[_key2];
-      }
-      return args.every(function(val) {
+      return toArr(arguments).slice(1).every(function(val) {
         return value !== val;
       });
     },
@@ -926,21 +920,17 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return elements;
     };
     elements.gotClass = function() {
-      for (var _len3 = arguments.length, args = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-        args[_key3] = arguments[_key3];
-      }
+      var _arguments = arguments;
       return elements.every(function(el) {
-        return args.every(function(Class) {
+        return toArr(_arguments).every(function(Class) {
           return el.classList.contains(Class);
         });
       });
     };
     elements.someGotClass = function() {
-      for (var _len4 = arguments.length, args = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-        args[_key4] = arguments[_key4];
-      }
+      var _arguments2 = arguments;
       return elements.some(function(el) {
-        return args.every(function(Class) {
+        return toArr(_arguments2).every(function(Class) {
           return el.classList.contains(Class);
         });
       });
@@ -963,11 +953,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {...string} name of the Attribute/s to strip
      */
     elements.stripAttr = function() {
-      for (var _len5 = arguments.length, args = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-        args[_key5] = arguments[_key5];
-      }
+      var _arguments3 = arguments;
       elements.forEach(function(el) {
-        args.forEach(function(attr) {
+        forEach(_arguments3, function(attr) {
           el.removeAttribute(attr);
         });
       });
@@ -980,12 +968,12 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {...string} names of attributes to check for
      */
     elements.hasAttr = function(attr) {
-      var _arguments = arguments;
+      var _arguments4 = arguments;
       if (is.String(attr)) return elements.every(function(el) {
         return el.hasAttribute(attr);
       });
       return elements.every(function(el) {
-        return Craft.flatten(_arguments).every(function(a) {
+        return Craft.flatten(_arguments4).every(function(a) {
           return el.hasAttribute(a);
         });
       });
@@ -1025,8 +1013,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return elements;
     };
     elements.append = function() {
-      var args = toArr(arguments);
-      args.forEach(function(arg) {
+      forEach(arguments, function(arg) {
         forEach(elements, function(el) {
           el.appendChild((is.Node(val) ? val : dffstr(val)).cloneNode(!0));
         });
@@ -1041,8 +1028,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return elements;
     };
     elements.prepend = function() {
-      var args = toArr(arguments);
-      args.forEach(function(val) {
+      forEach(arguments, function(val) {
         forEach(elements, function(el) {
           el.insertBefore(W(is.Node(val), val, dffstr(val)).cloneNode(!0), el.firstChild);
         });
@@ -1151,11 +1137,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {Node|string} String or Node to append to the this.element
      */
     element.append = function() {
-      for (var _len6 = arguments.length, args = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
-        args[_key6] = arguments[_key6];
-      }
       var domfrag = dom.frag();
-      args.forEach(function(val) {
+      forEach(arguments, function(val) {
         domfrag.appendChild(is.Node(val) ? val : dffstr(val));
       });
       element.appendChild(domfrag);
@@ -1167,10 +1150,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {Node|string} String or Node to prepend to the this.element
      */
     element.prepend = function() {
-      for (var _len7 = arguments.length, args = Array(_len7), _key7 = 0; _key7 < _len7; _key7++) {
-        args[_key7] = arguments[_key7];
-      }
-      args.forEach(function(val) {
+      forEach(arguments, function(val) {
         element.insertBefore(is.Node(val) ? val : dffstr(val), element.firstChild);
       });
       return element;
@@ -1275,10 +1255,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {...string} name of the class to check for
      */
     element.gotClass = function() {
-      for (var _len8 = arguments.length, args = Array(_len8), _key8 = 0; _key8 < _len8; _key8++) {
-        args[_key8] = arguments[_key8];
-      }
-      return args.every(function(Class) {
+      return toArr(arguments).every(function(Class) {
         return element.classList.contains(Class);
       });
     };
@@ -1288,10 +1265,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {string} name of the class to add
      */
     element.addClass = function() {
-      for (var _len9 = arguments.length, args = Array(_len9), _key9 = 0; _key9 < _len9; _key9++) {
-        args[_key9] = arguments[_key9];
-      }
-      args.forEach(function(Class) {
+      forEach(arguments, function(Class) {
         element.classList.add(Class);
       });
       return element;
@@ -1302,10 +1276,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {...string} name of the class to strip
      */
     element.stripClass = function() {
-      for (var _len10 = arguments.length, args = Array(_len10), _key10 = 0; _key10 < _len10; _key10++) {
-        args[_key10] = arguments[_key10];
-      }
-      args.forEach(function(Class) {
+      forEach(arguments, function(Class) {
         element.classList.remove(Class);
       });
       return element;
@@ -1327,10 +1298,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {...string} name of the Attribute/s to strip
      */
     element.stripAttr = function() {
-      for (var _len11 = arguments.length, args = Array(_len11), _key11 = 0; _key11 < _len11; _key11++) {
-        args[_key11] = arguments[_key11];
-      }
-      args.forEach(function(attr) {
+      forEach(arguments, function(attr) {
         element.removeAttribute(attr);
       });
       return element;
@@ -1342,9 +1310,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {...string} names of attributes to check for
      */
     element.hasAttr = function() {
-      for (var _len12 = arguments.length, args = Array(_len12), _key12 = 0; _key12 < _len12; _key12++) {
-        args[_key12] = arguments[_key12];
-      }
+      var args = toArr(arguments);
       if (is.String(args[0]) && args.length == 1) return element.hasAttribute(args[0]);
       return args.every(function(a) {
         return element.hasAttribute(a);
@@ -1557,8 +1523,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     if (is.Node(element)) return !element['_DOMM'] ? domManip(element) : element;
     return Dom;
   };
-  for (var _key13 in Dom) {
-    dp(dom, _key13, gpd(Dom, _key13));
+  for (var _key in Dom) {
+    dp(dom, _key, gpd(Dom, _key));
   }
   if (root.Proxy) dom = new Proxy(dom, {
     get: function(obj, key) {
@@ -1884,12 +1850,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @returns {Object} resulting object after merges
      */
     concatObjects: function(host) {
-      for (var _len13 = arguments.length, objs = Array(_len13 > 1 ? _len13 - 1 : 0), _key14 = 1; _key14 < _len13; _key14++) {
-        objs[_key14 - 1] = arguments[_key14];
-      }
-      objs.forEach(function(obj) {
-        for (var _key15 in obj) {
-          dp(host, _key15, gpd(obj, _key15));
+      Craft.omit(arguments, host).forEach(function(obj) {
+        for (var _key2 in obj) {
+          dp(host, _key2, gpd(obj, _key2));
         }
       });
       return host;
@@ -1908,9 +1871,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return is.Object(val) ? Object.create(val) : toArr(val);
     },
     omitFrom: function(Arr) {
-      for (var _len14 = arguments.length, args = Array(_len14 > 1 ? _len14 - 1 : 0), _key16 = 1; _key16 < _len14; _key16++) {
-        args[_key16 - 1] = arguments[_key16];
-      }
+      var args = toArr(arguments).slice(1);
       if (is.String(Arr)) args.forEach(function(a) {
         Craft.tco(function replace() {
           if (Arr.includes(a)) {
@@ -1927,10 +1888,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return Arr;
     },
     has: function(str) {
-      for (var _len15 = arguments.length, args = Array(_len15 > 1 ? _len15 - 1 : 0), _key17 = 1; _key17 < _len15; _key17++) {
-        args[_key17 - 1] = arguments[_key17];
-      }
-      return args.some(function(e) {
+      return Craft.omit(arguments, str).some(function(e) {
         return str.includes(e);
       });
     },
@@ -1943,10 +1901,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @returns {Object|Array}
      */
     omit: function(val) {
-      for (var _len16 = arguments.length, args = Array(_len16 > 1 ? _len16 - 1 : 0), _key18 = 1; _key18 < _len16; _key18++) {
-        args[_key18 - 1] = arguments[_key18];
-      }
       if (is.Arraylike(val)) val = Craft.omitFrom.apply(this, arguments);
+      var args = toArr(arguments).slice(1);
       if (is.Object(val) && !args.some(function(v) {
           return v == val;
         })) forEach(val, function(prop, key) {
@@ -2557,13 +2513,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {...string} includeChars - every extra argument should be a string containing a character you want the password to include
      */
     strongPassword: function(pass, length, caps, number, reasons) {
-      var pw = 'Password ';
+      var pw = 'Password ',
+        includeChars = toArr(arguments).slice(5);
       if (pass.length <= length - 1) return reasons ? pw + 'too short' : !1;
       if (caps === !0 && Craft.hasCapitals(pass) === !1) return reasons ? pw + 'should have a Capital letter' : !1;
       if (number === !0 && /\d/g.test(pass) === !1) return reasons ? pw + 'should have a number' : !1;
-      for (var _len17 = arguments.length, includeChars = Array(_len17 > 5 ? _len17 - 5 : 0), _key19 = 5; _key19 < _len17; _key19++) {
-        includeChars[_key19 - 5] = arguments[_key19];
-      }
       if (includeChars.length) {
         var hasChars = !0;
         includeChars.forEach(function(ch) {
@@ -2604,30 +2558,30 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       element.createdCallback = function() {
         var el = dom(this),
           dealtWith = [];
-        for (var _key20 in config) {
-          if (!dealtWith.includes(_key20)) {
-            if (_key20.includes("set_")) {
-              var sgKey = _key20.split("_")[1];
-              dealtWith.push(_key20, "get_" + sgKey);
-              el.newSetGet(sgKey, config[_key20], config["get_" + sgKey]);
-            } else if (_key20.includes("get_")) {
-              var _sgKey = _key20.split("_")[1];
-              dealtWith.push(_key20, "set_" + _sgKey);
-              el.newSetGet(_sgKey, is.Func(config["set_" + _sgKey]) ? config["set_" + _sgKey] : function(x) {}, config[_key20]);
+        for (var _key3 in config) {
+          if (!dealtWith.includes(_key3)) {
+            if (_key3.includes("set_")) {
+              var sgKey = _key3.split("_")[1];
+              dealtWith.push(_key3, "get_" + sgKey);
+              el.newSetGet(sgKey, config[_key3], config["get_" + sgKey]);
+            } else if (_key3.includes("get_")) {
+              var _sgKey = _key3.split("_")[1];
+              dealtWith.push(_key3, "set_" + _sgKey);
+              el.newSetGet(_sgKey, is.Func(config["set_" + _sgKey]) ? config["set_" + _sgKey] : function(x) {}, config[_key3]);
             }
           }
         }
         if (is.Func(config['created'])) return config['created'].call(el);
       };
-      var _loop = function(_key21) {
-        if (_key21 == 'created' || _key21.includes('set_') || _key21.includes('get_')) return "continue";
-        if (is.Func(config[_key21])) dm = function() { // Adds dom methods to element
-          return config[_key21].call(dom(this));
+      var _loop = function(_key4) {
+        if (_key4 == 'created' || _key4.includes('set_') || _key4.includes('get_')) return "continue";
+        if (is.Func(config[_key4])) dm = function() { // Adds dom methods to element
+          return config[_key4].call(dom(this));
         };
-        _key21 == 'inserted' ? element.attachedCallback = dm : _key21 == 'destroyed' ? element.detachedCallback = dm : _key21 == 'attr' ? element.attributeChangedCallback = dm : _key21.includes('css') && _key21.length == 3 ? Craft.addCSS(config[_key21]) : is.Func(config[_key21]) ? element[_key21] = dm : dp(element, _key21, gpd(config, _key21));
+        _key4 == 'inserted' ? element.attachedCallback = dm : _key4 == 'destroyed' ? element.detachedCallback = dm : _key4 == 'attr' ? element.attributeChangedCallback = dm : _key4.includes('css') && _key4.length == 3 ? Craft.addCSS(config[_key4]) : is.Func(config[_key4]) ? element[_key4] = dm : dp(element, _key4, gpd(config, _key4));
       };
-      for (var _key21 in config) {
-        var _ret6 = _loop(_key21);
+      for (var _key4 in config) {
+        var _ret6 = _loop(_key4);
         if (_ret6 === "continue") continue;
       }
       settings['prototype'] = element;
