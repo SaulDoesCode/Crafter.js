@@ -35,7 +35,8 @@ babel.transformFile("./src/Crafter.js", {
         "transform-es2015-destructuring",
         "transform-es2015-block-scoping",
         "transform-es2015-typeof-symbol",
-    ]
+    ],
+    compact : true,
 }, (err, result) => {
     if (err) throw err;
     let beautifiedCode = beautify(result.code, { indent_size: 2 });

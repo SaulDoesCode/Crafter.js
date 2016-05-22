@@ -96,7 +96,9 @@ Create a new Custom Element using the Craft.newComponent method
   // optionally manage each stage of the element's lifecycle
     created() {
       // hypothetically fetch a news article
-      fetch('/news/latest-article').then(response => response.json().then(news => this.news = news));
+      fetch('/news/latest-article')
+      .then(response => response.json())
+      .then(news => this.news = news);
     },
     inserted() {
       // when the news-element is insterted fill it with content
@@ -144,6 +146,9 @@ Create a new Custom Element using the Craft.newComponent method
       inserted() {
           this.check = this.Click(this.toggle.bind(this))
       },
+      // to add getters or setters to the element
+      // use underscores otherwise the getters and setters
+      // are local to the config object
       set_value(val) {
         this.toggleAttr('checked', val)
       },

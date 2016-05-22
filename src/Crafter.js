@@ -14,6 +14,8 @@
         tem, Br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
     const sI = 'Isync',
         ud = void 0,
+        dp = Object.defineProperty,
+        gpd = Object.getOwnPropertyDescriptor,
         head = doc.head,
         RegExps = {
             email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
@@ -506,30 +508,14 @@
         if (is.String(EventType) && EventType.includes(',')) EventType = EventType.split(',');
         if (!is.Arr(EventType)) EventType = [EventType];
 
-        function FuncWrapper(e) {
+        let FuncWrapper = e => {
             func(e, e.target, Craft.deglove(Target))
         }
-        /**
-         * Activates the EventHandler to start listening for the EventType on the Target/Targets
-         */
-        Object.defineProperty(this, 'On', {
-            get() {
-                let ehdl = this;
-                Target.forEach(target => {
-                    EventType.forEach(evt => {
-                        target.addEventListener(evt, FuncWrapper)
-                    });
-                });
-                ehdl.state = !0;
-                return ehdl
-            },
-            enumerable: !0
-        });
         /**
          * Change the Event type to listen for
          * {string} type - the name of the event/s to listen for
          */
-        Object.defineProperty(this, 'Type', {
+        dp(this, 'Type', {
                 set(type) {
                     let ehdl = this;
                     //  have you tried turning it on and off again? - THE IT CROWD
@@ -544,11 +530,27 @@
                 },
                 enumerable: !0
             })
+        /**
+         * Activates the EventHandler to start listening for the EventType on the Target/Targets
+         */
+        dp(this, 'On', {
+            get() {
+                let ehdl = this;
+                Target.forEach(target => {
+                    EventType.forEach(evt => {
+                        target.addEventListener(evt, FuncWrapper)
+                    });
+                });
+                ehdl.state = !0;
+                return ehdl
+            },
+            enumerable: !0
+        });
             /**
              * De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
              * can still optionally be re-activated with On again
              */
-        Object.defineProperty(this, 'Off', {
+        dp(this, 'Off', {
             get() {
                 let ehdl = this;
                 Target.forEach(target => {
@@ -566,24 +568,14 @@
          * Once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
          * the Handler function will be called only Once
          */
-        Object.defineProperty(this, 'Once', {
+        dp(this, 'Once', {
             get() {
-                let ehdl = this,
-                    func = FuncWrapper;
-                EventType.forEach(evt => {
-                    ehdl.state = !0;
-                    let listenOnce = e => {
-                        ehdl.state = !1;
-                        func(e);
-                        Target.forEach(t => {
-                            t.removeEventListener(evt, listenOnce)
-                        });
-                    }
-                    Target.forEach(t => {
-                        t.addEventListener(evt, listenOnce)
-                    })
-                });
-                return ehdl
+                let ehdl = this;
+                FuncWrapper = e => {
+                  func(e, e.target, Craft.deglove(Target));
+                  ehdl.Off.state = !1;
+                }
+                return ehdl.On;
             },
             enumerable: !0
         });
@@ -635,10 +627,11 @@
     }
 
     function EventTypes(Target, within, listen) {
-        let etype = type => fn => EventHandler(type, Target, fn, within)[listen || 'On'],
-            keypress = keycode => fn => EventHandler('keydown', Target, (e, el) => {
-                if (event.which == keycode || event.keyCode == keycode) fn(e, el)
-            }, within)[listen || 'On'];
+        listen = listen || 'On';
+        let etype = type => fn => EventHandler(type, Target, fn, within)[listen],
+            keypress = keycode => fn => EventHandler('keydown', Target, (e, el,t) => {
+                if (event.which == keycode || event.keyCode == keycode) fn(e, el,t)
+            }, within)[listen];
         return {
             Click: etype('click'),
             Input: etype('input'),
@@ -665,11 +658,11 @@
         };
     }
 
-    function EvtLT(ListenType = 'On') {
+    function EvtLT(ListenType) {
         return function(EventType, Target, element, func) {
             let args = toArr(arguments);
             return is.Func(Target) ? EventHandler(EventType, root, Target)[ListenType] :
-                args.length < 3 && !args.some(i => is.Func(i)) ? EventTypes(EventType, Target) :
+                args.length < 3 && !args.some(i => is.Func(i)) ? EventTypes(EventType, Target,ListenType) :
                 is.Func(element) ? EventHandler(EventType, Target, element)[ListenType] :
                 EventHandler(EventType, Target, func, element)[ListenType];
         }
@@ -682,7 +675,7 @@
      * @param {function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
      * @returns Off - when On is defined as a variable "var x = On(...)" it allows you to access all the EventHandler interfaces Off,Once,On
      */
-    root.On = EvtLT();
+    root.On = EvtLT('On');
 
     /**
      * Starts listening for an EventType on the Target/Targets ONCE after triggering the Once event Listener will stop listening
@@ -944,7 +937,7 @@
         element.isInput = is.Input(element);
 
         element.newSetGet = function(key, set, get) {
-            Object.defineProperty(this, key, {
+            dp(this, key, {
                 set: set,
                 get: get
             })
@@ -1237,7 +1230,7 @@
             return element
         }
 
-        Object.defineProperty(element, 'Siblings', {
+        dp(element, 'Siblings', {
             get() {
                 return Craft.omit(element.parentNode.children, element).filter(el => {
                     if (is.Element(el)) return el
@@ -1383,7 +1376,7 @@
         if (is.Node(element)) return !element['_DOMM'] ? domManip(element) : element;
         return Dom
     }
-    for (let key in Dom) Object.defineProperty(dom, key, Object.getOwnPropertyDescriptor(Dom, key));
+    for (let key in Dom) dp(dom, key, gpd(Dom, key));
     if (root.Proxy) dom = new Proxy(dom, {
         get(obj, key) {
             if (!obj.hasOwnProperty(key)) {
@@ -1397,7 +1390,7 @@
 
     function observable(obj) {
         if (!is.Def(obj)) obj = {};
-        Object.defineProperty(obj, 'listeners', {
+        dp(obj, 'listeners', {
             value: {
                 Get: new Set(),
                 Set: new Set(),
@@ -1405,7 +1398,7 @@
             enumerable: !1,
             writable: !0,
         });
-        Object.defineProperty(obj, 'isObservable', {
+        dp(obj, 'isObservable', {
             value: !0,
             enumerable: !1,
             writable: !1,
@@ -1413,7 +1406,7 @@
         ['$get', '$set'].forEach(t => {
             let Type = 'Set';
             if (t == '$get') Type = 'Get';
-            Object.defineProperty(obj, t, {
+            dp(obj, t, {
                 value(prop, func) {
                     if (is.Func(prop)) {
                         func = prop;
@@ -1441,7 +1434,7 @@
             });
         });
 
-        Object.defineProperty(obj, '$change', {
+        dp(obj, '$change', {
             value(prop, func) {
                 if (!is.Func(func)) throw new Error('no function');
                 let listener = {
@@ -1466,7 +1459,7 @@
             enumerable: !1,
             writable: !0,
         });
-        Object.defineProperty(obj, 'get', {
+        dp(obj, 'get', {
             value(key) {
                 let val;
                 obj.listeners.Get.forEach(ln => {
@@ -1477,7 +1470,7 @@
             writable: !1,
             enumerable: !1,
         });
-        Object.defineProperty(obj, 'set', {
+        dp(obj, 'set', {
             value(key, value) {
                 let val;
                 obj.listeners.Set.forEach(ln => {
@@ -1696,7 +1689,7 @@
          */
         concatObjects(host, ...objs) {
             objs.forEach(obj => {
-                for (let key in obj) Object.defineProperty(host, key, Object.getOwnPropertyDescriptor(obj, key));
+                for (let key in obj) dp(host, key, gpd(obj, key));
             });
             return host
         },
@@ -2348,7 +2341,7 @@
                     key == 'attr' ? element.attributeChangedCallback = dm :
                     key.includes('css') && key.length == 3 ? Craft.addCSS(config[key]) :
                     is.Func(config[key]) ? element[key] = dm :
-                    Object.defineProperty(element, key, Object.getOwnPropertyDescriptor(config, key))
+                    dp(element, key, gpd(config, key))
             }
 
             settings['prototype'] = element;
@@ -2389,7 +2382,7 @@
         });
     }
 
-    Object.defineProperty(Craft, 'tabActive', {
+    dp(Craft, 'tabActive', {
         get: () => tabActive
     });
 

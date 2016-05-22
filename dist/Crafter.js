@@ -21,6 +21,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     Br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i),
     sI = 'Isync',
     ud = void 0,
+    dp = Object.defineProperty,
+    gpd = Object.getOwnPropertyDescriptor,
     head = doc.head,
     RegExps = {
       email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
@@ -621,31 +623,14 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       Target = Target !== root && Target !== doc ? NodeOrQuerytoArr(Target, Within) : [Target];
       if (is.String(EventType) && EventType.includes(',')) EventType = EventType.split(',');
       if (!is.Arr(EventType)) EventType = [EventType];
-
-      function FuncWrapper(e) {
+      var FuncWrapper = function(e) {
         func(e, e.target, Craft.deglove(Target));
-      }
-      /**
-       * Activates the EventHandler to start listening for the EventType on the Target/Targets
-       */
-      Object.defineProperty(this, 'On', {
-        get: function() {
-          var ehdl = this;
-          Target.forEach(function(target) {
-            EventType.forEach(function(evt) {
-              target.addEventListener(evt, FuncWrapper);
-            });
-          });
-          ehdl.state = !0;
-          return ehdl;
-        },
-        enumerable: !0
-      });
+      };
       /**
        * Change the Event type to listen for
        * {string} type - the name of the event/s to listen for
        */
-      Object.defineProperty(this, 'Type', {
+      dp(this, 'Type', {
         set: function(type) {
           var ehdl = this; //  have you tried turning it on and off again? - THE IT CROWD
           ehdl.Off;
@@ -660,10 +645,26 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         enumerable: !0
       });
       /**
+       * Activates the EventHandler to start listening for the EventType on the Target/Targets
+       */
+      dp(this, 'On', {
+        get: function() {
+          var ehdl = this;
+          Target.forEach(function(target) {
+            EventType.forEach(function(evt) {
+              target.addEventListener(evt, FuncWrapper);
+            });
+          });
+          ehdl.state = !0;
+          return ehdl;
+        },
+        enumerable: !0
+      });
+      /**
        * De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
        * can still optionally be re-activated with On again
        */
-      Object.defineProperty(this, 'Off', {
+      dp(this, 'Off', {
         get: function() {
           var ehdl = this;
           Target.forEach(function(target) {
@@ -680,24 +681,14 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
        * Once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
        * the Handler function will be called only Once
        */
-      Object.defineProperty(this, 'Once', {
+      dp(this, 'Once', {
         get: function() {
-          var ehdl = this,
-            func = FuncWrapper;
-          EventType.forEach(function(evt) {
-            ehdl.state = !0;
-            var listenOnce = function(e) {
-              ehdl.state = !1;
-              func(e);
-              Target.forEach(function(t) {
-                t.removeEventListener(evt, listenOnce);
-              });
-            };
-            Target.forEach(function(t) {
-              t.addEventListener(evt, listenOnce);
-            });
-          });
-          return ehdl;
+          var ehdl = this;
+          FuncWrapper = function(e) {
+            func(e, e.target, Craft.deglove(Target));
+            ehdl.Off.state = !1;
+          };
+          return ehdl.On;
         },
         enumerable: !0
       });
@@ -747,16 +738,17 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   };
 
   function EventTypes(Target, within, listen) {
+    listen = listen || 'On';
     var etype = function(type) {
         return function(fn) {
-          return EventHandler(type, Target, fn, within)[listen || 'On'];
+          return EventHandler(type, Target, fn, within)[listen];
         };
       },
       keypress = function(keycode) {
         return function(fn) {
-          return EventHandler('keydown', Target, function(e, el) {
-            if (event.which == keycode || event.keyCode == keycode) fn(e, el);
-          }, within)[listen || 'On'];
+          return EventHandler('keydown', Target, function(e, el, t) {
+            if (event.which == keycode || event.keyCode == keycode) fn(e, el, t);
+          }, within)[listen];
         };
       };
     return {
@@ -785,13 +777,12 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     };
   }
 
-  function EvtLT() {
-    var ListenType = arguments.length <= 0 || arguments[0] === undefined ? 'On' : arguments[0];
+  function EvtLT(ListenType) {
     return function(EventType, Target, element, func) {
       var args = toArr(arguments);
       return is.Func(Target) ? EventHandler(EventType, root, Target)[ListenType] : args.length < 3 && !args.some(function(i) {
         return is.Func(i);
-      }) ? EventTypes(EventType, Target) : is.Func(element) ? EventHandler(EventType, Target, element)[ListenType] : EventHandler(EventType, Target, func, element)[ListenType];
+      }) ? EventTypes(EventType, Target, ListenType) : is.Func(element) ? EventHandler(EventType, Target, element)[ListenType] : EventHandler(EventType, Target, func, element)[ListenType];
     };
   }
   /**
@@ -801,7 +792,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
    * @param {function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
    * @returns Off - when On is defined as a variable "var x = On(...)" it allows you to access all the EventHandler interfaces Off,Once,On
    */
-  root.On = EvtLT();
+  root.On = EvtLT('On');
   /**
    * Starts listening for an EventType on the Target/Targets ONCE after triggering the Once event Listener will stop listening
    * @param {string} EventType - set the type of event to listen for example "click" or "scroll"
@@ -1094,7 +1085,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     element._DOMM = !0;
     element.isInput = is.Input(element);
     element.newSetGet = function(key, set, get) {
-      Object.defineProperty(this, key, {
+      dp(this, key, {
         set: set,
         get: get
       });
@@ -1419,7 +1410,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }, time || 5000);
       return element;
     };
-    Object.defineProperty(element, 'Siblings', {
+    dp(element, 'Siblings', {
       get: function() {
         return Craft.omit(element.parentNode.children, element).filter(function(el) {
           if (is.Element(el)) return el;
@@ -1567,7 +1558,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     return Dom;
   };
   for (var _key13 in Dom) {
-    Object.defineProperty(dom, _key13, Object.getOwnPropertyDescriptor(Dom, _key13));
+    dp(dom, _key13, gpd(Dom, _key13));
   }
   if (root.Proxy) dom = new Proxy(dom, {
     get: function(obj, key) {
@@ -1583,7 +1574,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
   function observable(obj) {
     if (!is.Def(obj)) obj = {};
-    Object.defineProperty(obj, 'listeners', {
+    dp(obj, 'listeners', {
       value: {
         Get: new Set(),
         Set: new Set()
@@ -1591,7 +1582,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       enumerable: !1,
       writable: !0
     });
-    Object.defineProperty(obj, 'isObservable', {
+    dp(obj, 'isObservable', {
       value: !0,
       enumerable: !1,
       writable: !1
@@ -1599,7 +1590,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     ['$get', '$set'].forEach(function(t) {
       var Type = 'Set';
       if (t == '$get') Type = 'Get';
-      Object.defineProperty(obj, t, {
+      dp(obj, t, {
         value: function(prop, func) {
           if (is.Func(prop)) {
             func = prop;
@@ -1625,7 +1616,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         writable: !0
       });
     });
-    Object.defineProperty(obj, '$change', {
+    dp(obj, '$change', {
       value: function(prop, func) {
         if (!is.Func(func)) throw new Error('no function');
         var listener = {
@@ -1649,7 +1640,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       enumerable: !1,
       writable: !0
     });
-    Object.defineProperty(obj, 'get', {
+    dp(obj, 'get', {
       value: function(key) {
         var val = void 0;
         obj.listeners.Get.forEach(function(ln) {
@@ -1660,7 +1651,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       writable: !1,
       enumerable: !1
     });
-    Object.defineProperty(obj, 'set', {
+    dp(obj, 'set', {
       value: function(key, value) {
         var val = void 0;
         obj.listeners.Set.forEach(function(ln) {
@@ -1898,7 +1889,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
       objs.forEach(function(obj) {
         for (var _key15 in obj) {
-          Object.defineProperty(host, _key15, Object.getOwnPropertyDescriptor(obj, _key15));
+          dp(host, _key15, gpd(obj, _key15));
         }
       });
       return host;
@@ -2633,7 +2624,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         if (is.Func(config[_key21])) dm = function() { // Adds dom methods to element
           return config[_key21].call(dom(this));
         };
-        _key21 == 'inserted' ? element.attachedCallback = dm : _key21 == 'destroyed' ? element.detachedCallback = dm : _key21 == 'attr' ? element.attributeChangedCallback = dm : _key21.includes('css') && _key21.length == 3 ? Craft.addCSS(config[_key21]) : is.Func(config[_key21]) ? element[_key21] = dm : Object.defineProperty(element, _key21, Object.getOwnPropertyDescriptor(config, _key21));
+        _key21 == 'inserted' ? element.attachedCallback = dm : _key21 == 'destroyed' ? element.detachedCallback = dm : _key21 == 'attr' ? element.attributeChangedCallback = dm : _key21.includes('css') && _key21.length == 3 ? Craft.addCSS(config[_key21]) : is.Func(config[_key21]) ? element[_key21] = dm : dp(element, _key21, gpd(config, _key21));
       };
       for (var _key21 in config) {
         var _ret6 = _loop(_key21);
@@ -2677,7 +2668,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       });
     };
   };
-  Object.defineProperty(Craft, 'tabActive', {
+  dp(Craft, 'tabActive', {
     get: function() {
       return tabActive;
     }
