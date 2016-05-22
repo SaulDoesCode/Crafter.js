@@ -1913,7 +1913,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return val;
     },
     addCSS: function(css) {
-      query('[crafterstyles]', head).textContent += "@import url(\"" + Craft.URLfrom(css, {
+      query('style[crafterstyles]', head).textContent += "@import url(\"" + Craft.URLfrom(css, {
         type: 'text/css'
       }) + "\");\n";
     },
@@ -1923,7 +1923,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       },
       browser: Br
     },
-    dom: Dom,
+    dom: dom,
     loader: {
       pre: 'craft:',
       fetchImport: function(obj) {
@@ -1935,16 +1935,16 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         });
         return new Promise(function(pass, fail) {
           return fetch(obj.url).then(function(res) {
-            res.text().then(function(data) {
-              obj.data = data;
-              obj.stamp = now;
-              obj.expire = now + Craft.millis.hours(obj.expire || 400);
-              if (obj.cache) localStorage.setItem(Craft.loader.pre + obj.key, JSON.stringify(obj));
-              pass(obj);
-            });
-          }).catch(function(err) {
-            fail("error importing -> " + err);
+            return res.text();
+          }).then(function(data) {
+            obj.data = data;
+            obj.stamp = now;
+            obj.expire = now + Craft.millis.hours(obj.expire || 400);
+            if (obj.cache) localStorage.setItem(Craft.loader.pre + obj.key, JSON.stringify(obj));
+            pass(obj);
           });
+        }).catch(function(err) {
+          fail("error importing -> " + err);
         });
       },
       get: function(key) {
@@ -1984,7 +1984,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       });
       return Promise.all(promises).then(function(src) {
         return src.map(function(obj) {
-          if (obj.exec) obj.type === 'css' ? Craft.addCSS('\n' + obj.data) : head.appendChild(dom.script(obj.data, 'key=' + obj.key, obj.defer));
+          if (obj.exec) obj.type === 'css' ? Craft.addCSS(obj.data) : head.appendChild(dom.script(obj.data, 'key=' + obj.key, obj.defer));
         });
       });
     },
@@ -2026,19 +2026,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       },
       get title() {
         return doc.title;
-      },
-      fetchView: function(selector, src, cache) {
-        var vh = dom(selector, !0),
-          srcpre = "Cr:" + src,
-          view = localStorage.getItem(srcpre);
-        is.Null(view) ? fetch(src).then(function(res) {
-          return res.text();
-        }).then(function(txt) {
-          if (is.True(cache, nil(view))) localStorage.setItem(srcpre, txt);
-          vh.html(txt);
-        }).catch(function(err) {
-          console.error("fetchView: " + err);
-        }) : vh.html(view);
       },
       clearViews: function() {
         for (var i in localStorage) {
@@ -2427,12 +2414,10 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     },
     fromModel: function(key, val) {
       var cutkey = cutdot(key),
-        ck = cutkey[0];
-      if (is.Def(Craft.Models[ck])) {
-        var vd = is.Def(val),
-          _type2 = (vd ? 'set' : 'get') + 'Deep';
-        return cutkey.length == 1 && !vd ? Craft.Models[ck].scope : Craft[_type2](Craft.Models[ck].scope, joindot(Craft.omit(cutkey, ck)), val);
-      }
+        vd = is.Def(val),
+        ck = cutkey[0],
+        type = (vd ? 'set' : 'get') + 'Deep';
+      if (is.Def(Craft.Models[ck])) return cutkey.length == 1 && !vd ? Craft.Models[ck].scope : Craft[type](Craft.Models[ck].scope, joindot(Craft.omit(cutkey, ck)), val);
     },
     getPath: function(path, full) {
       try {
@@ -2484,22 +2469,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         })();
       }
     },
-    poll: function(test, interval, timeout) {
-      return new Promise(function(pass, fail) {
-        if (!is.Def(timeout)) interval = timeout;
-        var isfn = is.Func(test),
-          Interval = setInterval(function() {
-            if (test || isfn && !test()) {
-              pass();
-              clearInterval(Interval);
-            }
-          }, interval || 20);
-        if (is.Num(timeout)) setTimeout(function() {
-          if (test || isfn && !test()) fail();
-          clearInterval(Interval);
-        }, timeout);
-      });
-    },
     /**
      * Usefull method for validating passwords , example Craft.strongPassword('#MyFancyPassword18',8,true,true,"#") -> true requirements met
      * @param {string} pass - string containing the password
@@ -2529,6 +2498,16 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       var k = 1000,
         i = Math.floor(Math.log(bytes) / Math.log(k));
       return (bytes / Math.pow(k, i)).toPrecision(decimals + 1 || 3) + ' ' + ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'][i];
+    },
+    randomNum: function() {
+      var min = arguments.length <= 0 || arguments[0] === undefined ? 0 : arguments[0],
+        max = arguments.length <= 1 || arguments[1] === undefined ? 100 : arguments[1];
+      return Math.random() * (max - min) + min;
+    },
+    randomInt: function() {
+      var min = arguments.length <= 0 || arguments[0] === undefined ? 0 : arguments[0],
+        max = arguments.length <= 1 || arguments[1] === undefined ? 100 : arguments[1];
+      return Math.floor(Math.random() * (max - min)) + min;
     },
     /** method for generating random alphanumeric strings*/ randomString: function() {
       return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
@@ -2626,11 +2605,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   });
   On('blur', TabChange(!1));
   On('focus', TabChange(!0));
-  Craft.ForEach = Craft.tco(function ForEach(collection, func, i) {
+  Craft.ForEach = Craft.tco(function(collection, func, i) {
     if (is.Undef(i)) i = 0;
     if (collection.length != i) {
-      func(collection[i], i);
-      ForEach(collection, func, i + 1);
+      func(collection[i], i, collection);
+      Craft.ForEach(collection, func, i + 1);
     }
   });
   Craft.loader.removeAll(!0);
@@ -2647,6 +2626,24 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   };
   Craft.customAttr('bind', function(element, bind) {
     element.bind(bind);
+  });
+  Craft.customAttr('fetch-view', function(element, src) {
+    if (element.hasAttr('cache-view')) {
+      var view = localStorage.getItem(src);
+      if (nil(view)) {
+        fetch(src).then(function(res) {
+          return res.text();
+        }).then(function(view) {
+          localStorage.setItem(src, view);
+          element.html(dffstr(view));
+        });
+      } else element.html(view);
+    }
+    fetch(src).then(function(res) {
+      return res.text();
+    }).then(function(view) {
+      element.html(dffstr(view));
+    });
   });
   Craft.customAttr('link', function(el, link) {
     el.linkevt = On(el).Click(function(e) {
