@@ -1,33 +1,49 @@
 const fs = require('fs'),
+    docs = require('documentation'),
     CleanCSS = require('clean-css'),
     beautify = require('js-beautify').js_beautify,
     ClosureCompiler = require('google-closure-compiler').compiler,
     babel = require("babel-core");
 
 let BabelOptions = {
-    plugins: [
-        "transform-es2015-template-literals",
-        "transform-es2015-literals",
-        //"transform-es2015-function-name",
-        //"transform-es2015-for-of",
-        "transform-merge-sibling-variables",
-        "transform-es2015-arrow-functions",
-        "transform-es2015-block-scoped-functions",
-        "transform-es2015-classes",
-        "transform-es2015-object-super",
-        "transform-es2015-shorthand-properties",
-        "transform-es2015-duplicate-keys",
-        "transform-es2015-computed-properties",
-        "transform-es2015-sticky-regex",
-        "transform-es2015-unicode-regex",
-        "transform-es2015-spread",
-        "transform-es2015-parameters",
-        "transform-es2015-destructuring",
-        "transform-es2015-block-scoping",
-        "transform-es2015-typeof-symbol",
-    ],
-    compact: true,
-}, wcPath = "./src/pre-webcomponents/"
+        plugins: [
+            "transform-es2015-template-literals",
+            "transform-es2015-literals",
+            //"transform-es2015-function-name",
+            //"transform-es2015-for-of",
+            "transform-merge-sibling-variables",
+            "transform-es2015-arrow-functions",
+            "transform-es2015-block-scoped-functions",
+            "transform-es2015-classes",
+            "transform-es2015-object-super",
+            "transform-es2015-shorthand-properties",
+            "transform-es2015-duplicate-keys",
+            "transform-es2015-computed-properties",
+            "transform-es2015-sticky-regex",
+            "transform-es2015-unicode-regex",
+            "transform-es2015-spread",
+            "transform-es2015-parameters",
+            "transform-es2015-destructuring",
+            "transform-es2015-block-scoping",
+            "transform-es2015-typeof-symbol",
+        ],
+        compact: true,
+    },
+    wcPath = "./src/pre-webcomponents/"
+
+function gendocs() {
+    docs(['./src/Crafter.js'], {
+        github: true
+    }, (err, result) => {
+        if (err) throw err;
+        docs.formats['md'](result, {}, (error, output) => {
+          fs.writeFile('./docs/crafterjs-docs.md', output, 'utf8', err => {
+            if (err) throw err;
+            console.log('docs gen success!');
+          });
+        })
+    });
+}
 
 function babelize(code) {
     return babel.transform(code, BabelOptions).code;
@@ -105,21 +121,22 @@ process.argv.forEach((val, index, array) => {
                 }
             }
         });
-    } else if (val == 'watchWC') {
+    } else if (val == 'docs') gendocs();
+    else if (val == 'watchWC') {
         fs.watch("./src/pre-webcomponents/", (event, filename) => {
             if (filename) {
-              if (filename.includes('.js')) {
-                  let name = filename.replace('.js', '');
-                  if (fs.statSync(wcPath + name + '.css').isFile()) {
-                      transformWC(name, fs.readFileSync(wcPath + name + '.js', 'utf8'), fs.readFileSync(wcPath + name + '.css', 'utf8'), './dist/WebComponents/');
-                  }
-              } else if(filename.includes('.css')) {
-                let name = filename.replace('.css', '');
-                if (fs.statSync(wcPath + name + '.js').isFile()) {
-                    transformWC(name, fs.readFileSync(wcPath + name + '.js', 'utf8'), fs.readFileSync(wcPath + name + '.css', 'utf8'), './dist/WebComponents/');
+                if (filename.includes('.js')) {
+                    let name = filename.replace('.js', '');
+                    if (fs.statSync(wcPath + name + '.css').isFile()) {
+                        transformWC(name, fs.readFileSync(wcPath + name + '.js', 'utf8'), fs.readFileSync(wcPath + name + '.css', 'utf8'), './dist/WebComponents/');
+                    }
+                } else if (filename.includes('.css')) {
+                    let name = filename.replace('.css', '');
+                    if (fs.statSync(wcPath + name + '.js').isFile()) {
+                        transformWC(name, fs.readFileSync(wcPath + name + '.js', 'utf8'), fs.readFileSync(wcPath + name + '.css', 'utf8'), './dist/WebComponents/');
+                    }
                 }
-              }
             }
         });
-    } else if (index === array.length - 1 && !array.includes('wc')) BabelizeBeatifyMinify("./src/Crafter.js", "./dist/Crafter.js");
+    } else if(val == 'craft') BabelizeBeatifyMinify("./src/Crafter.js", "./dist/Crafter.js");
 });

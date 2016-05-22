@@ -1028,12 +1028,12 @@
 
         element.bind = bind => {
                 function attemptBind() {
-                    let {
-                        cutbind,
-                        prop,
-                        obj,
-                        val
-                    } = Craft.getPath(bind, !0, !0);
+                    let path = Craft.getPath(bind, !0, !0),
+                        cutbind = path.cutbind,
+                        prop  = path.prop,
+                        obj  = path.obj,
+                        val  = path.val;
+
 
                     is.Def(val) ? element.html(val) : Craft.setDeep(obj, prop, element.html());
                     if (obj.isObservable) {
@@ -1770,9 +1770,6 @@
                 }).catch(err => {
                     fail(`error importing -> ${err}`)
                 }))
-            },
-            set prekey(str) {
-                Craft.loader.pre = str + ':'
             },
             get(key) {
                 return JSON.parse(localStorage.getItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key) || !1)

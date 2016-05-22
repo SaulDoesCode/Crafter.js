@@ -1157,11 +1157,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     };
     element.bind = function(bind) {
       function attemptBind() {
-        var _Craft$getPath = Craft.getPath(bind, !0, !0),
-          cutbind = _Craft$getPath.cutbind,
-          prop = _Craft$getPath.prop,
-          obj = _Craft$getPath.obj,
-          val = _Craft$getPath.val;
+        var path = Craft.getPath(bind, !0, !0),
+          cutbind = path.cutbind,
+          prop = path.prop,
+          obj = path.obj,
+          val = path.val;
         is.Def(val) ? element.html(val) : Craft.setDeep(obj, prop, element.html());
         if (obj.isObservable) {
           (function() {
@@ -1946,9 +1946,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
             fail("error importing -> " + err);
           });
         });
-      },
-      set prekey(str) {
-        Craft.loader.pre = str + ':';
       },
       get: function(key) {
         return JSON.parse(localStorage.getItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key) || !1);
