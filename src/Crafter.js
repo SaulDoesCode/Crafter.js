@@ -82,7 +82,9 @@
         } : ((fn, args, arity) => {
             let a = [];
             for (let i = arity; 0 > i; i--) a.push('a' + i.toString());
-            return function() {  return doInvok(fn, toArr(arguments).concat(a)) }
+            return function() {
+                return doInvok(fn, toArr(arguments).concat(a))
+            }
         })(fn, args, remainingArity);
     }
 
@@ -806,11 +808,11 @@
             return elements
         }
         elements.gotClass = function() {
-          return elements.every(el => toArr(arguments).every(Class => el.classList.contains(Class)))
+            return elements.every(el => toArr(arguments).every(Class => el.classList.contains(Class)))
         }
 
         elements.someGotClass = function() {
-          return elements.some(el => toArr(arguments).every(Class => el.classList.contains(Class)))
+            return elements.some(el => toArr(arguments).every(Class => el.classList.contains(Class)))
         }
 
         elements.stripClass = Class => {
@@ -1030,9 +1032,9 @@
                 function attemptBind() {
                     let path = Craft.getPath(bind, !0, !0),
                         cutbind = path.cutbind,
-                        prop  = path.prop,
-                        obj  = path.obj,
-                        val  = path.val;
+                        prop = path.prop,
+                        obj = path.obj,
+                        val = path.val;
 
 
                     is.Def(val) ? element.html(val) : Craft.setDeep(obj, prop, element.html());
@@ -1122,7 +1124,7 @@
              * @param {...string} name of the class to check for
              */
         element.gotClass = function() {
-          return toArr(arguments).every(Class => element.classList.contains(Class));
+            return toArr(arguments).every(Class => element.classList.contains(Class));
         }
 
 
@@ -1132,7 +1134,7 @@
          * @param {string} name of the class to add
          */
         element.addClass = function() {
-                forEach(arguments,Class => {
+                forEach(arguments, Class => {
                     element.classList.add(Class)
                 });
                 return element
@@ -1143,7 +1145,7 @@
              * @param {...string} name of the class to strip
              */
         element.stripClass = function() {
-                forEach(arguments,Class => {
+                forEach(arguments, Class => {
                     element.classList.remove(Class)
                 });
                 return element
@@ -1165,7 +1167,7 @@
              * @param {...string} name of the Attribute/s to strip
              */
         element.stripAttr = function() {
-                forEach(arguments,attr => {
+                forEach(arguments, attr => {
                     element.removeAttribute(attr)
                 });
                 return element
@@ -1726,7 +1728,7 @@
             return Arr
         },
         has(str) {
-          return Craft.omit(arguments,str).some(e => str.includes(e))
+            return Craft.omit(arguments, str).some(e => str.includes(e))
         },
         /**
          * Omits values from Objects or Arrays
@@ -1745,13 +1747,13 @@
             return val;
         },
         addCSS(css) {
-            query('[crafterstyles]', head).textContent += `@import url("${Craft.URLfrom(css,{type : 'text/css'})}");\n`;
+            query('style[crafterstyles]', head).textContent += `@import url("${Craft.URLfrom(css,{type : 'text/css'})}");\n`;
         },
         Browser: {
             is: browser => Br.toLowerCase().includes(browser.toLowerCase()),
             browser: Br
         },
-        dom: Dom,
+        dom,
         loader: {
             pre: 'craft:',
             fetchImport(obj) {
@@ -1759,17 +1761,15 @@
                 let now = +new Date(),
                     src = Craft.loader.get(obj.key);
                 if (src || src.expire - now > 0) return new Promise(pass => pass(src));
-                return new Promise((pass, fail) => fetch(obj.url).then(res => {
-                    res.text().then(data => {
-                        obj.data = data;
-                        obj.stamp = now;
-                        obj.expire = now + Craft.millis.hours(obj.expire || 400);
-                        if (obj.cache) localStorage.setItem(Craft.loader.pre + obj.key, JSON.stringify(obj));
-                        pass(obj);
-                    })
-                }).catch(err => {
+                return new Promise((pass, fail) => fetch(obj.url).then(res => res.text()).then(data => {
+                    obj.data = data;
+                    obj.stamp = now;
+                    obj.expire = now + Craft.millis.hours(obj.expire || 400);
+                    if (obj.cache) localStorage.setItem(Craft.loader.pre + obj.key, JSON.stringify(obj));
+                    pass(obj);
+                })).catch(err => {
                     fail(`error importing -> ${err}`)
-                }))
+                })
             },
             get(key) {
                 return JSON.parse(localStorage.getItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key) || !1)
@@ -1806,7 +1806,7 @@
                 }))
             });
             return Promise.all(promises).then(src => src.map(obj => {
-                if (obj.exec) obj.type === 'css' ? Craft.addCSS('\n' + obj.data) : head.appendChild(dom.script(obj.data, 'key=' + obj.key, obj.defer))
+                if (obj.exec) obj.type === 'css' ? Craft.addCSS(obj.data) : head.appendChild(dom.script(obj.data, 'key=' + obj.key, obj.defer))
             }))
         },
         router: {
@@ -1844,17 +1844,6 @@
             },
             get title() {
                 return doc.title
-            },
-            fetchView(selector, src, cache) {
-                let vh = dom(selector, !0),
-                    srcpre = `Cr:${src}`,
-                    view = localStorage.getItem(srcpre);
-                is.Null(view) ? fetch(src).then(res => res.text()).then(txt => {
-                    if (is.True(cache, nil(view))) localStorage.setItem(srcpre, txt);
-                    vh.html(txt);
-                }).catch(err => {
-                    console.error("fetchView: " + err)
-                }) : vh.html(view)
             },
             clearViews() {
                 for (let i in localStorage) localStorage.removeItem(localStorage.key(i).includes("Cr:"))
@@ -2197,12 +2186,10 @@
         },
         fromModel(key, val) {
             let cutkey = cutdot(key),
-                ck = cutkey[0];
-            if (is.Def(Craft.Models[ck])) {
-                let vd = is.Def(val),
-                    type = (vd ? 'set' : 'get') + 'Deep';
-                return cutkey.length == 1 && !vd ? Craft.Models[ck].scope : Craft[type](Craft.Models[ck].scope, joindot(Craft.omit(cutkey, ck)), val);
-            }
+                vd = is.Def(val),
+                ck = cutkey[0],
+                type = (vd ? 'set' : 'get') + 'Deep';
+            if (is.Def(Craft.Models[ck])) return cutkey.length == 1 && !vd ? Craft.Models[ck].scope : Craft[type](Craft.Models[ck].scope, joindot(Craft.omit(cutkey, ck)), val);
         },
         getPath(path, full) {
             try {
@@ -2253,22 +2240,6 @@
                 });
             }
         },
-        poll(test, interval, timeout) {
-            return new Promise((pass, fail) => {
-                if (!is.Def(timeout)) interval = timeout;
-                let isfn = is.Func(test),
-                    Interval = setInterval(() => {
-                        if (test || (isfn && !test())) {
-                            pass();
-                            clearInterval(Interval);
-                        }
-                    }, interval || 20);
-                if (is.Num(timeout)) setTimeout(() => {
-                    if (test || (isfn && !test())) fail();
-                    clearInterval(Interval);
-                }, timeout);
-            });
-        },
         /**
          * Usefull method for validating passwords , example Craft.strongPassword('#MyFancyPassword18',8,true,true,"#") -> true requirements met
          * @param {string} pass - string containing the password
@@ -2279,7 +2250,8 @@
          * @param {...string} includeChars - every extra argument should be a string containing a character you want the password to include
          */
         strongPassword(pass, length, caps, number, reasons) {
-            let pw = 'Password ', includeChars = toArr(arguments).slice(5);
+            let pw = 'Password ',
+                includeChars = toArr(arguments).slice(5);
             if (pass.length <= length - 1) return reasons ? pw + 'too short' : !1;
             if (caps === !0 && Craft.hasCapitals(pass) === !1) return reasons ? pw + 'should have a Capital letter' : !1;
             if (number === !0 && /\d/g.test(pass) === !1) return reasons ? pw + 'should have a number' : !1;
@@ -2297,6 +2269,12 @@
             let k = 1000,
                 i = Math.floor(Math.log(bytes) / Math.log(k));
             return (bytes / Math.pow(k, i)).toPrecision(decimals + 1 || 3) + ' ' + ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'][i]
+        },
+        randomNum(min = 0, max = 100) {
+            return Math.random() * (max - min) + min;
+        },
+        randomInt(min = 0, max = 100) {
+            return Math.floor(Math.random() * (max - min)) + min;
         },
         /** method for generating random alphanumeric strings*/
         randomString: () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1),
@@ -2398,11 +2376,11 @@
     On('focus', TabChange(!0));
 
 
-    Craft.ForEach = Craft.tco(function ForEach(collection, func, i) {
+    Craft.ForEach = Craft.tco((collection, func, i) => {
         if (is.Undef(i)) i = 0;
         if (collection.length != i) {
-            func(collection[i], i);
-            ForEach(collection, func, i + 1);
+            func(collection[i], i, collection);
+            Craft.ForEach(collection, func, i + 1);
         }
     });
 
@@ -2414,6 +2392,23 @@
     Craft.curry.adapt = fn => Craft.curry.adaptTo(fn.length, fn);
     Craft.customAttr('bind', (element, bind) => {
         element.bind(bind)
+    });
+
+    Craft.customAttr('fetch-view', (element, src) => {
+        if (element.hasAttr('cache-view')) {
+            let view = localStorage.getItem(src);
+            if (nil(view)) {
+                fetch(src).then(res => res.text())
+                    .then(view => {
+                        localStorage.setItem(src, view);
+                        element.html(dffstr(view));
+                    });
+            } else element.html(view);
+        }
+        fetch(src).then(res => res.text())
+            .then(view => {
+                element.html(dffstr(view));
+            });
     });
 
     Craft.customAttr('link', (el, link) => {
