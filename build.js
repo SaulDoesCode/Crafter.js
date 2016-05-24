@@ -86,7 +86,7 @@ function transformWC(name, js, css, outloc) {
 }
 
 function BundlePolyfills() {
-  let output = ``,path = './polyfills/',files = fs.readdirSync(path);
+  let output = ``,path = './polyfills/',files = fs.readdirSync(path).reverse();
   files.forEach((file,i) => {
       if (file.includes('.js')) minjs(path+file, out => {
         output += `\n//${file}\n`+out;

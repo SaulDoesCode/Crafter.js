@@ -41,11 +41,18 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     return [location.hash, location.href, location.pathname].some(test);
   }
 
+  function execfunc() {
+    var _arguments = arguments;
+    return function(fn) {
+      return fn.apply(null, _arguments);
+    };
+  }
+
   function last(arr) {
     return arr[arr.length - 1];
   } // document , fragment , from , string -   dffstr
   function dffstr(html) {
-    return doc.createRange().createContextualFragment(html);
+    return doc.createRange().createContextualFragment(html || '');
   }
 
   function toArr(val) {
@@ -568,7 +575,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {Element|Node} - element to test
      */
     Input: function(element) {
-      return ['INPUT', 'TEXTAREA'].some(function(i) {
+      return is.Element(element) && ['INPUT', 'TEXTAREA'].some(function(i) {
         return element.tagName.includes(i);
       });
     }
@@ -920,17 +927,17 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return elements;
     };
     elements.gotClass = function() {
-      var _arguments = arguments;
+      var _arguments2 = arguments;
       return elements.every(function(el) {
-        return toArr(_arguments).every(function(Class) {
+        return toArr(_arguments2).every(function(Class) {
           return el.classList.contains(Class);
         });
       });
     };
     elements.someGotClass = function() {
-      var _arguments2 = arguments;
+      var _arguments3 = arguments;
       return elements.some(function(el) {
-        return toArr(_arguments2).every(function(Class) {
+        return toArr(_arguments3).every(function(Class) {
           return el.classList.contains(Class);
         });
       });
@@ -953,9 +960,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {...string} name of the Attribute/s to strip
      */
     elements.stripAttr = function() {
-      var _arguments3 = arguments;
+      var _arguments4 = arguments;
       elements.forEach(function(el) {
-        forEach(_arguments3, function(attr) {
+        forEach(_arguments4, function(attr) {
           el.removeAttribute(attr);
         });
       });
@@ -968,12 +975,12 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {...string} names of attributes to check for
      */
     elements.hasAttr = function(attr) {
-      var _arguments4 = arguments;
+      var _arguments5 = arguments;
       if (is.String(attr)) return elements.every(function(el) {
         return el.hasAttribute(attr);
       });
       return elements.every(function(el) {
-        return Craft.flatten(_arguments4).every(function(a) {
+        return Craft.flatten(_arguments5).every(function(a) {
           return el.hasAttribute(a);
         });
       });
@@ -1055,12 +1062,13 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   function Inner(type, el) {
     type = el.isInput ? 'value' : type;
     return function() {
-      var args = toArr(arguments);
-      if (args.length == 0) return el[type];
-      args.length == 1 ? is.Node(args[0]) ? el.append(args[0]) : el[type] = args[0] : el[type] = args.map(function(val) {
-        if (is.Node(val)) el.append(val);
-        else return val;
-      }).join('');
+      if (!arguments.length) return el[type];
+      if (arguments.length == 1) {
+        if (is.Node(arguments[0])) {
+          el[type] = '';
+          el.append(arguments[0]);
+        } else el[type] = arguments[0];
+      } else forEach(arguments, Inner(type, el));
       return el;
     };
   }
@@ -1255,9 +1263,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {...string} name of the class to check for
      */
     element.gotClass = function() {
-      return toArr(arguments).every(function(Class) {
-        return element.classList.contains(Class);
-      });
+      return toArr(arguments).every(element.classList.contains.bind(element.classList));
     };
     /**
      * Add a CSS class to the element
@@ -1265,9 +1271,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {string} name of the class to add
      */
     element.addClass = function() {
-      forEach(arguments, function(Class) {
-        element.classList.add(Class);
-      });
+      forEach(arguments, element.classList.add.bind(element.classList));
       return element;
     };
     /**
@@ -1276,9 +1280,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {...string} name of the class to strip
      */
     element.stripClass = function() {
-      forEach(arguments, function(Class) {
-        element.classList.remove(Class);
-      });
+      forEach(arguments, element.classList.remove.bind(element.classList));
       return element;
     };
     /**
@@ -1873,12 +1875,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     omitFrom: function(Arr) {
       var args = toArr(arguments).slice(1);
       if (is.String(Arr)) args.forEach(function(a) {
-        Craft.tco(function replace() {
-          if (Arr.includes(a)) {
-            Arr = Arr.replace(a, '');
-            replace();
-          }
-        })();
+        while (Arr.includes(a)) {
+          Arr = Arr.replace(a, '');
+        }
       });
       else Arr = (is.Arraylike(Arr) ? toArr(Arr) : Arr).filter(function(e) {
         return rif(!args.some(function(v) {
@@ -1934,7 +1933,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           return pass(src);
         });
         return new Promise(function(pass, fail) {
-          return fetch(obj.url).then(function(res) {
+          fetch(obj.url).then(function(res) {
             return res.text();
           }).then(function(data) {
             obj.data = data;
@@ -1942,9 +1941,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
             obj.expire = now + Craft.millis.hours(obj.expire || 400);
             if (obj.cache) localStorage.setItem(Craft.loader.pre + obj.key, JSON.stringify(obj));
             pass(obj);
+          }).catch(function(err) {
+            fail("error importing -> " + err);
           });
-        }).catch(function(err) {
-          fail("error importing -> " + err);
         });
       },
       get: function(key) {
@@ -2035,7 +2034,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     },
     Cookies: {
       get: function(key) {
-        return key ? decodeURIComponent(doc.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1")) || null : null;
+        return decodeURIComponent(doc.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1")) || null;
       },
       set: function(key, val, expires, path, domain, secure) {
         if (!key || /^(?:expires|max\-age|path|domain|secure)$/i.test(key)) return !1;
@@ -2054,7 +2053,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         return !0;
       },
       has: function(key) {
-        return key ? new RegExp("(?:^|;\\s*)" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=").test(doc.cookie) : false;
+        return key ? new RegExp("(?:^|;\\s*)" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=").test(doc.cookie) : !1;
       },
       keys: function() {
         return doc.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/).map(function(c) {
@@ -2126,7 +2125,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
                 Options.open = !1;
               };
               sock.onerror = function(e) {
-                console.error(e);
+                throw e;
               };
             };
           OpenSock(Options.socket = newSock());
@@ -2232,10 +2231,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return -1;
     },
     type: function() {
-      var types = toArr(arguments).map(function(t) {
+      return Craft.deglove(toArr(arguments).map(function(t) {
         return typeof t === "undefined" ? "undefined" : _typeof(t);
-      });
-      return types.length < 2 ? types[0] : types;
+      }));
     },
     memoize: function(func, resolver) {
       if (!is.Func(func) || resolver && !is.Func(resolver)) throw new TypeError("no function");
@@ -2343,7 +2341,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           if (elapsedTime < options.duration) requestAnimationFrame(loop);
           else {
             scrollTo(0, start + distance);
-            if (is.Func(options.func)) options.func.call();
+            if (is.Func(options.func)) options.func();
             startTime = ud;
           }
         };
@@ -2365,6 +2363,12 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       });
       return formData;
     },
+    /**
+     * handles scrolling events
+     * @param {Node} element - target of listener
+     * @param {function} func - callback to handle the event
+     * @param {=boolean} pd - preventDefault on the event or not
+     */
     OnScroll: function(element, func, pd) {
       return On('wheel', element, function(e) {
         if (pd) e.preventDefault();
@@ -2435,7 +2439,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         if (is.Def(_val)) return _val;
         if (!full && first === prop && is.Def(obj)) return obj;
       } catch (e) {
-        throw new Error(e);
+        return {};
       }
     },
     /**
@@ -2593,9 +2597,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   var TabChange = function(ta) {
     return function() {
       tabActive = ta;
-      tabListeners.forEach(function(tl) {
-        tl(tabActive);
-      });
+      tabListeners.forEach(execfunc(tabActive));
     };
   };
   dp(Craft, 'tabActive', {
@@ -2627,22 +2629,23 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   Craft.customAttr('bind', function(element, bind) {
     element.bind(bind);
   });
-  Craft.customAttr('fetch-view', function(element, src) {
-    if (element.hasAttr('cache-view')) {
+  Craft.customAttr('import-view', function(element, src) {
+    var cache = element.hasAttr('cache-view');
+    if (cache) {
       var view = localStorage.getItem(src);
-      if (nil(view)) {
-        fetch(src).then(function(res) {
-          return res.text();
-        }).then(function(view) {
-          localStorage.setItem(src, view);
-          element.html(dffstr(view));
-        });
-      } else element.html(view);
+      if (!nil(view)) {
+        element.html(view);
+        return;
+      }
     }
-    fetch(src).then(function(res) {
-      return res.text();
-    }).then(function(view) {
-      element.html(dffstr(view));
+    fetch(src, {
+      mode: 'cors'
+    }).then(function(res) {
+      if (!res.ok) console.warn("<" + element.localName + "> : unable to import view - " + src);
+      else res.text().then(function(view) {
+        if (cache) localStorage.setItem(src, view);
+        element.html(view);
+      });
     });
   });
   Craft.customAttr('link', function(el, link) {
@@ -2679,9 +2682,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   var DestructionEvent = new Event('destroy');
 
   function init() {
-    Craft.router.links.forEach(function(link) {
-      link();
-    });
+    Craft.router.links.forEach(execfunc());
     Craft.DomObserver = new MutationObserver(function(muts) {
       forEach(muts, function(mut) {
         mut.removedNodes.forEach(function(el) {
