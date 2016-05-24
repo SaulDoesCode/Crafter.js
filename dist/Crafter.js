@@ -20,7 +20,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     tem = void 0,
     Br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i),
     sI = 'Isync',
-    ud = void 0,
+    undef = void 0,
     dp = Object.defineProperty,
     gpd = Object.getOwnPropertyDescriptor,
     head = doc.head,
@@ -39,26 +39,17 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
   function Locs(test) {
     return [location.hash, location.href, location.pathname].some(test);
-  }
-
-  function execfunc() {
-    var _arguments = arguments;
-    return function(fn) {
-      return fn.apply(null, _arguments);
-    };
-  }
-
+  } // get the last item in an array
   function last(arr) {
     return arr[arr.length - 1];
   } // document , fragment , from , string -   dffstr
   function dffstr(html) {
     return doc.createRange().createContextualFragment(html || '');
-  }
-
+  } // converts a value to an array
   function toArr(val) {
     return Array.from(val);
-  }
-
+  } // get the string form of any object
+  // then compare it to a given string
   function type(obj, str) {
     return toString.call(obj) === str;
   } // tests arguments with Array.prototype.every;
@@ -807,9 +798,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     var newEl = domManip(doc.createElement(name));
     if (is.Object(inner)) {
       attributes = inner;
-      inner = ud;
+      inner = undef;
     }
-    if (inner != ud) {
+    if (inner != undef) {
       var _type = newEl.isInput ? 'value' : 'innerHTML';
       if (!is.Arr(inner)) is.Node(inner) ? newEl.appendChild(inner) : newEl[_type] = inner;
       else newEl[_type] = inner.map(function(val) {
@@ -818,7 +809,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }).join('');
     }
     if (is.Object(attributes) || is.String(attributes)) newEl.setAttr(attributes);
-    if (extraAttr != ud) is.Bool(extraAttr) ? stringForm = extraAttr : newEl.setAttr(extraAttr);
+    if (extraAttr != undef) is.Bool(extraAttr) ? stringForm = extraAttr : newEl.setAttr(extraAttr);
     if (stringForm) newEl = newEl.outerHTML;
     return newEl;
   }
@@ -911,14 +902,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
      */
     elements.css = function(styles) {
-      if (styles != ud) {
-        elements.forEach(function(el) {
-          forEach(styles, function(prop, key) {
-            el.style[key] = prop;
-          });
-        });
-      } else throw new Error('styles unefined');
-      return elements;
+      return Craft.css(elements, styles);
     };
     elements.addClass = function(Class) {
       elements.forEach(function(el) {
@@ -927,17 +911,17 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return elements;
     };
     elements.gotClass = function() {
-      var _arguments2 = arguments;
+      var _arguments = arguments;
       return elements.every(function(el) {
-        return toArr(_arguments2).every(function(Class) {
+        return toArr(_arguments).every(function(Class) {
           return el.classList.contains(Class);
         });
       });
     };
     elements.someGotClass = function() {
-      var _arguments3 = arguments;
+      var _arguments2 = arguments;
       return elements.some(function(el) {
-        return toArr(_arguments3).every(function(Class) {
+        return toArr(_arguments2).every(function(Class) {
           return el.classList.contains(Class);
         });
       });
@@ -960,9 +944,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {...string} name of the Attribute/s to strip
      */
     elements.stripAttr = function() {
-      var _arguments4 = arguments;
+      var _arguments3 = arguments;
       elements.forEach(function(el) {
-        forEach(_arguments4, function(attr) {
+        forEach(_arguments3, function(attr) {
           el.removeAttribute(attr);
         });
       });
@@ -975,12 +959,12 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {...string} names of attributes to check for
      */
     elements.hasAttr = function(attr) {
-      var _arguments5 = arguments;
+      var _arguments4 = arguments;
       if (is.String(attr)) return elements.every(function(el) {
         return el.hasAttribute(attr);
       });
       return elements.every(function(el) {
-        return Craft.flatten(_arguments5).every(function(a) {
+        return Craft.flatten(_arguments4).every(function(a) {
           return el.hasAttribute(a);
         });
       });
@@ -1127,7 +1111,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {Node} Node to replace with
      */
     element.clone = function(val) {
-      return domManip(element.cloneNode(val == ud ? !0 : val));
+      return domManip(element.cloneNode(val == undef ? !0 : val));
     };
     /**
      * append the Element to another node using either a CSS selector or a Node
@@ -1246,16 +1230,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     /**
      * add CSS style rules to the Element or NodeList
      * @memberof dom
-     * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
+     * @param {object} styles - should contain all the styles you wish to add
+     * @example element.css({ borderWidth : '5px solid red' , float : 'right'});
      */
-    element.css = function(styles, prop) {
-      if (styles == ud) throw new Error('Style properties undefined');
-      if (is.String(styles, prop)) element.style[styles] = prop;
-      else
-        for (var style in styles) {
-          element.style[style] = styles[style];
-        }
-      return element;
+    element.css = function(styles) {
+      return Craft.css(element, styles);
     };
     /**
      * check if the element has got a specific CSS class
@@ -1406,7 +1385,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {string|number=} pixel value to set
      */
     element.newSetGet('Height', function(pixels) {
-      if (pixels != ud) element.style.height = pixels;
+      if (pixels != undef) element.style.height = pixels;
     }, function() {
       return element.getRect().height;
     });
@@ -1668,7 +1647,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         removed = arr.filter(function(item) {
           if (newArr.includes(item)) return item;
         }),
-        diff = Craft.omit(added.concat(removed), ud);
+        diff = Craft.omit(added.concat(removed), undef);
       if (is.Func(func) && !is.empty(diff)) func(arr, newArr, added, removed, diff);
       else return {
         arr: arr,
@@ -1782,10 +1761,10 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       path = cutdot(path.replace(/^\./, ''));
       try {
         for (var i = 0; i < path.length; ++i) {
-          path[i] in obj ? obj = obj[path[i]] : obj = ud;
+          path[i] in obj ? obj = obj[path[i]] : obj = undef;
         }
       } catch (e) {
-        obj = ud;
+        obj = undef;
       }
       return obj;
     },
@@ -1817,11 +1796,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @method forEachDeep
      * @memberof Craft
      * @param {Object} obj - the object to loop through
-     * @param {function} fn - function to handle each iteration
+     * @param {function} func - function to handle each iteration
      * @param {string=} path - string to reference value by simple dot notation
      * @example Craft.forEachDeep({ a : 1 , b : { c : 2}}, (value , key , object, currentPath) => { console.log(key) })
      */
-    forEachDeep: function(object, fn, path) {
+    forEachDeep: function(object, func, path) {
       path = path || '';
       var currentPath = path,
         nestable = void 0,
@@ -1832,8 +1811,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         currentPath = path;
         nestable = !1;
         is.Arr(object) ? currentPath += "[" + key + "]" : !currentPath ? currentPath = key : currentPath += '.' + key;
-        nestable = fn(val, key, object, currentPath) == !1;
-        if (nestable && (is.Arr(val) || is.Object(val))) Craft.forEachDeep(val, fn, currentPath);
+        nestable = func(val, key, object, currentPath) == !1;
+        if (nestable && (is.Arr(val) || is.Object(val))) Craft.forEachDeep(val, func, currentPath);
       }
     },
     /**
@@ -1872,6 +1851,12 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     clone: function(val) {
       return is.Object(val) ? Object.create(val) : toArr(val);
     },
+    /**
+     * Craft.omitFrom will omit values from any arraylike object or string
+     * @param (arraylike|string) Arr - arraylike object from which values will be omitted
+     * @param (...*) values - values to omit from the arraylike object
+     * @return (array|string)
+     */
     omitFrom: function(Arr) {
       var args = toArr(arguments).slice(1);
       if (is.String(Arr)) args.forEach(function(a) {
@@ -1880,19 +1865,26 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         }
       });
       else Arr = (is.Arraylike(Arr) ? toArr(Arr) : Arr).filter(function(e) {
-        return rif(!args.some(function(v) {
-          return v == e;
-        }), e);
+        if (!args.some(function(v) {
+            return v == e;
+          })) return e;
       });
       return Arr;
     },
+    /**
+     * Craft.has checks whether or not strings or arrays contains
+     * certain values
+     * @param (string|array) str - collection to check
+     * @param (...*) values - values to check for in the collection
+     */
     has: function(str) {
+      if (!str.includes) toArr(str);
       return Craft.omit(arguments, str).some(function(e) {
         return str.includes(e);
       });
     },
     /**
-     * Omits values from Objects or Arrays
+     * Omits values from Objects, Strings and Arraylike objects
      * @method omit
      * @memberof Craft
      * @param {Object|Array} val - object from which things may be omitted
@@ -1911,6 +1903,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       });
       return val;
     },
+    /**
+     * Craft.addCSS takes in any string of valid css code and executes it
+     * in the global scope
+     * @param (string) css - css code to execute
+     */
     addCSS: function(css) {
       query('style[crafterstyles]', head).textContent += "@import url(\"" + Craft.URLfrom(css, {
         type: 'text/css'
@@ -1976,7 +1973,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           type: arg.css ? 'css' : 'script',
           exec: arg.execute != !1,
           cache: arg.cache != !1,
-          defer: arg.defer || ud,
+          defer: arg.defer || undef,
           key: arg.key,
           expire: arg.expire
         }));
@@ -2193,30 +2190,35 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       };
     },
     once: function(func, context) {
-      var res = void 0;
+      var result = void 0;
       return function() {
         if (is.Func(func)) {
-          res = func.apply(context || this, arguments);
+          result = func.apply(context || this, arguments);
           func = null;
         }
-        return res;
+        return result;
       };
     },
-    css: function(el, styles) {
-      if (is.Object(styles) && is.Element(el)) forEach(styles, function(prop, key) {
-        el.style[key] = prop;
+    css: function(element, styles) {
+      if (is.Object(styles)) forEach(styles, function(prop, key) {
+        if (is.Element(element)) element.style[key] = prop;
+        else if (is.NodeList(element)) forEach(element, function(el) {
+          el.style[key] = prop;
+        });
       });
+      else throw new Error('CSS : Styles Object is not an object');
+      return element;
     },
     hasCapitals: function(string) {
       return toArr(string).some(function(c) {
         return is.Uppercase(c);
       });
     },
-    OverrideFunction: function(funcName, Func, ContextObject) {
+    OverrideFunction: function(funcName, func, ContextObject) {
       funcName.split(".").forEach(function(i) {
         ContextObject = ContextObject[i];
       });
-      ContextObject[funcName.split(".").pop()] = Func;
+      ContextObject[funcName.split(".").pop()] = func;
     },
     len: function(val) {
       try {
@@ -2342,7 +2344,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           else {
             scrollTo(0, start + distance);
             if (is.Func(options.func)) options.func();
-            startTime = ud;
+            startTime = undef;
           }
         };
       requestAnimationFrame(loop);
@@ -2367,11 +2369,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * handles scrolling events
      * @param {Node} element - target of listener
      * @param {function} func - callback to handle the event
-     * @param {=boolean} pd - preventDefault on the event or not
+     * @param {=boolean} preventDefault - event.preventDefault() or not
      */
-    OnScroll: function(element, func, pd) {
+    OnScroll: function(element, func, preventDefault) {
       return On('wheel', element, function(e) {
-        if (pd) e.preventDefault();
+        if (preventDefault) e.preventDefault();
         func(e.deltaY < 1, e);
       });
     },
@@ -2418,10 +2420,12 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     },
     fromModel: function(key, val) {
       var cutkey = cutdot(key),
-        vd = is.Def(val),
+        IsValDefined = is.Def(val),
         ck = cutkey[0],
-        type = (vd ? 'set' : 'get') + 'Deep';
-      if (is.Def(Craft.Models[ck])) return cutkey.length == 1 && !vd ? Craft.Models[ck].scope : Craft[type](Craft.Models[ck].scope, joindot(Craft.omit(cutkey, ck)), val);
+        type = (IsValDefined ? 'set' : 'get') + 'Deep';
+      if (is.Def(Craft.Models[ck])) {
+        return cutkey.length == 1 && !IsValDefined ? Craft.Models[ck].scope : Craft[type](Craft.Models[ck].scope, joindot(Craft.omit(cutkey, ck)), val);
+      }
     },
     getPath: function(path, full) {
       try {
@@ -2597,7 +2601,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   var TabChange = function(ta) {
     return function() {
       tabActive = ta;
-      tabListeners.forEach(execfunc(tabActive));
+      tabListeners.forEach(function(listener) {
+        listener(tabActive);
+      });
     };
   };
   dp(Craft, 'tabActive', {
@@ -2661,8 +2667,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         element._cah.dw = !1;
       }
     }
-  });
-
+  }); // takes in an affected element and scans it for custom attributes
+  // then handles the custom attribute if it was registered with Craft.customAttr
   function manageAttr(el) {
     for (var attr, i = 0; i < Craft.CustomAttributes.length; i++) {
       attr = Craft.CustomAttributes[i];
@@ -2682,7 +2688,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   var DestructionEvent = new Event('destroy');
 
   function init() {
-    Craft.router.links.forEach(execfunc());
+    Craft.router.links.forEach(function(link) {
+      link();
+    });
     Craft.DomObserver = new MutationObserver(function(muts) {
       forEach(muts, function(mut) {
         mut.removedNodes.forEach(function(el) {
