@@ -769,7 +769,10 @@
             return script;
         },
         SafeHTML(html, node) {
-            html = html.replace(/<script[^>]*?>.*?<\/script>/gi, '').replace(/<style[^>]*?>.*?<\/style>/gi, '').replace(/<![\s\S]*?--[ \t\n\r]*>/gi, '');
+            html = html
+            .replace(/<script[^>]*?>.*?<\/script>/gi, '')
+            .replace(/<style[^>]*?>.*?<\/style>/gi, '')
+            .replace(/<![\s\S]*?--[ \t\n\r]*>/gi, '');
             return !node ? html : dffstr(html)
         }
     }

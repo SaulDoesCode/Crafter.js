@@ -37,10 +37,10 @@ function gendocs() {
     }, (err, result) => {
         if (err) throw err;
         docs.formats['md'](result, {}, (error, output) => {
-          fs.writeFile('./docs/crafterjs-docs.md', output, 'utf8', err => {
-            if (err) throw err;
-            console.log('docs gen success!');
-          });
+            fs.writeFile('./docs/crafterjs-docs.md', output, 'utf8', err => {
+                if (err) throw err;
+                console.log('docs gen success!');
+            });
         })
     });
 }
@@ -49,17 +49,19 @@ function babelize(code) {
     return babel.transform(code, BabelOptions).code;
 }
 
-function minjs(loc,func) {
-  new ClosureCompiler({
-      js: loc,
-      compilation_level: 'SIMPLE',
-      language_in: 'ECMASCRIPT5_STRICT',
-      language_out: 'ECMASCRIPT5_STRICT',
-  }).run((exitcode, out, err) => {
-      if (err) console.log(err);
-      func(out);
-      console.log('Success -> Script was Minified!\n');
-  });
+function minjs(loc) {
+    return new Promise((pass, fail) => {
+        new ClosureCompiler({
+            js: loc,
+            compilation_level: 'SIMPLE',
+            language_in: 'ECMASCRIPT5_STRICT',
+            language_out: 'ECMASCRIPT5_STRICT',
+        }).run((exitcode, out, err) => {
+            if (err) console.error(err);
+            console.log('Success -> Script was Minified!\n');
+            pass(out);
+        });
+    });
 }
 
 function mincss(css) {
@@ -71,14 +73,14 @@ function transformWC(name, js, css, outloc) {
     fs.writeFile(outloc + name + '.pwc', `Craft.addCSS("${mincss(css)}");\n${babelize(js)}`, 'utf8', err => {
         if (err) throw err;
 
-        minjs(outloc + name + '.pwc',out => {
-          fs.writeFile(outloc + name + '.js', out, 'utf8', err => {
-              if (err) throw err;
-              try {
-                  fs.unlinkSync(outloc + name + '.pwc');
-                  console.log('Succesfully compiled ' + name + ' web component!');
-              } catch (e) {}
-          });
+        minjs(outloc + name + '.pwc').then(out => {
+            fs.writeFile(outloc + name + '.js', out, 'utf8', err => {
+                if (err) throw err;
+                try {
+                    fs.unlinkSync(outloc + name + '.pwc');
+                    console.log('Succesfully compiled ' + name + ' web component!');
+                } catch (e) {}
+            })
         });
 
     });
@@ -86,20 +88,18 @@ function transformWC(name, js, css, outloc) {
 }
 
 function BundlePolyfills() {
-  let output = ``,path = './polyfills/',files = fs.readdirSync(path).reverse();
-  files.forEach((file,i) => {
-      if (file.includes('.js')) minjs(path+file, out => {
-        output += `\n//${file}\n`+out;
-        if(i == files.length - 1) {
-          fs.writeFile("./dist/polyfills.min.js", output, 'utf8', err => {
-            if(err) throw err;
-            console.log('Polyfills Succesfully Bundled and Minified!');
-          });
-        }
-      });
-
-  });
-
+    let path = './polyfills/';
+    new ClosureCompiler({
+        js: fs.readdirSync(path).map(file => {
+            if (file.includes('.js')) return path + file
+        }),
+        compilation_level: 'SIMPLE',
+        language_in: 'ECMASCRIPT5_STRICT',
+        language_out: 'ECMASCRIPT5_STRICT',
+        js_output_file: './dist/polyfills.min.js'
+    }).run(() => {
+        console.log('Success -> Polyfills Bundled and Minified!\n');
+    });
 }
 
 function BabelizeBeatifyMinify(inloc, outloc) {
@@ -113,11 +113,11 @@ function BabelizeBeatifyMinify(inloc, outloc) {
             if (err) throw err;
             console.log('Success -> Crafter.js Babelized!\n');
 
-            minjs(outloc,out => {
-              fs.writeFile(outloc.replace('.js', '.min.js'), out, 'utf8', err => {
-                  if (err) throw err;
-                  console.log('Success -> Crafter.js Babelized and Minified!\n')
-              })
+            minjs(outloc).then(out => {
+                fs.writeFile(outloc.replace('.js', '.min.js'), out, 'utf8', err => {
+                    if (err) throw err;
+                    console.log('Success -> Crafter.js Babelized and Minified!\n')
+                })
             });
 
         });
@@ -141,18 +141,14 @@ process.argv.forEach((val, index, array) => {
     else if (val == 'watchWC') {
         fs.watch("./src/pre-webcomponents/", (event, filename) => {
             if (filename) {
-                if (filename.includes('.js')) {
-                    let name = filename.replace('.js', '');
-                    if (fs.statSync(wcPath + name + '.css').isFile()) {
-                        transformWC(name, fs.readFileSync(wcPath + name + '.js', 'utf8'), fs.readFileSync(wcPath + name + '.css', 'utf8'), './dist/WebComponents/');
-                    }
-                } else if (filename.includes('.css')) {
-                    let name = filename.replace('.css', '');
-                    if (fs.statSync(wcPath + name + '.js').isFile()) {
+                if (filename.includes('.js') || filename.includes('.css')) {
+                    let isJS = filename.includes('.js'),
+                        name = filename.replace(isJS ? '.js' : '.css', '');
+                    if (fs.statSync(wcPath + name + (isJS ? '.css' : '.js')).isFile()) {
                         transformWC(name, fs.readFileSync(wcPath + name + '.js', 'utf8'), fs.readFileSync(wcPath + name + '.css', 'utf8'), './dist/WebComponents/');
                     }
                 }
             }
         });
-    } else if(val == 'craft') BabelizeBeatifyMinify("./src/Crafter.js", "./dist/Crafter.js");
+    } else if (val == 'craft') BabelizeBeatifyMinify("./src/Crafter.js", "./dist/Crafter.js");
 });
