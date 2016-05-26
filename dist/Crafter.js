@@ -20,6 +20,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     tem = void 0,
     Br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i),
     sI = 'Isync',
+    toArr = Array.from,
     undef = void 0,
     defineprop = Object.defineProperty,
     getpropdescriptor = Object.getOwnPropertyDescriptor,
@@ -46,8 +47,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   } // document , fragment , from , string -   dffstr
   function dffstr(html) {
     return doc.createRange().createContextualFragment(html || '');
-  } // converts a value to an array
-  var toArr = Array.from; // get the string form of any object
+  } // get the string form of any object
   // then compare it to a given string
   function type(obj, str) {
     return toString.call(obj) === str;
@@ -128,7 +128,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     }),
     /**
      * Test if something is an Array
-     * @param args - value/values to test
+     * @param {...*} args - value/values to test
      */
     Arr: ta(Array.isArray),
     /**
@@ -895,7 +895,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         });
       });
     };
-    elements.someGotClass = function() {
+    elements.GotSomeClass = function() {
       var _arguments2 = arguments;
       return elements.some(function(el) {
         return toArr(_arguments2).every(function(Class) {
@@ -2494,9 +2494,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         max = arguments.length <= 1 || arguments[1] === undefined ? 100 : arguments[1];
       return Math.random() * (max - min) + min;
     },
-    randomInt: function() {
-      var min = arguments.length <= 0 || arguments[0] === undefined ? 0 : arguments[0],
-        max = arguments.length <= 1 || arguments[1] === undefined ? 100 : arguments[1];
+    randomInt: function(min, max) {
+      min = min || 0;
+      max = max || 100;
       return Math.floor(Math.random() * (max - min)) + min;
     },
     /** method for generating random alphanumeric strings*/ randomString: function() {

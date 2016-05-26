@@ -13,6 +13,7 @@
         tabListeners = new Set,
         tem, Br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
     const sI = 'Isync',
+        toArr = Array.from,
         undef = void 0,
         defineprop = Object.defineProperty,
         getpropdescriptor = Object.getOwnPropertyDescriptor,
@@ -45,10 +46,6 @@
     function dffstr(html) {
         return doc.createRange().createContextualFragment(html || '');
     }
-
-    // converts a value to an array
-    var toArr = Array.from;
-
 
     // get the string form of any object
     // then compare it to a given string
@@ -127,7 +124,7 @@
         String: ta(o => typeof o === 'string'),
         /**
          * Test if something is an Array
-         * @param args - value/values to test
+         * @param {...*} args - value/values to test
          */
         Arr: ta(Array.isArray),
         /**
@@ -793,7 +790,7 @@
             return elements.every(el => toArr(arguments).every(Class => el.classList.contains(Class)))
         }
 
-        elements.someGotClass = function () {
+        elements.GotSomeClass = function () {
             return elements.some(el => toArr(arguments).every(Class => el.classList.contains(Class)))
         }
 
@@ -2283,7 +2280,9 @@
         randomNum(min = 0, max = 100) {
             return Math.random() * (max - min) + min;
         },
-        randomInt(min = 0, max = 100) {
+        randomInt(min, max) {
+            min = min || 0;
+            max = max || 100;
             return Math.floor(Math.random() * (max - min)) + min;
         },
         /** method for generating random alphanumeric strings*/
