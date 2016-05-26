@@ -1,14 +1,13 @@
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function(obj) {
-    return typeof obj;
-  } : function(obj) {
-    return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj;
-  },
-  perf = performance.now();
+  return typeof obj;
+} : function(obj) {
+  return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj;
+};
 /**
  *  @overview Crafter.js , minimalist front-end library
  *  @author Saul van der Walt - https://github.com/SaulDoesCode/
  *  @license MIT
- */
+ */ //var perf = performance.now();
 (function(doc, root) {
   "use strict";
   var Ready = false,
@@ -22,18 +21,15 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     Br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i),
     sI = 'Isync',
     undef = void 0,
-    dp = Object.defineProperty,
-    gpd = Object.getOwnPropertyDescriptor,
+    defineprop = Object.defineProperty,
+    getpropdescriptor = Object.getOwnPropertyDescriptor,
     head = doc.head,
     RegExps = {
       email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
       timeString: /^(2[0-3]|[01]?[0-9]):([0-5]?[0-9]):([0-5]?[0-9])$/,
       dateString: /^(1[0-2]|0?[1-9])\/(3[01]|[12][0-9]|0?[1-9])\/(?:[0-9]{2})?[0-9]{2}$/,
       hexadecimal: /^[0-9a-fA-F]+$/,
-      hexColor: /^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/,
-      ipv4: /^(?:(?:\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])\.){3}(?:\d|[1-9]\d|1\d{2}|2[0-4]\d|25[0-5])$/,
-      ipv6: /^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/,
-      ip: /^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$|^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])$|^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/
+      hexColor: /^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/
     };
   if (Br && (tem = ua.match(/version\/([\.\d]+)/i)) !== null) Br[2] = tem[1];
   Br = (Br ? [Br[1], Br[2]] : [navigator.appName, navigator.appVersion, '-?']).join(' ');
@@ -345,10 +341,10 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return (/^[0-9a-zA-Z]+$/.test(str));
     },
     /**
-     * Determines whether a String is a valid Email
+     * Determines whether a String is a valid email
      * @param {string} email - variable to test
      */
-    Email: function(email) {
+    email: function(email) {
       return RegExps.email.test(email);
     },
     /**
@@ -368,27 +364,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      */
     HexColor: function(hexColor) {
       return RegExps.hexColor.test(hexColor);
-    },
-    /**
-     * Determines whether a String is a ip
-     * @param {string} ip - variable to test
-     */
-    ip: function(ip) {
-      return RegExps.ip.test(ip);
-    },
-    /**
-     * Determines whether a String is a ipv4
-     * @param {string} ipv4 - variable to test
-     */
-    ipv4: function(ipv4) {
-      return RegExps.ipv4.test(ipv4);
-    },
-    /**
-     * Determines whether a String is a ipv6
-     * @param {string} ipv6 - variable to test
-     */
-    ipv6: function(ipv6) {
-      return RegExps.ipv6.test(ipv6);
     },
     /**
      * Determines whether a String is hexadecimal
@@ -625,7 +600,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
        * Change the Event type to listen for
        * {string} type - the name of the event/s to listen for
        */
-      dp(this, 'Type', {
+      defineprop(this, 'Type', {
         set: function(type) {
           var ehdl = this; //  have you tried turning it on and off again? - THE IT CROWD
           ehdl.Off;
@@ -642,7 +617,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       /**
        * Activates the EventHandler to start listening for the EventType on the Target/Targets
        */
-      dp(this, 'On', {
+      defineprop(this, 'On', {
         get: function() {
           var ehdl = this;
           Target.forEach(function(target) {
@@ -659,7 +634,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
        * De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
        * can still optionally be re-activated with On again
        */
-      dp(this, 'Off', {
+      defineprop(this, 'Off', {
         get: function() {
           var ehdl = this;
           Target.forEach(function(target) {
@@ -676,7 +651,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
        * Once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
        * the Handler function will be called only Once
        */
-      dp(this, 'Once', {
+      defineprop(this, 'Once', {
         get: function() {
           var ehdl = this;
           FuncWrapper = function(e) {
@@ -1060,7 +1035,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   }
 
   function newSetGet(key, set, get) {
-    dp(this, key, {
+    defineprop(this, key, {
       set: set,
       get: get
     });
@@ -1370,7 +1345,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }, time || 5000);
       return element;
     };
-    dp(element, 'Siblings', {
+    defineprop(element, 'Siblings', {
       get: function() {
         return Craft.omit(element.parentNode.children, element).filter(function(el) {
           if (is.Element(el)) return el;
@@ -1518,7 +1493,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     return Dom;
   };
   for (var _key in Dom) {
-    dp(dom, _key, gpd(Dom, _key));
+    defineprop(dom, _key, getpropdescriptor(Dom, _key));
   }
   if (root.Proxy) dom = new Proxy(dom, {
     get: function(obj, key) {
@@ -1534,7 +1509,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
   function observable(obj) {
     if (!is.Def(obj)) obj = {};
-    dp(obj, 'listeners', {
+    defineprop(obj, 'listeners', {
       value: {
         Get: new Set(),
         Set: new Set()
@@ -1542,7 +1517,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       enumerable: false,
       writable: true
     });
-    dp(obj, 'isObservable', {
+    defineprop(obj, 'isObservable', {
       value: true,
       enumerable: false,
       writable: false
@@ -1550,7 +1525,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     ['$get', '$set'].forEach(function(t) {
       var Type = 'Set';
       if (t == '$get') Type = 'Get';
-      dp(obj, t, {
+      defineprop(obj, t, {
         value: function(prop, func) {
           if (is.Func(prop)) {
             func = prop;
@@ -1576,7 +1551,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         writable: true
       });
     });
-    dp(obj, '$change', {
+    defineprop(obj, '$change', {
       value: function(prop, func) {
         if (!is.Func(func)) throw new Error('no function');
         var listener = {
@@ -1600,7 +1575,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       enumerable: false,
       writable: true
     });
-    dp(obj, 'get', {
+    defineprop(obj, 'get', {
       value: function(key) {
         var val = void 0;
         obj.listeners.Get.forEach(function(ln) {
@@ -1611,7 +1586,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       writable: false,
       enumerable: false
     });
-    dp(obj, 'set', {
+    defineprop(obj, 'set', {
       value: function(key, value) {
         var val = void 0;
         obj.listeners.Set.forEach(function(ln) {
@@ -1628,7 +1603,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         target.listeners.Get.forEach(function(ln) {
           if (ln.prop === '*' || ln.prop === key) val = ln.multi ? ln.fn('get', key, target) : ln.fn(key, target);
         });
-        return is.Def(val) ? val : Reflect.get(target, key);
+        return is.Def(val) ? val : target[key];
       },
       set: function(target, key, value) {
         var val = void 0;
@@ -1847,7 +1822,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     concatObjects: function(host) {
       Craft.omit(arguments, host).forEach(function(obj) {
         for (var _key2 in obj) {
-          dp(host, _key2, gpd(obj, _key2));
+          defineprop(host, _key2, getpropdescriptor(obj, _key2));
         }
       });
       return host;
@@ -1953,7 +1928,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
             if (obj.cache) localStorage.setItem(Craft.loader.pre + obj.key, JSON.stringify(obj));
             pass(obj);
           }).catch(function(err) {
-            fail("error importing -> " + err);
+            fail("error importing", err);
           });
         });
       },
@@ -2569,7 +2544,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         if (is.Func(config[_key4])) dm = function() { // Adds dom methods to element
           return config[_key4].call(dom(this));
         };
-        _key4 == 'inserted' ? element.attachedCallback = dm : _key4 == 'destroyed' ? element.detachedCallback = dm : _key4 == 'attr' ? element.attributeChangedCallback = dm : _key4.includes('css') && _key4.length == 3 ? Craft.addCSS(config[_key4]) : is.Func(config[_key4]) ? element[_key4] = dm : dp(element, _key4, gpd(config, _key4));
+        _key4 == 'inserted' ? element.attachedCallback = dm : _key4 == 'destroyed' ? element.detachedCallback = dm : _key4 == 'attr' ? element.attributeChangedCallback = dm : _key4.toLowerCase() == 'css' ? Craft.addCSS(config[_key4]) : is.Func(config[_key4]) ? element[_key4] = dm : defineprop(element, _key4, getpropdescriptor(config, _key4));
       };
       for (var _key4 in config) {
         var _ret7 = _loop(_key4);
@@ -2613,7 +2588,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       });
     };
   };
-  dp(Craft, 'tabActive', {
+  defineprop(Craft, 'tabActive', {
     get: function() {
       return tabActive;
     }
@@ -2715,7 +2690,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           el.dispatchEvent(DestructionEvent);
         });
         mut.addedNodes.forEach(function(el) {
-          if (el['hasAttribute']) manageAttr(el);
+          if (el.hasAttribute) manageAttr(el);
         });
         if (mut.type == 'attributes') manageAttr(mut.target);
       });
@@ -2735,6 +2710,5 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           return l == handle.link;
         })) handle.func(location.hash);
     });
-  });
-  console.log(performance.now() - perf, 'Crafter.js');
+  }); //console.log(performance.now() - perf, 'Crafter.js');
 })(document, self);
