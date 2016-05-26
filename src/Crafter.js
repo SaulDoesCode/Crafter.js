@@ -3,16 +3,17 @@
  *  @author Saul van der Walt - https://github.com/SaulDoesCode/
  *  @license MIT
  */
-(function(doc, root) {
+var perf = performance.now();
+(function (doc, root) {
     "use strict";
-    let Ready = !1,
+    let Ready = false,
         ready = () => Ready || doc.readyState == "complete",
         ua = navigator.userAgent,
-        tabActive = !0,
-        tabListeners = new Set(),
+        tabActive = true,
+        tabListeners = new Set,
         tem, Br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
     const sI = 'Isync',
-       undef = void 0,
+        undef = void 0,
         dp = Object.defineProperty,
         gpd = Object.getOwnPropertyDescriptor,
         head = doc.head,
@@ -30,6 +31,10 @@
     if (Br && (tem = ua.match(/version\/([\.\d]+)/i)) !== null) Br[2] = tem[1];
     Br = (Br ? [Br[1], Br[2]] : [navigator.appName, navigator.appVersion, '-?']).join(' ');
 
+    function promise(func) {
+        return new Promise(func);
+    }
+
     function Locs(test) {
         return [location.hash, location.href, location.pathname].some(test);
     }
@@ -45,9 +50,8 @@
     }
 
     // converts a value to an array
-    function toArr(val) {
-        return Array.from(val)
-    }
+    var toArr = Array.from;
+
 
     // get the string form of any object
     // then compare it to a given string
@@ -57,7 +61,7 @@
 
     // tests arguments with Array.prototype.every;
     function ta(test) {
-        return function() {
+        return function () {
             return arguments.length && toArr(arguments).every(test);
         }
     }
@@ -80,12 +84,12 @@
 
     function makeFn(fn, Args, totalArity) {
         let remainingArity = totalArity - Args.length;
-        return is.Between(remainingArity, 10, 0) ? function() {
+        return is.Between(remainingArity, 10, 0) ? function () {
             return doInvok(fn, Args.concat(toArr(arguments)), totalArity);
         } : ((fn, args, arity) => {
             let a = [];
             for (let i = arity; 0 > i; i--) a.push('a' + i.toString());
-            return function() {
+            return function () {
                 return doInvok(fn, toArr(arguments).concat(a))
             }
         })(fn, args, remainingArity);
@@ -142,7 +146,7 @@
             try {
                 return def(o.length)
             } catch (e) {}
-            return !1;
+            return false;
         }),
         /**
          * Determine whether a variable is undefined
@@ -194,9 +198,9 @@
         Json: ta(str => {
             try {
                 JSON.parse(str);
-                return !0;
+                return true;
             } catch (e) {}
-            return !1;
+            return false;
         }),
         /**
          * Determine if a variable is a HTMLElement
@@ -227,7 +231,7 @@
          * Determine if a variable/s are true
          * @param args - value/values to test
          */
-        True: ta(o => o === !0),
+        True: ta(o => o === true),
         /**
          * Determine if a variable/s are false
          * @param args - value/values to test
@@ -300,9 +304,9 @@
         URL(url) {
             try {
                 new URL(url);
-                return !0;
+                return true;
             } catch (e) {}
-            return !1;
+            return false;
         },
         /**
          * Determines whether a String is a HEX-COLOR (#fff123)
@@ -454,7 +458,7 @@
             try {
                 return !(is.Object(val) ? Object.keys(val).length : is.Map(val) || is.Set(val) ? val.size : val.length) || val === ''
             } catch (e) {}
-            return !1
+            return false
         }),
         /**
          * Test if something is a Native JavaScript feature
@@ -476,7 +480,7 @@
      * @param {Array|Object|NodeList|Number} iterable - any collection that is either an Object or has a .length value
      * @param {function} func - function called on each iteration -> "function( value , indexOrKey ) {...}"
      */
-    root.forEach = function(iterable, func) {
+    root.forEach = function (iterable, func) {
         if (!is.empty(iterable) && is.Func(func)) {
             let i = 0;
             if (is.Arraylike(iterable) && !localStorage) {
@@ -508,9 +512,9 @@
      * @returns Interface On,Off,Once
      */
     function EventHandler(EventType, Target, func, Within) {
-        return new function() {
+        return new function () {
             EventType = EventType || 'click';
-            this.state = !1;
+            this.state = false;
             Target = (Target !== root && Target !== doc) ? NodeOrQuerytoArr(Target, Within) : [Target];
             if (is.String(EventType) && EventType.includes(',')) EventType = EventType.split(',');
             if (!is.Arr(EventType)) EventType = [EventType];
@@ -535,7 +539,7 @@
                     get() {
                         return EventType
                     },
-                    enumerable: !0
+                    enumerable: true
                 })
                 /**
                  * Activates the EventHandler to start listening for the EventType on the Target/Targets
@@ -548,10 +552,10 @@
                             target.addEventListener(evt, FuncWrapper)
                         });
                     });
-                    ehdl.state = !0;
+                    ehdl.state = true;
                     return ehdl
                 },
-                enumerable: !0
+                enumerable: true
             });
             /**
              * De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
@@ -565,10 +569,10 @@
                             target.removeEventListener(evt, FuncWrapper)
                         });
                     });
-                    ehdl.state = !1;
+                    ehdl.state = false;
                     return ehdl
                 },
-                enumerable: !0
+                enumerable: true
             });
 
             /**
@@ -580,11 +584,11 @@
                     let ehdl = this;
                     FuncWrapper = e => {
                         func(e, e.target, Craft.deglove(Target));
-                        ehdl.Off.state = !1;
+                        ehdl.Off.state = false;
                     }
                     return ehdl.On;
                 },
-                enumerable: !0
+                enumerable: true
             });
         }
     }
@@ -666,7 +670,7 @@
     }
 
     function EvtLT(ListenType) {
-        return function(EventType, Target, element, func) {
+        return function (EventType, Target, element, func) {
             let args = toArr(arguments);
             return is.Func(Target) ? EventHandler(EventType, root, Target)[ListenType] :
                 args.length < 3 && !args.some(i => is.Func(i)) ? EventTypes(EventType, Target, ListenType) :
@@ -697,9 +701,9 @@
         let newEl = domManip(doc.createElement(name));
         if (is.Object(inner)) {
             attributes = inner;
-            inner =undef;
+            inner = undef;
         }
-        if (inner !=undef) {
+        if (inner != undef) {
             let type = newEl.isInput ? 'value' : 'innerHTML';
             if (!is.Arr(inner)) is.Node(inner) ? newEl.appendChild(inner) : newEl[type] = inner;
             else newEl[type] = inner.map(val => {
@@ -708,7 +712,7 @@
             }).join('');
         }
         if (is.Object(attributes) || is.String(attributes)) newEl.setAttr(attributes);
-        if (extraAttr !=undef) is.Bool(extraAttr) ? stringForm = extraAttr : newEl.setAttr(extraAttr);
+        if (extraAttr != undef) is.Bool(extraAttr) ? stringForm = extraAttr : newEl.setAttr(extraAttr);
         if (stringForm) newEl = newEl.outerHTML;
         return newEl
     }
@@ -764,19 +768,18 @@
                 type: 'text/javascript'
             });
             script.src = Craft.URLfrom(code);
-            if (defer == !0) script.defer = defer != !1;
+            if (defer == true) script.defer = defer != false;
             if (is.Func(onload)) script.onload = onload;
             return script;
         },
-        SafeHTML(html, node) {
-            html = html
-            .replace(/<script[^>]*?>.*?<\/script>/gi, '')
-            .replace(/<style[^>]*?>.*?<\/style>/gi, '')
-            .replace(/<![\s\S]*?--[ \t\n\r]*>/gi, '');
-            return !node ? html : dffstr(html)
+        SafeHTML(html) {
+            return html
+                .replace(/<script[^>]*?>.*?<\/script>/gi, '')
+                .replace(/<style[^>]*?>.*?<\/style>/gi, '')
+                .replace(/<![\s\S]*?--[ \t\n\r]*>/gi, '');
         }
     }
-    'table,td,th,tr,article,ul,ol,li,h1,h2,h3,h4,h5,h6,div,span,button,br,label,header,i,style'.split(',').forEach(tag => {
+    'table,td,th,tr,article,aside,ul,ol,li,h1,h2,h3,h4,h5,h6,div,span,button,br,label,header,i,style,nav,menu,main,menuitem'.split(',').forEach(tag => {
         Dom[tag] = (inner, attr) => Dom.element(tag, inner, attr);
     });
 
@@ -797,18 +800,18 @@
          * add CSS style rules to NodeList
          * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
          */
-        elements.css = styles => Craft.css(elements,styles);
-        elements.addClass = function(Class) {
+        elements.css = styles => Craft.css(elements, styles);
+        elements.addClass = function (Class) {
             elements.forEach(el => {
                 el.classList.add(Class)
             });
             return elements
         }
-        elements.gotClass = function() {
+        elements.gotClass = function () {
             return elements.every(el => toArr(arguments).every(Class => el.classList.contains(Class)))
         }
 
-        elements.someGotClass = function() {
+        elements.someGotClass = function () {
             return elements.some(el => toArr(arguments).every(Class => el.classList.contains(Class)))
         }
 
@@ -830,7 +833,7 @@
          * @memberof dom
          * @param {...string} name of the Attribute/s to strip
          */
-        elements.stripAttr = function() {
+        elements.stripAttr = function () {
                 elements.forEach(el => {
                     forEach(arguments, attr => {
                         el.removeAttribute(attr)
@@ -844,7 +847,7 @@
              * @param {string|boolean} name of the Attribute or if true checks that it has some (||) of the attributes or if false checks that it has all of the attributes (&&)
              * @param {...string} names of attributes to check for
              */
-        elements.hasAttr = function(attr) {
+        elements.hasAttr = function (attr) {
                 if (is.String(attr)) return elements.every(el => el.hasAttribute(attr));
                 return elements.every(el => Craft.flatten(arguments).every(a => el.hasAttribute(a)))
             }
@@ -854,7 +857,7 @@
              * @param {string} val - value to set attribute to
              * @param {boolean=} rtst - optionally return a bool witht the toggle state otherwise returns the element
              */
-        elements.toggleAttr = function(name, val, rtst) {
+        elements.toggleAttr = function (name, val, rtst) {
                 forEach(elements, el => {
                     el[W(is.Bool(val) ? !val : el.hasAttr(name), 'strip', 'set', 'Attr')](name, val);
                 });
@@ -866,7 +869,7 @@
              * @param {string} Name of the Attribute to add/set
              * @param {string} Value of the Attribute to add/set
              */
-        elements.setAttr = function(attr, val) {
+        elements.setAttr = function (attr, val) {
             forEach(elements, el => {
                 if (!is.Def(val)) {
                     if (is.String(attr)) attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(Attr => {
@@ -882,10 +885,10 @@
             return elements
         }
 
-        elements.append = function() {
+        elements.append = function () {
             forEach(arguments, arg => {
                 forEach(elements, el => {
-                    el.appendChild((is.Node(val) ? val : dffstr(val)).cloneNode(!0));
+                    el.appendChild((is.Node(val) ? val : dffstr(val)).cloneNode(true));
                 });
             });
             return elements
@@ -897,10 +900,10 @@
             });
             return elements
         }
-        elements.prepend = function() {
+        elements.prepend = function () {
             forEach(arguments, val => {
                 forEach(elements, el => {
-                    el.insertBefore(W(is.Node(val), val, dffstr(val)).cloneNode(!0), el.firstChild);
+                    el.insertBefore(W(is.Node(val), val, dffstr(val)).cloneNode(true), el.firstChild);
                 });
             });
             return elements
@@ -922,37 +925,39 @@
 
     function Inner(type, el) {
         type = el.isInput ? 'value' : type;
-        return function() {
+        return function () {
             if (!arguments.length) return el[type];
-            if(arguments.length == 1) {
-              if(is.Node(arguments[0])) {
-                el[type] = '';
-                el.append(arguments[0]);
-              } else el[type] = arguments[0];
-            } else forEach(arguments,Inner(type,el));
+            if (arguments.length == 1) {
+                if (is.Node(arguments[0])) {
+                    el[type] = '';
+                    el.append(arguments[0]);
+                } else el[type] = arguments[0];
+            } else forEach(arguments, Inner(type, el));
             return el;
         }
     }
 
+    function newSetGet(key, set, get) {
+        dp(this, key, {
+            set: set,
+            get: get
+        })
+    }
+
     function domManip(element, within) {
         if (is.String(element)) element = query(element, within);
-        if (element._DOMM == !0) return element;
-        element._DOMM = !0;
+        if (element._DOMM == true) return element;
+        element._DOMM = true;
         element.isInput = is.Input(element);
 
-        element.newSetGet = function(key, set, get) {
-            dp(this, key, {
-                set: set,
-                get: get
-            })
-        }
+        element.newSetGet = newSetGet;
 
         element.newSetGet('colorAccent', func => {
             if (element.hasAttr('color-accent')) {
                 func(element.getAttr('color-accent'));
                 element._cah = {
                     fn: func,
-                    dw: !0
+                    dw: true
                 }
             } else {
                 element._cah = {
@@ -990,13 +995,13 @@
              * @memberof dom
              * @param {Node} Node to replace with
              */
-        element.clone = val => domManip(element.cloneNode(val ==undef ? !0 : val));
+        element.clone = val => domManip(element.cloneNode(val == undef ? true : val));
         /**
          * append the Element to another node using either a CSS selector or a Node
          * @memberof dom
          * @param {Node|string} CSS selector or Node to append the this.element to
          */
-        element.appendTo = function(val, within) {
+        element.appendTo = function (val, within) {
                 if (is.String(val)) val = query(val, within);
                 if (is.Node(val)) val.appendChild(element);
                 return element
@@ -1006,7 +1011,7 @@
              * @memberof dom
              * @param {Node|string} String or Node to append to the this.element
              */
-        element.append = function() {
+        element.append = function () {
                 let domfrag = dom.frag();
                 forEach(arguments, val => {
                     domfrag.appendChild(is.Node(val) ? val : dffstr(val))
@@ -1019,7 +1024,7 @@
              * @memberof dom
              * @param {Node|string} String or Node to prepend to the this.element
              */
-        element.prepend = function() {
+        element.prepend = function () {
             forEach(arguments, val => {
                 element.insertBefore(is.Node(val) ? val : dffstr(val), element.firstChild);
             });
@@ -1028,7 +1033,7 @@
 
         element.bind = bind => {
                 function attemptBind() {
-                    let path = Craft.getPath(bind, !0, !0),
+                    let path = Craft.getPath(bind, true, true),
                         cutbind = path.cutbind,
                         prop = path.prop,
                         obj = path.obj,
@@ -1037,11 +1042,11 @@
 
                     is.Def(val) ? element.html(val) : Craft.setDeep(obj, prop, element.html());
                     if (obj.isObservable) {
-                        let firstTime = !0;
+                        let firstTime = true;
                         element._BoundObservable = obj.$set(prop, (k, v, o) => {
                             firstTime ? setTimeout(() => {
                                 element.html(obj.get(k))
-                                firstTime = !1;
+                                firstTime = false;
                             }, 30) : element.html(obj.get(k));
                         });
                     }
@@ -1051,8 +1056,9 @@
                 try {
                     attemptBind()
                 } catch (e) {
-                    Craft.Models.$set(cutdot(bind)[0], () => {
+                    let modelListener = Craft.Models.$set(cutdot(bind)[0], () => {
                         setTimeout(attemptBind, 20)
+                        modelListener.off;
                     })
                 }
 
@@ -1110,14 +1116,14 @@
          * @param {object} styles - should contain all the styles you wish to add
          * @example element.css({ borderWidth : '5px solid red' , float : 'right'});
          */
-        element.css = styles => Craft.css(element,styles);
-            /**
-             * check if the element has got a specific CSS class
-             * @memberof dom
-             * @param {...string} name of the class to check for
-             */
-        element.gotClass = function() {
-            return toArr(arguments).every(element.classList.contains.bind(element.classList));
+        element.css = (styles, prop) => Craft.css(element, styles, prop);
+        /**
+         * check if the element has got a specific CSS class
+         * @memberof dom
+         * @param {...string} name of the class to check for
+         */
+        element.gotClass = function () {
+            return toArr(arguments).every(Class => element.classList.contains(Class));
         }
 
 
@@ -1126,8 +1132,10 @@
          * @memberof dom
          * @param {string} name of the class to add
          */
-        element.addClass = function() {
-                forEach(arguments, element.classList.add.bind(element.classList));
+        element.addClass = function () {
+                forEach(arguments, Class => {
+                    element.classList.add(Class)
+                });
                 return element
             }
             /**
@@ -1135,8 +1143,10 @@
              * @memberof dom
              * @param {...string} name of the class to strip
              */
-        element.stripClass = function() {
-                forEach(arguments, element.classList.remove.bind(element.classList));
+        element.stripClass = function () {
+                forEach(arguments, Class => {
+                    element.classList.remove(Class)
+                });
                 return element
             }
             /**
@@ -1145,7 +1155,7 @@
              * @param {string} name of the class to add
              * @param {boolean=} state - optionally toggle class either on or off with bool
              */
-        element.toggleClass = function(Class, state) {
+        element.toggleClass = function (Class, state) {
                 if (!is.Bool(state)) state = element.gotClass(Class);
                 element[W(state, 'strip', 'add', 'Class')](Class);
                 return element
@@ -1155,7 +1165,7 @@
              * @memberof dom
              * @param {...string} name of the Attribute/s to strip
              */
-        element.stripAttr = function() {
+        element.stripAttr = function () {
                 forEach(arguments, attr => {
                     element.removeAttribute(attr)
                 });
@@ -1167,7 +1177,7 @@
              * @param {string|boolean} name of the Attribute or if true checks that it has some (||) of the attributes or if false checks that it has all of the attributes (&&)
              * @param {...string} names of attributes to check for
              */
-        element.hasAttr = function() {
+        element.hasAttr = function () {
                 let args = toArr(arguments);
                 if (is.String(args[0]) && args.length == 1) return element.hasAttribute(args[0]);
                 return args.every(a => element.hasAttribute(a))
@@ -1188,7 +1198,7 @@
              * @param {string} Name of the Attribute to add/set
              * @param {string} Value of the Attribute to add/set
              */
-        element.setAttr = function(attr, val) {
+        element.setAttr = function (attr, val) {
                 if (!is.Def(val)) {
                     if (is.String(attr)) attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(Attr => {
                         is.Def(Attr.split('=')[1]) ? element.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : element.setAttribute(Attr.split('=')[0], '')
@@ -1257,7 +1267,7 @@
          * @param {string|number=} pixel value to set
          */
         element.newSetGet('Height', pixels => {
-            if (pixels !=undef) element.style.height = pixels
+            if (pixels != undef) element.style.height = pixels
         }, () => element.getRect().height);
         /**
          * move the element using either css transforms or plain css possitioning
@@ -1267,11 +1277,11 @@
          * @param {string=} position - set the position style of the element absolute/fixed...
          * @param {boolean=} chainable - should this method be chainable defaults to false for performance reasons
          */
-        element.move = function(x, y, transform, position, chainable) {
+        element.move = function (x, y, transform, position, chainable) {
                 if (is.Bool(position)) chainable = position;
                 if (is.String(transform)) position = transfrom;
                 if (is.String(position)) element.style.position = position;
-                element.css(transform == !0 ? {
+                element.css(transform == true ? {
                     transform: `translateX(${x}px) translateY(${y}px)`
                 } : {
                     left: x + 'px',
@@ -1310,7 +1320,7 @@
 
         if (element.isInput) {
             element.SyncInput = (obj, key) => {
-                element[sI] = On(element).Input(e => {
+                element[sI] = On(element).Input(() => {
                     Craft.setDeep(obj, key, element.value)
                 })
                 return element
@@ -1324,7 +1334,7 @@
             }
         }
 
-        element.observe = function(func, options, name) {
+        element.observe = function (func, options, name) {
             if (!is.String(name)) name = 'MutObserver';
             element[name] = new MutationObserver(muts => {
                 muts.forEach(mut => {
@@ -1332,9 +1342,9 @@
                 });
             });
             element[name].observe(element, options || {
-                attributes: !0,
-                childList: !0,
-                subtree: !0
+                attributes: true,
+                childList: true,
+                subtree: true
             });
             return element
         }
@@ -1358,8 +1368,8 @@
      * @param {Node|string=} within - optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
      * @param {boolean=} one - even if there are more than one elements matching a selector only return the first one
      */
-    root.dom = function(element, within, one) {
-        if (within == !0) {
+    root.dom = function (element, within, one) {
+        if (within == true) {
             one = within;
             within = null;
         }
@@ -1390,16 +1400,16 @@
         if (!is.Def(obj)) obj = {};
         dp(obj, 'listeners', {
             value: {
-                Get: new Set(),
-                Set: new Set(),
+                Get: new Set,
+                Set: new Set,
             },
-            enumerable: !1,
-            writable: !0,
+            enumerable: false,
+            writable: true,
         });
         dp(obj, 'isObservable', {
-            value: !0,
-            enumerable: !1,
-            writable: !1,
+            value: true,
+            enumerable: false,
+            writable: false,
         });
         ['$get', '$set'].forEach(t => {
             let Type = 'Set';
@@ -1427,8 +1437,8 @@
                     };
                     return options.on;
                 },
-                enumerable: !1,
-                writable: !0,
+                enumerable: false,
+                writable: true,
             });
         });
 
@@ -1438,7 +1448,7 @@
                 let listener = {
                     prop: is.String(prop) ? prop : '*',
                     fn: func,
-                    multi: !0,
+                    multi: true,
                 }
                 let options = {
                     get on() {
@@ -1454,8 +1464,8 @@
                 };
                 return options.on;
             },
-            enumerable: !1,
-            writable: !0,
+            enumerable: false,
+            writable: true,
         });
         dp(obj, 'get', {
             value(key) {
@@ -1465,8 +1475,8 @@
                 });
                 return obj[key];
             },
-            writable: !1,
-            enumerable: !1,
+            writable: false,
+            enumerable: false,
         });
         dp(obj, 'set', {
             value(key, value) {
@@ -1477,8 +1487,8 @@
                 });
                 obj[key] = is.Def(val) ? val : value;
             },
-            writable: !1,
-            enumerable: !1,
+            writable: false,
+            enumerable: false,
         });
         if (Proxy) return new Proxy(obj, {
             get(target, key) {
@@ -1520,7 +1530,7 @@
                 removed = arr.filter(item => {
                     if (newArr.includes(item)) return item
                 }),
-                diff = Craft.omit(added.concat(removed),undef);
+                diff = Craft.omit(added.concat(removed), undef);
             if (is.Func(func) && !is.empty(diff)) func(arr, newArr, added, removed, diff);
             else return {
                 arr: arr,
@@ -1557,6 +1567,7 @@
          * {number|string} val - number to convert to an integer
          */
         toInt,
+        promise,
         /**
          * Compares two arrays and determines if they are the same array
          * @method sameArray
@@ -1566,10 +1577,10 @@
          */
         sameArray(arr1, arr2) {
             let i = arr1.length;
-            if (i !== arr2.length) return !1;
+            if (i !== arr2.length) return false;
             while (i--)
-                if (arr1[i] !== arr2[i]) return !1;
-            return !0;
+                if (arr1[i] !== arr2[i]) return false;
+            return true;
         },
         /**
          * Generates arrays of a set length , with values or values generated from functions
@@ -1621,9 +1632,9 @@
             path = path.replace(/\[(\w+)\]/g, '.$1');
             path = cutdot(path.replace(/^\./, ''));
             try {
-                for (let i = 0; i < path.length; ++i) path[i] in obj ? obj = obj[path[i]] : obj =undef
+                for (let i = 0; i < path.length; ++i) path[i] in obj ? obj = obj[path[i]] : obj = undef
             } catch (e) {
-                obj =undef
+                obj = undef
             }
             return obj
         },
@@ -1666,9 +1677,9 @@
             for (key in object) {
                 if (object.hasOwnProperty(key)) val = object[key];
                 currentPath = path;
-                nestable = !1;
+                nestable = false;
                 is.Arr(object) ? currentPath += `[${key}]` : !currentPath ? currentPath = key : currentPath += '.' + key;
-                nestable = func(val, key, object, currentPath) == !1;
+                nestable = func(val, key, object, currentPath) == false;
                 if (nestable && (is.Arr(val) || is.Object(val))) Craft.forEachDeep(val, func, currentPath);
             }
         },
@@ -1691,7 +1702,7 @@
             });
             return host
         },
-        isObservable: obj => obj.isObservable || !1,
+        isObservable: obj => obj.isObservable || false,
         /**
          * Simply clones/duplicates any object or array/arraylike object
          * @method clone
@@ -1715,7 +1726,7 @@
                     while (Arr.includes(a)) Arr = Arr.replace(a, '');
                 });
             else Arr = (is.Arraylike(Arr) ? toArr(Arr) : Arr).filter(e => {
-              if(!args.some(v => v == e)) return  e
+                if (!args.some(v => v == e)) return e
             });
             return Arr
         },
@@ -1726,7 +1737,7 @@
          * @param (...*) values - values to check for in the collection
          */
         has(str) {
-            if(!str.includes) toArr(str);
+            if (!str.includes) toArr(str);
             return Craft.omit(arguments, str).some(e => str.includes(e))
         },
         /**
@@ -1764,22 +1775,22 @@
                 obj.key = obj.key || obj.url;
                 let now = +new Date(),
                     src = Craft.loader.get(obj.key);
-                if (src || src.expire - now > 0) return new Promise(pass => pass(src));
-                return new Promise((pass, fail) => {
+                if (src || src.expire - now > 0) return promise(pass => pass(src));
+                return promise((pass, fail) => {
                     fetch(obj.url).then(res => res.text())
-                    .then(data => {
-                        obj.data = data;
-                        obj.stamp = now;
-                        obj.expire = now + Craft.millis.hours(obj.expire || 400);
-                        if (obj.cache) localStorage.setItem(Craft.loader.pre + obj.key, JSON.stringify(obj));
-                        pass(obj);
-                    }).catch(err => {
-                        fail(`error importing -> ${err}`)
-                    })
+                        .then(data => {
+                            obj.data = data;
+                            obj.stamp = now;
+                            obj.expire = now + Craft.millis.hours(obj.expire || 400);
+                            if (obj.cache) localStorage.setItem(Craft.loader.pre + obj.key, JSON.stringify(obj));
+                            pass(obj);
+                        }).catch(err => {
+                            fail(`error importing -> ${err}`)
+                        })
                 })
             },
             get(key) {
-                return JSON.parse(localStorage.getItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key) || !1)
+                return JSON.parse(localStorage.getItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key) || false)
             },
             remove(key) {
                 localStorage.removeItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key)
@@ -1805,9 +1816,9 @@
                 arg.test ? Craft.loader.remove(arg.css || arg.script) : promises.push(Craft.loader.fetchImport({
                     url: arg.css || arg.script,
                     type: arg.css ? 'css' : 'script',
-                    exec: arg.execute != !1,
-                    cache: arg.cache != !1,
-                    defer: arg.defer ||undef,
+                    exec: arg.execute != false,
+                    cache: arg.cache != false,
+                    defer: arg.defer || undef,
                     key: arg.key,
                     expire: arg.expire
                 }))
@@ -1828,7 +1839,7 @@
                     if (Locs(l => l == route)) func(route);
                     Craft.router.addHandle(route, func)
                 } else if (is.Arr(route))
-                    route.forEach(link => {
+                    forEach(route, link => {
                         if (Locs(l => l == link)) func(link);
                         Craft.router.addHandle(link, func)
                     });
@@ -1861,7 +1872,7 @@
                 return decodeURIComponent(doc.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1")) || null
             },
             set(key, val, expires, path, domain, secure) {
-                if (!key || /^(?:expires|max\-age|path|domain|secure)$/i.test(key)) return !1;
+                if (!key || /^(?:expires|max\-age|path|domain|secure)$/i.test(key)) return false;
                 let expiry = "";
                 if (expires) {
                     if (is.Num(expires)) expiry = expires == Infinity ? "; expires=Fri, 11 April 9997 23:59:59 UTC" : "; max-age=" + expires;
@@ -1869,14 +1880,14 @@
                     if (is.Date(expires)) expiry = "; expires=" + expires.toUTCString();
                 }
                 doc.cookie = encodeURIComponent(key) + "=" + encodeURIComponent(val) + expiry + (domain ? "; domain=" + domain : "") + (path ? "; path=" + path : "") + (secure ? "; secure" : "");
-                return !0
+                return true
             },
             remove(key, path, domain) {
-                if (!Craft.Cookies.has(key)) return !1;
+                if (!Craft.Cookies.has(key)) return false;
                 doc.cookie = encodeURIComponent(key) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT" + (domain ? "; domain=" + domain : "") + (path ? "; path=" + path : "");
-                return !0
+                return true
             },
-            has: key => key ? (new RegExp("(?:^|;\\s*)" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=")).test(doc.cookie) : !1,
+            has: key => key ? (new RegExp("(?:^|;\\s*)" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=")).test(doc.cookie) : false,
             keys() {
                 return doc.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/).map(c => {
                     decodeURIComponent(c);
@@ -1903,7 +1914,7 @@
 
                 let Options = {
                     socket: null,
-                    open: !1,
+                    open: false,
                     recievers: [],
                     message: '',
                     set send(msg) {
@@ -1932,9 +1943,9 @@
                     }
                 }
 
-              function OpenSock(sock) {
+                function OpenSock(sock) {
                     sock.onopen = () => {
-                        Options.open = !0;
+                        Options.open = true;
                         sock.onmessage = e => {
                             Options.message = e.data;
                             Options.recievers.forEach(fn => {
@@ -1943,7 +1954,7 @@
                         }
                     }
                     sock.onclose = () => {
-                        Options.open = !1
+                        Options.open = false
                     }
                     sock.onerror = e => {
                         throw e
@@ -1957,13 +1968,13 @@
         after(n, func) {
             !is.Func(func) && is.Func(n) ? func = n : console.error("after: no function");
             n = Number.isFinite(n = +n) ? n : 0;
-            if (--n < 1) return function() {
+            if (--n < 1) return function () {
                 return func.apply(this, arguments)
             }
         },
         debounce(wait, func, immediate) {
             let timeout;
-            return function() {
+            return function () {
                 let args = arguments,
                     scope = this,
                     later = () => {
@@ -1981,13 +1992,13 @@
                 timeout = null,
                 previous = 0;
             if (!options) options = {};
-            let later = function() {
+            let later = function () {
                 previous = !options.leading ? 0 : Date.now();
                 timeout = null;
                 result = func.apply(context, args);
                 if (!timeout) context = args = null;
             }
-            return function() {
+            return function () {
                 let now = Date.now();
                 if (is.False(previous, options.leading)) previous = now;
                 let remaining = wait - (now - previous);
@@ -2001,13 +2012,13 @@
                     previous = now;
                     result = func.apply(context, args);
                     if (!timeout) context = args = null;
-                } else if (!timeout && options.trailing == !0) timeout = setTimeout(later, remaining);
+                } else if (!timeout && options.trailing == true) timeout = setTimeout(later, remaining);
                 return result
             }
         },
         once(func, context) {
             let result;
-            return function() {
+            return function () {
                 if (is.Func(func)) {
                     result = func.apply(context || this, arguments);
                     func = null;
@@ -2015,30 +2026,26 @@
                 return result
             }
         },
-        css(element, styles) {
-            if (is.Object(styles)) forEach(styles, (prop, key) => {
-                if(is.Element(element)) element.style[key] = prop;
-                else if(is.NodeList(element)) forEach(element,el => {
-                  el.style[key] = prop;
+        css(element, styles, prop) {
+            if (is.Object(styles))
+                forEach(styles, (prop, key) => {
+                    if (is.Element(element)) element.style[key] = prop;
+                    else if (is.NodeList(element)) forEach(element, el => {
+                        el.style[key] = prop;
+                    });
                 });
-            });
+            else if (is.String(styles, prop)) element.style[styles] = prop;
             else throw new Error('CSS : Styles Object is not an object');
             return element;
         },
-        hasCapitals: string => toArr(string).some(c => is.Uppercase(c)),
-        OverrideFunction(funcName, func, ContextObject) {
-            funcName.split(".").forEach(i => {
-                ContextObject = ContextObject[i]
-            });
-            ContextObject[funcName.split(".").pop()] = func
-        },
+        hasCapitals: string => toArr(string).some(is.Uppercase),
         len(val) {
             try {
                 return is.Object(val) ? Object.keys(val).length : is.Map(val) || is.Set(val) ? val.size : val.length
             } catch (e) {}
             return -1
         },
-        indexOfDate(Collection, date) {
+        DateIndex(Collection, date) {
             for (let i = 0; i < Collection.length; i++)
                 if (+Collection[i] === +date) return i;
             return -1;
@@ -2049,7 +2056,7 @@
         memoize(func, resolver) {
             if (!is.Func(func) || (resolver && !is.Func(resolver))) throw new TypeError("no function");
             let cache = new WeakMap,
-                memoized = function() {
+                memoized = function () {
                     let args = arguments,
                         key = resolver ? resolver.apply(this, args) : args[0];
                     if (cache.has(key)) return cache.get(key);
@@ -2075,20 +2082,20 @@
         observable,
         CustomAttributes: [],
         Models: observable(),
-        tabActive: !0,
+        tabActive: true,
         /**
          * Tail Call Optimization for recursive functional functions
          * @param fn - function that uses recursion inside
          */
         tco(fn) {
             let active, nextArgs;
-            return function() {
+            return function () {
                 let result;
                 nextArgs = arguments;
                 if (!active) {
-                    active = !0;
+                    active = true;
                     while (nextArgs) result = fn.apply(this, [nextArgs, nextArgs = null][0]);
-                    active = !1;
+                    active = false;
                 }
                 return result
             }
@@ -2118,7 +2125,7 @@
             options.offset = options.offset || 0;
 
             let startTime, elapsedTime, start = root.pageYOffset,
-                distance = is.String(target) ? options.offset + dom(target, !0).getRect().top : target,
+                distance = is.String(target) ? options.offset + dom(target, true).getRect().top : target,
                 loopIteration = 0,
                 loop = time => {
                     if (loopIteration == 0) startTime = time;
@@ -2134,7 +2141,7 @@
                     else {
                         scrollTo(0, start + distance);
                         if (is.Func(options.func)) options.func();
-                        startTime =undef;
+                        startTime = undef;
                     }
                 }
             requestAnimationFrame(loop)
@@ -2159,7 +2166,7 @@
          * handles scrolling events
          * @param {Node} element - target of listener
          * @param {function} func - callback to handle the event
-         * @param {=boolean} preventDefault - event.preventDefault() or not
+         * @param {boolean=} preventDefault - event.preventDefault() or not
          */
         OnScroll(element, func, preventDefault) {
             return On('wheel', element, e => {
@@ -2172,7 +2179,7 @@
          * @returns {promise} - when everything is done loading WhenReady will return a promise
          */
         get WhenReady() {
-            return new Promise((pass, fail) => {
+            return promise((pass, fail) => {
                 if (ready()) return pass();
                 let check = setInterval(() => {
                     if (ready()) {
@@ -2209,7 +2216,7 @@
                 ck = cutkey[0],
                 type = (IsValDefined ? 'set' : 'get') + 'Deep';
             if (is.Def(Craft.Models[ck])) {
-              return cutkey.length == 1 && !IsValDefined ? Craft.Models[ck].scope : Craft[type](Craft.Models[ck].scope, joindot(Craft.omit(cutkey, ck)), val)
+                return cutkey.length == 1 && !IsValDefined ? Craft.Models[ck].scope : Craft[type](Craft.Models[ck].scope, joindot(Craft.omit(cutkey, ck)), val)
             }
         },
         getPath(path, full) {
@@ -2273,17 +2280,17 @@
         strongPassword(pass, length, caps, number, reasons) {
             let pw = 'Password ',
                 includeChars = toArr(arguments).slice(5);
-            if (pass.length <= length - 1) return reasons ? pw + 'too short' : !1;
-            if (caps === !0 && Craft.hasCapitals(pass) === !1) return reasons ? pw + 'should have a Capital letter' : !1;
-            if (number === !0 && /\d/g.test(pass) === !1) return reasons ? pw + 'should have a number' : !1;
+            if (pass.length <= length - 1) return reasons ? pw + 'too short' : false;
+            if (caps === true && Craft.hasCapitals(pass) === false) return reasons ? pw + 'should have a Capital letter' : false;
+            if (number === true && /\d/g.test(pass) === false) return reasons ? pw + 'should have a number' : false;
             if (includeChars.length) {
-                let hasChars = !0;
+                let hasChars = true;
                 includeChars.forEach(ch => {
                     hasChars = pass.includes(ch)
                 });
-                if (!hasChars) return reasons ? '' : !1
+                if (!hasChars) return reasons ? '' : false
             }
-            return !1
+            return false
         },
         formatBytes(bytes, decimals) {
             if (bytes == 0) return '0 Byte';
@@ -2317,7 +2324,7 @@
                 settings = {},
                 dm;
 
-            element.createdCallback = function() {
+            element.createdCallback = function () {
                 let el = dom(this),
                     dealtWith = [];
                 for (let key in config) {
@@ -2339,7 +2346,7 @@
             for (let key in config) {
                 if (key == 'created' || (key.includes('set_') || key.includes('get_'))) continue;
 
-                if (is.Func(config[key])) dm = function() { // Adds dom methods to element
+                if (is.Func(config[key])) dm = function () { // Adds dom methods to element
                     return config[key].call(dom(this))
                 }
 
@@ -2385,7 +2392,7 @@
     let TabChange = ta => () => {
         tabActive = ta;
         tabListeners.forEach(listener => {
-          listener(tabActive)
+            listener(tabActive)
         })
     }
 
@@ -2393,21 +2400,12 @@
         get: () => tabActive
     });
 
-    On('blur', TabChange(!1));
-    On('focus', TabChange(!0));
+    On('blur', TabChange(false));
+    On('focus', TabChange(true));
 
-
-    Craft.ForEach = Craft.tco((collection, func, i) => {
-        if (is.Undef(i)) i = 0;
-        if (collection.length != i) {
-            func(collection[i], i, collection);
-            Craft.ForEach(collection, func, i + 1);
-        }
-    });
-
-    Craft.loader.removeAll(!0);
+    Craft.loader.removeAll(true);
     Craft.curry.to = Craft.curry((arity, fn) => makeFn(fn, [], arity));
-    Craft.curry.adaptTo = Craft.curry((num, fn) => Craft.curry.to(num, function(context) {
+    Craft.curry.adaptTo = Craft.curry((num, fn) => Craft.curry.to(num, function (context) {
         fn.apply(null, Craft.omit(arguments, context).slice(1).concat(context))
     }));
     Craft.curry.adapt = fn => Craft.curry.adaptTo(fn.length, fn);
@@ -2415,30 +2413,50 @@
         element.bind(bind)
     });
 
+    Craft.customAttr('toggle-parent', element => {
+        let visible = true,
+            parent = dom(element.parentNode);
+        element.Click(() => {
+            visible = !visible;
+            parent[visible ? 'show' : 'hide']()
+        })
+    });
+
+    Craft.customAttr('toggle-element', (element, selector) => {
+        let visible = true,
+            toggleElement = dom(selector, true);
+        if (!is.Element(toggleElement)) console.warn(`${element.localName} - toggle-element : "${selector}" is an invalid selector`);
+        else element.Click(() => {
+            visible = !visible;
+            toggleElement[visible ? 'show' : 'hide']()
+        })
+    });
+
     Craft.customAttr('import-view', (element, src) => {
         let cache = element.hasAttr('cache-view');
         if (cache) {
-          let view = localStorage.getItem(src);
-          if(!nil(view)) {
-            element.html(view);
-            return;
-          }
+            let view = localStorage.getItem(src);
+            if (!nil(view)) {
+                element.html(view);
+                return;
+            }
         }
-            fetch(src, {
-                mode: 'cors'
-            }).then(res => {
-                if (!res.ok) console.warn(`<${element.localName}> : unable to import view - ${src}`);
-                else res.text().then(view => {
-                    if (cache) localStorage.setItem(src, view);
-                    element.html(view)
-                });
+        fetch(src, {
+            mode: 'cors'
+        }).then(res => {
+            if (!res.ok) console.warn(`<${element.localName}> : unable to import view - ${src}`);
+            else res.text().then(view => {
+                if (cache) localStorage.setItem(src, view);
+                element.html(view)
             });
+        });
     });
 
-    Craft.customAttr('link', (el, link) => {
-        el.linkevt = On(el).Click(e => {
-            (el.hasAttr('newtab') ? open : Craft.router.open)(link)
-        })
+    Craft.customAttr('link', (element, link) => {
+        element.linkevt = element.Click(e => {
+            (element.hasAttr('newtab') ? open : Craft.router.open)(link)
+        });
+        if (is.Func(element.linkhandle)) Craft.router.handle(link, element.linkhandle);
     });
 
     Craft.customAttr('color-accent', (element, color) => {
@@ -2446,7 +2464,7 @@
         else if (is.Object(element.colorAccent)) {
             if (!element._cah.dw) {
                 element._cah.fn(color);
-                element._cah.dw = !1;
+                element._cah.dw = false;
             }
         }
     });
@@ -2474,7 +2492,7 @@
 
     function init() {
         Craft.router.links.forEach(link => {
-          link()
+            link()
         });
         Craft.DomObserver = new MutationObserver(muts => {
             forEach(muts, mut => {
@@ -2484,17 +2502,17 @@
                 mut.addedNodes.forEach(el => {
                     if (el['hasAttribute']) manageAttr(el);
                 });
-                if (mut.type == 'attributes' && mut.target.hasAttribute(mut.attributeName)) manageAttr(mut.target);
+                if (mut.type == 'attributes') manageAttr(mut.target);
             });
         });
         Craft.DomObserver.observe(doc.body, {
-            attributes: !0,
-            childList: !0,
-            characterData: !0,
-            characterDataOldValue: !0,
-            subtree: !0
+            attributes: true,
+            childList: true,
+            characterData: true,
+            characterDataOldValue: true,
+            subtree: true
         });
-        Ready = !0
+        Ready = true
     }
 
     !ready() ? Once("DOMContentLoaded", doc, init) : init();
@@ -2505,4 +2523,5 @@
         });
     });
 
+    console.log(performance.now() - perf, 'Crafter.js');
 })(document, self)

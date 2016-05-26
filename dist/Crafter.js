@@ -1062,6 +1062,13 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     if (element._DOMM == !0) return element;
     element._DOMM = !0;
     element.isInput = is.Input(element);
+
+    function returnElement(func) {
+      return function() {
+        func.apply(element, arguments);
+        return element;
+      };
+    }
     element.newSetGet = function(key, set, get) {
       dp(this, key, {
         set: set,
@@ -1101,10 +1108,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @memberof dom
      * @param {Node} Node to replace with
      */
-    element.replace = function(val) {
+    element.replace = returnElement(function(val) {
       element.parentNode.replaceChild(val, element);
-      return element;
-    };
+    });
     /**
      * replaces a Node with another node provided as a parameter/argument
      * @memberof dom
@@ -1118,36 +1124,33 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @memberof dom
      * @param {Node|string} CSS selector or Node to append the this.element to
      */
-    element.appendTo = function(val, within) {
+    element.appendTo = returnElement(function(val, within) {
       if (is.String(val)) val = query(val, within);
       if (is.Node(val)) val.appendChild(element);
-      return element;
-    };
+    });
     /**
      * append text or a Node to the element
      * @memberof dom
      * @param {Node|string} String or Node to append to the this.element
      */
-    element.append = function() {
+    element.append = returnElement(function() {
       var domfrag = dom.frag();
       forEach(arguments, function(val) {
         domfrag.appendChild(is.Node(val) ? val : dffstr(val));
       });
       element.appendChild(domfrag);
-      return element;
-    };
+    });
     /**
      * prepend text or a Node to the element
      * @memberof dom
      * @param {Node|string} String or Node to prepend to the this.element
      */
-    element.prepend = function() {
+    element.prepend = returnElement(function() {
       forEach(arguments, function(val) {
         element.insertBefore(is.Node(val) ? val : dffstr(val), element.firstChild);
       });
-      return element;
-    };
-    element.bind = function(bind) {
+    });
+    element.bind = returnElement(function(bind) {
       function attemptBind() {
         var path = Craft.getPath(bind, !0, !0),
           cutbind = path.cutbind,
@@ -1175,8 +1178,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           setTimeout(attemptBind, 20);
         });
       }
-      return element;
-    };
+    });
     /**
      * Listen for Events on the element or on all the elements in the NodeList
      * @memberof dom
@@ -1233,7 +1235,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {object} styles - should contain all the styles you wish to add
      * @example element.css({ borderWidth : '5px solid red' , float : 'right'});
      */
-    element.css = function(styles) {
+    element.css = function(styles, prop) {
+      if (is.String(styles, prop)) {
+        element.style[styles] = prop;
+        return element;
+      }
       return Craft.css(element, styles);
     };
     /**
@@ -1249,41 +1255,41 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @memberof dom
      * @param {string} name of the class to add
      */
-    element.addClass = function() {
-      forEach(arguments, element.classList.add.bind(element.classList));
-      return element;
-    };
+    element.addClass = returnElement(function() {
+      forEach(arguments, function(Class) {
+        element.classList.add(Class);
+      });
+    });
     /**
      * removes a specific CSS class from the element
      * @memberof dom
      * @param {...string} name of the class to strip
      */
-    element.stripClass = function() {
-      forEach(arguments, element.classList.remove.bind(element.classList));
-      return element;
-    };
+    element.stripClass = returnElement(function() {
+      forEach(arguments, function(Class) {
+        element.classList.remove(Class);
+      });
+    });
     /**
      * Toggle a CSS class to the element
      * @memberof dom
      * @param {string} name of the class to add
      * @param {boolean=} state - optionally toggle class either on or off with bool
      */
-    element.toggleClass = function(Class, state) {
+    element.toggleClass = returnElement(function(Class, state) {
       if (!is.Bool(state)) state = element.gotClass(Class);
       element[W(state, 'strip', 'add', 'Class')](Class);
-      return element;
-    };
+    });
     /**
      * removes a specific Attribute from the this.element
      * @memberof dom
      * @param {...string} name of the Attribute/s to strip
      */
-    element.stripAttr = function() {
+    element.stripAttr = returnElement(function() {
       forEach(arguments, function(attr) {
         element.removeAttribute(attr);
       });
-      return element;
-    };
+    });
     /**
      * checks if the element has a specific Attribute or Attributes
      * @memberof dom
@@ -1313,7 +1319,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {string} Name of the Attribute to add/set
      * @param {string} Value of the Attribute to add/set
      */
-    element.setAttr = function(attr, val) {
+    element.setAttr = returnElement(function(attr, val) {
       if (!is.Def(val)) {
         if (is.String(attr)) attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(function(Attr) {
           is.Def(Attr.split('=')[1]) ? element.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : element.setAttribute(Attr.split('=')[0], '');
@@ -1322,8 +1328,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           return element.setAttribute(Attr, value);
         });
       } else element.setAttribute(attr, val || '');
-      return element;
-    };
+    });
     /**
      * Gets the value of an attribute , short alias for element.getAttribute
      * {string} attr - name of attribute to get
@@ -1351,12 +1356,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * Remove the element after a time in milliseconds
      * @param {number=} time - time to wait before self destructing the element
      */
-    element.removeAfter = function(time) {
+    element.removeAfter = returnElement(function(time) {
       setTimeout(function() {
         element.remove();
       }, time || 5000);
-      return element;
-    };
+    });
     dp(element, 'Siblings', {
       get: function() {
         return Craft.omit(element.parentNode.children, element).filter(function(el) {
@@ -1440,21 +1444,19 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return queryAll(selector, element);
     };
     if (element.isInput) {
-      element.SyncInput = function(obj, key) {
+      element.SyncInput = returnElement(function(obj, key) {
         element[sI] = On(element).Input(function(e) {
           Craft.setDeep(obj, key, element.value);
         });
-        return element;
-      };
-      element.disconectInputSync = function() {
+      });
+      element.disconectInputSync = returnElement(function() {
         if (is.Def(element[sI])) {
           element[sI].Off;
           delete element[sI];
         }
-        return element;
-      };
+      });
     }
-    element.observe = function(func, options, name) {
+    element.observe = returnElement(function(func, options, name) {
       if (!is.String(name)) name = 'MutObserver';
       element[name] = new MutationObserver(function(muts) {
         muts.forEach(function(mut) {
@@ -1466,16 +1468,14 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         childList: !0,
         subtree: !0
       });
-      return element;
-    };
-    element.unobserve = function(name) {
+    });
+    element.unobserve = returnElement(function(name) {
       if (!is.String(name)) name = 'MutObserver';
       if (is.Def(element[name])) {
         element[name].disconnect();
         delete element[name];
       }
-      return element;
-    };
+    });
     return element;
   };
   /**
