@@ -24,7 +24,7 @@
             dateString: /^(1[0-2]|0?[1-9])\/(3[01]|[12][0-9]|0?[1-9])\/(?:[0-9]{2})?[0-9]{2}$/,
             hexadecimal: /^[0-9a-fA-F]+$/,
             hexColor: /^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/,
-      }
+        }
 
     if (Br && (tem = ua.match(/version\/([\.\d]+)/i)) !== null) Br[2] = tem[1];
     Br = (Br ? [Br[1], Br[2]] : [navigator.appName, navigator.appVersion, '-?']).join(' ');
@@ -682,14 +682,7 @@
             attributes = inner;
             inner = undef;
         }
-        if (inner != undef) {
-            let type = newEl.isInput ? 'value' : 'innerHTML';
-            if (!is.Arr(inner)) is.Node(inner) ? newEl.appendChild(inner) : newEl[type] = inner;
-            else newEl[type] = inner.map(val => {
-                if (is.Node(val)) newEl.append(val);
-                else return val
-            }).join('');
-        }
+        if (inner != undef) newEl.html(inner);
         if (is.Object(attributes) || is.String(attributes)) newEl.setAttr(attributes);
         if (extraAttr != undef) is.Bool(extraAttr) ? stringForm = extraAttr : newEl.setAttr(extraAttr);
         if (stringForm) newEl = newEl.outerHTML;
@@ -758,7 +751,7 @@
                 .replace(/<![\s\S]*?--[ \t\n\r]*>/gi, '');
         }
     }
-    'table,td,th,tr,article,aside,ul,ol,li,h1,h2,h3,h4,h5,h6,div,span,button,br,label,header,i,style,nav,menu,main,menuitem'.split(',').forEach(tag => {
+    'table,td,th,tr,article,aside,ul,ol,li,h1,h2,h3,h4,h5,h6,div,span,section,button,br,label,header,i,style,nav,menu,main,menuitem'.split(',').forEach(tag => {
         Dom[tag] = (inner, attr) => Dom.element(tag, inner, attr);
     });
 
@@ -906,12 +899,13 @@
         type = el.isInput ? 'value' : type;
         return function () {
             if (!arguments.length) return el[type];
-            if (arguments.length == 1) {
-                if (is.Node(arguments[0])) {
-                    el[type] = '';
-                    el.append(arguments[0]);
-                } else el[type] = arguments[0];
-            } else forEach(arguments, Inner(type, el));
+            el[type] = '';
+            forEach(arguments, val => {
+                if (is.Arraylike(val)) forEach(val, v => {
+                    is.Node(v) ? el.append(v) : el[type] += is.Func(v) ? v.call(el) : v;
+                });
+                else is.Node(val) || is.Element(val) ? el.append(val) : el[type] += is.Func(val) ? val.call(el) : val;
+            });
             return el;
         }
     }
@@ -975,6 +969,26 @@
              * @param {Node} Node to replace with
              */
         element.clone = val => domManip(element.cloneNode(val == undef ? true : val));
+        element.importview = src => {
+            let cache = element.hasAttr('cache-view');
+            if (cache) {
+                let view = localStorage.getItem(src);
+                if (!nil(view)) {
+                    element.html(view);
+                    return;
+                }
+            }
+            fetch(src, {
+                mode: 'cors'
+            }).then(res => {
+                if (!res.ok) console.warn(`<${element.localName}> : unable to import view - ${src}`);
+                else res.text().then(view => {
+                    if (cache) localStorage.setItem(src, view);
+                    element.html(view)
+                });
+            });
+        }
+
         /**
          * append the Element to another node using either a CSS selector or a Node
          * @memberof dom
@@ -1162,22 +1176,12 @@
                 return args.every(a => element.hasAttribute(a))
             }
             /**
-             * Toggles an attribute on element , optionally add value when toggle is adding attribute
-             * @param {string} name - name of the attribute to toggle
-             * @param {string} val - value to set attribute to
-             * @param {boolean=} rtst - optionally return a bool witht the toggle state otherwise returns the element
-             */
-        element.toggleAttr = (name, val, rtst) => {
-                element[W(is.Bool(val) ? !val : element.hasAttr(name), 'strip', 'set', 'Attr')](name, val);
-                return rtst ? element.hasAttr(name) : element
-            }
-            /**
              * Sets or adds an Attribute on the element
              * @memberof dom
              * @param {string} Name of the Attribute to add/set
              * @param {string} Value of the Attribute to add/set
              */
-        element.setAttr = function (attr, val) {
+        element.setAttr =  (attr, val) => {
                 if (!is.Def(val)) {
                     if (is.String(attr)) attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(Attr => {
                         is.Def(Attr.split('=')[1]) ? element.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : element.setAttribute(Attr.split('=')[0], '')
@@ -1191,10 +1195,25 @@
              * {string} attr - name of attribute to get
              */
         element.getAttr = element.getAttribute;
+        element.attr = (attr,val) => {
+          if(is.String(val) || is.Object(attr)) return element.setAttr(attr,val);
+          if(is.String(attr) && !is.Def(val)) return element.getAttr(attr);
+        }
+        element.prop = element.hasAttr;
         /**
-         * Hides and element by setting display none
-         * @todo : Smooth animation
+         * Toggles an attribute on element , optionally add value when toggle is adding attribute
+         * @param {string} name - name of the attribute to toggle
+         * @param {string} val - value to set attribute to
+         * @param {boolean=} rtst - optionally return a bool witht the toggle state otherwise returns the element
          */
+        element.toggleAttr = (name, val, rtst) => {
+                element[W(is.Bool(val) ? !val : element.hasAttr(name), 'strip', 'set', 'Attr')](name, val);
+                return rtst ? element.hasAttr(name) : element
+        }
+            /**
+             * Hides and element by setting display none
+             * @todo : Smooth animation
+             */
         element.hide = () => element.css({
             display: 'none'
         });
@@ -1764,7 +1783,7 @@
                             if (obj.cache) localStorage.setItem(Craft.loader.pre + obj.key, JSON.stringify(obj));
                             pass(obj);
                         }).catch(err => {
-                            fail(`error importing`,err)
+                            fail(`error importing`, err)
                         })
                 })
             },
@@ -2334,7 +2353,7 @@
                 key == 'inserted' ? element.attachedCallback = dm :
                     key == 'destroyed' ? element.detachedCallback = dm :
                     key == 'attr' ? element.attributeChangedCallback = dm :
-                    key.toLowerCase() =='css' ? Craft.addCSS(config[key]) :
+                    key.toLowerCase() == 'css' ? Craft.addCSS(config[key]) :
                     is.Func(config[key]) ? element[key] = dm :
                     defineprop(element, key, getpropdescriptor(config, key))
             }
@@ -2414,23 +2433,7 @@
     });
 
     Craft.customAttr('import-view', (element, src) => {
-        let cache = element.hasAttr('cache-view');
-        if (cache) {
-            let view = localStorage.getItem(src);
-            if (!nil(view)) {
-                element.html(view);
-                return;
-            }
-        }
-        fetch(src, {
-            mode: 'cors'
-        }).then(res => {
-            if (!res.ok) console.warn(`<${element.localName}> : unable to import view - ${src}`);
-            else res.text().then(view => {
-                if (cache) localStorage.setItem(src, view);
-                element.html(view)
-            });
-        });
+        element.importview(src)
     });
 
     Craft.customAttr('link', (element, link) => {
