@@ -778,14 +778,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       attributes = inner;
       inner = undef;
     }
-    if (inner != undef) {
-      var _type = newEl.isInput ? 'value' : 'innerHTML';
-      if (!is.Arr(inner)) is.Node(inner) ? newEl.appendChild(inner) : newEl[_type] = inner;
-      else newEl[_type] = inner.map(function(val) {
-        if (is.Node(val)) newEl.append(val);
-        else return val;
-      }).join('');
-    }
+    if (inner != undef) newEl.html(inner);
     if (is.Object(attributes) || is.String(attributes)) newEl.setAttr(attributes);
     if (extraAttr != undef) is.Bool(extraAttr) ? stringForm = extraAttr : newEl.setAttr(extraAttr);
     if (stringForm) newEl = newEl.outerHTML;
@@ -855,7 +848,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return html.replace(/<script[^>]*?>.*?<\/script>/gi, '').replace(/<style[^>]*?>.*?<\/style>/gi, '').replace(/<![\s\S]*?--[ \t\n\r]*>/gi, '');
     }
   };
-  'table,td,th,tr,article,aside,ul,ol,li,h1,h2,h3,h4,h5,h6,div,span,button,br,label,header,i,style,nav,menu,main,menuitem'.split(',').forEach(function(tag) {
+  'table,td,th,tr,article,aside,ul,ol,li,h1,h2,h3,h4,h5,h6,div,span,section,button,br,label,header,i,style,nav,menu,main,menuitem'.split(',').forEach(function(tag) {
     Dom[tag] = function(inner, attr) {
       return Dom.element(tag, inner, attr);
     };
@@ -1024,12 +1017,13 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     type = el.isInput ? 'value' : type;
     return function() {
       if (!arguments.length) return el[type];
-      if (arguments.length == 1) {
-        if (is.Node(arguments[0])) {
-          el[type] = '';
-          el.append(arguments[0]);
-        } else el[type] = arguments[0];
-      } else forEach(arguments, Inner(type, el));
+      el[type] = '';
+      forEach(arguments, function(val) {
+        if (is.Arraylike(val)) forEach(val, function(v) {
+          is.Node(v) ? el.append(v) : el[type] += is.Func(v) ? v.call(el) : v;
+        });
+        else is.Node(val) || is.Element(val) ? el.append(val) : el[type] += is.Func(val) ? val.call(el) : val;
+      });
       return el;
     };
   }
@@ -1091,6 +1085,25 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      */
     element.clone = function(val) {
       return domManip(element.cloneNode(val == undef ? true : val));
+    };
+    element.importview = function(src) {
+      var cache = element.hasAttr('cache-view');
+      if (cache) {
+        var view = localStorage.getItem(src);
+        if (!nil(view)) {
+          element.html(view);
+          return;
+        }
+      }
+      fetch(src, {
+        mode: 'cors'
+      }).then(function(res) {
+        if (!res.ok) console.warn("<" + element.localName + "> : unable to import view - " + src);
+        else res.text().then(function(view) {
+          if (cache) localStorage.setItem(src, view);
+          element.html(view);
+        });
+      });
     };
     /**
      * append the Element to another node using either a CSS selector or a Node
@@ -1286,16 +1299,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       });
     };
     /**
-     * Toggles an attribute on element , optionally add value when toggle is adding attribute
-     * @param {string} name - name of the attribute to toggle
-     * @param {string} val - value to set attribute to
-     * @param {boolean=} rtst - optionally return a bool witht the toggle state otherwise returns the element
-     */
-    element.toggleAttr = function(name, val, rtst) {
-      element[W(is.Bool(val) ? !val : element.hasAttr(name), 'strip', 'set', 'Attr')](name, val);
-      return rtst ? element.hasAttr(name) : element;
-    };
-    /**
      * Sets or adds an Attribute on the element
      * @memberof dom
      * @param {string} Name of the Attribute to add/set
@@ -1317,6 +1320,21 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * {string} attr - name of attribute to get
      */
     element.getAttr = element.getAttribute;
+    element.attr = function(attr, val) {
+      if (is.String(val) || is.Object(attr)) return element.setAttr(attr, val);
+      if (is.String(attr) && !is.Def(val)) return element.getAttr(attr);
+    };
+    element.prop = element.hasAttr;
+    /**
+     * Toggles an attribute on element , optionally add value when toggle is adding attribute
+     * @param {string} name - name of the attribute to toggle
+     * @param {string} val - value to set attribute to
+     * @param {boolean=} rtst - optionally return a bool witht the toggle state otherwise returns the element
+     */
+    element.toggleAttr = function(name, val, rtst) {
+      element[W(is.Bool(val) ? !val : element.hasAttr(name), 'strip', 'set', 'Attr')](name, val);
+      return rtst ? element.hasAttr(name) : element;
+    };
     /**
      * Hides and element by setting display none
      * @todo : Smooth animation
@@ -2628,23 +2646,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     });
   });
   Craft.customAttr('import-view', function(element, src) {
-    var cache = element.hasAttr('cache-view');
-    if (cache) {
-      var view = localStorage.getItem(src);
-      if (!nil(view)) {
-        element.html(view);
-        return;
-      }
-    }
-    fetch(src, {
-      mode: 'cors'
-    }).then(function(res) {
-      if (!res.ok) console.warn("<" + element.localName + "> : unable to import view - " + src);
-      else res.text().then(function(view) {
-        if (cache) localStorage.setItem(src, view);
-        element.html(view);
-      });
-    });
+    element.importview(src);
   });
   Craft.customAttr('link', function(element, link) {
     element.linkevt = element.Click(function(e) {
