@@ -1034,7 +1034,6 @@
                         obj = path.obj,
                         val = path.val;
 
-
                     is.Def(val) ? element.html(val) : Craft.setDeep(obj, prop, element.html());
                     if (obj.isObservable) {
                         let firstTime = true;
@@ -1257,7 +1256,7 @@
          * @param {string|number=} pixel value to set
          */
         element.newSetGet('Width', pixels => {
-            if (is.Def(pixels)) element.style.width = pixels
+            element.style.width = pixels
         }, () => element.getRect().with);
 
 
@@ -1267,7 +1266,7 @@
          * @param {string|number=} pixel value to set
          */
         element.newSetGet('Height', pixels => {
-            if (pixels != undef) element.style.height = pixels
+            element.style.height = pixels
         }, () => element.getRect().height);
         /**
          * move the element using either css transforms or plain css possitioning

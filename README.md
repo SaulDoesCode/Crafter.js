@@ -100,6 +100,15 @@ create elements on the fly with ease using the `dom` method!
   })
 ```
 
+import views using some of the built in custom attributes in Crafter.js
+```html
+  <article importview="/views/article.html" class="fancy-article"></article>
+```
+or do it in code using dom methods
+```javascript
+  dom('article.fancy-article').importview('/views/article.html');
+```
+
 #### Custom Elements
 Create a new Custom Element using the Craft.newComponent method
 
@@ -128,7 +137,8 @@ Create a new Custom Element using the Craft.newComponent method
       // useful for stopping event listeners
     }
   });
-
+```
+```javascript
   // You can add style to your custom element using the css property
   Craft.newComponent('check-box', {
       css : `
@@ -154,8 +164,7 @@ Create a new Custom Element using the Craft.newComponent method
       }
       check-box:hover {
         border: 1px solid #797979;
-      }
-      `,
+      }`,
       inserted() {
           this.check = this.Click(this.toggle.bind(this))
       },
@@ -198,7 +207,7 @@ Crafter.js allows the creation of scoped models to manipulate your app, models e
 
   }).view(scope => {
     // do any dom manips or post DOM load code here
-    dom.article('class=news-article').bind('MyModel.articles[2]').appendTo('div.news')
+    dom.article('class=news-article').bind('MyModel.articles[2]').appendTo('div.news');
   })
 
   // You can assign to variables from the model scope via Craft.fromModel
@@ -265,7 +274,7 @@ You can easily bind scope variables to the dom using the bind="ModelName.xyz" at
 
 ```javascript
     let NodeListEventHandler = On('mouseover,mouseout','.elements-in-list', evt => {
-      // react to multiple event types with a single EventHandler
+      // react to multiple event types with a single handler
     });
 
     let NodeListEventHandler = On(['doubleclick','input'],DOMnode, evt => {
@@ -293,7 +302,9 @@ You can easily bind scope variables to the dom using the bind="ModelName.xyz" at
     });
 
     /// add another reciever to see output in DOM.
-    Ws.recieve = message => MessageScope.msg = message;
+    Ws.recieve = message => {
+      MessageScope.msg = message;
+    }
 
     // Sync the value of the Input to the WebSocket
     dom("input").SyncInput(Websocket,'send');
@@ -324,9 +335,7 @@ var News = Craft.observable({
 News.Headline = 'New information, data-binding is a thing';
 
 // you can change the output of any get by returning a value
-News.$get('Article',(key,value,object) => {
-  return dom.article(value);
-});
+News.$get('Article',(key,value,object) => dom.article(value));
 
 // You can also optionally add change listeners for a specific property or properties
 News.$set('Headline',(key,value,object) => {
@@ -334,7 +343,7 @@ News.$set('Headline',(key,value,object) => {
 });
 ```
 
-If a bind does not exist it gets bound as a property of the gobal CraftScope Binds on `input` and `textarea` will set the property when the value changes
+If a bind does not exist it gets bound as a property of the gobal CraftScope Binds on inputs will set the property when the value changes
 
 ```html
 <textarea bind="truestory">
