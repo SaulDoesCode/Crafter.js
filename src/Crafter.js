@@ -78,7 +78,7 @@
 
     function makeFn(fn, Args, totalArity) {
         let remainingArity = totalArity - Args.length;
-        return is.Between(remainingArity, 10, 0) ? function () {
+        return is.between(remainingArity, 10, 0) ? function () {
             return doInvok(fn, Args.concat(toArr(arguments)), totalArity);
         } : ((fn, args, arity) => {
             let a = [];
@@ -365,7 +365,7 @@
          * @param {Number} min - minimum to compare the value with
          * @returns {Boolean} wether or not the value is between the max and min
          */
-        Between: (val, max, min) => (val <= max && val >= min),
+        between: (val, max, min) => (val <= max && val >= min),
         /**
          * checks if a number is an integer
          * @param val - variable / value to test
@@ -1018,15 +1018,17 @@
              * @param {Node|string} String or Node to prepend to the this.element
              */
         element.prepend = function () {
+            let domfrag = dom.frag();
             forEach(arguments, val => {
-                element.insertBefore(is.Node(val) ? val : dffstr(val), element.firstChild);
+                domfrag.appendChild(is.Node(val) ? val : dffstr(val))
             });
+            element.insertBefore(domfrag, element.firstChild);
             return element
         }
 
         element.bind = bind => {
                 function attemptBind() {
-                    let path = Craft.getPath(bind, true, true),
+                    let path = Craft.getPath(bind, true),
                         cutbind = path.cutbind,
                         prop = path.prop,
                         obj = path.obj,

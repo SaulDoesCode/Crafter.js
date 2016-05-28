@@ -6,7 +6,7 @@ Crafter.js is still very W.I.P , so tread carefully
 ## Crafter.js makes use of
 - Promises
 - Fetch API
-- Proxy
+- Proxy (optional)
 - ES6
 - WebComponents
 
@@ -74,15 +74,28 @@ create elements on the fly with ease using the `dom` method!
      * then you may use this method to create elements that are not available by default in the dom object
     */
     // for hyphenated names use the square brackets and string notation
-    dom['my-element']('inner html', { id : 'element-one', class : 'fancy-el'});
+    dom['my-element']('inner html goes here', { id : 'element-one', class : 'fancy-el'});
     // otherwise normal dot notation will work for more excentric tag names
     dom.address('2 mainstreet codeshire','class=address-fancy')
 
     // for less common elements or custom elements use dom.element
+    // when Proxy is not available in your browser
     // you could also add attributes URI style
 
     dom.element('aside','text to go inside','id=asidecontent&class=side-content');
     // -> <aside id="aside2" class="side-content"> text to go inside </aside>
+
+    // for hirarchies arrays with elements are also accepted
+    dom.table([
+      dom.tr([
+        dom.td('Row 1, Column 1'),
+        dom.td('Row 1, Column 2')
+      ]),
+      dom.tr([
+        dom.td('Row 2, Column 1'),
+        dom.td('Row 2, Column 2')
+      ])
+    ]);
 
   })
 ```
