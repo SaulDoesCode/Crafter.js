@@ -1922,13 +1922,18 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         type: 'text/css'
       }) + "\");\n";
     },
-    Browser: {
+    browser: {
+      /**
+       * Craft.browser.is - checks which browser you're running
+       * @param (string) browser - string containing a browser name like 'chrome','firefox'...
+       * @returns (boolean) - returns whether or not this is the browser you checked for
+       */
       is: function(browser) {
         return Br.toLowerCase().includes(browser.toLowerCase());
-      },
+      }, // name of browser and version
       browser: Br
-    },
-    dom: dom,
+    }, // dom methods and stuff
+    dom: dom, // part of the Craft.Import loader
     loader: {
       pre: 'craft:',
       fetchImport: function(obj) {
@@ -2219,7 +2224,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       else throw new Error('CSS : Styles Object is not an object');
       return element;
     },
-    hasCapitals: function(string) {
+    hasCaps: function(string) {
       return toArr(string).some(is.Uppercase);
     },
     len: function(val) {
@@ -2492,8 +2497,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       var pw = 'Password ',
         includeChars = toArr(arguments).slice(5);
       if (pass.length <= length - 1) return reasons ? pw + 'too short' : false;
-      if (caps === true && Craft.hasCapitals(pass) === false) return reasons ? pw + 'should have a Capital letter' : false;
-      if (number === true && /\d/g.test(pass) === false) return reasons ? pw + 'should have a number' : false;
+      if (caps && !Craft.hasCaps(pass)) return reasons ? pw + 'should have a Capital letter' : false;
+      if (number && !/\d/g.test(pass)) return reasons ? pw + 'should have a number' : false;
       if (includeChars.length) {
         var hasChars = true;
         includeChars.forEach(function(ch) {
@@ -2504,10 +2509,10 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return false;
     },
     formatBytes: function(bytes, decimals) {
-      if (bytes == 0) return '0 Byte';
+      if (bytes == 0) return '0 Bytes';
       var k = 1000,
         i = Math.floor(Math.log(bytes) / Math.log(k));
-      return (bytes / Math.pow(k, i)).toPrecision(decimals + 1 || 3) + ' ' + ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'][i];
+      return (bytes / Math.pow(k, i)).toPrecision(decimals + 1 || 3) + ' ' + 'Bytes,KB,MB,GB,TB,PB,EB,ZB,YB'.split(',')[i];
     },
     randomNum: function() {
       var min = arguments.length <= 0 || arguments[0] === undefined ? 0 : arguments[0],
