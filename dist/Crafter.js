@@ -74,7 +74,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
   function makeFn(fn, Args, totalArity) {
     var remainingArity = totalArity - Args.length;
-    return is.Between(remainingArity, 10, 0) ? function() {
+    return is.between(remainingArity, 10, 0) ? function() {
       return doInvok(fn, Args.concat(toArr(arguments)), totalArity);
     } : function(fn, args, arity) {
       var a = [];
@@ -433,7 +433,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {Number} min - minimum to compare the value with
      * @returns {Boolean} wether or not the value is between the max and min
      */
-    Between: function(val, max, min) {
+    between: function(val, max, min) {
       return val <= max && val >= min;
     },
     /**
@@ -1134,14 +1134,16 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {Node|string} String or Node to prepend to the this.element
      */
     element.prepend = function() {
+      var domfrag = dom.frag();
       forEach(arguments, function(val) {
-        element.insertBefore(is.Node(val) ? val : dffstr(val), element.firstChild);
+        domfrag.appendChild(is.Node(val) ? val : dffstr(val));
       });
+      element.insertBefore(domfrag, element.firstChild);
       return element;
     };
     element.bind = function(bind) {
       function attemptBind() {
-        var path = Craft.getPath(bind, true, true),
+        var path = Craft.getPath(bind, true),
           cutbind = path.cutbind,
           prop = path.prop,
           obj = path.obj,
@@ -1381,7 +1383,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {string|number=} pixel value to set
      */
     element.newSetGet('Width', function(pixels) {
-      if (is.Def(pixels)) element.style.width = pixels;
+      element.style.width = pixels;
     }, function() {
       return element.getRect().with;
     });
@@ -1391,7 +1393,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {string|number=} pixel value to set
      */
     element.newSetGet('Height', function(pixels) {
-      if (pixels != undef) element.style.height = pixels;
+      element.style.height = pixels;
     }, function() {
       return element.getRect().height;
     });
