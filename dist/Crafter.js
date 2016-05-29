@@ -1086,6 +1086,10 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     element.clone = function(val) {
       return domManip(element.cloneNode(val == undef ? true : val));
     };
+    /**
+     * element.importview - imports a file and renders it on to the node
+     * @param (string) src - url to fetch from
+     */
     element.importview = function(src) {
       var cache = element.hasAttr('cache-view');
       if (cache) {
@@ -1141,6 +1145,12 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       element.insertBefore(domfrag, element.firstChild);
       return element;
     };
+    /**
+     * element.bind is what drives data-binding in Crafter.js
+     * it binds to values in models and objects
+     * @param (string) bind - path to bind to
+     * @example element.bind('myModel.value');
+     */
     element.bind = function(bind) {
       function attemptBind() {
         var path = Craft.getPath(bind, true),
@@ -1172,6 +1182,15 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           });
         })();
       }
+      return element;
+    };
+    /**
+     * @func element.modify - used to do things with your element without breaking scope
+     * @param (function) func - callback to execute
+     * @returns (element) to make it chainable
+     */
+    element.modify = function(func) {
+      func.call(element, element);
       return element;
     };
     /**
@@ -1912,16 +1931,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       });
       return val;
     },
-    /**
-     * Craft.addCSS takes in any string of valid css code and executes it
-     * in the global scope
-     * @param (string) css - css code to execute
-     */
-    addCSS: function(css) {
-      query('style[crafterstyles]', head).textContent += "@import url(\"" + Craft.URLfrom(css, {
-        type: 'text/css'
-      }) + "\");\n";
-    },
     browser: {
       /**
        * Craft.browser.is - checks which browser you're running
@@ -1933,71 +1942,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }, // name of browser and version
       browser: Br
     }, // dom methods and stuff
-    dom: dom, // part of the Craft.Import loader
-    loader: {
-      pre: 'craft:',
-      fetchImport: function(obj) {
-        obj.key = obj.key || obj.url;
-        var now = +new Date(),
-          src = Craft.loader.get(obj.key);
-        if (src || src.expire - now > 0) return promise(function(pass) {
-          return pass(src);
-        });
-        return promise(function(pass, fail) {
-          fetch(obj.url).then(function(res) {
-            return res.text();
-          }).then(function(data) {
-            obj.data = data;
-            obj.stamp = now;
-            obj.expire = now + Craft.millis.hours(obj.expire || 400);
-            if (obj.cache) localStorage.setItem(Craft.loader.pre + obj.key, JSON.stringify(obj));
-            pass(obj);
-          }).catch(function(err) {
-            fail("error importing", err);
-          });
-        });
-      },
-      get: function(key) {
-        return JSON.parse(localStorage.getItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key) || false);
-      },
-      remove: function(key) {
-        localStorage.removeItem(key.includes(Craft.loader.pre) ? key : Craft.loader.pre + key);
-      },
-      removeAll: function(expired) {
-        for (var i in localStorage) {
-          if (!expired || is.past(Craft.loader.get(i).expire)) Craft.loader.remove(i);
-        }
-      }
-    },
-    /**
-     * Crafter.js resource loader for Scripts and Style sheets,
-     * each import option is an object with properties like 'script/css/wc : "location" ' for resource url
-     * other options include 'cache' - determines wether to cache the resource or not , 'test' : usefull for conditional imports if test is false the resource won't load or execute ,
-     * 'key' custom name to cache the resource in localStorage with instead of the resource location, 'defer' optionally load the script when the dom is loaded or load when it's ready,
-     * {...object} args - Objects containing options for Script/CSS/WebComponent import
-     * @method import
-     * @param {...Object} Imports - Objects containing the properties neccesarry to import a resource
-     * @returns {Promise} returns a promise after importing the resource
-     */
-    Import: function() {
-      var promises = [];
-      forEach(arguments, function(arg) {
-        arg.test ? Craft.loader.remove(arg.css || arg.script) : promises.push(Craft.loader.fetchImport({
-          url: arg.css || arg.script,
-          type: arg.css ? 'css' : 'script',
-          exec: arg.execute != false,
-          cache: arg.cache != false,
-          defer: arg.defer || undef,
-          key: arg.key,
-          expire: arg.expire
-        }));
-      });
-      return Promise.all(promises).then(function(src) {
-        return src.map(function(obj) {
-          if (obj.exec) obj.type === 'css' ? Craft.addCSS(obj.data) : head.appendChild(dom.script(obj.data, 'key=' + obj.key, obj.defer));
-        });
-      });
-    },
+    dom: dom,
     router: {
       addHandle: function(link, func) {
         Craft.router.handlers.push({
@@ -2058,13 +2003,13 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         doc.cookie = encodeURIComponent(key) + "=" + encodeURIComponent(val) + expiry + (domain ? "; domain=" + domain : "") + (path ? "; path=" + path : "") + (secure ? "; secure" : "");
         return true;
       },
+      has: function(key) {
+        return key ? new RegExp("(?:^|;\\s*)" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=").test(doc.cookie) : false;
+      },
       remove: function(key, path, domain) {
         if (!Craft.Cookies.has(key)) return false;
         doc.cookie = encodeURIComponent(key) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT" + (domain ? "; domain=" + domain : "") + (path ? "; path=" + path : "");
         return true;
-      },
-      has: function(key) {
-        return key ? new RegExp("(?:^|;\\s*)" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=").test(doc.cookie) : false;
       },
       keys: function() {
         return doc.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/).map(function(c) {
@@ -2084,7 +2029,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         if (is.empty(match)) throw new Error('invalid url');
         address = location.host + match[0];
       }
-      if (!address.includes('ws://') || !address.includes('wss://')) address = (location.protocol === 'http:' ? 'ws://' : 'wss://') + address;
+      if (!address.includes('ws://') && !address.includes('wss://')) address = (location.protocol === 'http:' ? 'ws://' : 'wss://') + address;
       if (is.URL(address)) {
         var _ret3 = function() {
           var newSock = function() {
@@ -2223,6 +2168,55 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       else if (is.String(styles, prop)) element.style[styles] = prop;
       else throw new Error('CSS : Styles Object is not an object');
       return element;
+    },
+    fixURL: function(url) {
+      if (!is.URL(url)) {
+        var match = url.match(/^(\/.*?)?$/);
+        if (is.empty(match)) throw new Error('invalid src');
+        url = location.host + match[0];
+      }
+      if (!url.includes('http://') && !url.includes('https://')) url = location.protocol + '//' + url;
+      return url;
+    },
+    /**
+     * Craft.addCSS takes in any string of valid css code and executes it
+     * @param (string) css - css code to execute
+     */
+    addCSS: function(css, noimport) {
+      query('style[crafterstyles]', head).textContent += noimport ? css : "@import url(\"" + Craft.URLfrom(css, {
+        type: 'text/css'
+      }) + "\");\n";
+    },
+    /**
+     * Craft.importCSS takes in a source then attempts to fetch and execute it
+     * @param (src) css - css code to execute
+     */
+    importCSS: function(src) {
+      Craft.addCSS("@import url(\"" + Craft.fixURL(src) + "\");\n", true);
+    },
+    importFont: function(name, src) {
+      Craft.addCSS("@font-face {font-family: " + name + ";src:url(\"" + Craft.fixURL(src) + "\");}", true);
+    },
+    loadScript: function(src, funcexec) {
+      return promise(function(pass, fail) {
+        fetch(Craft.fixURL(src), {
+          mode: 'cors'
+        }).then(function(res) {
+          if (!res.ok) console.warn("loading script failed - " + src);
+          else res.text().then(function(code) {
+            if (funcexec) {
+              try {
+                new Function(code).call(root);
+                pass();
+              } catch (e) {
+                fail();
+              }
+            } else head.appendChild(dom.script(code).modify(function(script) {
+              script.onload = pass;
+            }));
+          });
+        });
+      });
     },
     hasCaps: function(string) {
       return toArr(string).some(is.Uppercase);
@@ -2619,8 +2613,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     }
   });
   On('blur', TabChange(false));
-  On('focus', TabChange(true));
-  Craft.loader.removeAll(true);
+  On('focus', TabChange(true)); //Craft.loader.removeAll(true);
   Craft.curry.to = Craft.curry(function(arity, fn) {
     return makeFn(fn, [], arity);
   });

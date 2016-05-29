@@ -1,6 +1,5 @@
 "use strict";
 dom.ripple = attr => dom.element('ripple-effect', '', attr);
-
 Craft.ripple = (selector, options) => queryEach(selector, element => {
     On(element).Mousedown(e => {
         if (e.buttons == 1) {

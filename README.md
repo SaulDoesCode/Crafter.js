@@ -15,7 +15,7 @@ Crafter.js uses Babel to ensure compatibility on older browsers
 ## Crafter.js Offers
 - DOM Manipulation
 - Observe elements and react to changes
-- Models
+- Models/Controllers
 - Several useful functional programming methods including currying
 - Two Way Data Binding
 - methods like setDeep , getDeep, forEachDeep , arrDiff ,flatten , omit... for manipulating objects and arrays
@@ -27,7 +27,7 @@ Crafter.js uses Babel to ensure compatibility on older browsers
 - Web Components
 - WebSocket wrapper for ease of use
 - Form Validation methods
-- Resource loader for Scripts and Style sheets
+- loader functions for Scripts, Style sheets and fonts
 - Front End Router
 - Easy to use Event Handling system with features such as .On , .Off , .Once , .Type
 - Shorthand functions such as forEach, query/queryAll/queryEach
