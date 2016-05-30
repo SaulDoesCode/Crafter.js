@@ -2195,7 +2195,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       Craft.addCSS("@import url(\"" + Craft.fixURL(src) + "\");\n", true);
     },
     importFont: function(name, src) {
-      Craft.addCSS("@font-face {font-family: " + name + ";src:url(\"" + Craft.fixURL(src) + "\");}", true);
+      Craft.addCSS("@font-face {font-family:" + name + ";src:url(\"" + Craft.fixURL(src) + "\");}", true);
     },
     loadScript: function(src, funcexec) {
       return promise(function(pass, fail) {
@@ -2502,15 +2502,24 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
       return false;
     },
+    /**
+     * converts camel case strings to dashed strings
+     * usefull for css properties and such
+     * @example Craft.camelDash('MyCamelCaseName') // -> my-camel-case-name
+     * @param (string) val - string to convert
+     */
+    camelDash: function(val) {
+      return val.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+    },
     formatBytes: function(bytes, decimals) {
       if (bytes == 0) return '0 Bytes';
       var k = 1000,
         i = Math.floor(Math.log(bytes) / Math.log(k));
       return (bytes / Math.pow(k, i)).toPrecision(decimals + 1 || 3) + ' ' + 'Bytes,KB,MB,GB,TB,PB,EB,ZB,YB'.split(',')[i];
     },
-    randomNum: function() {
-      var min = arguments.length <= 0 || arguments[0] === undefined ? 0 : arguments[0],
-        max = arguments.length <= 1 || arguments[1] === undefined ? 100 : arguments[1];
+    randomNum: function(min, max) {
+      min = min || 0;
+      max = max || 100;
       return Math.random() * (max - min) + min;
     },
     randomInt: function(min, max) {
@@ -2518,7 +2527,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       max = max || 100;
       return Math.floor(Math.random() * (max - min)) + min;
     },
-    /** method for generating random alphanumeric strings*/ randomString: function() {
+    /**
+     * method for generating random alphanumeric strings
+     * @return (string)
+     */
+    randomString: function() {
       return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
     },
     /**
@@ -2613,7 +2626,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     }
   });
   On('blur', TabChange(false));
-  On('focus', TabChange(true)); //Craft.loader.removeAll(true);
+  On('focus', TabChange(true));
   Craft.curry.to = Craft.curry(function(arity, fn) {
     return makeFn(fn, [], arity);
   });
