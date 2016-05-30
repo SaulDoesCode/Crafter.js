@@ -78,29 +78,6 @@ Craft.newComponent('craft-notification', {
     }
 })
 
-let __ContextMenus = [];
-
-Craft.newComponent('context-menu', {
-    inserted() {
-        let el = this;
-        if (el.hasAttr('scope')) el.Contextmenu = On('contextmenu', el.getAttr('scope'), e => {
-                el.Show(!0, e)
-            });
-
-
-        __ContextMenus.push(el);
-    },
-    destroyed() {
-        __ContextMenus = Craft.omit(__ContextMenus, this);
-        this.Contextmenu.Off
-    },
-    Show(Show, ev) {
-        if (is.Def(ev)) ev.preventDefault();
-        let el = this;
-        Show ? el.addClass('context-menu-active').move((ev.clientX + 5), (ev.clientY + 5), !0) : el.stripClass('context-menu-active');
-    }
-});
-
 Craft.newComponent('check-box', {
     inserted() {
         let el = this;
@@ -186,7 +163,8 @@ Craft.newComponent('material-input', {
             labelEffects()
         }, () => input.value);
 
-        el.hasAttr("type") ? ["submit", "button", "range"].some(v => el.getAttr("type") != v) ? input.setAttr("type", el.getAttr("type")) :
+        let itype = el.getAttr("type");
+        !is.Null(itype) ? ["submit", "button", "range"].some(v => itype != v) ? input.setAttr("type", itype) :
             console.warn("<material-input> is only for text type inputs it will default to text if wrong type is chosen") :
             input.setAttr("type", "text");
 
@@ -209,8 +187,7 @@ Craft.newComponent('material-input', {
         el.onblur = labelEffects;
 
         if (el.hasAttr("label") || el.hasAttr("placeholder")) {
-            let label = dom.label(el.getAttr("label") || el.getAttr("placeholder"));
-            el.append(label);
+            dom.label(el.getAttr("label") || el.getAttr("placeholder")).appendTo(el);
             labelEffects();
         }
 
@@ -270,11 +247,6 @@ Craft.newComponent('radio-button', {
         if (name === "checked" && element.hasAttr("checked")) element.CheckGroup(element);
         else if ((name === "name" || name === "label") && (element.hasAttr("name") || element.hasAttr("label"))) element.name = element.getAttr("name") || element.getAttr("label");
     }
-});
-
-On('blur', e => queryEach('context-menu', el => el.Show()));
-On(document).Click(e => {
-    if (e.target.parentNode.tagName !== 'CONTEXT-MENU' && e.target.tagName !== 'SECTION') forEach(__ContextMenus, el => el.Show());
 });
 
 Craft.customAttr('ripple', (el, color) => {

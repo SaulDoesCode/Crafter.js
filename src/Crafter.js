@@ -1038,46 +1038,46 @@
          * @example element.bind('myModel.value');
          */
         element.bind = bind => {
-                function attemptBind() {
-                    let path = Craft.getPath(bind, true),
-                        cutbind = path.cutbind,
-                        prop = path.prop,
-                        obj = path.obj,
-                        val = path.val;
+            function attemptBind() {
+                let path = Craft.getPath(bind, true),
+                    cutbind = path.cutbind,
+                    prop = path.prop,
+                    obj = path.obj,
+                    val = path.val;
 
-                    is.Def(val) ? element.html(val) : Craft.setDeep(obj, prop, element.html());
-                    if (obj.isObservable) {
-                        let firstTime = true;
-                        element._BoundObservable = obj.$set(prop, (k, v, o) => {
-                            firstTime ? setTimeout(() => {
-                                element.html(obj.get(k))
-                                firstTime = false;
-                            }, 30) : element.html(obj.get(k));
-                        });
-                    }
-                    if (element.isInput) element.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : joindot(Craft.omit(cutbind, cutbind[0])))
+                is.Def(val) ? element.html(val) : Craft.setDeep(obj, prop, element.html());
+                if (obj.isObservable) {
+                    let firstTime = true;
+                    element._BoundObservable = obj.$set(prop, (k, v, o) => {
+                        firstTime ? setTimeout(() => {
+                            element.html(obj.get(k))
+                            firstTime = false;
+                        }, 30) : element.html(obj.get(k));
+                    });
                 }
-
-                try {
-                    attemptBind()
-                } catch (e) {
-                    let modelListener = Craft.Models.$set(cutdot(bind)[0], () => {
-                        setTimeout(attemptBind, 20)
-                        modelListener.off;
-                    })
-                }
-
-                return element
+                if (element.isInput) element.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : joindot(Craft.omit(cutbind, cutbind[0])))
             }
 
-            /**
-             * @func element.modify - used to do things with your element without breaking scope
-             * @param (function) func - callback to execute
-             * @returns (element) to make it chainable
-             */
-            element.modify = func => {
-              func.call(element,element);
-              return element;
+            try {
+                attemptBind()
+            } catch (e) {
+                let modelListener = Craft.Models.$set(cutdot(bind)[0], () => {
+                    setTimeout(attemptBind, 20)
+                    modelListener.off;
+                })
+            }
+
+            return element
+        }
+
+        /**
+         * @func element.modify - used to do things with your element without breaking scope
+         * @param (function) func - callback to execute
+         * @returns (element) to make it chainable
+         */
+        element.modify = func => {
+                func.call(element, element);
+                return element;
             }
             /**
              * Listen for Events on the element or on all the elements in the NodeList
@@ -1203,7 +1203,7 @@
              * @param {string} Name of the Attribute to add/set
              * @param {string} Value of the Attribute to add/set
              */
-        element.setAttr =  (attr, val) => {
+        element.setAttr = (attr, val) => {
                 if (!is.Def(val)) {
                     if (is.String(attr)) attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(Attr => {
                         is.Def(Attr.split('=')[1]) ? element.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : element.setAttribute(Attr.split('=')[0], '')
@@ -1217,9 +1217,9 @@
              * {string} attr - name of attribute to get
              */
         element.getAttr = element.getAttribute;
-        element.attr = (attr,val) => {
-          if(is.String(val) || is.Object(attr)) return element.setAttr(attr,val);
-          if(is.String(attr) && !is.Def(val)) return element.getAttr(attr);
+        element.attr = (attr, val) => {
+            if (is.String(val) || is.Object(attr)) return element.setAttr(attr, val);
+            if (is.String(attr) && !is.Def(val)) return element.getAttr(attr);
         }
         element.prop = element.hasAttr;
         /**
@@ -1231,7 +1231,7 @@
         element.toggleAttr = (name, val, rtst) => {
                 element[W(is.Bool(val) ? !val : element.hasAttr(name), 'strip', 'set', 'Attr')](name, val);
                 return rtst ? element.hasAttr(name) : element
-        }
+            }
             /**
              * Hides and element by setting display none
              * @todo : Smooth animation
@@ -1781,7 +1781,7 @@
              * Craft.browser.is - checks which browser you're running
              * @param (string) browser - string containing a browser name like 'chrome','firefox'...
              * @returns (boolean) - returns whether or not this is the browser you checked for
-            */
+             */
             is: browser => Br.toLowerCase().includes(browser.toLowerCase()),
             // name of browser and version
             browser: Br
@@ -2000,19 +2000,19 @@
             return element;
         },
         fixURL(url) {
-          if (!is.URL(url)) {
-              let match = url.match(/^(\/.*?)?$/);
-              if (is.empty(match)) throw new Error('invalid src');
-              url = location.host + match[0];
-          }
-          if (!url.includes('http://') && !url.includes('https://')) url = location.protocol + '//' + url;
-          return url;
+            if (!is.URL(url)) {
+                let match = url.match(/^(\/.*?)?$/);
+                if (is.empty(match)) throw new Error('invalid src');
+                url = location.host + match[0];
+            }
+            if (!url.includes('http://') && !url.includes('https://')) url = location.protocol + '//' + url;
+            return url;
         },
         /**
          * Craft.addCSS takes in any string of valid css code and executes it
          * @param (string) css - css code to execute
          */
-        addCSS(css,noimport) {
+        addCSS(css, noimport) {
             query('style[crafterstyles]', head).textContent += noimport ? css : `@import url("${Craft.URLfrom(css,{type : 'text/css'})}");\n`;
         },
         /**
@@ -2020,32 +2020,32 @@
          * @param (src) css - css code to execute
          */
         importCSS(src) {
-          Craft.addCSS(`@import url("${Craft.fixURL(src)}");\n`,true);
+            Craft.addCSS(`@import url("${Craft.fixURL(src)}");\n`, true);
         },
-        importFont(name,src) {
-          Craft.addCSS(`@font-face {font-family: ${name};src:url("${Craft.fixURL(src)}");}`,true);
+        importFont(name, src) {
+            Craft.addCSS(`@font-face {font-family:${name};src:url("${Craft.fixURL(src)}");}`, true);
         },
-        loadScript(src,funcexec) {
-          return promise((pass,fail) => {
-            fetch(Craft.fixURL(src), {
-                mode: 'cors'
-            }).then(res => {
-                if (!res.ok) console.warn(`loading script failed - ${src}`);
-                else res.text().then(code => {
-                      if(funcexec) {
-                        try {
-                          new Function(code).call(root);
-                          pass();
-                        } catch(e) {
-                          fail();
-                        }
-                      } else
-                      head.appendChild(dom.script(code).modify(script => {
-                        script.onload = pass;
-                      }))
+        loadScript(src, funcexec) {
+            return promise((pass, fail) => {
+                fetch(Craft.fixURL(src), {
+                    mode: 'cors'
+                }).then(res => {
+                    if (!res.ok) console.warn(`loading script failed - ${src}`);
+                    else res.text().then(code => {
+                        if (funcexec) {
+                            try {
+                                new Function(code).call(root);
+                                pass();
+                            } catch (e) {
+                                fail();
+                            }
+                        } else
+                            head.appendChild(dom.script(code).modify(script => {
+                                script.onload = pass;
+                            }))
+                    });
                 });
-            });
-          })
+            })
         },
         hasCaps: string => toArr(string).some(is.Uppercase),
         len(val) {
@@ -2301,13 +2301,24 @@
             }
             return false
         },
+        /**
+         * converts camel case strings to dashed strings
+         * usefull for css properties and such
+         * @example Craft.camelDash('MyCamelCaseName') // -> my-camel-case-name
+         * @param (string) val - string to convert
+         */
+        camelDash(val) {
+            return val.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+        },
         formatBytes(bytes, decimals) {
             if (bytes == 0) return '0 Bytes';
             let k = 1000,
                 i = Math.floor(Math.log(bytes) / Math.log(k));
             return (bytes / Math.pow(k, i)).toPrecision(decimals + 1 || 3) + ' ' + 'Bytes,KB,MB,GB,TB,PB,EB,ZB,YB'.split(',')[i]
         },
-        randomNum(min = 0, max = 100) {
+        randomNum(min, max) {
+            min = min || 0;
+            max = max || 100;
             return Math.random() * (max - min) + min;
         },
         randomInt(min, max) {
@@ -2315,7 +2326,10 @@
             max = max || 100;
             return Math.floor(Math.random() * (max - min)) + min;
         },
-        /** method for generating random alphanumeric strings*/
+        /**
+         * method for generating random alphanumeric strings
+         * @return (string)
+         */
         randomString: () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1),
         /**
          * similar to Craft.randomString in that it generates a unique string , in this case a Unique ID with random alphanumeric strings separated by hyphens
@@ -2414,7 +2428,6 @@
     On('blur', TabChange(false));
     On('focus', TabChange(true));
 
-    //Craft.loader.removeAll(true);
     Craft.curry.to = Craft.curry((arity, fn) => makeFn(fn, [], arity));
     Craft.curry.adaptTo = Craft.curry((num, fn) => Craft.curry.to(num, function (context) {
         fn.apply(null, Craft.omit(arguments, context).slice(1).concat(context))
