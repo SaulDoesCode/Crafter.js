@@ -487,6 +487,7 @@
     function eventemitter(obj) {
         let options = {
             evtlisteners: new Set,
+            stop:false,
             on(type, func) {
                 if (!is.Func(func)) throw new TypeError(`.on(${type},func) : func is not a function`);
                 func.etype = type;
@@ -506,15 +507,22 @@
                 if (options.evtlisteners.has(func)) options.evtlisteners.delete(func);
                 return options;
             },
-            emit(type, event) {
-                let args = toArr(arguments).slice(2);
-                options.evtlisteners.forEach(ln => {
-                    if (ln.etype == type) ln.apply(obj, [event].concat(args));
-                });
+            emit(type) {
+                if(!options.stop) {
+                  let args = toArr(arguments).slice(1);
+                  options.evtlisteners.forEach(ln => {
+                      if (ln.etype == type && !options.stop) ln.apply(obj, args);
+                  });
+                }
                 return options;
             },
-            defineHandle(type) {
-                this[type] = (fn, once) => options[once == true ? 'once' : 'on'](type, fn);
+            stopall(stop) {
+              if(!is.Bool(stop)) stop = true;
+              options.stop = stop;
+            },
+            defineHandle(name,type) {
+                if(!type) type = name;
+                this[name] = (fn, once) => options[once == true ? 'once' : 'on'](type, fn);
                 return options;
             },
         };
@@ -2437,15 +2445,14 @@
                 if (key == 'created' || (key.includes('set_') || key.includes('get_'))) continue;
 
                 if (is.Func(config[key])) dm = function () { // Adds dom methods to element
-                    return config[key].call(dom(this))
+                      return config[key].apply(dom(this),arguments)
                 }
-
                 key == 'inserted' ? element.attachedCallback = dm :
                     key == 'destroyed' ? element.detachedCallback = dm :
                     key == 'attr' ? element.attributeChangedCallback = dm :
                     key.toLowerCase() == 'css' ? Craft.addCSS(config[key]) :
                     is.Func(config[key]) ? element[key] = dm :
-                    defineprop(element, key, getpropdescriptor(config, key))
+                    defineprop(element, key, getpropdescriptor(config, key));
             }
 
             settings['prototype'] = element;
