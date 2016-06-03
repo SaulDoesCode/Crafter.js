@@ -607,6 +607,7 @@ function _defineProperty(obj, key, value) {
   function eventemitter(obj) {
     var options = {
       evtlisteners: new Set(),
+      stop: false,
       on: function(type, func) {
         if (!is.Func(func)) throw new TypeError(".on(" + type + ",func) : func is not a function");
         func.etype = type;
@@ -628,15 +629,25 @@ function _defineProperty(obj, key, value) {
         if (options.evtlisteners.has(func)) options.evtlisteners.delete(func);
         return options;
       },
-      emit: function(type, event) {
-        var args = toArr(arguments).slice(2);
-        options.evtlisteners.forEach(function(ln) {
-          if (ln.etype == type) ln.apply(obj, [event].concat(args));
-        });
+      emit: function(type) {
+        var _arguments = arguments;
+        if (!options.stop) {
+          (function() {
+            var args = toArr(_arguments).slice(1);
+            options.evtlisteners.forEach(function(ln) {
+              if (ln.etype == type && !options.stop) ln.apply(obj, args);
+            });
+          })();
+        }
         return options;
       },
-      defineHandle: function(type) {
-        this[type] = function(fn, once) {
+      stopall: function(stop) {
+        if (!is.Bool(stop)) stop = true;
+        options.stop = stop;
+      },
+      defineHandle: function(name, type) {
+        if (!type) type = name;
+        this[name] = function(fn, once) {
           return options[once == true ? 'once' : 'on'](type, fn);
         };
         return options;
@@ -939,17 +950,17 @@ function _defineProperty(obj, key, value) {
       return elements;
     };
     elements.gotClass = function() {
-      var _arguments = arguments;
+      var _arguments2 = arguments;
       return elements.every(function(el) {
-        return toArr(_arguments).every(function(Class) {
+        return toArr(_arguments2).every(function(Class) {
           return el.classList.contains(Class);
         });
       });
     };
     elements.GotSomeClass = function() {
-      var _arguments2 = arguments;
+      var _arguments3 = arguments;
       return elements.some(function(el) {
-        return toArr(_arguments2).every(function(Class) {
+        return toArr(_arguments3).every(function(Class) {
           return el.classList.contains(Class);
         });
       });
@@ -972,9 +983,9 @@ function _defineProperty(obj, key, value) {
      * @param {...string} name of the Attribute/s to strip
      */
     elements.stripAttr = function() {
-      var _arguments3 = arguments;
+      var _arguments4 = arguments;
       elements.forEach(function(el) {
-        forEach(_arguments3, function(attr) {
+        forEach(_arguments4, function(attr) {
           el.removeAttribute(attr);
         });
       });
@@ -987,12 +998,12 @@ function _defineProperty(obj, key, value) {
      * @param {...string} names of attributes to check for
      */
     elements.hasAttr = function(attr) {
-      var _arguments4 = arguments;
+      var _arguments5 = arguments;
       if (is.String(attr)) return elements.every(function(el) {
         return el.hasAttribute(attr);
       });
       return elements.every(function(el) {
-        return Craft.flatten(_arguments4).every(function(a) {
+        return Craft.flatten(_arguments5).every(function(a) {
           return el.hasAttribute(a);
         });
       });
@@ -2108,7 +2119,7 @@ function _defineProperty(obj, key, value) {
       }
       if (!address.includes('ws://') && !address.includes('wss://')) address = (location.protocol === 'http:' ? 'ws://' : 'wss://') + address;
       if (is.URL(address)) {
-        var _ret3 = function() {
+        var _ret4 = function() {
           var newSock = function() {
               return protocols ? new WebSocket(address, protocols) : new WebSocket(address);
             },
@@ -2166,7 +2177,7 @@ function _defineProperty(obj, key, value) {
             v: Options
           };
         }();
-        if ((typeof _ret3 === "undefined" ? "undefined" : _typeof(_ret3)) === "object") return _ret3.v;
+        if ((typeof _ret4 === "undefined" ? "undefined" : _typeof(_ret4)) === "object") return _ret4.v;
       }
     },
     curry: function(fn) {
@@ -2434,7 +2445,7 @@ function _defineProperty(obj, key, value) {
   }, _defineProperty(_root$Craft, "model", function(name, func) {
     if (is.Func(func) && is.String(name)) {
       if (!is.Def(Craft.Models[name])) {
-        var _ret5 = function() {
+        var _ret6 = function() {
           var scope = observable();
           Craft.Models[name] = {
             func: func.bind(scope),
@@ -2448,7 +2459,7 @@ function _defineProperty(obj, key, value) {
             }
           };
         }();
-        if ((typeof _ret5 === "undefined" ? "undefined" : _typeof(_ret5)) === "object") return _ret5.v;
+        if ((typeof _ret6 === "undefined" ? "undefined" : _typeof(_ret6)) === "object") return _ret6.v;
       }
       throw new Error('Craft Model already exists');
     }
@@ -2561,13 +2572,13 @@ function _defineProperty(obj, key, value) {
     var _loop = function(_key4) {
       if (_key4 == 'created' || _key4.includes('set_') || _key4.includes('get_')) return "continue";
       if (is.Func(config[_key4])) dm = function() { // Adds dom methods to element
-        return config[_key4].call(dom(this));
+        return config[_key4].apply(dom(this), arguments);
       };
       _key4 == 'inserted' ? element.attachedCallback = dm : _key4 == 'destroyed' ? element.detachedCallback = dm : _key4 == 'attr' ? element.attributeChangedCallback = dm : _key4.toLowerCase() == 'css' ? Craft.addCSS(config[_key4]) : is.Func(config[_key4]) ? element[_key4] = dm : defineprop(element, _key4, getpropdescriptor(config, _key4));
     };
     for (var _key4 in config) {
-      var _ret7 = _loop(_key4);
-      if (_ret7 === "continue") continue;
+      var _ret8 = _loop(_key4);
+      if (_ret8 === "continue") continue;
     }
     settings['prototype'] = element;
     doc.registerElement(tag, settings);
