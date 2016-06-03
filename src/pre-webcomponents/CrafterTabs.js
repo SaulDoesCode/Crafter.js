@@ -37,7 +37,7 @@
         element.tabs[0].view.setAttribute('active', '');
       }
 
-      element.scrollHandle = On('wheel', 'tab-handles', element, e => {
+      element.scrollHandle = on('wheel', 'tab-handles', element, e => {
         queryEach('[active]', element, el => el.removeAttribute('active'));
         (e.deltaY < 1) ? activeTab-- : activeTab++;
         e.preventDefault();
@@ -49,8 +49,8 @@
 
     },
     destroyed() {
-      this.scrollHandle.Off;
-      this.handleClick.Off;
+      this.scrollHandle.off;
+      this.handleClick.off;
     },
     attr(attrName, oldVal, newVal) {
       if (attrName === 'selected') {

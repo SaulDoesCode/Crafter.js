@@ -7,16 +7,27 @@
 (function (doc, root) {
     "use strict";
     let Ready = false,
+        tabActive = true,
         ready = () => Ready || doc.readyState == "complete",
         ua = navigator.userAgent,
-        tabActive = true,
         tabListeners = new Set,
         tem, Br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
+
+    // tests arguments with Array.prototype.every;
+    function ta(test) {
+        return function () {
+            return arguments.length && toArr(arguments).every(test)
+        }
+    }
+
     const sI = 'Isync',
+        DestructionEvent = new Event('destroy'),
         toArr = Array.from,
         undef = void 0,
         defineprop = Object.defineProperty,
         getpropdescriptor = Object.getOwnPropertyDescriptor,
+        def = ta(o => typeof o !== 'undefined'),
+        nil = ta(o => o === null),
         head = doc.head,
         RegExps = {
             email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
@@ -30,34 +41,27 @@
     Br = (Br ? [Br[1], Br[2]] : [navigator.appName, navigator.appVersion, '-?']).join(' ');
 
     function promise(func) {
-        return new Promise(func);
+        return new Promise(func)
     }
 
     function Locs(test) {
-        return [location.hash, location.href, location.pathname].some(test);
+        return [location.hash, location.href, location.pathname].some(test)
     }
 
     // get the last item in an array
     function last(arr) {
-        return arr[arr.length - 1];
+        return arr[arr.length - 1]
     }
 
     // document , fragment , from , string -   dffstr
     function dffstr(html) {
-        return doc.createRange().createContextualFragment(html || '');
+        return doc.createRange().createContextualFragment(html || '')
     }
 
     // get the string form of any object
     // then compare it to a given string
     function type(obj, str) {
         return toString.call(obj) === str
-    }
-
-    // tests arguments with Array.prototype.every;
-    function ta(test) {
-        return function () {
-            return arguments.length && toArr(arguments).every(test);
-        }
     }
 
     function rif(b, e) {
@@ -102,15 +106,13 @@
         if (!is.Arr(arr) && is.Arraylike(arr)) arr = toArr(arr);
         return arr.join('.')
     }
-    let def = ta(o => typeof o !== 'undefined'),
-        nil = ta(o => o === null);
 
     /**
      * is - Type Testing / Assertion *
      *
      */
 
-    root.is = {
+    let is = {
         /**
          * @method Bool
          * Test if something is a boolean type
@@ -397,7 +399,7 @@
          * @param {...*} arguments to compare with value
          */
         neither(value) {
-            return toArr(arguments).slice(1).every(val => value !== val);
+            return toArr(arguments).slice(1).every(val => value !== val)
         },
         /**
          * Determines if two variables are equal
@@ -459,15 +461,14 @@
      * @param {Array|Object|NodeList|Number} iterable - any collection that is either an Object or has a .length value
      * @param {function} func - function called on each iteration -> "function( value , indexOrKey ) {...}"
      */
-    root.forEach = function (iterable, func) {
-        if (!is.empty(iterable) && is.Func(func)) {
+    function forEach(iterable, func) {
+        if (is.Func(func)) {
             let i = 0;
-            if (is.Arraylike(iterable) && !localStorage) {
+            if (is.Arraylike(iterable) && !localStorage)
                 for (; i < iterable.length; i++) func(iterable[i], i);
-            } else if (is.int(iterable)) {
-                iterable = toInt(iterable);
-                for (; i < iterable; func(iterable--));
-            } else
+            else if (is.int(iterable))
+                while (iterable != i) func(i++);
+            else
                 for (i in iterable)
                     if (iterable.hasOwnProperty(i)) func(iterable[i], i);
         }
@@ -483,12 +484,56 @@
         return is.Node(val) ? [val] : is.NodeList(val) ? toArr(val) : [];
     }
 
+    function eventemitter(obj) {
+        let options = {
+            evtlisteners: new Set,
+            on(type, func) {
+                if (!is.Func(func)) throw new TypeError(`.on(${type},func) : func is not a function`);
+                func.etype = type;
+                options.evtlisteners.add(func);
+                return {
+                    off: () => options.off(func),
+                }
+            },
+            once(type, func) {
+                function funcwrapper() {
+                    func.apply(obj, arguments);
+                    options.off(funcwrapper);
+                }
+                options.on(type, funcwrapper);
+            },
+            off(func) {
+                if (options.evtlisteners.has(func)) options.evtlisteners.delete(func);
+                return options;
+            },
+            emit(type, event) {
+                let args = toArr(arguments).slice(2);
+                options.evtlisteners.forEach(ln => {
+                    if (ln.etype == type) ln.apply(obj, [event].concat(args));
+                });
+                return options;
+            },
+            defineHandle(type) {
+                this[type] = (fn, once) => options[once == true ? 'once' : 'on'](type, fn);
+                return options;
+            },
+        };
+        forEach(options, (val, key) => {
+            defineprop(obj, key, {
+                value: val,
+                enumerable: false,
+                writable: false,
+            })
+        });
+        return obj;
+    }
+
     /**
      * Event Handler
      * @param {string} EventType - set the type of event to listen for example "click" or "scroll"
      * @param {Node|NodeList|window|document} Target - the Event Listener's target , can also be a NodeList to listen on multiple Nodes
      * @param {function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
-     * @returns Interface On,Off,Once
+     * @returns Interface on,off,once
      */
     function EventHandler(EventType, Target, func, Within) {
         return new function () {
@@ -509,10 +554,10 @@
                     set(type) {
                         let ehdl = this;
                         //  have you tried turning it on and off again? - THE IT CROWD
-                        ehdl.Off;
+                        ehdl.off;
                         EventType = type.includes(',') ? type.split(',') : type;
                         if (!is.Arr(EventType)) EventType = [EventType];
-                        ehdl.On;
+                        ehdl.on;
                         return ehdl
                     },
                     get() {
@@ -523,7 +568,7 @@
                 /**
                  * Activates the EventHandler to start listening for the EventType on the Target/Targets
                  */
-            defineprop(this, 'On', {
+            defineprop(this, 'on', {
                 get() {
                     let ehdl = this;
                     Target.forEach(target => {
@@ -538,9 +583,9 @@
             });
             /**
              * De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
-             * can still optionally be re-activated with On again
+             * can still optionally be re-activated with on again
              */
-            defineprop(this, 'Off', {
+            defineprop(this, 'off', {
                 get() {
                     let ehdl = this;
                     Target.forEach(target => {
@@ -555,17 +600,17 @@
             });
 
             /**
-             * Once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
-             * the Handler function will be called only Once
+             * once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
+             * the Handler function will be called only once
              */
-            defineprop(this, 'Once', {
+            defineprop(this, 'once', {
                 get() {
                     let ehdl = this;
                     FuncWrapper = e => {
                         func(e, e.target, Craft.deglove(Target));
-                        ehdl.Off.state = false;
+                        ehdl.off.state = false;
                     }
-                    return ehdl.On;
+                    return ehdl.on;
                 },
                 enumerable: true
             });
@@ -577,7 +622,7 @@
      * @param {string} selector - CSS selector to query the DOM Node with
      * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
      */
-    root.query = (selector, element) => {
+    let query = (selector, element) => {
         if (is.String(element)) element = doc.querySelector(element);
         return is.Node(element) ? element.querySelector(selector) : doc.querySelector(selector);
     }
@@ -587,7 +632,7 @@
      * @param {string} selector - CSS selector to query the DOM Nodes with
      * @param {Node|NodeList|string=} element - Optional Node or CSS selector to search within insead of document
      */
-    root.queryAll = (selector, element) => {
+    let queryAll = (selector, element) => {
             if (is.String(element)) element = queryAll(element);
             let list;
             if (Craft.len(element) !== 1 && (is.Arr(element) || is.NodeList(element))) {
@@ -609,7 +654,7 @@
          * @param {function} func - function called on each iteration -> "function( Element , index ) {...}"
          * @param {boolean=} returnList - should queryEach also return the list of nodes
          */
-    root.queryEach = (selector, element, func, returnList) => {
+    let queryEach = (selector, element, func, returnList) => {
         if (is.Func(element)) func = element;
         let list = NodeOrQuerytoArr(selector, element);
         forEach(list, func);
@@ -617,11 +662,8 @@
     }
 
     function EventTypes(Target, within, listen) {
-        listen = listen || 'On';
-        let etype = type => fn => EventHandler(type, Target, fn, within)[listen],
-            keypress = keycode => fn => EventHandler('keydown', Target, (e, el, t) => {
-                if (event.which == keycode || event.keyCode == keycode) fn(e, el, t)
-            }, within)[listen];
+        listen = listen || 'on';
+        let etype = type => fn => EventHandler(type, Target, fn, within)[listen];
         return {
             Click: etype('click'),
             Input: etype('input'),
@@ -637,14 +679,6 @@
             Mouseenter: etype('mouseenter'),
             Mouseleave: etype('mouseleave'),
             Scroll: etype('scroll'),
-            Enter: keypress(13),
-            Escape: keypress(27),
-            Delete: keypress(46),
-            Space: keypress(32),
-            UpArrow: keypress(38),
-            DownArrow: keypress(40),
-            LeftArrow: keypress(37),
-            RightArrow: keypress(39),
         };
     }
 
@@ -663,18 +697,18 @@
      * @param {string} EventType - set the type of event to listen for example "click" or "scroll"
      * @param {Node|NodeList|window|document} Target - the Event Listener's target , can be a NodeList to listen on multiple Nodes
      * @param {function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
-     * @returns Off - when On is defined as a variable "var x = On(...)" it allows you to access all the EventHandler interfaces Off,Once,On
+     * @returns off - when on is defined as a variable "var x = on(...)" it allows you to access all the EventHandler interfaces off,once,on
      */
-    root.On = EvtLT('On');
+    let on = EvtLT('on');
 
     /**
-     * Starts listening for an EventType on the Target/Targets ONCE after triggering the Once event Listener will stop listening
+     * Starts listening for an EventType on the Target/Targets ONCE after triggering the once event Listener will stop listening
      * @param {string} EventType - set the type of event to listen for example "click" or "scroll"
      * @param {Node|NodeList|window|document} Target - the Event Listener's target , can be a NodeList to listen on multiple Nodes
      * @param {function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
-     * @returns On,Off,Once - when Once is defined as a variable "var x = Once(...)" it allows you to access all the EventHandler interfaces Off,Once,On
+     * @returns on,off,once - when once is defined as a variable "var x = once(...)" it allows you to access all the EventHandler interfaces off,once,on
      */
-    root.Once = EvtLT('Once');
+    let once = EvtLT('once');
 
     function craftElement(name, inner, attributes, extraAttr, stringForm) {
         let newEl = domManip(doc.createElement(name));
@@ -735,11 +769,14 @@
         a: (link, inner, attr) => Dom.element('a', inner, attr, {
             href: link
         }),
-        script(code, attr, defer, onload) {
+        script(code, attr, defer, onload, nosrc) {
             let script = Dom.element('script', '', attr, {
                 type: 'text/javascript'
             });
-            script.src = Craft.URLfrom(code);
+            if (nosrc == true) script.textContent = code;
+            else script.src = Craft.URLfrom(code, {
+                type: 'text/javascript'
+            });
             if (defer == true) script.defer = defer != false;
             if (is.Func(onload)) script.onload = onload;
             return script;
@@ -752,7 +789,7 @@
         }
     }
     'table,td,th,tr,article,aside,ul,ol,li,h1,h2,h3,h4,h5,h6,div,span,section,button,br,label,header,i,style,nav,menu,main,menuitem'.split(',').forEach(tag => {
-        Dom[tag] = (inner, attr) => Dom.element(tag, inner, attr);
+        Dom[tag] = (inner, attr, ea) => Dom.element(tag, inner, attr, ea);
     });
 
     function domNodeList(elements) {
@@ -765,9 +802,9 @@
          * Listen for Events on the NodeList
          * @param {string} string indicating the type of event to listen for
          * @param {function} func - handler function for the event
-         * @returns handler (Off,Once,On)
+         * @returns handler (off,once,on)
          */
-        elements.On = (eventType, func) => On(eventType, elements, func);
+        elements.on = (eventType, func) => on(eventType, elements, func);
         /**
          * add CSS style rules to NodeList
          * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
@@ -1084,17 +1121,23 @@
              * @memberof dom
              * @param {string} string indicating the type of event to listen for
              * @param {function} func - handler function for the event
-             * @returns handler (Off,Once,On)
+             * @returns handler (off,once,on)
              */
-        element.On = (eventType, func) => On(eventType, element, func);
+        element.on = (eventType, func) => on(eventType, element, func);
 
+        element.emit = (evt, detail) => {
+            if (!is.String(evt)) throw new TypeError("element.emit : event name needs to be a string");
+            element.dispatchEvent(new CustomEvent(evt, {
+                detail: is.Def(detail) || null
+            }))
+        }
 
         element.newSetGet('ondestroy', fn => {
-            if (is.Func(fn)) element.On('destroy', fn)
+            if (is.Func(fn)) element.on('destroy', fn)
         });
 
         function evlt(type) {
-            return (fn, ltype) => root[ltype ? 'Once' : 'On'](type, element, fn)
+            return (fn, ltype) => (ltype ? once : on)(type, element, fn)
         }
 
         element.Click = evlt('click');
@@ -1111,12 +1154,11 @@
         element.Mouseenter = evlt('mouseenter');
         element.Mouseleave = evlt('mouseleave');
 
-        element.OnScroll = (func, pd) => Craft.OnScroll(element, func, pd);
+        element.onScroll = (func, pd) => Craft.onScroll(element, func, pd);
 
-        let keypress = code => (fn, type) => evlt('keydown')(element, e => {
+        /*let keypress = code => (fn, type) => evlt('keydown')(element, e => {
             if (e.which == code || e.keyCode == code) fn(e, element)
         }, type);
-
         element.Enter = keypress(13);
         element.Escape = keypress(27);
         element.Delete = keypress(46);
@@ -1125,6 +1167,8 @@
         element.DownArrow = keypress(40);
         element.LeftArrow = keypress(37);
         element.RightArrow = keypress(39);
+
+        */
         /**
          * add CSS style rules to the Element or NodeList
          * @memberof dom
@@ -1181,9 +1225,7 @@
              * @param {...string} name of the Attribute/s to strip
              */
         element.stripAttr = function () {
-                forEach(arguments, attr => {
-                    element.removeAttribute(attr)
-                });
+                forEach(arguments, element.removeAttribute.bind(element));
                 return element
             }
             /**
@@ -1208,7 +1250,9 @@
                     if (is.String(attr)) attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(Attr => {
                         is.Def(Attr.split('=')[1]) ? element.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : element.setAttribute(Attr.split('=')[0], '')
                     }) : element.setAttribute(attr, '');
-                    else if (is.Object(attr)) forEach(attr, (value, Attr) => element.setAttribute(Attr, value));
+                    else if (is.Object(attr)) forEach(attr, (value, Attr) => {
+                        element.setAttribute(Attr, value)
+                    });
                 } else element.setAttribute(attr, val || '');
                 return element
             }
@@ -1340,14 +1384,14 @@
 
         if (element.isInput) {
             element.SyncInput = (obj, key) => {
-                element[sI] = On(element).Input(() => {
+                element[sI] = on(element).Input(() => {
                     Craft.setDeep(obj, key, element.value)
                 })
                 return element
             }
             element.disconectInputSync = () => {
                 if (is.Def(element[sI])) {
-                    element[sI].Off;
+                    element[sI].off;
                     delete element[sI]
                 }
                 return element
@@ -1388,7 +1432,7 @@
      * @param {Node|string=} within - optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
      * @param {boolean=} one - even if there are more than one elements matching a selector only return the first one
      */
-    root.dom = function (element, within, one) {
+    function dom(element, within, one) {
         if (within == true) {
             one = within;
             within = null;
@@ -1424,7 +1468,7 @@
                 Set: new Set,
             },
             enumerable: false,
-            writable: true,
+            writable: false,
         });
         defineprop(obj, 'isObservable', {
             value: true,
@@ -1458,7 +1502,7 @@
                     return options.on;
                 },
                 enumerable: false,
-                writable: true,
+                writable: false,
             });
         });
 
@@ -1485,7 +1529,7 @@
                 return options.on;
             },
             enumerable: false,
-            writable: true,
+            writable: false,
         });
         defineprop(obj, 'get', {
             value(key) {
@@ -1510,13 +1554,14 @@
             writable: false,
             enumerable: false,
         });
-        if (Proxy) return new Proxy(obj, {
+        obj = eventemitter(obj);
+        if (root.Proxy) return new Proxy(obj, {
             get(target, key) {
                 let val;
                 target.listeners.Get.forEach(ln => {
                     if (ln.prop === '*' || ln.prop === key) val = ln.multi ? ln.fn('get', key, target) : ln.fn(key, target);
                 });
-                return is.Def(val) ? val : target[key];
+                return is.Def(val) ? val : Reflect.get(target, key);
             },
             set(target, key, value) {
                 let val;
@@ -1524,10 +1569,15 @@
                     if (ln.prop === '*' || ln.prop === key) val = ln.multi ? ln.fn('set', key, value, target, !Reflect.has(target, key)) :
                         ln.fn(key, value, target, !Reflect.has(target, key));
                 });
-                return is.Def(val) ? val : Reflect.set(target, key, value)
+                val = is.Def(val) ? val : value;
+                if (is.Object(val)) observable(val);
+                return Reflect.set(target, key, val);
             }
         });
-        else return obj;
+        else {
+            console.warn('This Browser does not support Proxy, Craft.observables need to use the .set and .get accessors to work');
+            return obj;
+        }
     }
 
     /**
@@ -1588,6 +1638,19 @@
          */
         toInt,
         promise,
+        eventemitter,
+        // dom methods and stuff
+        dom,
+        query,
+        queryAll,
+        queryEach,
+        forEach,
+        on,
+        once,
+        is,
+        init(func) {
+            return func.apply(Craft, toArr(arguments).slice(1));
+        },
         /**
          * Compares two arrays and determines if they are the same array
          * @method sameArray
@@ -1786,8 +1849,6 @@
             // name of browser and version
             browser: Br
         },
-        // dom methods and stuff
-        dom,
         router: {
             addHandle(link, func) {
                 Craft.router.handlers.push({
@@ -1810,7 +1871,7 @@
             link(Selector, link, newtab, eventType) {
                 if (is.String(newtab)) eventType = newtab
                 Craft.router.links.push(() => {
-                    On(eventType || 'click', Selector, e => {
+                    on(eventType || 'click', Selector, e => {
                         Craft.router.open(link, newtab)
                     })
                 })
@@ -2019,8 +2080,14 @@
          * Craft.importCSS takes in a source then attempts to fetch and execute it
          * @param (src) css - css code to execute
          */
-        importCSS(src) {
-            Craft.addCSS(`@import url("${Craft.fixURL(src)}");\n`, true);
+        importCSS(src, gofetch) {
+            if (gofetch == true) fetch(Craft.fixURL(src), {
+                mode: 'cors'
+            }).then(res => {
+                if (!res.ok) console.warn(`loading css failed - ${src}`);
+                else res.text().then(css => Craft.addCSS('\n'+css,true));
+            });
+            else Craft.addCSS(`@import url("${Craft.fixURL(src)}");\n`, true);
         },
         importFont(name, src) {
             Craft.addCSS(`@font-face {font-family:${name};src:url("${Craft.fixURL(src)}");}`, true);
@@ -2040,9 +2107,7 @@
                                 fail();
                             }
                         } else
-                            head.appendChild(dom.script(code).modify(script => {
-                                script.onload = pass;
-                            }))
+                            head.appendChild(dom.script(code, {}, false, pass, true));
                     });
                 });
             })
@@ -2076,8 +2141,8 @@
             return memoized;
         },
         millis: {
-            min: 60000,
             sec: 1000,
+            min: 60000,
             hour: 3600000,
             day: 86400000,
             seconds: n => (n || 1) * 1000,
@@ -2093,7 +2158,7 @@
         Models: observable(),
         tabActive: true,
         /**
-         * Tail Call Optimization for recursive functional functions
+         * Tail Call Optimization for recursive functions
          * @param fn - function that uses recursion inside
          */
         tco(fn) {
@@ -2133,7 +2198,7 @@
             options.duration = options.duration || 400;
             options.offset = options.offset || 0;
 
-            let startTime, elapsedTime, start = root.pageYOffset,
+            let startTime, elapsedTime, start = root.pageYoffset,
                 distance = is.String(target) ? options.offset + dom(target, true).getRect().top : target,
                 loopIteration = 0,
                 loop = time => {
@@ -2177,8 +2242,8 @@
          * @param {function} func - callback to handle the event
          * @param {boolean=} preventDefault - event.preventDefault() or not
          */
-        OnScroll(element, func, preventDefault) {
-            return On('wheel', element, e => {
+        onScroll(element, func, preventDefault) {
+            return on('wheel', element, e => {
                 if (preventDefault) e.preventDefault();
                 func(e.deltaY < 1, e)
             })
@@ -2388,14 +2453,14 @@
         },
         SyncInput(input, obj, key) {
             if (is.String(input)) input = query(input);
-            if (is.Input(input)) input[sI] = On(input).Input(e => {
+            if (is.Input(input)) input[sI] = on(input).Input(e => {
                 Craft.setDeep(obj, key, input.value)
             })
         },
         disconectInputSync(input) {
             if (is.String(input)) input = query(input);
             if (is.Node(input) && is.Def(input[sI])) {
-                input[sI].Off;
+                input[sI].off;
                 delete input[sI]
             }
         },
@@ -2410,7 +2475,7 @@
                     return options;
                 }
             }
-            return options.On;
+            return options.on;
         },
     }
     head.appendChild(dom.style('', 'crafterstyles'));
@@ -2425,8 +2490,8 @@
         get: () => tabActive
     });
 
-    On('blur', TabChange(false));
-    On('focus', TabChange(true));
+    on('blur', TabChange(false));
+    on('focus', TabChange(true));
 
     Craft.curry.to = Craft.curry((arity, fn) => makeFn(fn, [], arity));
     Craft.curry.adaptTo = Craft.curry((num, fn) => Craft.curry.to(num, function (context) {
@@ -2496,8 +2561,6 @@
         model.func(model.scope)
     });
 
-    let DestructionEvent = new Event('destroy');
-
     function init() {
         Craft.router.links.forEach(link => {
             link()
@@ -2523,9 +2586,9 @@
         Ready = true
     }
 
-    !ready() ? Once("DOMContentLoaded", doc, init) : init();
+    !ready() ? once("DOMContentLoaded", doc, init) : init();
 
-    On('hashchange', () => {
+    on('hashchange', () => {
         Craft.router.handlers.forEach(handle => {
             if (Locs(l => l == handle.link)) handle.func(location.hash)
         });
