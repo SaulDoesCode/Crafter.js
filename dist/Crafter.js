@@ -244,7 +244,7 @@ function _defineProperty(obj, key, value) {
      * @param args - value/values to test
      */
     Element: ta(function(o) {
-      return type(o, '[object HTMLElement]');
+      return o.toString().includes('HTML');
     }),
     /**
      * Determine if a variable is a File Object
@@ -272,7 +272,7 @@ function _defineProperty(obj, key, value) {
      * @param args - value/values to test
      */
     Func: ta(function(o) {
-      return typeof o === 'function';
+      return typeof o == 'function';
     }),
     /**
      * Determine if a variable/s are true
@@ -585,7 +585,7 @@ function _defineProperty(obj, key, value) {
       if (is.Arraylike(iterable) && !localStorage)
         for (; i < iterable.length; i++) {
           func(iterable[i], i);
-        } else if (is.int(iterable))
+        } else if (is.int(iterable) && !is.String(iterable))
           while (iterable != i) {
             func(i++);
           } else
@@ -814,6 +814,14 @@ function _defineProperty(obj, key, value) {
     };
   }
 
+  function keyhandle(keycode) {
+    return function(fn, context) {
+      return function(evt) {
+        if (evt.keyCode === keycode) fn.apply(context || this, arguments);
+      };
+    };
+  }
+
   function EvtLT(ListenType) {
     return function(EventType, Target, element, func) {
       var args = toArr(arguments);
@@ -830,7 +838,8 @@ function _defineProperty(obj, key, value) {
    * @returns off - when on is defined as a variable "var x = on(...)" it allows you to access all the EventHandler interfaces off,once,on
    */
   var on = EvtLT('on'),
-    once = EvtLT('once');
+    once = EvtLT('once'),
+    eventoptions = 'Click,Input,DoubleClick,Focus,Blur,Keydown,Mousemove,Mousedown,Mouseup,Mouseover,Mouseout'.split(',');
   /**
    * Starts listening for an EventType on the Target/Targets ONCE after triggering the once event Listener will stop listening
    * @param {string} EventType - set the type of event to listen for example "click" or "scroll"
@@ -839,16 +848,28 @@ function _defineProperty(obj, key, value) {
    * @returns on,off,once - when once is defined as a variable "var x = once(...)" it allows you to access all the EventHandler interfaces off,once,on
    */
   function craftElement(name, inner, attributes, extraAttr, stringForm) {
-    var newEl = domManip(doc.createElement(name));
+    var element = domManip(doc.createElement(name));
     if (is.Object(inner)) {
       attributes = inner;
       inner = undef;
     }
-    if (inner != undef) newEl.html(inner);
-    if (is.Object(attributes) || is.String(attributes)) newEl.setAttr(attributes);
-    if (extraAttr != undef) is.Bool(extraAttr) ? stringForm = extraAttr : newEl.setAttr(extraAttr);
-    if (stringForm) newEl = newEl.outerHTML;
-    return newEl;
+    if (inner != undef) element.html(inner);
+    if (is.Object(attributes) || is.String(attributes)) {
+      if (is.Object(attributes)) Object.keys(attributes).forEach(function(key) {
+        if (eventoptions.some(function(evo) {
+            return evo == key;
+          }) && is.Func(attributes[key])) {
+          var func = attributes[key];
+          key == 'DoubleClick' ? key = 'dblclick' : key = key.toLowerCase();
+          element[key + 'handle'] = on(key, element, func);
+          delete attributes[key];
+        }
+      });
+      element.setAttr(attributes);
+    }
+    if (extraAttr != undef) is.Bool(extraAttr) ? stringForm = extraAttr : element.setAttr(extraAttr);
+    if (stringForm) element = element.outerHTML;
+    return element;
   }
   /**
    * Contains several methods for Element Creation
@@ -1229,15 +1250,10 @@ function _defineProperty(obj, key, value) {
           val = path.val;
         is.Def(val) ? element.html(val) : Craft.setDeep(obj, prop, element.html());
         if (obj.isObservable) {
-          (function() {
-            var firstTime = true;
-            element._BoundObservable = obj.$set(prop, function(k, v, o) {
-              firstTime ? setTimeout(function() {
-                element.html(obj.get(k));
-                firstTime = false;
-              }, 30) : element.html(obj.get(k));
-            });
-          })();
+          var firstTime = true;
+          if (!element.isInput) element._BoundObservable = obj.on('$uberset:' + prop, function(val) {
+            element.html(val);
+          });
         }
         if (element.isInput) element.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : joindot(Craft.omit(cutbind, cutbind[0])));
       }
@@ -1539,17 +1555,10 @@ function _defineProperty(obj, key, value) {
     };
     if (element.isInput) {
       element.SyncInput = function(obj, key) {
-        element[sI] = on(element).Input(function() {
-          Craft.setDeep(obj, key, element.value);
-        });
-        return element;
+        return Craft.SyncInput(element, obj, key);
       };
       element.disconectInputSync = function() {
-        if (is.Def(element[sI])) {
-          element[sI].off;
-          delete element[sI];
-        }
-        return element;
+        return Craft.disconectInputSync(element);
       };
     }
     element.observe = function(func, options, name) {
@@ -1693,18 +1702,19 @@ function _defineProperty(obj, key, value) {
         });
         return obj[key];
       },
-      writable: false,
       enumerable: false
     });
     defineprop(obj, 'set', {
       value: function(key, value) {
         var val = void 0;
         obj.listeners.Set.forEach(function(ln) {
-          if (ln.prop === '*' || ln.prop === key) val = ln.multi ? ln.fn('set', key, value, obj, !is.Def(obj[key])) : ln.fn(key, value, obj, !is.Def(obj[key]));
+          if (ln.prop === '*' || ln.prop === key) val = ln.multi ? ln.fn('set', key, value, obj, Object.hasOwnProperty(obj, key)) : ln.fn(key, value, obj, Object.hasOwnProperty(obj, key));
         });
-        obj[key] = is.Def(val) ? val : value;
+        val = val != undef ? val : value;
+        if (is.Object(val)) observable(val);
+        target.emit('$uberset:' + key, val);
+        obj[key] = val;
       },
-      writable: false,
       enumerable: false
     });
     obj = eventemitter(obj);
@@ -1712,17 +1722,27 @@ function _defineProperty(obj, key, value) {
       get: function(target, key) {
         var val = void 0;
         target.listeners.Get.forEach(function(ln) {
-          if (ln.prop === '*' || ln.prop === key) val = ln.multi ? ln.fn('get', key, target) : ln.fn(key, target);
+          if (ln.prop === '*' || ln.prop === key) {
+            val = ln.multi ? ln.fn('get', key, target) : ln.fn(key, target);
+          }
         });
         return is.Def(val) ? val : Reflect.get(target, key);
       },
       set: function(target, key, value) {
-        var val = void 0;
+        var val = void 0,
+          onetime = false;
         target.listeners.Set.forEach(function(ln) {
-          if (ln.prop === '*' || ln.prop === key) val = ln.multi ? ln.fn('set', key, value, target, !Reflect.has(target, key)) : ln.fn(key, value, target, !Reflect.has(target, key));
+          if (ln.prop === '*' || ln.prop === key) {
+            if (onetime) {
+              value = val;
+              onetime = false;
+            } else onetime = true;
+            val = ln.multi ? ln.fn('set', key, value, target, !Reflect.has(target, key)) : ln.fn(key, value, target, !Reflect.has(target, key));
+          }
         });
         val = is.Def(val) ? val : value;
         if (is.Object(val)) observable(val);
+        target.emit('$uberset:' + key, val);
         return Reflect.set(target, key, val);
       }
     });
@@ -1939,6 +1959,12 @@ function _defineProperty(obj, key, value) {
     URLfrom: function(text, type) {
       return URL.createObjectURL(new Blob([text], type));
     },
+    checkStatus: function(response) {
+      if (response.status >= 200 && response.status < 300) return response;
+      var error = new Error(response.statusText);
+      error.response = response;
+      throw error;
+    },
     /**
      * Method to merge the properties of multiple objects , it can handle getters or setters without breaking them
      * @method concatObjects
@@ -2119,7 +2145,7 @@ function _defineProperty(obj, key, value) {
       }
       if (!address.includes('ws://') && !address.includes('wss://')) address = (location.protocol === 'http:' ? 'ws://' : 'wss://') + address;
       if (is.URL(address)) {
-        var _ret4 = function() {
+        var _ret3 = function() {
           var newSock = function() {
               return protocols ? new WebSocket(address, protocols) : new WebSocket(address);
             },
@@ -2177,8 +2203,15 @@ function _defineProperty(obj, key, value) {
             v: Options
           };
         }();
-        if ((typeof _ret4 === "undefined" ? "undefined" : _typeof(_ret4)) === "object") return _ret4.v;
+        if ((typeof _ret3 === "undefined" ? "undefined" : _typeof(_ret3)) === "object") return _ret3.v;
       }
+    },
+    keyhandles: {
+      base: keyhandle,
+      enter: keyhandle(13),
+      delete: keyhandle(8),
+      escape: keyhandle(27),
+      spacebar: keyhandle(32)
     },
     curry: function(fn) {
       return makeFn(fn, [], fn.length);
@@ -2445,7 +2478,7 @@ function _defineProperty(obj, key, value) {
   }, _defineProperty(_root$Craft, "model", function(name, func) {
     if (is.Func(func) && is.String(name)) {
       if (!is.Def(Craft.Models[name])) {
-        var _ret6 = function() {
+        var _ret5 = function() {
           var scope = observable();
           Craft.Models[name] = {
             func: func.bind(scope),
@@ -2459,7 +2492,7 @@ function _defineProperty(obj, key, value) {
             }
           };
         }();
-        if ((typeof _ret6 === "undefined" ? "undefined" : _typeof(_ret6)) === "object") return _ret6.v;
+        if ((typeof _ret5 === "undefined" ? "undefined" : _typeof(_ret5)) === "object") return _ret5.v;
       }
       throw new Error('Craft Model already exists');
     }
@@ -2577,16 +2610,27 @@ function _defineProperty(obj, key, value) {
       _key4 == 'inserted' ? element.attachedCallback = dm : _key4 == 'destroyed' ? element.detachedCallback = dm : _key4 == 'attr' ? element.attributeChangedCallback = dm : _key4.toLowerCase() == 'css' ? Craft.addCSS(config[_key4]) : is.Func(config[_key4]) ? element[_key4] = dm : defineprop(element, _key4, getpropdescriptor(config, _key4));
     };
     for (var _key4 in config) {
-      var _ret8 = _loop(_key4);
-      if (_ret8 === "continue") continue;
+      var _ret7 = _loop(_key4);
+      if (_ret7 === "continue") continue;
     }
     settings['prototype'] = element;
     doc.registerElement(tag, settings);
   }), _defineProperty(_root$Craft, "SyncInput", function(input, obj, key) {
     if (is.String(input)) input = query(input);
-    if (is.Input(input)) input[sI] = on(input).Input(function(e) {
-      Craft.setDeep(obj, key, input.value);
-    });
+    if (is.Input(input)) {
+      (function() {
+        var oldval = input.value;
+        input[sI] = on('input,blur,keydown', input, function(e) {
+          setTimeout(function() {
+            var val = input.value;
+            if (!(Craft.getDeep(obj, key) == "" && val == "") && val != oldval) {
+              oldval = val;
+              Craft.setDeep(obj, key, input.value);
+            }
+          }, 0);
+        });
+      })();
+    }
   }), _defineProperty(_root$Craft, "disconectInputSync", function(input) {
     if (is.String(input)) input = query(input);
     if (is.Node(input) && is.Def(input[sI])) {
@@ -2634,6 +2678,19 @@ function _defineProperty(obj, key, value) {
   };
   Craft.customAttr('bind', function(element, bind) {
     element.bind(bind);
+  });
+  Craft.customAttr('bind-for', function(element, bind) {
+    var data = Craft.fromModel(bind);
+    if (is.Arr(data)) {
+      (function() {
+        var domfrag = dom.frag();
+        element = element.stripAttr('bind-for');
+        data.forEach(function(item) {
+          domfrag.appendChild(element.html(item).clone(true));
+        });
+        element.replace(domfrag);
+      })();
+    }
   });
   Craft.customAttr('toggle-parent', function(element) {
     var visible = true,
