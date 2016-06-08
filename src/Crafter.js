@@ -493,6 +493,11 @@
                 func.etype = type;
                 options.evtlisteners.add(func);
                 return {
+                    on: () => {
+                        func.etype = type;
+                        options.evtlisteners.add(func);
+                        return options;
+                    },
                     off: () => options.off(func),
                 }
             },
@@ -1110,9 +1115,8 @@
 
                 is.Def(val) ? element.html(val) : Craft.setDeep(obj, prop, element.html());
                 if (obj.isObservable) {
-                    let firstTime = true;
-                    if (!element.isInput) element._BoundObservable = obj.on('$uberset:'+prop,val => {
-                      element.html(val);
+                    if (!element.isInput) element._BoundObservable = obj.on('$uberset:' + prop, val => {
+                        element.html(val);
                     })
                 }
                 if (element.isInput) element.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : joindot(Craft.omit(cutbind, cutbind[0])))
@@ -1473,133 +1477,135 @@
 
 
     function observable(obj) {
-        if (!is.Def(obj)) obj = {};
-        defineprop(obj, 'listeners', {
-            value: {
-                Get: new Set,
-                Set: new Set,
-            },
-            enumerable: false,
-            writable: false,
-        });
-        defineprop(obj, 'isObservable', {
-            value: true,
-            enumerable: false,
-            writable: false,
-        });
-        ['$get', '$set'].forEach(t => {
-            let Type = 'Set';
-            if (t == '$get') Type = 'Get';
-            defineprop(obj, t, {
-                value(prop, func) {
-                    if (is.Func(prop)) {
-                        func = prop;
-                        prop = '*';
-                    }
-                    if (!is.Func(func)) throw new Error('no function');
-                    let listener = {
-                        prop: is.String(prop) ? prop : '*',
-                        fn: func,
-                    }
-                    let options = {
-                        get on() {
-                            obj.listeners[Type].add(listener);
-                            return options
-                        },
-                        get off() {
-                            obj.listeners[Type].delete(listener);
-                            return options
-                        },
-                    };
-                    return options.on;
-                },
-                enumerable: false,
-                writable: false,
-            });
-        });
+      if (obj == undefined) obj = {};
+      defineprop(obj, 'listeners', {
+          value: {
+              Get: new Set,
+              Set: new Set,
+          },
+          enumerable: false,
+          writable: false,
+      });
+      defineprop(obj, 'isObservable', {
+          value: true,
+          enumerable: false,
+          writable: false,
+      });
+      ['$get', '$set'].forEach(t => {
+          let Type = 'Set';
+          if (t == '$get') Type = 'Get';
+          defineprop(obj, t, {
+              value(prop, func) {
+                  if (is.Func(prop)) {
+                      func = prop;
+                      prop = '*';
+                  }
+                  if (!is.Func(func)) throw new Error('no function');
+                  let listener = {
+                      prop: is.String(prop) ? prop : '*',
+                      fn: func,
+                  }
+                  let options = {
+                      get on() {
+                          obj.listeners[Type].add(listener);
+                          return options
+                      },
+                      get off() {
+                          obj.listeners[Type].delete(listener);
+                          return options
+                      },
+                  };
+                  return options.on;
+              },
+              enumerable: false,
+              writable: false,
+          });
+      });
 
-        defineprop(obj, '$change', {
-            value(prop, func) {
-                if (!is.Func(func)) throw new Error('no function');
-                let listener = {
-                    prop: is.String(prop) ? prop : '*',
-                    fn: func,
-                    multi: true,
-                }
-                let options = {
-                    get on() {
-                        obj.listeners.Get.add(listener);
-                        obj.listeners.Set.add(listener);
-                        return options
-                    },
-                    get off() {
-                        obj.listeners.Get.delete(listener);
-                        obj.listeners.Set.delete(listener);
-                        return options
-                    },
-                };
-                return options.on;
-            },
-            enumerable: false,
-            writable: false,
-        });
-        defineprop(obj, 'get', {
-            value(key) {
-                let val;
-                obj.listeners.Get.forEach(ln => {
-                    if (ln.prop === '*' || ln.prop === key) val = ln.multi ? ln.fn('get', key, obj) : ln.fn(key, obj);
-                });
-                return obj[key];
-            },
-            enumerable: false,
-        });
-        defineprop(obj, 'set', {
-            value(key, value) {
-                let val;
-                obj.listeners.Set.forEach(ln => {
-                    if (ln.prop === '*' || ln.prop === key) val = ln.multi ? ln.fn('set', key, value, obj, Object.hasOwnProperty(obj, key)) :
-                        ln.fn(key, value, obj, Object.hasOwnProperty(obj, key));
-                });
-                val = val != undef ? val : value;
-                if (is.Object(val)) observable(val);
-                target.emit('$uberset:'+key,val);
-                obj[key] = val;
-            },
-            enumerable: false,
-        });
-        obj = eventemitter(obj);
-        if (root.Proxy) return new Proxy(obj, {
-            get(target, key) {
-                let val;
-                target.listeners.Get.forEach(ln => {
-                    if (ln.prop === '*' || ln.prop === key) {
-                      val = ln.multi ? ln.fn('get', key, target) : ln.fn(key, target);
-                    }
-                });
-                return is.Def(val) ? val : Reflect.get(target, key);
-            },
-            set(target, key, value) {
-                let val, onetime = false;
-                target.listeners.Set.forEach(ln => {
-                    if (ln.prop === '*' || ln.prop === key) {
-                        if(onetime) {
+      defineprop(obj, '$change', {
+          value(prop, func) {
+              if (!is.Func(func)) throw new Error('no function');
+              let listener = {
+                  prop: is.String(prop) ? prop : '*',
+                  fn: func,
+                  multi: true,
+              }
+              let options = {
+                  get on() {
+                      obj.listeners.Get.add(listener);
+                      obj.listeners.Set.add(listener);
+                      return options
+                  },
+                  get off() {
+                      obj.listeners.Get.delete(listener);
+                      obj.listeners.Set.delete(listener);
+                      return options
+                  },
+              };
+              return options.on;
+          },
+          enumerable: false,
+          writable: false,
+      });
+      defineprop(obj, 'get', {
+          value(key) {
+              if (key != 'get' && key != 'set') {
+                  let val;
+                  obj.listeners.Get.forEach(ln => {
+                      if (ln.prop === '*' || ln.prop === key) val = ln.multi ? ln.fn('get', key, obj) : ln.fn(key, obj);
+                  });
+                  return val != undefined ? val : obj[key];
+              } else return obj[key];
+          },
+          enumerable: false,
+      });
+      defineprop(obj, 'set', {
+          value(key, value) {
+              let val;
+              obj.listeners.Set.forEach(ln => {
+                  if (ln.prop === '*' || ln.prop === key) val = ln.multi ? ln.fn('set', key, value, obj, Object.hasOwnProperty(obj, key)) :
+                      ln.fn(key, value, obj, Object.hasOwnProperty(obj, key));
+              });
+              val = val != undef ? val : value;
+              if (is.Object(val) && !val.isObservable) val = observable(val);
+              target.emit('$uberset:' + key, val);
+              obj[key] = val;
+          },
+          enumerable: false,
+      });
+      obj = eventemitter(obj);
+      if (root.Proxy) return new Proxy(obj, {
+          get(target, key) {
+              if (key != 'get' && key != 'set') {
+                  let val;
+                  target.listeners.Get.forEach(ln => {
+                      if (ln.prop === '*' || ln.prop === key) val = ln.multi ? ln.fn('get', key, target) : ln.fn(key, target);
+                  });
+                  return val != undefined ? val : Reflect.get(target, key);
+              } else return Reflect.get(target, key);
+          },
+          set(target, key, value) {
+              let val, onetime = false;
+              target.listeners.Set.forEach(ln => {
+                  if (ln.prop === '*' || ln.prop === key) {
+                      if (onetime) {
                           value = val;
                           onetime = false;
-                        } else onetime = true;
-                        val = ln.multi ? ln.fn('set', key, value, target, !Reflect.has(target, key)) :
-                        ln.fn(key, value, target, !Reflect.has(target, key));
-                    }
-                });
-                val = is.Def(val) ? val : value;
-                if (is.Object(val)) observable(val);
-                target.emit('$uberset:'+key,val);
-                return Reflect.set(target, key, val);
-            }
-        });
-        else {
-            console.warn('This Browser does not support Proxy, Craft.observables need to use the .set and .get accessors to work');
-            return obj;
-        }
+                      } else onetime = true;
+                      val = ln.multi ? ln.fn('set', key, value, target, !Reflect.has(target, key)) :
+                          ln.fn(key, value, target, !Reflect.has(target, key));
+                  }
+              });
+              val = val != undefined ? val : value;
+              if (is.Object(val) && !val.isObservable) val = observable(val);
+              target.emit('$uberset:' + key, val);
+              return Reflect.set(target, key, val);
+          }
+      });
+      else {
+          console.warn('This Browser does not support Proxy, observables need to use the .set and .get accessors to work');
+          return obj;
+      }
     }
 
     /**
@@ -1812,6 +1818,23 @@
                 for (let key in obj) defineprop(host, key, getpropdescriptor(obj, key));
             });
             return host
+        },
+        completeAssign(host) {
+            Craft.omit(arguments, host).forEach(source => {
+                let descriptors = Object.keys(source).reduce((descriptors, key) => {
+                    descriptors[key] = Object.getOwnPropertyDescriptor(source, key);
+                    return descriptors;
+                }, {});
+                // by default, Object.assign copies enumerable Symbols too
+                Object.getOwnPropertySymbols(source).forEach(sym => {
+                    let descriptor = Object.getOwnPropertyDescriptor(source, sym);
+                    if (descriptor.enumerable) {
+                        descriptors[sym] = descriptor;
+                    }
+                });
+                Object.defineProperties(target, descriptors);
+            });
+            return target;
         },
         isObservable: obj => obj.isObservable || false,
         /**
@@ -2492,12 +2515,11 @@
                 input[sI] = on('input,blur,keydown', input, e => {
                     setTimeout(() => {
                         let val = input.value;
-                        if(!(Craft.getDeep(obj, key) == "" && val == "")  && val != oldval) {
-                          oldval = val;
-                          Craft.setDeep(obj, key, input.value);
+                        if (!(Craft.getDeep(obj, key) == "" && val == "") && val != oldval) {
+                            oldval = val;
+                            Craft.setDeep(obj, key, input.value);
                         }
                     }, 0);
-
                 });
             }
         },
