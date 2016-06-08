@@ -613,6 +613,11 @@ function _defineProperty(obj, key, value) {
         func.etype = type;
         options.evtlisteners.add(func);
         return {
+          on: function() {
+            func.etype = type;
+            options.evtlisteners.add(func);
+            return options;
+          },
           off: function() {
             return options.off(func);
           }
@@ -1250,7 +1255,6 @@ function _defineProperty(obj, key, value) {
           val = path.val;
         is.Def(val) ? element.html(val) : Craft.setDeep(obj, prop, element.html());
         if (obj.isObservable) {
-          var firstTime = true;
           if (!element.isInput) element._BoundObservable = obj.on('$uberset:' + prop, function(val) {
             element.html(val);
           });
@@ -1627,7 +1631,7 @@ function _defineProperty(obj, key, value) {
   });
 
   function observable(obj) {
-    if (!is.Def(obj)) obj = {};
+    if (obj == undefined) obj = {};
     defineprop(obj, 'listeners', {
       value: {
         Get: new Set(),
@@ -1696,11 +1700,13 @@ function _defineProperty(obj, key, value) {
     });
     defineprop(obj, 'get', {
       value: function(key) {
-        var val = void 0;
-        obj.listeners.Get.forEach(function(ln) {
-          if (ln.prop === '*' || ln.prop === key) val = ln.multi ? ln.fn('get', key, obj) : ln.fn(key, obj);
-        });
-        return obj[key];
+        if (key != 'get' && key != 'set') {
+          var _val = void 0;
+          obj.listeners.Get.forEach(function(ln) {
+            if (ln.prop === '*' || ln.prop === key) _val = ln.multi ? ln.fn('get', key, obj) : ln.fn(key, obj);
+          });
+          return _val != undefined ? _val : obj[key];
+        } else return obj[key];
       },
       enumerable: false
     });
@@ -1711,7 +1717,7 @@ function _defineProperty(obj, key, value) {
           if (ln.prop === '*' || ln.prop === key) val = ln.multi ? ln.fn('set', key, value, obj, Object.hasOwnProperty(obj, key)) : ln.fn(key, value, obj, Object.hasOwnProperty(obj, key));
         });
         val = val != undef ? val : value;
-        if (is.Object(val)) observable(val);
+        if (is.Object(val) && !val.isObservable) val = observable(val);
         target.emit('$uberset:' + key, val);
         obj[key] = val;
       },
@@ -1720,13 +1726,13 @@ function _defineProperty(obj, key, value) {
     obj = eventemitter(obj);
     if (root.Proxy) return new Proxy(obj, {
       get: function(target, key) {
-        var val = void 0;
-        target.listeners.Get.forEach(function(ln) {
-          if (ln.prop === '*' || ln.prop === key) {
-            val = ln.multi ? ln.fn('get', key, target) : ln.fn(key, target);
-          }
-        });
-        return is.Def(val) ? val : Reflect.get(target, key);
+        if (key != 'get' && key != 'set') {
+          var _val2 = void 0;
+          target.listeners.Get.forEach(function(ln) {
+            if (ln.prop === '*' || ln.prop === key) _val2 = ln.multi ? ln.fn('get', key, target) : ln.fn(key, target);
+          });
+          return _val2 != undefined ? _val2 : Reflect.get(target, key);
+        } else return Reflect.get(target, key);
       },
       set: function(target, key, value) {
         var val = void 0,
@@ -1740,14 +1746,14 @@ function _defineProperty(obj, key, value) {
             val = ln.multi ? ln.fn('set', key, value, target, !Reflect.has(target, key)) : ln.fn(key, value, target, !Reflect.has(target, key));
           }
         });
-        val = is.Def(val) ? val : value;
-        if (is.Object(val)) observable(val);
+        val = val != undefined ? val : value;
+        if (is.Object(val) && !val.isObservable) val = observable(val);
         target.emit('$uberset:' + key, val);
         return Reflect.set(target, key, val);
       }
     });
     else {
-      console.warn('This Browser does not support Proxy, Craft.observables need to use the .set and .get accessors to work');
+      console.warn('This Browser does not support Proxy, observables need to use the .set and .get accessors to work');
       return obj;
     }
   }
@@ -1980,6 +1986,22 @@ function _defineProperty(obj, key, value) {
         }
       });
       return host;
+    },
+    completeAssign: function(host) {
+      Craft.omit(arguments, host).forEach(function(source) {
+        var descriptors = Object.keys(source).reduce(function(descriptors, key) {
+          descriptors[key] = Object.getOwnPropertyDescriptor(source, key);
+          return descriptors;
+        }, {}); // by default, Object.assign copies enumerable Symbols too
+        Object.getOwnPropertySymbols(source).forEach(function(sym) {
+          var descriptor = Object.getOwnPropertyDescriptor(source, sym);
+          if (descriptor.enumerable) {
+            descriptors[sym] = descriptor;
+          }
+        });
+        Object.defineProperties(target, descriptors);
+      });
+      return target;
     },
     isObservable: function(obj) {
       return obj.isObservable || false;
@@ -2510,14 +2532,14 @@ function _defineProperty(obj, key, value) {
         prop = last(cutbind),
         first = cutbind[0],
         obj = is.Def(Craft.Models[first]) ? Craft.Models[first].scope : Craft.getDeep(root, joindot(Craft.omit(cutbind, prop))),
-        _val = Craft.getDeep(obj, cutbind.length > 1 ? joindot(Craft.omit(cutbind, first)) : prop);
+        _val3 = Craft.getDeep(obj, cutbind.length > 1 ? joindot(Craft.omit(cutbind, first)) : prop);
       if (full) return {
         cutbind: cutbind,
         prop: prop,
         obj: obj,
-        val: _val
+        val: _val3
       };
-      if (is.Def(_val)) return _val;
+      if (is.Def(_val3)) return _val3;
       if (!full && first === prop && is.Def(obj)) return obj;
     } catch (e) {
       return {};
