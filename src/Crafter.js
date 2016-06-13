@@ -804,19 +804,21 @@
             let script = Dom.element('script', '', attr, {
                 type: 'text/javascript'
             });
-            if (nosrc == true) script.textContent = code;
+            if (is.Func(onload)) {
+              script.onload = () => {
+                script.removeAttribute('initx');
+                onload();
+              };
+              let random = Craft.randomInt();
+              script.setAttribute('initx',random);
+              code += `\ndocument.head.querySelector('script[initx="${random}"]').dispatchEvent(new UIEvent('load'));\n`
+            }
+            if (defer == true) script.defer = defer != false;
+            if (nosrc == true) script.text = code;
             else script.src = Craft.URLfrom(code, {
                 type: 'text/javascript'
             });
-            if (defer == true) script.defer = defer != false;
-            if (is.Func(onload)) script.onload = onload;
             return script;
-        },
-        SafeHTML(html) {
-            return html
-                .replace(/<script[^>]*?>.*?<\/script>/gi, '')
-                .replace(/<style[^>]*?>.*?<\/style>/gi, '')
-                .replace(/<![\s\S]*?--[ \t\n\r]*>/gi, '');
         }
     }
     'table,td,th,tr,article,aside,ul,ol,li,h1,h2,h3,h4,h5,h6,div,span,section,button,br,label,header,i,style,nav,menu,main,menuitem'.split(',').forEach(tag => {
@@ -1436,6 +1438,17 @@
             }
             return element
         }
+
+        element.observeAttrs = func => {
+            if (!is.Object(element.attrX)) element.attrX = eventemitter({});
+            element.attrX.on('attr', function(attr) {
+                func.apply(element, arguments);
+                element.attrX.emit.apply(null, ['attr:' + attr].concat(arguments));
+            });
+        }
+        element.stopAttrObserve = state => {
+            if (element.attrX) element.attrX.stopall(state);
+        }
         return element
     };
 
@@ -1477,142 +1490,145 @@
 
 
     function observable(obj) {
-      if (obj == undefined) obj = {};
-      defineprop(obj, 'listeners', {
-          value: {
-              Get: new Set,
-              Set: new Set,
-          },
-          enumerable: false,
-          writable: false,
-      });
-      defineprop(obj, 'isObservable', {
-          value: true,
-          enumerable: false,
-          writable: false,
-      });
-      ['$get', '$set'].forEach(t => {
-          let Type = 'Set';
-          if (t == '$get') Type = 'Get';
-          defineprop(obj, t, {
-              value(prop, func) {
-                  if (is.Func(prop)) {
-                      func = prop;
-                      prop = '*';
-                  }
-                  if (!is.Func(func)) throw new Error('no function');
-                  let listener = {
-                      prop: is.String(prop) ? prop : '*',
-                      fn: func,
-                  }
-                  let options = {
-                      get on() {
-                          obj.listeners[Type].add(listener);
-                          return options
-                      },
-                      get off() {
-                          obj.listeners[Type].delete(listener);
-                          return options
-                      },
-                  };
-                  return options.on;
-              },
-              enumerable: false,
-              writable: false,
-          });
-      });
+        if (obj == undefined) obj = {};
+        defineprop(obj, 'listeners', {
+            value: {
+                Get: new Set,
+                Set: new Set,
+            },
+            enumerable: false,
+            writable: false,
+        });
+        defineprop(obj, 'isObservable', {
+            value: true,
+            enumerable: false,
+            writable: false,
+        });
+        ['$get', '$set'].forEach(t => {
+            let Type = 'Set';
+            if (t == '$get') Type = 'Get';
+            defineprop(obj, t, {
+                value(prop, func) {
+                    if (is.Func(prop)) {
+                        func = prop;
+                        prop = '*';
+                    }
+                    if (!is.Func(func)) throw new Error('no function');
+                    let listener = {
+                        prop: is.String(prop) ? prop : '*',
+                        fn: func,
+                    }
+                    let options = {
+                        get on() {
+                            obj.listeners[Type].add(listener);
+                            return options
+                        },
+                        get off() {
+                            obj.listeners[Type].delete(listener);
+                            return options
+                        },
+                    };
+                    return options.on;
+                },
+                enumerable: false,
+                writable: false,
+            });
+        });
 
-      defineprop(obj, '$change', {
-          value(prop, func) {
-              if (!is.Func(func)) throw new Error('no function');
-              let listener = {
-                  prop: is.String(prop) ? prop : '*',
-                  fn: func,
-                  multi: true,
-              }
-              let options = {
-                  get on() {
-                      obj.listeners.Get.add(listener);
-                      obj.listeners.Set.add(listener);
-                      return options
-                  },
-                  get off() {
-                      obj.listeners.Get.delete(listener);
-                      obj.listeners.Set.delete(listener);
-                      return options
-                  },
-              };
-              return options.on;
-          },
-          enumerable: false,
-          writable: false,
-      });
-      defineprop(obj, 'get', {
-          value(key) {
-              if (key != 'get' && key != 'set') {
-                  let val;
-                  obj.listeners.Get.forEach(ln => {
-                      if (ln.prop === '*' || ln.prop === key) val = ln.multi ? ln.fn('get', key, obj) : ln.fn(key, obj);
-                  });
-                  return val != undefined ? val : obj[key];
-              } else return obj[key];
-          },
-          enumerable: false,
-      });
-      defineprop(obj, 'set', {
-          value(key, value) {
-              let val;
-              obj.listeners.Set.forEach(ln => {
-                  if (ln.prop === '*' || ln.prop === key) val = ln.multi ? ln.fn('set', key, value, obj, Object.hasOwnProperty(obj, key)) :
-                      ln.fn(key, value, obj, Object.hasOwnProperty(obj, key));
-              });
-              val = val != undef ? val : value;
-              if (is.Object(val) && !val.isObservable) val = observable(val);
-              target.emit('$uberset:' + key, val);
-              obj[key] = val;
-          },
-          enumerable: false,
-      });
-      obj = eventemitter(obj);
-      if (root.Proxy) return new Proxy(obj, {
-          get(target, key) {
-              if (key != 'get' && key != 'set') {
-                  let val;
-                  target.listeners.Get.forEach(ln => {
-                      if (ln.prop === '*' || ln.prop === key) val = ln.multi ? ln.fn('get', key, target) : ln.fn(key, target);
-                  });
-                  return val != undefined ? val : Reflect.get(target, key);
-              } else return Reflect.get(target, key);
-          },
-          set(target, key, value) {
-              let val, onetime = false;
-              target.listeners.Set.forEach(ln => {
-                  if (ln.prop === '*' || ln.prop === key) {
-                      if (onetime) {
-                          value = val;
-                          onetime = false;
-                      } else onetime = true;
-                      val = ln.multi ? ln.fn('set', key, value, target, !Reflect.has(target, key)) :
-                          ln.fn(key, value, target, !Reflect.has(target, key));
-                  }
-              });
-              val = val != undefined ? val : value;
-              if (is.Object(val) && !val.isObservable) val = observable(val);
-              target.emit('$uberset:' + key, val);
-              return Reflect.set(target, key, val);
-          }
-      });
-      else {
-          console.warn('This Browser does not support Proxy, observables need to use the .set and .get accessors to work');
-          return obj;
-      }
+        defineprop(obj, '$change', {
+            value(prop, func) {
+                if (!is.Func(func)) throw new Error('no function');
+                let listener = {
+                    prop: is.String(prop) ? prop : '*',
+                    fn: func,
+                    multi: true,
+                }
+                let options = {
+                    get on() {
+                        obj.listeners.Get.add(listener);
+                        obj.listeners.Set.add(listener);
+                        return options
+                    },
+                    get off() {
+                        obj.listeners.Get.delete(listener);
+                        obj.listeners.Set.delete(listener);
+                        return options
+                    },
+                };
+                return options.on;
+            },
+            enumerable: false,
+            writable: false,
+        });
+        defineprop(obj, 'get', {
+            value(key) {
+                if (key != 'get' && key != 'set') {
+                    let val;
+                    obj.listeners.Get.forEach(ln => {
+                        if (ln.prop === '*' || ln.prop === key) val = ln.multi ? ln.fn('get', key, obj) : ln.fn(key, obj);
+                    });
+                    return val != undefined ? val : obj[key];
+                } else return obj[key];
+            },
+            enumerable: false,
+        });
+        defineprop(obj, 'set', {
+            value(key, value) {
+                let val;
+                obj.listeners.Set.forEach(ln => {
+                    if (ln.prop === '*' || ln.prop === key) val = ln.multi ? ln.fn('set', key, value, obj, Object.hasOwnProperty(obj, key)) :
+                        ln.fn(key, value, obj, Object.hasOwnProperty(obj, key));
+                });
+                val = val != undef ? val : value;
+                if (is.Object(val) && !val.isObservable) val = observable(val);
+                target.emit('$uberset:' + key, val);
+                obj[key] = val;
+            },
+            enumerable: false,
+        });
+        obj = eventemitter(obj);
+        forEach(obj,(val,key) => {
+          if(is.Object(val) && !val.isObservable) obj[key] = observable(val);
+        });
+        if (root.Proxy) return new Proxy(obj, {
+            get(target, key) {
+                if (key != 'get' && key != 'set') {
+                    let val;
+                    target.listeners.Get.forEach(ln => {
+                        if (ln.prop === '*' || ln.prop === key) val = ln.multi ? ln.fn('get', key, target) : ln.fn(key, target);
+                    });
+                    return val != undefined ? val : Reflect.get(target, key);
+                } else return Reflect.get(target, key);
+            },
+            set(target, key, value) {
+                let val, onetime = false;
+                target.listeners.Set.forEach(ln => {
+                    if (ln.prop === '*' || ln.prop === key) {
+                        if (onetime) {
+                            value = val;
+                            onetime = false;
+                        } else onetime = true;
+                        val = ln.multi ? ln.fn('set', key, value, target, !Reflect.has(target, key)) :
+                            ln.fn(key, value, target, !Reflect.has(target, key));
+                    }
+                });
+                val = val != undefined ? val : value;
+                if (is.Object(val) && !val.isObservable) val = observable(val);
+                target.emit('$uberset:' + key, val);
+                return Reflect.set(target, key, val);
+            }
+        });
+        else {
+            console.warn('This Browser does not support Proxy, observables need to use the .set and .get accessors to work');
+            return obj;
+        }
     }
 
     /**
      * Craft is Crafter.js's Core containing most functionality.
      * @namespace Craft
      */
-    root.Craft = {
+    var Craft = {
         /**
          * Returns an object or calls a function with all the differences between two arrays
          * @method arrDiff
@@ -1676,6 +1692,12 @@
         on,
         once,
         is,
+        UnHTML(html) {
+            return html
+                .replace(/<script[^>]*?>.*?<\/script>/gi, '')
+                .replace(/<style[^>]*?>.*?<\/style>/gi, '')
+                .replace(/<![\s\S]*?--[ \t\n\r]*>/gi, '');
+        },
         init(func) {
             return func.apply(Craft, toArr(arguments).slice(1));
         },
@@ -2150,11 +2172,13 @@
         importFont(name, src) {
             Craft.addCSS(`@font-face {font-family:${name};src:url("${Craft.fixURL(src)}");}`, true);
         },
-        loadScript(src, funcexec) {
+        loadScript(src, funcexec, fetchattr) {
+            let fetchAttr = {
+                mode: 'cors'
+            };
+            if (is.Object(fetchattr)) fetchAttr = Object.assign(fetchAttr, fetchattr);
             return promise((pass, fail) => {
-                fetch(Craft.fixURL(src), {
-                    mode: 'cors'
-                }).then(res => {
+                fetch(Craft.fixURL(src), fetchAttr).then(res => {
                     if (!res.ok) console.warn(`loading script failed - ${src}`);
                     else res.text().then(code => {
                         if (funcexec) {
@@ -2162,7 +2186,7 @@
                                 new Function(code).call(root);
                                 pass();
                             } catch (e) {
-                                fail();
+                                fail(e);
                             }
                         } else
                             head.appendChild(dom.script(code, {}, false, pass, true));
@@ -2170,7 +2194,19 @@
                 });
             })
         },
+        loadScripts(urls,funcexec,fetchattr) {
+          return promise((pass,fail) => {
+            let len = 0;
+            urls.forEach(src => {
+              Craft.loadScript(src,funcexec,fetchattr).then(() => {
+                len++;
+                if(len == urls.length) pass();
+              }).catch(fail);
+            });
+          });
+        },
         hasCaps: string => toArr(string).some(is.Uppercase),
+        hasNums: str => /\d/g.test(str),
         len(val) {
             try {
                 return is.Object(val) ? Object.keys(val).length : is.Map(val) || is.Set(val) ? val.size : val.length
@@ -2342,6 +2378,12 @@
                 throw new Error('Craft Model already exists');
             }
         },
+        modelInit(name, func) {
+            if (Craft.Models[name] != undef) func.call(Craft, Craft.Models[name].scope);
+            else Craft.Models.once(name, model => {
+                func.call(Craft, model.scope);
+            });
+        },
         fromModel(key, val) {
             let cutkey = cutdot(key),
                 IsValDefined = is.Def(val),
@@ -2365,7 +2407,7 @@
                     val
                 };
                 if (is.Def(val)) return val;
-                if (!full && first === prop && is.Def(obj)) return obj;
+                if (first === prop && is.Def(obj)) return obj;
             } catch (e) {
                 return {}
             }
@@ -2414,13 +2456,9 @@
                 includeChars = toArr(arguments).slice(5);
             if (pass.length <= length - 1) return reasons ? pw + 'too short' : false;
             if (caps && !Craft.hasCaps(pass)) return reasons ? pw + 'should have a Capital letter' : false;
-            if (number && !/\d/g.test(pass)) return reasons ? pw + 'should have a number' : false;
+            if (number && !Craft.hasNums(pass)) return reasons ? pw + 'should have a number' : false;
             if (includeChars.length) {
-                let hasChars = true;
-                includeChars.forEach(ch => {
-                    hasChars = pass.includes(ch)
-                });
-                if (!hasChars) return reasons ? '' : false
+                if (!includeChars.some(ch => pass.includes(ch))) return reasons ? '' : false
             }
             return false
         },
@@ -2488,18 +2526,20 @@
                         }
                     }
                 }
+                if(is.Func(config['attr'])) {
+                    el.observeAttrs(config['attr']);
+                }
                 if (is.Func(config['created'])) return config['created'].call(el)
             }
 
             for (let key in config) {
-                if (key == 'created' || (key.includes('set_') || key.includes('get_'))) continue;
+                if (key == 'created' || key == 'attr' || (key.includes('set_') || key.includes('get_'))) continue;
 
-                if (is.Func(config[key])) dm = function () { // Adds dom methods to element
+                if (is.Func(config[key]) && key != 'attr') dm = function () { // Adds dom methods to element
                     return config[key].apply(dom(this), arguments)
                 }
                 key == 'inserted' ? element.attachedCallback = dm :
                     key == 'destroyed' ? element.detachedCallback = dm :
-                    key == 'attr' ? element.attributeChangedCallback = dm :
                     key.toLowerCase() == 'css' ? Craft.addCSS(config[key]) :
                     is.Func(config[key]) ? element[key] = dm :
                     defineprop(element, key, getpropdescriptor(config, key));
@@ -2570,14 +2610,14 @@
 
     Craft.customAttr('bind-for', (element, bind) => {
         let data = Craft.fromModel(bind);
-        if (is.Arr(data)) {
+        if (is.Arr(data) || is.Set(data)) {
             let domfrag = dom.frag();
             element = element.stripAttr('bind-for');
             data.forEach(item => {
                 domfrag.appendChild(element.html(item).clone(true));
             });
             element.replace(domfrag);
-        }
+        } else element.remove();
     });
 
     Craft.customAttr('toggle-parent', element => {
@@ -2621,7 +2661,7 @@
     });
     // takes in an affected element and scans it for custom attributes
     // then handles the custom attribute if it was registered with Craft.customAttr
-    function manageAttr(el) {
+    function manageAttr(el, attr) {
         for (let attr, i = 0; i < Craft.CustomAttributes.length; i++) {
             attr = Craft.CustomAttributes[i];
             if (el.hasAttribute(attr.name)) {
@@ -2636,30 +2676,40 @@
     }
 
     Craft.Models.$set((key, model) => {
+        Craft.Models.emit(key, model);
         model.func(model.scope)
+    });
+
+    Craft.DomObserver = new MutationObserver(muts => {
+        muts.forEach(mut => {
+            mut.removedNodes.forEach(el => {
+                el.dispatchEvent(DestructionEvent);
+            });
+            mut.addedNodes.forEach(el => {
+                if (el.hasAttribute) manageAttr(el);
+            });
+            if (mut.type == 'attributes') {
+                manageAttr(mut.target, mut.attributeName);
+                if (mut.target.attrX) mut.target.attrX.emit('attr',
+                    mut.attributeName,
+                    mut.target.getAttribute(mut.attributeName),
+                    mut.oldValue,
+                    mut.target.hasAttribute(mut.attributeName)
+                );
+            }
+        });
+    });
+    Craft.DomObserver.observe(doc, {
+        attributes: true,
+        childList: true,
+        characterData: true,
+        characterDataOldValue: true,
+        subtree: true
     });
 
     function init() {
         Craft.router.links.forEach(link => {
             link()
-        });
-        Craft.DomObserver = new MutationObserver(muts => {
-            forEach(muts, mut => {
-                mut.removedNodes.forEach(el => {
-                    el.dispatchEvent(DestructionEvent);
-                });
-                mut.addedNodes.forEach(el => {
-                    if (el.hasAttribute) manageAttr(el);
-                });
-                if (mut.type == 'attributes') manageAttr(mut.target);
-            });
-        });
-        Craft.DomObserver.observe(doc.body, {
-            attributes: true,
-            childList: true,
-            characterData: true,
-            characterDataOldValue: true,
-            subtree: true
         });
         Ready = true
     }
@@ -2672,5 +2722,6 @@
         });
     });
 
+    root.Craft = Craft;
     //console.log(performance.now() - perf, 'Crafter.js');
 })(document, self)

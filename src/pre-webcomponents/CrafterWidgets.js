@@ -119,23 +119,25 @@ Craft.init(function () {
     Craft.newComponent('toggle-button', {
         inserted() {
             let el = this;
-            el.toggleAttr('on', el.hasAttr('on'));
-            el.click = el.Click(el.toggle.bind(el));
-            el.newSetGet('on', v => el.toggle(v), () => el.hasAttr('on'));
-            el.append(dom.span('', 'class=toggle'));
+            el.tclick = el.Click(el.toggle.bind(el));
+            el.toggleAttr('on', el.hasAttr('on')).append(dom.span('', 'class=toggle'));
         },
         set_ontoggle(func) {
-            if (is.Func(func)) this.func = func;
+            if (is.Func(func)) this.togglefunc = func;
         },
         toggle(on) {
-            this.toggleAttr('on', is.Bool(on) ? on : void 0)
-        },
-        attr(name) {
             let el = this;
-            if (name == 'on') el.func(el.hasAttr('on'))
+            el.toggleAttr('on', is.Bool(on) ? on : void 0);
+            if(is.Def(el.togglefunc)) el.togglefunc(el.on);
+        },
+        set_on(v) {
+          this.toggle(v);
+        },
+        get_on() {
+          return this.hasAttr('on')
         },
         destroyed() {
-            this.click.off
+            this.tclick.off
         }
     });
 
