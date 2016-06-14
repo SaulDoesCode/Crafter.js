@@ -60,7 +60,17 @@ function _defineProperty(obj, key, value) {
     nil = ta(function(o) {
       return o === null;
     }),
+    isFunc = function(o) {
+      return typeof o === 'function';
+    },
+    isString = function(o) {
+      return typeof o === 'string';
+    },
+    isObj = function(o) {
+      return toString.call(o) === '[object Object]';
+    },
     head = doc.head,
+    BracketsRegEx = /(\{\{[\w\.]*\}\})/g,
     RegExps = {
       email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
       timeString: /^(2[0-3]|[01]?[0-9]):([0-5]?[0-9]):([0-5]?[0-9])$/,
@@ -225,9 +235,7 @@ function _defineProperty(obj, key, value) {
      * Determine if a variable is an Object
      * @param args - value/values to test
      */
-    Object: ta(function(o) {
-      return toString.call(o) === '[object Object]';
-    }),
+    Object: ta(isObj),
     /**
      * Determine if a sring is JSON
      * @param args - value/values to test
@@ -271,9 +279,7 @@ function _defineProperty(obj, key, value) {
      * Determine if a variable is a function
      * @param args - value/values to test
      */
-    Func: ta(function(o) {
-      return typeof o == 'function';
-    }),
+    Func: ta(isFunc),
     /**
      * Determine if a variable/s are true
      * @param args - value/values to test
@@ -552,7 +558,7 @@ function _defineProperty(obj, key, value) {
      */
     empty: ta(function(val) {
       try {
-        return !(is.Object(val) ? Object.keys(val).length : is.Map(val) || is.Set(val) ? val.size : val.length) || val === '';
+        return !(isObj(val) ? Object.keys(val).length : is.Map(val) || is.Set(val) ? val.size : val.length) || val === '';
       } catch (e) {}
       return false;
     }),
@@ -562,7 +568,7 @@ function _defineProperty(obj, key, value) {
      */
     Native: function(val) {
       var type = typeof val === "undefined" ? "undefined" : _typeof(val);
-      return is.Func(val) ? RegExp('^' + String(Object.prototype.toString).replace(/[.*+?^${}()|[\]\/\\]/g, '\\$&').replace(/toString|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$').test(Function.prototype.toString.call(val)) : val && type == 'object' && /^\[object .+?Constructor\]$/.test(val.toString) || false;
+      return isFunc(val) ? RegExp('^' + String(Object.prototype.toString).replace(/[.*+?^${}()|[\]\/\\]/g, '\\$&').replace(/toString|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$').test(Function.prototype.toString.call(val)) : val && type == 'object' && /^\[object .+?Constructor\]$/.test(val.toString) || false;
     },
     /**
      * Tests where a dom element is an input of some sort
@@ -580,7 +586,7 @@ function _defineProperty(obj, key, value) {
    * @param {function} func - function called on each iteration -> "function( value , indexOrKey ) {...}"
    */
   function forEach(iterable, func) {
-    if (is.Func(func)) {
+    if (isFunc(func)) {
       var i = 0;
       if (is.Arraylike(iterable) && !localStorage)
         for (; i < iterable.length; i++) {
@@ -609,7 +615,7 @@ function _defineProperty(obj, key, value) {
       evtlisteners: new Set(),
       stop: false,
       on: function(type, func) {
-        if (!is.Func(func)) throw new TypeError(".on(" + type + ",func) : func is not a function");
+        if (!isFunc(func)) throw new TypeError(".on(" + type + ",func) : func is not a function");
         func.etype = type;
         options.evtlisteners.add(func);
         return {
@@ -777,7 +783,7 @@ function _defineProperty(obj, key, value) {
       return is.Null(list) ? list : is.Arr(list) ? list : toArr(list);
     },
     queryEach = function(selector, element, func, returnList) {
-      if (is.Func(element)) func = element;
+      if (isFunc(element)) func = element;
       var list = NodeOrQuerytoArr(selector, element);
       forEach(list, func);
       if (returnList) return list;
@@ -830,9 +836,7 @@ function _defineProperty(obj, key, value) {
   function EvtLT(ListenType) {
     return function(EventType, Target, element, func) {
       var args = toArr(arguments);
-      return is.Func(Target) ? EventHandler(EventType, root, Target)[ListenType] : args.length < 3 && !args.some(function(i) {
-        return is.Func(i);
-      }) ? EventTypes(EventType, Target, ListenType) : is.Func(element) ? EventHandler(EventType, Target, element)[ListenType] : EventHandler(EventType, Target, func, element)[ListenType];
+      return isFunc(Target) ? EventHandler(EventType, root, Target)[ListenType] : args.length < 3 && !args.some(isFunc) ? EventTypes(EventType, Target, ListenType) : isFunc(element) ? EventHandler(EventType, Target, element)[ListenType] : EventHandler(EventType, Target, func, element)[ListenType];
     };
   }
   /**
@@ -854,16 +858,16 @@ function _defineProperty(obj, key, value) {
    */
   function craftElement(name, inner, attributes, extraAttr, stringForm) {
     var element = domManip(doc.createElement(name));
-    if (is.Object(inner)) {
+    if (isObj(inner)) {
       attributes = inner;
       inner = undef;
     }
     if (inner != undef) element.html(inner);
-    if (is.Object(attributes) || is.String(attributes)) {
-      if (is.Object(attributes)) Object.keys(attributes).forEach(function(key) {
+    if (isObj(attributes) || is.String(attributes)) {
+      if (isObj(attributes)) Object.keys(attributes).forEach(function(key) {
         if (eventoptions.some(function(evo) {
             return evo == key;
-          }) && is.Func(attributes[key])) {
+          }) && isFunc(attributes[key])) {
           var func = attributes[key];
           key == 'DoubleClick' ? key = 'dblclick' : key = key.toLowerCase();
           element[key + 'handle'] = on(key, element, func);
@@ -906,7 +910,7 @@ function _defineProperty(obj, key, value) {
       });
     },
     input: function(type, attr) {
-      if (is.Object(type)) {
+      if (isObj(type)) {
         attributes = type;
         type = 'text';
       }
@@ -918,7 +922,7 @@ function _defineProperty(obj, key, value) {
       var list = "";
       if (is.Arrylike(items)) forEach(items, function(item) {
         if (is.String(item)) list += Dom.element('li', item).outerHTML;
-        else if (is.Object(items)) list += Dom.element('li', item.inner, item.attr).outerHTML;
+        else if (isObj(items)) list += Dom.element('li', item.inner, item.attr).outerHTML;
       });
       return Dom.element(type, list, attr);
     },
@@ -931,7 +935,7 @@ function _defineProperty(obj, key, value) {
       var script = Dom.element('script', '', attr, {
         type: 'text/javascript'
       });
-      if (is.Func(onload)) {
+      if (isFunc(onload)) {
         script.onload = function() {
           script.removeAttribute('initx');
           onload();
@@ -1066,7 +1070,7 @@ function _defineProperty(obj, key, value) {
             var attribs = Attr.split('=');
             is.Def(attribs[1]) ? element.setAttribute(attribs[0], attribs[1]) : element.setAttribute(attribs[0], '');
           }) : element.setAttribute(attr, '');
-          else if (is.Object(attr)) forEach(attr, function(value, Attr) {
+          else if (isObj(attr)) forEach(attr, function(value, Attr) {
             element.setAttribute(Attr, value);
           });
         } else element.setAttribute(attr, val || '');
@@ -1120,9 +1124,9 @@ function _defineProperty(obj, key, value) {
       el[type] = '';
       forEach(arguments, function(val) {
         if (is.Arraylike(val)) forEach(val, function(v) {
-          is.Node(v) ? el.append(v) : el[type] += is.Func(v) ? v.call(el) : v;
+          is.Node(v) ? el.append(v) : el[type] += isFunc(v) ? v.call(el) : v;
         });
-        else is.Node(val) || is.Element(val) ? el.append(val) : el[type] += is.Func(val) ? val.call(el) : val;
+        else is.Node(val) || is.Element(val) ? el.append(val) : el[type] += isFunc(val) ? val.call(el) : val;
       });
       return el;
     };
@@ -1304,7 +1308,7 @@ function _defineProperty(obj, key, value) {
       }));
     };
     element.newSetGet('ondestroy', function(fn) {
-      if (is.Func(fn)) element.on('destroy', fn);
+      if (isFunc(fn)) element.on('destroy', fn);
     });
 
     function evlt(type) {
@@ -1426,7 +1430,7 @@ function _defineProperty(obj, key, value) {
         if (is.String(attr)) attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(function(Attr) {
           is.Def(Attr.split('=')[1]) ? element.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : element.setAttribute(Attr.split('=')[0], '');
         }) : element.setAttribute(attr, '');
-        else if (is.Object(attr)) forEach(attr, function(value, Attr) {
+        else if (isObj(attr)) forEach(attr, function(value, Attr) {
           element.setAttribute(Attr, value);
         });
       } else element.setAttribute(attr, val || '');
@@ -1438,7 +1442,7 @@ function _defineProperty(obj, key, value) {
      */
     element.getAttr = element.getAttribute;
     element.attr = function(attr, val) {
-      if (is.String(val) || is.Object(attr)) return element.setAttr(attr, val);
+      if (is.String(val) || isObj(attr)) return element.setAttr(attr, val);
       if (is.String(attr) && !is.Def(val)) return element.getAttr(attr);
     };
     element.prop = element.hasAttr;
@@ -1593,7 +1597,7 @@ function _defineProperty(obj, key, value) {
       return element;
     };
     element.observeAttrs = function(func) {
-      if (!is.Object(element.attrX)) element.attrX = eventemitter({});
+      if (!isObj(element.attrX)) element.attrX = eventemitter({});
       element.attrX.on('attr', function(attr) {
         func.apply(element, arguments);
         element.attrX.emit.apply(null, ['attr:' + attr].concat(arguments));
@@ -1665,11 +1669,11 @@ function _defineProperty(obj, key, value) {
       if (t == '$get') Type = 'Get';
       defineprop(obj, t, {
         value: function(prop, func) {
-          if (is.Func(prop)) {
+          if (isFunc(prop)) {
             func = prop;
             prop = '*';
           }
-          if (!is.Func(func)) throw new Error('no function');
+          if (!isFunc(func)) throw new Error('no function');
           var listener = {
               prop: is.String(prop) ? prop : '*',
               fn: func
@@ -1691,7 +1695,7 @@ function _defineProperty(obj, key, value) {
     });
     defineprop(obj, '$change', {
       value: function(prop, func) {
-        if (!is.Func(func)) throw new Error('no function');
+        if (!isFunc(func)) throw new Error('no function');
         var listener = {
             prop: is.String(prop) ? prop : '*',
             fn: func,
@@ -1732,7 +1736,7 @@ function _defineProperty(obj, key, value) {
           if (ln.prop === '*' || ln.prop === key) val = ln.multi ? ln.fn('set', key, value, obj, Object.hasOwnProperty(obj, key)) : ln.fn(key, value, obj, Object.hasOwnProperty(obj, key));
         });
         val = val != undef ? val : value;
-        if (is.Object(val) && !val.isObservable) val = observable(val);
+        if (isObj(val) && !val.isObservable) val = observable(val);
         target.emit('$uberset:' + key, val);
         obj[key] = val;
       },
@@ -1740,7 +1744,7 @@ function _defineProperty(obj, key, value) {
     });
     obj = eventemitter(obj);
     forEach(obj, function(val, key) {
-      if (is.Object(val) && !val.isObservable) obj[key] = observable(val);
+      if (isObj(val) && !val.isObservable) obj[key] = observable(val);
     });
     if (root.Proxy) return new Proxy(obj, {
       get: function(target, key) {
@@ -1749,7 +1753,7 @@ function _defineProperty(obj, key, value) {
           target.listeners.Get.forEach(function(ln) {
             if (ln.prop === '*' || ln.prop === key) _val2 = ln.multi ? ln.fn('get', key, target) : ln.fn(key, target);
           });
-          return _val2 != undefined ? _val2 : Reflect.get(target, key);
+          return _val2 != undef ? _val2 : Reflect.get(target, key);
         } else return Reflect.get(target, key);
       },
       set: function(target, key, value) {
@@ -1764,8 +1768,8 @@ function _defineProperty(obj, key, value) {
             val = ln.multi ? ln.fn('set', key, value, target, !Reflect.has(target, key)) : ln.fn(key, value, target, !Reflect.has(target, key));
           }
         });
-        val = val != undefined ? val : value;
-        if (is.Object(val) && !val.isObservable) val = observable(val);
+        val = val != undef ? val : value;
+        if (isObj(val) && !val.isObservable) val = observable(val);
         target.emit('$uberset:' + key, val);
         return Reflect.set(target, key, val);
       }
@@ -1796,7 +1800,7 @@ function _defineProperty(obj, key, value) {
           if (newArr.includes(item)) return item;
         }),
         diff = Craft.omit(added.concat(removed), undef);
-      if (is.Func(func) && !is.empty(diff)) func(arr, newArr, added, removed, diff);
+      if (isFunc(func) && !is.empty(diff)) func(arr, newArr, added, removed, diff);
       else return {
         arr: arr,
         newArr: newArr,
@@ -1877,7 +1881,7 @@ function _defineProperty(obj, key, value) {
         val = Craft.omit(arguments, len);
       if (val.length == 1)
         for (; len > 0; len--) {
-          arr.push(is.Func(val[0]) ? val[0]() : val[0]);
+          arr.push(isFunc(val[0]) ? val[0]() : val[0]);
         } else
           for (; len > 0; len--) {
             arr.push(Craft.array(val.length, val));
@@ -1976,7 +1980,7 @@ function _defineProperty(obj, key, value) {
         nestable = false;
         is.Arr(object) ? currentPath += "[" + key + "]" : !currentPath ? currentPath = key : currentPath += '.' + key;
         nestable = func(val, key, object, currentPath) == false;
-        if (nestable && (is.Arr(val) || is.Object(val))) Craft.forEachDeep(val, func, currentPath);
+        if (nestable && (is.Arr(val) || isObj(val))) Craft.forEachDeep(val, func, currentPath);
       }
     },
     /**
@@ -2035,7 +2039,7 @@ function _defineProperty(obj, key, value) {
      * @returns {Array|Object} cloned result
      */
     clone: function(val) {
-      return is.Object(val) ? Object.create(val) : toArr(val);
+      return isObj(val) ? Object.create(val) : toArr(val);
     },
     /**
      * Craft.omitFrom will omit values from any arraylike object or string
@@ -2080,7 +2084,7 @@ function _defineProperty(obj, key, value) {
     omit: function(val) {
       if (is.Arraylike(val)) val = Craft.omitFrom.apply(this, arguments);
       var args = toArr(arguments).slice(1);
-      if (is.Object(val) && !args.some(function(v) {
+      if (isObj(val) && !args.some(function(v) {
           return v == val;
         })) forEach(val, function(prop, key) {
         if (args.some(function(v) {
@@ -2198,12 +2202,12 @@ function _defineProperty(obj, key, value) {
               recievers: [],
               message: '',
               set send(msg) {
-                if (Options.socket['readyState'] == 1) Options.socket.send(is.Object(msg) ? JSON.stringify(msg) : msg);
+                if (Options.socket['readyState'] == 1) Options.socket.send(isObj(msg) ? JSON.stringify(msg) : msg);
                 else {
                   (function() {
                     var poll = setInterval(function() {
                       if (Options.socket['readyState'] == 1) {
-                        Options.socket.send(is.Object(msg) ? JSON.stringify(msg) : msg);
+                        Options.socket.send(isObj(msg) ? JSON.stringify(msg) : msg);
                         clearInterval(poll);
                       }
                     }, 10);
@@ -2212,7 +2216,7 @@ function _defineProperty(obj, key, value) {
                 }
               },
               set recieve(func) {
-                if (is.Func(func)) Options.recievers.push(func);
+                if (isFunc(func)) Options.recievers.push(func);
               },
               get recieve() {
                 return Options.message;
@@ -2260,7 +2264,7 @@ function _defineProperty(obj, key, value) {
       return makeFn(fn, [], fn.length);
     },
     after: function(n, func) {
-      !is.Func(func) && is.Func(n) ? func = n : console.error("after: no function");
+      !isFunc(func) && isFunc(n) ? func = n : console.error("after: no function");
       n = Number.isFinite(n = +n) ? n : 0;
       if (--n < 1) return function() {
         return func.apply(this, arguments);
@@ -2315,14 +2319,14 @@ function _defineProperty(obj, key, value) {
   }, _defineProperty(_Craft, "once", function(func, context) {
     var result = void 0;
     return function() {
-      if (is.Func(func)) {
+      if (isFunc(func)) {
         result = func.apply(context || this, arguments);
         func = null;
       }
       return result;
     };
   }), _defineProperty(_Craft, "css", function(element, styles, prop) {
-    if (is.Object(styles)) forEach(styles, function(prop, key) {
+    if (isObj(styles)) forEach(styles, function(prop, key) {
       if (is.Element(element)) element.style[key] = prop;
       else if (is.NodeList(element)) forEach(element, function(el) {
         el.style[key] = prop;
@@ -2359,7 +2363,7 @@ function _defineProperty(obj, key, value) {
     var fetchAttr = {
       mode: 'cors'
     };
-    if (is.Object(fetchattr)) fetchAttr = Object.assign(fetchAttr, fetchattr);
+    if (isObj(fetchattr)) fetchAttr = Object.assign(fetchAttr, fetchattr);
     return promise(function(pass, fail) {
       fetch(Craft.fixURL(src), fetchAttr).then(function(res) {
         if (!res.ok) console.warn("loading script failed - " + src);
@@ -2391,7 +2395,7 @@ function _defineProperty(obj, key, value) {
     return (/\d/g.test(str));
   }), _defineProperty(_Craft, "len", function(val) {
     try {
-      return is.Object(val) ? Object.keys(val).length : is.Map(val) || is.Set(val) ? val.size : val.length;
+      return isObj(val) ? Object.keys(val).length : is.Map(val) || is.Set(val) ? val.size : val.length;
     } catch (e) {}
     return -1;
   }), _defineProperty(_Craft, "DateIndex", function(Collection, date) {
@@ -2404,7 +2408,7 @@ function _defineProperty(obj, key, value) {
       return typeof t === "undefined" ? "undefined" : _typeof(t);
     }));
   }), _defineProperty(_Craft, "memoize", function(func, resolver) {
-    if (!is.Func(func) || resolver && !is.Func(resolver)) throw new TypeError("no function");
+    if (!isFunc(func) || resolver && !isFunc(resolver)) throw new TypeError("no function");
     var cache = new WeakMap(),
       memoized = function() {
         var args = arguments,
@@ -2470,7 +2474,7 @@ function _defineProperty(obj, key, value) {
         },
         reset: function(fn) {
           options.stop();
-          if (is.Func(fn)) func = fn;
+          if (isFunc(fn)) func = fn;
           return options.start();
         }
       };
@@ -2497,7 +2501,7 @@ function _defineProperty(obj, key, value) {
         if (elapsedTime < options.duration) requestAnimationFrame(loop);
         else {
           scrollTo(0, start + distance);
-          if (is.Func(options.func)) options.func();
+          if (isFunc(options.func)) options.func();
           startTime = undef;
         }
       };
@@ -2533,7 +2537,7 @@ function _defineProperty(obj, key, value) {
       }, 5500);
     });
   }, _defineProperty(_Craft, "model", function(name, func) {
-    if (is.Func(func) && is.String(name)) {
+    if (isFunc(func) && is.String(name)) {
       if (!is.Def(Craft.Models[name])) {
         var _ret5 = function() {
           var scope = observable();
@@ -2585,7 +2589,7 @@ function _defineProperty(obj, key, value) {
       return {};
     }
   }), _defineProperty(_Craft, "customAttr", function(name, handle) {
-    if (is.Func(handle)) {
+    if (isFunc(handle)) {
       (function() {
         var apply = function() {
           queryEach("[" + name + "]", function(el) {
@@ -2656,21 +2660,21 @@ function _defineProperty(obj, key, value) {
           } else if (_key3.includes("get_")) {
             var _sgKey = _key3.split("_")[1];
             dealtWith.push(_key3, "set_" + _sgKey);
-            el.newSetGet(_sgKey, is.Func(config["set_" + _sgKey]) ? config["set_" + _sgKey] : function(x) {}, config[_key3]);
+            el.newSetGet(_sgKey, isFunc(config["set_" + _sgKey]) ? config["set_" + _sgKey] : function(x) {}, config[_key3]);
           }
         }
       }
-      if (is.Func(config['attr'])) {
+      if (isFunc(config['attr'])) {
         el.observeAttrs(config['attr']);
       }
-      if (is.Func(config['created'])) return config['created'].call(el);
+      if (isFunc(config['created'])) return config['created'].call(el);
     };
     var _loop = function(_key4) {
       if (_key4 == 'created' || _key4 == 'attr' || _key4.includes('set_') || _key4.includes('get_')) return "continue";
-      if (is.Func(config[_key4]) && _key4 != 'attr') dm = function() { // Adds dom methods to element
+      if (isFunc(config[_key4]) && _key4 != 'attr') dm = function() { // Adds dom methods to element
         return config[_key4].apply(dom(this), arguments);
       };
-      _key4 == 'inserted' ? element.attachedCallback = dm : _key4 == 'destroyed' ? element.detachedCallback = dm : _key4.toLowerCase() == 'css' ? Craft.addCSS(config[_key4]) : is.Func(config[_key4]) ? element[_key4] = dm : defineprop(element, _key4, getpropdescriptor(config, _key4));
+      _key4 == 'inserted' ? element.attachedCallback = dm : _key4 == 'destroyed' ? element.detachedCallback = dm : _key4.toLowerCase() == 'css' ? Craft.addCSS(config[_key4]) : isFunc(config[_key4]) ? element[_key4] = dm : defineprop(element, _key4, getpropdescriptor(config, _key4));
     };
     for (var _key4 in config) {
       var _ret7 = _loop(_key4);
@@ -2779,16 +2783,27 @@ function _defineProperty(obj, key, value) {
     element.linkevt = element.Click(function(e) {
       (element.hasAttr('newtab') ? open : Craft.router.open)(link);
     });
-    if (is.Func(element.linkhandle)) Craft.router.handle(link, element.linkhandle);
+    if (isFunc(element.linkhandle)) Craft.router.handle(link, element.linkhandle);
   });
   Craft.customAttr('color-accent', function(element, color) {
-    if (is.Func(element.colorAccent)) element.colorAccent(color);
-    else if (is.Object(element.colorAccent)) {
+    if (isFunc(element.colorAccent)) element.colorAccent(color);
+    else if (isObj(element.colorAccent)) {
       if (!element._cah.dw) {
         element._cah.fn(color);
         element._cah.dw = false;
       }
     }
+  });
+
+  function parseTemplate(html) {
+    return html.replace(BracketsRegEx, function(match, text, offset, string) {
+      var key = match.replace(/{{/, '').replace('}}', ''),
+        val = Craft.getPath(key);
+      return "<o bind=" + key + ">" + val + "</o>";
+    });
+  }
+  Craft.customAttr('craft-template', function(element) {
+    element.replace(Craft.dffstr(parseTemplate(element.html())));
   }); // takes in an affected element and scans it for custom attributes
   // then handles the custom attribute if it was registered with Craft.customAttr
   function manageAttr(el, attr) {
