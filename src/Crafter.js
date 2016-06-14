@@ -28,7 +28,11 @@
         getpropdescriptor = Object.getOwnPropertyDescriptor,
         def = ta(o => typeof o !== 'undefined'),
         nil = ta(o => o === null),
+        isFunc = o => typeof o === 'function',
+        isString = o => typeof o === 'string',
+        isObj = o => toString.call(o) === '[object Object]',
         head = doc.head,
+        BracketsRegEx = /(\{\{[\w\.]*\}\})/g,
         RegExps = {
             email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
             timeString: /^(2[0-3]|[01]?[0-9]):([0-5]?[0-9]):([0-5]?[0-9])$/,
@@ -186,7 +190,7 @@
          * Determine if a variable is an Object
          * @param args - value/values to test
          */
-        Object: ta(o => toString.call(o) === '[object Object]'),
+        Object: ta(isObj),
         /**
          * Determine if a sring is JSON
          * @param args - value/values to test
@@ -222,7 +226,7 @@
          * Determine if a variable is a function
          * @param args - value/values to test
          */
-        Func: ta(o => typeof o == 'function'),
+        Func: ta(isFunc),
         /**
          * Determine if a variable/s are true
          * @param args - value/values to test
@@ -437,7 +441,7 @@
          */
         empty: ta(val => {
             try {
-                return !(is.Object(val) ? Object.keys(val).length : is.Map(val) || is.Set(val) ? val.size : val.length) || val === ''
+                return !(isObj(val) ? Object.keys(val).length : is.Map(val) || is.Set(val) ? val.size : val.length) || val === ''
             } catch (e) {}
             return false
         }),
@@ -447,7 +451,7 @@
          */
         Native(val) {
             let type = typeof val;
-            return is.Func(val) ? RegExp('^' + String(Object.prototype.toString).replace(/[.*+?^${}()|[\]\/\\]/g, '\\$&').replace(/toString|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$').test(Function.prototype.toString.call(val)) : (val && type == 'object' && /^\[object .+?Constructor\]$/.test(val.toString)) || false;
+            return isFunc(val) ? RegExp('^' + String(Object.prototype.toString).replace(/[.*+?^${}()|[\]\/\\]/g, '\\$&').replace(/toString|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$').test(Function.prototype.toString.call(val)) : (val && type == 'object' && /^\[object .+?Constructor\]$/.test(val.toString)) || false;
         },
         /**
          * Tests where a dom element is an input of some sort
@@ -462,7 +466,7 @@
      * @param {function} func - function called on each iteration -> "function( value , indexOrKey ) {...}"
      */
     function forEach(iterable, func) {
-        if (is.Func(func)) {
+        if (isFunc(func)) {
             let i = 0;
             if (is.Arraylike(iterable) && !localStorage)
                 for (; i < iterable.length; i++) func(iterable[i], i);
@@ -489,7 +493,7 @@
             evtlisteners: new Set,
             stop: false,
             on(type, func) {
-                if (!is.Func(func)) throw new TypeError(`.on(${type},func) : func is not a function`);
+                if (!isFunc(func)) throw new TypeError(`.on(${type},func) : func is not a function`);
                 func.etype = type;
                 options.evtlisteners.add(func);
                 return {
@@ -668,7 +672,7 @@
          * @param {boolean=} returnList - should queryEach also return the list of nodes
          */
     let queryEach = (selector, element, func, returnList) => {
-        if (is.Func(element)) func = element;
+        if (isFunc(element)) func = element;
         let list = NodeOrQuerytoArr(selector, element);
         forEach(list, func);
         if (returnList) return list;
@@ -704,9 +708,9 @@
     function EvtLT(ListenType) {
         return function (EventType, Target, element, func) {
             let args = toArr(arguments);
-            return is.Func(Target) ? EventHandler(EventType, root, Target)[ListenType] :
-                args.length < 3 && !args.some(i => is.Func(i)) ? EventTypes(EventType, Target, ListenType) :
-                is.Func(element) ? EventHandler(EventType, Target, element)[ListenType] :
+            return isFunc(Target) ? EventHandler(EventType, root, Target)[ListenType] :
+                args.length < 3 && !args.some(isFunc) ? EventTypes(EventType, Target, ListenType) :
+                isFunc(element) ? EventHandler(EventType, Target, element)[ListenType] :
                 EventHandler(EventType, Target, func, element)[ListenType];
         }
     }
@@ -733,14 +737,14 @@
 
     function craftElement(name, inner, attributes, extraAttr, stringForm) {
         let element = domManip(doc.createElement(name));
-        if (is.Object(inner)) {
+        if (isObj(inner)) {
             attributes = inner;
             inner = undef;
         }
         if (inner != undef) element.html(inner);
-        if (is.Object(attributes) || is.String(attributes)) {
-            if (is.Object(attributes)) Object.keys(attributes).forEach(key => {
-                if (eventoptions.some(evo => evo == key) && is.Func(attributes[key])) {
+        if (isObj(attributes) || is.String(attributes)) {
+            if (isObj(attributes)) Object.keys(attributes).forEach(key => {
+                if (eventoptions.some(evo => evo == key) && isFunc(attributes[key])) {
                     let func = attributes[key];
                     key == 'DoubleClick' ? key = 'dblclick' : key = key.toLowerCase();
                     element[key + 'handle'] = on(key, element, func);
@@ -780,7 +784,7 @@
             alt: alt
         }),
         input(type, attr) {
-            if (is.Object(type)) {
+            if (isObj(type)) {
                 attributes = type;
                 type = 'text';
             }
@@ -793,7 +797,7 @@
             if (is.Arrylike(items))
                 forEach(items, item => {
                     if (is.String(item)) list += Dom.element('li', item).outerHTML;
-                    else if (is.Object(items)) list += Dom.element('li', item.inner, item.attr).outerHTML;
+                    else if (isObj(items)) list += Dom.element('li', item.inner, item.attr).outerHTML;
                 });
             return Dom.element(type, list, attr);
         },
@@ -804,7 +808,7 @@
             let script = Dom.element('script', '', attr, {
                 type: 'text/javascript'
             });
-            if (is.Func(onload)) {
+            if (isFunc(onload)) {
               script.onload = () => {
                 script.removeAttribute('initx');
                 onload();
@@ -919,7 +923,7 @@
                             is.Def(attribs[1]) ? element.setAttribute(attribs[0], attribs[1]) : element.setAttribute(attribs[0], '')
                         }) :
                         element.setAttribute(attr, '');
-                    else if (is.Object(attr)) forEach(attr, (value, Attr) => {
+                    else if (isObj(attr)) forEach(attr, (value, Attr) => {
                         element.setAttribute(Attr, value)
                     });
                 } else element.setAttribute(attr, val || '');
@@ -972,9 +976,9 @@
             el[type] = '';
             forEach(arguments, val => {
                 if (is.Arraylike(val)) forEach(val, v => {
-                    is.Node(v) ? el.append(v) : el[type] += is.Func(v) ? v.call(el) : v;
+                    is.Node(v) ? el.append(v) : el[type] += isFunc(v) ? v.call(el) : v;
                 });
-                else is.Node(val) || is.Element(val) ? el.append(val) : el[type] += is.Func(val) ? val.call(el) : val;
+                else is.Node(val) || is.Element(val) ? el.append(val) : el[type] += isFunc(val) ? val.call(el) : val;
             });
             return el;
         }
@@ -1162,7 +1166,7 @@
         }
 
         element.newSetGet('ondestroy', fn => {
-            if (is.Func(fn)) element.on('destroy', fn)
+            if (isFunc(fn)) element.on('destroy', fn)
         });
 
         function evlt(type) {
@@ -1279,7 +1283,7 @@
                     if (is.String(attr)) attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(Attr => {
                         is.Def(Attr.split('=')[1]) ? element.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : element.setAttribute(Attr.split('=')[0], '')
                     }) : element.setAttribute(attr, '');
-                    else if (is.Object(attr)) forEach(attr, (value, Attr) => {
+                    else if (isObj(attr)) forEach(attr, (value, Attr) => {
                         element.setAttribute(Attr, value)
                     });
                 } else element.setAttribute(attr, val || '');
@@ -1291,7 +1295,7 @@
              */
         element.getAttr = element.getAttribute;
         element.attr = (attr, val) => {
-            if (is.String(val) || is.Object(attr)) return element.setAttr(attr, val);
+            if (is.String(val) || isObj(attr)) return element.setAttr(attr, val);
             if (is.String(attr) && !is.Def(val)) return element.getAttr(attr);
         }
         element.prop = element.hasAttr;
@@ -1440,7 +1444,7 @@
         }
 
         element.observeAttrs = func => {
-            if (!is.Object(element.attrX)) element.attrX = eventemitter({});
+            if (!isObj(element.attrX)) element.attrX = eventemitter({});
             element.attrX.on('attr', function(attr) {
                 func.apply(element, arguments);
                 element.attrX.emit.apply(null, ['attr:' + attr].concat(arguments));
@@ -1509,11 +1513,11 @@
             if (t == '$get') Type = 'Get';
             defineprop(obj, t, {
                 value(prop, func) {
-                    if (is.Func(prop)) {
+                    if (isFunc(prop)) {
                         func = prop;
                         prop = '*';
                     }
-                    if (!is.Func(func)) throw new Error('no function');
+                    if (!isFunc(func)) throw new Error('no function');
                     let listener = {
                         prop: is.String(prop) ? prop : '*',
                         fn: func,
@@ -1537,7 +1541,7 @@
 
         defineprop(obj, '$change', {
             value(prop, func) {
-                if (!is.Func(func)) throw new Error('no function');
+                if (!isFunc(func)) throw new Error('no function');
                 let listener = {
                     prop: is.String(prop) ? prop : '*',
                     fn: func,
@@ -1580,7 +1584,7 @@
                         ln.fn(key, value, obj, Object.hasOwnProperty(obj, key));
                 });
                 val = val != undef ? val : value;
-                if (is.Object(val) && !val.isObservable) val = observable(val);
+                if (isObj(val) && !val.isObservable) val = observable(val);
                 target.emit('$uberset:' + key, val);
                 obj[key] = val;
             },
@@ -1588,7 +1592,7 @@
         });
         obj = eventemitter(obj);
         forEach(obj,(val,key) => {
-          if(is.Object(val) && !val.isObservable) obj[key] = observable(val);
+          if(isObj(val) && !val.isObservable) obj[key] = observable(val);
         });
         if (root.Proxy) return new Proxy(obj, {
             get(target, key) {
@@ -1597,7 +1601,7 @@
                     target.listeners.Get.forEach(ln => {
                         if (ln.prop === '*' || ln.prop === key) val = ln.multi ? ln.fn('get', key, target) : ln.fn(key, target);
                     });
-                    return val != undefined ? val : Reflect.get(target, key);
+                    return val != undef ? val : Reflect.get(target, key);
                 } else return Reflect.get(target, key);
             },
             set(target, key, value) {
@@ -1612,8 +1616,8 @@
                             ln.fn(key, value, target, !Reflect.has(target, key));
                     }
                 });
-                val = val != undefined ? val : value;
-                if (is.Object(val) && !val.isObservable) val = observable(val);
+                val = val != undef ? val : value;
+                if (isObj(val) && !val.isObservable) val = observable(val);
                 target.emit('$uberset:' + key, val);
                 return Reflect.set(target, key, val);
             }
@@ -1645,7 +1649,7 @@
                     if (newArr.includes(item)) return item
                 }),
                 diff = Craft.omit(added.concat(removed), undef);
-            if (is.Func(func) && !is.empty(diff)) func(arr, newArr, added, removed, diff);
+            if (isFunc(func) && !is.empty(diff)) func(arr, newArr, added, removed, diff);
             else return {
                 arr: arr,
                 newArr: newArr,
@@ -1726,7 +1730,7 @@
             let arr = [],
                 val = Craft.omit(arguments, len);
             if (val.length == 1)
-                for (; len > 0; len--) arr.push(is.Func(val[0]) ? val[0]() : val[0]);
+                for (; len > 0; len--) arr.push(isFunc(val[0]) ? val[0]() : val[0]);
             else
                 for (; len > 0; len--) arr.push(Craft.array(val.length, val));
             return arr
@@ -1813,7 +1817,7 @@
                 nestable = false;
                 is.Arr(object) ? currentPath += `[${key}]` : !currentPath ? currentPath = key : currentPath += '.' + key;
                 nestable = func(val, key, object, currentPath) == false;
-                if (nestable && (is.Arr(val) || is.Object(val))) Craft.forEachDeep(val, func, currentPath);
+                if (nestable && (is.Arr(val) || isObj(val))) Craft.forEachDeep(val, func, currentPath);
             }
         },
         /**
@@ -1867,7 +1871,7 @@
          * @returns {Array|Object} cloned result
          */
         clone(val) {
-            return is.Object(val) ? Object.create(val) : toArr(val)
+            return isObj(val) ? Object.create(val) : toArr(val)
         },
         /**
          * Craft.omitFrom will omit values from any arraylike object or string
@@ -1907,7 +1911,7 @@
         omit(val) {
             if (is.Arraylike(val)) val = Craft.omitFrom.apply(this, arguments);
             let args = toArr(arguments).slice(1);
-            if (is.Object(val) && !args.some(v => v == val)) forEach(val, (prop, key) => {
+            if (isObj(val) && !args.some(v => v == val)) forEach(val, (prop, key) => {
                 if (args.some(v => v == prop || v == key)) delete val[key];
             });
             return val;
@@ -2013,11 +2017,11 @@
                     recievers: [],
                     message: '',
                     set send(msg) {
-                        if (Options.socket['readyState'] == 1) Options.socket.send(is.Object(msg) ? JSON.stringify(msg) : msg);
+                        if (Options.socket['readyState'] == 1) Options.socket.send(isObj(msg) ? JSON.stringify(msg) : msg);
                         else {
                             let poll = setInterval(() => {
                                 if (Options.socket['readyState'] == 1) {
-                                    Options.socket.send(is.Object(msg) ? JSON.stringify(msg) : msg);
+                                    Options.socket.send(isObj(msg) ? JSON.stringify(msg) : msg);
                                     clearInterval(poll);
                                 }
                             }, 10);
@@ -2025,7 +2029,7 @@
                         }
                     },
                     set recieve(func) {
-                        if (is.Func(func)) Options.recievers.push(func);
+                        if (isFunc(func)) Options.recievers.push(func);
                     },
                     get recieve() {
                         return Options.message;
@@ -2068,7 +2072,7 @@
         },
         curry: fn => makeFn(fn, [], fn.length),
         after(n, func) {
-            !is.Func(func) && is.Func(n) ? func = n : console.error("after: no function");
+            !isFunc(func) && isFunc(n) ? func = n : console.error("after: no function");
             n = Number.isFinite(n = +n) ? n : 0;
             if (--n < 1) return function () {
                 return func.apply(this, arguments)
@@ -2121,7 +2125,7 @@
         once(func, context) {
             let result;
             return function () {
-                if (is.Func(func)) {
+                if (isFunc(func)) {
                     result = func.apply(context || this, arguments);
                     func = null;
                 }
@@ -2129,7 +2133,7 @@
             }
         },
         css(element, styles, prop) {
-            if (is.Object(styles))
+            if (isObj(styles))
                 forEach(styles, (prop, key) => {
                     if (is.Element(element)) element.style[key] = prop;
                     else if (is.NodeList(element)) forEach(element, el => {
@@ -2176,7 +2180,7 @@
             let fetchAttr = {
                 mode: 'cors'
             };
-            if (is.Object(fetchattr)) fetchAttr = Object.assign(fetchAttr, fetchattr);
+            if (isObj(fetchattr)) fetchAttr = Object.assign(fetchAttr, fetchattr);
             return promise((pass, fail) => {
                 fetch(Craft.fixURL(src), fetchAttr).then(res => {
                     if (!res.ok) console.warn(`loading script failed - ${src}`);
@@ -2209,7 +2213,7 @@
         hasNums: str => /\d/g.test(str),
         len(val) {
             try {
-                return is.Object(val) ? Object.keys(val).length : is.Map(val) || is.Set(val) ? val.size : val.length
+                return isObj(val) ? Object.keys(val).length : is.Map(val) || is.Set(val) ? val.size : val.length
             } catch (e) {}
             return -1
         },
@@ -2222,7 +2226,7 @@
             return Craft.deglove(toArr(arguments).map(t => typeof t))
         },
         memoize(func, resolver) {
-            if (!is.Func(func) || (resolver && !is.Func(resolver))) throw new TypeError("no function");
+            if (!isFunc(func) || (resolver && !isFunc(resolver))) throw new TypeError("no function");
             let cache = new WeakMap,
                 memoized = function () {
                     let args = arguments,
@@ -2281,7 +2285,7 @@
                 },
                 reset(fn) {
                     options.stop();
-                    if (is.Func(fn)) func = fn;
+                    if (isFunc(fn)) func = fn;
                     return options.start();
                 }
             }
@@ -2308,7 +2312,7 @@
                     if (elapsedTime < options.duration) requestAnimationFrame(loop)
                     else {
                         scrollTo(0, start + distance);
-                        if (is.Func(options.func)) options.func();
+                        if (isFunc(options.func)) options.func();
                         startTime = undef;
                     }
                 }
@@ -2362,7 +2366,7 @@
             })
         },
         model(name, func) {
-            if (is.Func(func) && is.String(name)) {
+            if (isFunc(func) && is.String(name)) {
                 if (!is.Def(Craft.Models[name])) {
                     let scope = observable();
                     Craft.Models[name] = {
@@ -2419,7 +2423,7 @@
          * @example Craft.customAttr('turngreen', element => element.css({ background : 'green'}));
          **/
         customAttr(name, handle) {
-            if (is.Func(handle)) {
+            if (isFunc(handle)) {
                 Craft.CustomAttributes.push({
                     name,
                     handle
@@ -2522,26 +2526,26 @@
                         } else if (key.includes("get_")) {
                             let sgKey = key.split("_")[1];
                             dealtWith.push(key, "set_" + sgKey);
-                            el.newSetGet(sgKey, (is.Func(config["set_" + sgKey]) ? config["set_" + sgKey] : x => {}), config[key]);
+                            el.newSetGet(sgKey, (isFunc(config["set_" + sgKey]) ? config["set_" + sgKey] : x => {}), config[key]);
                         }
                     }
                 }
-                if(is.Func(config['attr'])) {
+                if(isFunc(config['attr'])) {
                     el.observeAttrs(config['attr']);
                 }
-                if (is.Func(config['created'])) return config['created'].call(el)
+                if (isFunc(config['created'])) return config['created'].call(el)
             }
 
             for (let key in config) {
                 if (key == 'created' || key == 'attr' || (key.includes('set_') || key.includes('get_'))) continue;
 
-                if (is.Func(config[key]) && key != 'attr') dm = function () { // Adds dom methods to element
+                if (isFunc(config[key]) && key != 'attr') dm = function () { // Adds dom methods to element
                     return config[key].apply(dom(this), arguments)
                 }
                 key == 'inserted' ? element.attachedCallback = dm :
                     key == 'destroyed' ? element.detachedCallback = dm :
                     key.toLowerCase() == 'css' ? Craft.addCSS(config[key]) :
-                    is.Func(config[key]) ? element[key] = dm :
+                    isFunc(config[key]) ? element[key] = dm :
                     defineprop(element, key, getpropdescriptor(config, key));
             }
 
@@ -2647,18 +2651,31 @@
         element.linkevt = element.Click(e => {
             (element.hasAttr('newtab') ? open : Craft.router.open)(link)
         });
-        if (is.Func(element.linkhandle)) Craft.router.handle(link, element.linkhandle);
+        if (isFunc(element.linkhandle)) Craft.router.handle(link, element.linkhandle);
     });
 
     Craft.customAttr('color-accent', (element, color) => {
-        if (is.Func(element.colorAccent)) element.colorAccent(color);
-        else if (is.Object(element.colorAccent)) {
+        if (isFunc(element.colorAccent)) element.colorAccent(color);
+        else if (isObj(element.colorAccent)) {
             if (!element._cah.dw) {
                 element._cah.fn(color);
                 element._cah.dw = false;
             }
         }
     });
+
+    function parseTemplate(html) {
+      return html.replace(BracketsRegEx, (match, text, offset, string) => {
+        let key = match.replace(/{{/, '').replace('}}', ''),
+        val = Craft.getPath(key);
+        return `<o bind=${key}>${val}</o>`;
+      });
+    }
+
+    Craft.customAttr('craft-template',element => {
+      element.replace(Craft.dffstr(parseTemplate(element.html())));
+    });
+
     // takes in an affected element and scans it for custom attributes
     // then handles the custom attribute if it was registered with Craft.customAttr
     function manageAttr(el, attr) {
