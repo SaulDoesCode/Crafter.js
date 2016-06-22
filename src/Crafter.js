@@ -29,7 +29,7 @@
         def = ta(o => typeof o !== 'undefined'),
         nil = ta(o => o === null),
         isFunc = o => typeof o === 'function',
-        isString = o => typeof o === 'string',
+        isStr = o => typeof o === 'string',
         isObj = o => toString.call(o) === '[object Object]',
         head = doc.head,
         BracketsRegEx = /(\{\{[\w\.]*\}\})/g,
@@ -72,13 +72,18 @@
         if (b) return e
     }
 
+
+    function exec(fn,context,...args) {
+      return fn.apply(context,args);
+    }
+
     // if x then return y else return z
     function W(x, y, z, a) {
         return a ? (x ? y : z) + a : x ? y : z
     }
 
     function toInt(num) {
-        if (is.String(num)) num = Number(num);
+        if (isStr(num)) num = Number(num);
         if (isNaN(num)) return 0;
         if (num === 0 || !isFinite(num)) return num;
         return (num > 0 ? 1 : -1) * Math.floor(Math.abs(num));
@@ -127,7 +132,7 @@
          * Test if something is a String
          * @param args - value/values to test
          */
-        String: ta(o => typeof o === 'string'),
+        String: ta(isStr),
         /**
          * Test if something is an Array
          * @param {...*} args - value/values to test
@@ -271,7 +276,7 @@
          * tests if a value is a single character
          * @param {...string} values to test
          */
-        char: ta(val => is.String(val) && val.length == 1),
+        char: ta(val => isStr(val) && val.length == 1),
         /**
          * tests if a value is a space character
          * @param {...string} values to test
@@ -281,12 +286,12 @@
          * Determine if a String is UPPERCASE
          * @param {string} char - variable to test
          */
-        Uppercase: str => is.String(str) && !is.Num(str) && str === str.toUpperCase(),
+        Uppercase: str => isStr(str) && !is.Num(str) && str === str.toUpperCase(),
         /**
          * Determine if a String is LOWERCASE
          * @param {string} char - variable to test
          */
-        Lowercase: str => is.String(str) && str === str.toLowerCase(),
+        Lowercase: str => isStr(str) && str === str.toLowerCase(),
         /**
          * Determine if a String contains only characters and numbers (alphanumeric)
          * @param {string} str - variable to test
@@ -345,7 +350,7 @@
          */
         past(obj) {
             try {
-                if (!is.Date(obj)) obj = is.String(obj) ? new Date(is.Num(obj) ? Number(obj) : obj) : new Date(obj);
+                if (!is.Date(obj)) obj = isStr(obj) ? new Date(is.Num(obj) ? Number(obj) : obj) : new Date(obj);
             } catch (e) {}
             return is.Date(obj) && obj.getTime() < new Date().getTime();
         },
@@ -470,7 +475,7 @@
             let i = 0;
             if (is.Arraylike(iterable) && !localStorage)
                 for (; i < iterable.length; i++) func(iterable[i], i);
-            else if (is.int(iterable) && !is.String(iterable))
+            else if (is.int(iterable) && !isStr(iterable))
                 while (iterable != i) func(i++);
             else
                 for (i in iterable)
@@ -484,7 +489,7 @@
      * @param {Node|NodeList|Array|String} within - pass either a CSS Selector string , Node/NodeList or Array of Nodes to search for val in
      */
     function NodeOrQuerytoArr(val, within) {
-        if (is.String(val)) val = queryAll(val, within);
+        if (isStr(val)) val = queryAll(val, within);
         return is.Node(val) ? [val] : is.NodeList(val) ? toArr(val) : [];
     }
 
@@ -557,7 +562,7 @@
             EventType = EventType || 'click';
             this.state = false;
             Target = (Target !== root && Target !== doc) ? NodeOrQuerytoArr(Target, Within) : [Target];
-            if (is.String(EventType) && EventType.includes(',')) EventType = EventType.split(',');
+            if (isStr(EventType) && EventType.includes(',')) EventType = EventType.split(',');
             if (!is.Arr(EventType)) EventType = [EventType];
 
             let FuncWrapper = e => {
@@ -640,7 +645,7 @@
      * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
      */
     let query = (selector, element) => {
-        if (is.String(element)) element = doc.querySelector(element);
+        if (isStr(element)) element = doc.querySelector(element);
         return is.Node(element) ? element.querySelector(selector) : doc.querySelector(selector);
     }
 
@@ -650,12 +655,12 @@
      * @param {Node|NodeList|string=} element - Optional Node or CSS selector to search within insead of document
      */
     let queryAll = (selector, element) => {
-            if (is.String(element)) element = queryAll(element);
+            if (isStr(element)) element = queryAll(element);
             let list;
             if (Craft.len(element) !== 1 && (is.Arr(element) || is.NodeList(element))) {
                 list = [];
                 forEach(element, el => {
-                    if (is.String(el)) el = query(el);
+                    if (isStr(el)) el = query(el);
                     if (is.Node(el)) {
                         el = queryAll(selector, el);
                         if (is.NodeList(el)) list.concat(toArr(el));
@@ -742,7 +747,7 @@
             inner = undef;
         }
         if (inner != undef) element.html(inner);
-        if (isObj(attributes) || is.String(attributes)) {
+        if (isObj(attributes) || isStr(attributes)) {
             if (isObj(attributes)) Object.keys(attributes).forEach(key => {
                 if (eventoptions.some(evo => evo == key) && isFunc(attributes[key])) {
                     let func = attributes[key];
@@ -766,7 +771,7 @@
         element: craftElement,
         frag(inner) {
             let dfrag = doc.createDocumentFragment();
-            if (is.String(inner)) inner = dffstr(inner);
+            if (isStr(inner)) inner = dffstr(inner);
             if (is.Node(inner)) dfrag.appendChild(dfrag);
             return dfrag;
         },
@@ -796,26 +801,24 @@
             let list = ``;
             if (is.Arrylike(items))
                 forEach(items, item => {
-                    if (is.String(item)) list += Dom.element('li', item).outerHTML;
+                    if (isStr(item)) list += Dom.element('li', item).outerHTML;
                     else if (isObj(items)) list += Dom.element('li', item.inner, item.attr).outerHTML;
                 });
             return Dom.element(type, list, attr);
         },
-        a: (link, inner, attr) => Dom.element('a', inner, attr, {
-            href: link
-        }),
+        a: (link, inner, attr) => Dom.element('a', inner, attr,'href'+link),
         script(code, attr, defer, onload, nosrc) {
             let script = Dom.element('script', '', attr, {
                 type: 'text/javascript'
             });
             if (isFunc(onload)) {
-              script.onload = () => {
-                script.removeAttribute('initx');
-                onload();
-              };
-              let random = Craft.randomInt();
-              script.setAttribute('initx',random);
-              code += `\ndocument.head.querySelector('script[initx="${random}"]').dispatchEvent(new UIEvent('load'));\n`
+                script.onload = () => {
+                    script.removeAttribute('initx');
+                    onload();
+                };
+                let random = Craft.randomInt(1000);
+                script.setAttribute('initx', random);
+                code += `\ndocument.head.querySelector('script[initx="${random}"]').dispatchEvent(new UIEvent('load'));\n`
             }
             if (defer == true) script.defer = defer != false;
             if (nosrc == true) script.text = code;
@@ -894,7 +897,7 @@
              * @param {...string} names of attributes to check for
              */
         elements.hasAttr = function (attr) {
-                if (is.String(attr)) return elements.every(el => el.hasAttribute(attr));
+                if (isStr(attr)) return elements.every(el => el.hasAttribute(attr));
                 return elements.every(el => Craft.flatten(arguments).every(a => el.hasAttribute(a)))
             }
             /**
@@ -918,7 +921,7 @@
         elements.setAttr = function (attr, val) {
             forEach(elements, el => {
                 if (!is.Def(val)) {
-                    if (is.String(attr)) attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(Attr => {
+                    if (isStr(attr)) attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(Attr => {
                             let attribs = Attr.split('=');
                             is.Def(attribs[1]) ? element.setAttribute(attribs[0], attribs[1]) : element.setAttribute(attribs[0], '')
                         }) :
@@ -941,7 +944,7 @@
         }
         elements.appendTo = (val, within) => {
             forEach(elements, el => {
-                if (is.String(el)) el = query(val, within);
+                if (isStr(el)) el = query(val, within);
                 if (is.Node(el)) el.appendChild(el);
             });
             return elements
@@ -992,7 +995,7 @@
     }
 
     function domManip(element, within) {
-        if (is.String(element)) element = query(element, within);
+        if (isStr(element)) element = query(element, within);
         if (element._DOMM == true) return element;
         element._DOMM = true;
         element.isInput = is.Input(element);
@@ -1048,7 +1051,7 @@
          * element.importview - imports a file and renders it on to the node
          * @param (string) src - url to fetch from
          */
-        element.importview = src => {
+        element.importview = (src,fetchoptions) => {
             let cache = element.hasAttr('cache-view');
             if (cache) {
                 let view = localStorage.getItem(src);
@@ -1057,8 +1060,9 @@
                     return;
                 }
             }
-            fetch(src, {
-                mode: 'cors'
+            fetch(src,fetchoptions || {
+                mode: 'cors',
+                credentials:'same-origin',
             }).then(res => {
                 if (!res.ok) console.warn(`<${element.localName}> : unable to import view - ${src}`);
                 else res.text().then(view => {
@@ -1074,7 +1078,7 @@
          * @param {Node|string} CSS selector or Node to append the this.element to
          */
         element.appendTo = function (val, within) {
-                if (is.String(val)) val = query(val, within);
+                if (isStr(val)) val = query(val, within);
                 if (is.Node(val)) val.appendChild(element);
                 return element
             }
@@ -1159,7 +1163,7 @@
         element.on = (eventType, func) => on(eventType, element, func);
 
         element.emit = (evt, detail) => {
-            if (!is.String(evt)) throw new TypeError("element.emit : event name needs to be a string");
+            if (!isStr(evt)) throw new TypeError("element.emit : event name needs to be a string");
             element.dispatchEvent(new CustomEvent(evt, {
                 detail: is.Def(detail) || null
             }))
@@ -1269,7 +1273,7 @@
              */
         element.hasAttr = function () {
                 let args = toArr(arguments);
-                if (is.String(args[0]) && args.length == 1) return element.hasAttribute(args[0]);
+                if (isStr(args[0]) && args.length == 1) return element.hasAttribute(args[0]);
                 return args.every(a => element.hasAttribute(a))
             }
             /**
@@ -1280,7 +1284,7 @@
              */
         element.setAttr = (attr, val) => {
                 if (!is.Def(val)) {
-                    if (is.String(attr)) attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(Attr => {
+                    if (isStr(attr)) attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(Attr => {
                         is.Def(Attr.split('=')[1]) ? element.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : element.setAttribute(Attr.split('=')[0], '')
                     }) : element.setAttribute(attr, '');
                     else if (isObj(attr)) forEach(attr, (value, Attr) => {
@@ -1295,8 +1299,8 @@
              */
         element.getAttr = element.getAttribute;
         element.attr = (attr, val) => {
-            if (is.String(val) || isObj(attr)) return element.setAttr(attr, val);
-            if (is.String(attr) && !is.Def(val)) return element.getAttr(attr);
+            if (isStr(val) || isObj(attr)) return element.setAttr(attr, val);
+            if (isStr(attr) && !is.Def(val)) return element.getAttr(attr);
         }
         element.prop = element.hasAttr;
         /**
@@ -1376,8 +1380,8 @@
          */
         element.move = function (x, y, transform, position, chainable) {
                 if (is.Bool(position)) chainable = position;
-                if (is.String(transform)) position = transfrom;
-                if (is.String(position)) element.style.position = position;
+                if (isStr(transform)) position = transfrom;
+                if (isStr(position)) element.style.position = position;
                 element.css(transform == true ? {
                     transform: `translateX(${x}px) translateY(${y}px)`
                 } : {
@@ -1420,8 +1424,8 @@
             element.disconectInputSync = () => Craft.disconectInputSync(element)
         }
 
-        element.observe = function (func, options, name) {
-            if (!is.String(name)) name = 'MutObserver';
+        element.observe = (func, options, name) => {
+            if (!isStr(name)) name = 'MutObserver';
             element[name] = new MutationObserver(muts => {
                 muts.forEach(mut => {
                     func(mut, mut.type, mut.target, mut.addedNodes, mut.removedNodes)
@@ -1435,7 +1439,7 @@
             return element
         }
         element.unobserve = name => {
-            if (!is.String(name)) name = 'MutObserver';
+            if (!isStr(name)) name = 'MutObserver';
             if (is.Def(element[name])) {
                 element[name].disconnect();
                 delete element[name]
@@ -1445,7 +1449,7 @@
 
         element.observeAttrs = func => {
             if (!isObj(element.attrX)) element.attrX = eventemitter({});
-            element.attrX.on('attr', function(attr) {
+            element.attrX.on('attr', function (attr) {
                 func.apply(element, arguments);
                 element.attrX.emit.apply(null, ['attr:' + attr].concat(arguments));
             });
@@ -1471,13 +1475,13 @@
             within = null;
         }
         if (!one) {
-            if (is.String(element)) element = queryAll(element, within);
+            if (isStr(element)) element = queryAll(element, within);
             if (is.NodeList(element)) {
                 element = toArr(element).filter(el => is.Def(el.setAttribute));
                 if (element.length != 1) return domNodeList(element);
                 else element = element[0]
             }
-        } else if (is.String(element)) element = query(element, within);
+        } else if (isStr(element)) element = query(element, within);
         if (is.Node(element)) return !element['_DOMM'] ? domManip(element) : element;
         return Dom
     }
@@ -1519,7 +1523,7 @@
                     }
                     if (!isFunc(func)) throw new Error('no function');
                     let listener = {
-                        prop: is.String(prop) ? prop : '*',
+                        prop: isStr(prop) ? prop : '*',
                         fn: func,
                     }
                     let options = {
@@ -1543,7 +1547,7 @@
             value(prop, func) {
                 if (!isFunc(func)) throw new Error('no function');
                 let listener = {
-                    prop: is.String(prop) ? prop : '*',
+                    prop: isStr(prop) ? prop : '*',
                     fn: func,
                     multi: true,
                 }
@@ -1591,8 +1595,8 @@
             enumerable: false,
         });
         obj = eventemitter(obj);
-        forEach(obj,(val,key) => {
-          if(isObj(val) && !val.isObservable) obj[key] = observable(val);
+        forEach(obj, (val, key) => {
+            if (isObj(val) && !val.isObservable) obj[key] = observable(val);
         });
         if (root.Proxy) return new Proxy(obj, {
             get(target, key) {
@@ -1696,6 +1700,7 @@
         on,
         once,
         is,
+        exec,
         UnHTML(html) {
             return html
                 .replace(/<script[^>]*?>.*?<\/script>/gi, '')
@@ -1881,7 +1886,7 @@
          */
         omitFrom(Arr) {
             let args = toArr(arguments).slice(1);
-            if (is.String(Arr))
+            if (isStr(Arr))
                 args.forEach(a => {
                     while (Arr.includes(a)) Arr = Arr.replace(a, '');
                 });
@@ -1934,7 +1939,7 @@
                 })
             },
             handle(route, func) {
-                if (is.String(route)) {
+                if (isStr(route)) {
                     if (Locs(l => l == route)) func(route);
                     Craft.router.addHandle(route, func)
                 } else if (is.Arr(route))
@@ -1946,7 +1951,7 @@
             handlers: [],
             links: [],
             link(Selector, link, newtab, eventType) {
-                if (is.String(newtab)) eventType = newtab
+                if (isStr(newtab)) eventType = newtab
                 Craft.router.links.push(() => {
                     on(eventType || 'click', Selector, e => {
                         Craft.router.open(link, newtab)
@@ -1975,7 +1980,7 @@
                 let expiry = "";
                 if (expires) {
                     if (is.Num(expires)) expiry = expires == Infinity ? "; expires=Fri, 11 April 9997 23:59:59 UTC" : "; max-age=" + expires;
-                    if (is.String(expires)) expiry = "; expires=" + expires;
+                    if (isStr(expires)) expiry = "; expires=" + expires;
                     if (is.Date(expires)) expiry = "; expires=" + expires.toUTCString();
                 }
                 doc.cookie = encodeURIComponent(key) + "=" + encodeURIComponent(val) + expiry + (domain ? "; domain=" + domain : "") + (path ? "; path=" + path : "") + (secure ? "; secure" : "");
@@ -2140,7 +2145,7 @@
                         el.style[key] = prop;
                     });
                 });
-            else if (is.String(styles, prop)) element.style[styles] = prop;
+            else if (isStr(styles, prop)) element.style[styles] = prop;
             else throw new Error('CSS : Styles Object is not an object');
             return element;
         },
@@ -2198,16 +2203,16 @@
                 });
             })
         },
-        loadScripts(urls,funcexec,fetchattr) {
-          return promise((pass,fail) => {
-            let len = 0;
-            urls.forEach(src => {
-              Craft.loadScript(src,funcexec,fetchattr).then(() => {
-                len++;
-                if(len == urls.length) pass();
-              }).catch(fail);
+        loadScripts(urls, funcexec, fetchattr) {
+            return promise((pass, fail) => {
+                let len = 0;
+                urls.forEach(src => {
+                    Craft.loadScript(src, funcexec, fetchattr).then(() => {
+                        len++;
+                        if (len == urls.length) pass();
+                    }).catch(fail);
+                });
             });
-          });
         },
         hasCaps: string => toArr(string).some(is.Uppercase),
         hasNums: str => /\d/g.test(str),
@@ -2297,7 +2302,7 @@
             options.offset = options.offset || 0;
 
             let startTime, elapsedTime, start = root.pageYoffset,
-                distance = is.String(target) ? options.offset + dom(target, true).getRect().top : target,
+                distance = isStr(target) ? options.offset + dom(target, true).getRect().top : target,
                 loopIteration = 0,
                 loop = time => {
                     if (loopIteration == 0) startTime = time;
@@ -2324,9 +2329,9 @@
          */
         toFormData(val) {
             let formData = new FormData();
-            if (is.String(val)) val = val.split('&');
+            if (isStr(val)) val = val.split('&');
             forEach(val, v => {
-                if (is.String(v)) {
+                if (isStr(v)) {
                     v = v.split('=');
                     if (v.length == 1) v[1] = '';
                     formData.append(v[0], v[1])
@@ -2366,7 +2371,7 @@
             })
         },
         model(name, func) {
-            if (isFunc(func) && is.String(name)) {
+            if (isFunc(func) && isStr(name)) {
                 if (!is.Def(Craft.Models[name])) {
                     let scope = observable();
                     Craft.Models[name] = {
@@ -2481,12 +2486,12 @@
                 i = Math.floor(Math.log(bytes) / Math.log(k));
             return (bytes / Math.pow(k, i)).toPrecision(decimals + 1 || 3) + ' ' + 'Bytes,KB,MB,GB,TB,PB,EB,ZB,YB'.split(',')[i]
         },
-        randomNum(min, max) {
+        randomNum(max, min) {
             min = min || 0;
             max = max || 100;
             return Math.random() * (max - min) + min;
         },
-        randomInt(min, max) {
+        randomInt(max, min) {
             min = min || 0;
             max = max || 100;
             return Math.floor(Math.random() * (max - min)) + min;
@@ -2530,7 +2535,7 @@
                         }
                     }
                 }
-                if(isFunc(config['attr'])) {
+                if (isFunc(config['attr'])) {
                     el.observeAttrs(config['attr']);
                 }
                 if (isFunc(config['created'])) return config['created'].call(el)
@@ -2553,7 +2558,7 @@
             doc.registerElement(tag, settings);
         },
         SyncInput(input, obj, key) {
-            if (is.String(input)) input = query(input);
+            if (isStr(input)) input = query(input);
             if (is.Input(input)) {
                 let oldval = input.value;
                 input[sI] = on('input,blur,keydown', input, e => {
@@ -2568,7 +2573,7 @@
             }
         },
         disconectInputSync(input) {
-            if (is.String(input)) input = query(input);
+            if (isStr(input)) input = query(input);
             if (is.Node(input) && is.Def(input[sI])) {
                 input[sI].off;
                 delete input[sI]
@@ -2665,15 +2670,15 @@
     });
 
     function parseTemplate(html) {
-      return html.replace(BracketsRegEx, (match, text, offset, string) => {
-        let key = match.replace(/{{/, '').replace('}}', ''),
-        val = Craft.getPath(key);
-        return `<o bind=${key}>${val}</o>`;
-      });
+        return html.replace(BracketsRegEx, (match, text, offset, string) => {
+            let key = match.replace(/{{/, '').replace('}}', ''),
+                val = Craft.getPath(key);
+            return `<o bind=${key}>${val == undef ? '' : val}</o>`;
+        });
     }
 
-    Craft.customAttr('craft-template',element => {
-      element.replace(Craft.dffstr(parseTemplate(element.html())));
+    Craft.customAttr('craft-template', element => {
+        element.replace(Craft.dffstr(parseTemplate(element.html())));
     });
 
     // takes in an affected element and scans it for custom attributes
@@ -2725,9 +2730,7 @@
     });
 
     function init() {
-        Craft.router.links.forEach(link => {
-            link()
-        });
+        Craft.router.links.forEach(exec);
         Ready = true
     }
 
@@ -2738,6 +2741,9 @@
             if (Locs(l => l == handle.link)) handle.func(location.hash)
         });
     });
+
+
+
 
     root.Craft = Craft;
     //console.log(performance.now() - perf, 'Crafter.js');

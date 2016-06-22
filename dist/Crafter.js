@@ -63,7 +63,7 @@ function _defineProperty(obj, key, value) {
     isFunc = function(o) {
       return typeof o === 'function';
     },
-    isString = function(o) {
+    isStr = function(o) {
       return typeof o === 'string';
     },
     isObj = function(o) {
@@ -101,13 +101,20 @@ function _defineProperty(obj, key, value) {
 
   function rif(b, e) {
     if (b) return e;
+  }
+
+  function exec(fn, context) {
+    for (var _len = arguments.length, args = Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
+      args[_key - 2] = arguments[_key];
+    }
+    return fn.apply(context, args);
   } // if x then return y else return z
   function W(x, y, z, a) {
     return a ? (x ? y : z) + a : x ? y : z;
   }
 
   function toInt(num) {
-    if (is.String(num)) num = Number(num);
+    if (isStr(num)) num = Number(num);
     if (isNaN(num)) return 0;
     if (num === 0 || !isFinite(num)) return num;
     return (num > 0 ? 1 : -1) * Math.floor(Math.abs(num));
@@ -158,9 +165,7 @@ function _defineProperty(obj, key, value) {
      * Test if something is a String
      * @param args - value/values to test
      */
-    String: ta(function(o) {
-      return typeof o === 'string';
-    }),
+    String: ta(isStr),
     /**
      * Test if something is an Array
      * @param {...*} args - value/values to test
@@ -341,7 +346,7 @@ function _defineProperty(obj, key, value) {
      * @param {...string} values to test
      */
     char: ta(function(val) {
-      return is.String(val) && val.length == 1;
+      return isStr(val) && val.length == 1;
     }),
     /**
      * tests if a value is a space character
@@ -355,14 +360,14 @@ function _defineProperty(obj, key, value) {
      * @param {string} char - variable to test
      */
     Uppercase: function(str) {
-      return is.String(str) && !is.Num(str) && str === str.toUpperCase();
+      return isStr(str) && !is.Num(str) && str === str.toUpperCase();
     },
     /**
      * Determine if a String is LOWERCASE
      * @param {string} char - variable to test
      */
     Lowercase: function(str) {
-      return is.String(str) && str === str.toLowerCase();
+      return isStr(str) && str === str.toLowerCase();
     },
     /**
      * Determine if a String contains only characters and numbers (alphanumeric)
@@ -432,7 +437,7 @@ function _defineProperty(obj, key, value) {
      */
     past: function(obj) {
       try {
-        if (!is.Date(obj)) obj = is.String(obj) ? new Date(is.Num(obj) ? Number(obj) : obj) : new Date(obj);
+        if (!is.Date(obj)) obj = isStr(obj) ? new Date(is.Num(obj) ? Number(obj) : obj) : new Date(obj);
       } catch (e) {}
       return is.Date(obj) && obj.getTime() < new Date().getTime();
     },
@@ -591,7 +596,7 @@ function _defineProperty(obj, key, value) {
       if (is.Arraylike(iterable) && !localStorage)
         for (; i < iterable.length; i++) {
           func(iterable[i], i);
-        } else if (is.int(iterable) && !is.String(iterable))
+        } else if (is.int(iterable) && !isStr(iterable))
           while (iterable != i) {
             func(i++);
           } else
@@ -606,7 +611,7 @@ function _defineProperty(obj, key, value) {
    * @param {Node|NodeList|Array|String} within - pass either a CSS Selector string , Node/NodeList or Array of Nodes to search for val in
    */
   function NodeOrQuerytoArr(val, within) {
-    if (is.String(val)) val = queryAll(val, within);
+    if (isStr(val)) val = queryAll(val, within);
     return is.Node(val) ? [val] : is.NodeList(val) ? toArr(val) : [];
   }
 
@@ -685,7 +690,7 @@ function _defineProperty(obj, key, value) {
       EventType = EventType || 'click';
       this.state = false;
       Target = Target !== root && Target !== doc ? NodeOrQuerytoArr(Target, Within) : [Target];
-      if (is.String(EventType) && EventType.includes(',')) EventType = EventType.split(',');
+      if (isStr(EventType) && EventType.includes(',')) EventType = EventType.split(',');
       if (!is.Arr(EventType)) EventType = [EventType];
       var FuncWrapper = function(e) {
         func(e, e.target, Craft.deglove(Target));
@@ -764,16 +769,16 @@ function _defineProperty(obj, key, value) {
    * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
    */
   var query = function(selector, element) {
-      if (is.String(element)) element = doc.querySelector(element);
+      if (isStr(element)) element = doc.querySelector(element);
       return is.Node(element) ? element.querySelector(selector) : doc.querySelector(selector);
     },
     queryAll = function(selector, element) {
-      if (is.String(element)) element = queryAll(element);
+      if (isStr(element)) element = queryAll(element);
       var list = void 0;
       if (Craft.len(element) !== 1 && (is.Arr(element) || is.NodeList(element))) {
         list = [];
         forEach(element, function(el) {
-          if (is.String(el)) el = query(el);
+          if (isStr(el)) el = query(el);
           if (is.Node(el)) {
             el = queryAll(selector, el);
             if (is.NodeList(el)) list.concat(toArr(el));
@@ -863,7 +868,7 @@ function _defineProperty(obj, key, value) {
       inner = undef;
     }
     if (inner != undef) element.html(inner);
-    if (isObj(attributes) || is.String(attributes)) {
+    if (isObj(attributes) || isStr(attributes)) {
       if (isObj(attributes)) Object.keys(attributes).forEach(function(key) {
         if (eventoptions.some(function(evo) {
             return evo == key;
@@ -888,7 +893,7 @@ function _defineProperty(obj, key, value) {
     element: craftElement,
     frag: function(inner) {
       var dfrag = doc.createDocumentFragment();
-      if (is.String(inner)) inner = dffstr(inner);
+      if (isStr(inner)) inner = dffstr(inner);
       if (is.Node(inner)) dfrag.appendChild(dfrag);
       return dfrag;
     },
@@ -921,15 +926,13 @@ function _defineProperty(obj, key, value) {
     list: function(type, items, attr) {
       var list = "";
       if (is.Arrylike(items)) forEach(items, function(item) {
-        if (is.String(item)) list += Dom.element('li', item).outerHTML;
+        if (isStr(item)) list += Dom.element('li', item).outerHTML;
         else if (isObj(items)) list += Dom.element('li', item.inner, item.attr).outerHTML;
       });
       return Dom.element(type, list, attr);
     },
     a: function(link, inner, attr) {
-      return Dom.element('a', inner, attr, {
-        href: link
-      });
+      return Dom.element('a', inner, attr, 'href' + link);
     },
     script: function(code, attr, defer, onload, nosrc) {
       var script = Dom.element('script', '', attr, {
@@ -940,7 +943,7 @@ function _defineProperty(obj, key, value) {
           script.removeAttribute('initx');
           onload();
         };
-        var random = Craft.randomInt();
+        var random = Craft.randomInt(1000);
         script.setAttribute('initx', random);
         code += "\ndocument.head.querySelector('script[initx=\"" + random + "\"]').dispatchEvent(new UIEvent('load'));\n";
       }
@@ -1034,7 +1037,7 @@ function _defineProperty(obj, key, value) {
      */
     elements.hasAttr = function(attr) {
       var _arguments5 = arguments;
-      if (is.String(attr)) return elements.every(function(el) {
+      if (isStr(attr)) return elements.every(function(el) {
         return el.hasAttribute(attr);
       });
       return elements.every(function(el) {
@@ -1066,7 +1069,7 @@ function _defineProperty(obj, key, value) {
     elements.setAttr = function(attr, val) {
       forEach(elements, function(el) {
         if (!is.Def(val)) {
-          if (is.String(attr)) attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(function(Attr) {
+          if (isStr(attr)) attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(function(Attr) {
             var attribs = Attr.split('=');
             is.Def(attribs[1]) ? element.setAttribute(attribs[0], attribs[1]) : element.setAttribute(attribs[0], '');
           }) : element.setAttribute(attr, '');
@@ -1087,7 +1090,7 @@ function _defineProperty(obj, key, value) {
     };
     elements.appendTo = function(val, within) {
       forEach(elements, function(el) {
-        if (is.String(el)) el = query(val, within);
+        if (isStr(el)) el = query(val, within);
         if (is.Node(el)) el.appendChild(el);
       });
       return elements;
@@ -1140,7 +1143,7 @@ function _defineProperty(obj, key, value) {
   }
 
   function domManip(element, within) {
-    if (is.String(element)) element = query(element, within);
+    if (isStr(element)) element = query(element, within);
     if (element._DOMM == true) return element;
     element._DOMM = true;
     element.isInput = is.Input(element);
@@ -1194,7 +1197,7 @@ function _defineProperty(obj, key, value) {
      * element.importview - imports a file and renders it on to the node
      * @param (string) src - url to fetch from
      */
-    element.importview = function(src) {
+    element.importview = function(src, fetchoptions) {
       var cache = element.hasAttr('cache-view');
       if (cache) {
         var view = localStorage.getItem(src);
@@ -1203,8 +1206,9 @@ function _defineProperty(obj, key, value) {
           return;
         }
       }
-      fetch(src, {
-        mode: 'cors'
+      fetch(src, fetchoptions || {
+        mode: 'cors',
+        credentials: 'same-origin'
       }).then(function(res) {
         if (!res.ok) console.warn("<" + element.localName + "> : unable to import view - " + src);
         else res.text().then(function(view) {
@@ -1219,7 +1223,7 @@ function _defineProperty(obj, key, value) {
      * @param {Node|string} CSS selector or Node to append the this.element to
      */
     element.appendTo = function(val, within) {
-      if (is.String(val)) val = query(val, within);
+      if (isStr(val)) val = query(val, within);
       if (is.Node(val)) val.appendChild(element);
       return element;
     };
@@ -1302,7 +1306,7 @@ function _defineProperty(obj, key, value) {
       return on(eventType, element, func);
     };
     element.emit = function(evt, detail) {
-      if (!is.String(evt)) throw new TypeError("element.emit : event name needs to be a string");
+      if (!isStr(evt)) throw new TypeError("element.emit : event name needs to be a string");
       element.dispatchEvent(new CustomEvent(evt, {
         detail: is.Def(detail) || null
       }));
@@ -1414,7 +1418,7 @@ function _defineProperty(obj, key, value) {
      */
     element.hasAttr = function() {
       var args = toArr(arguments);
-      if (is.String(args[0]) && args.length == 1) return element.hasAttribute(args[0]);
+      if (isStr(args[0]) && args.length == 1) return element.hasAttribute(args[0]);
       return args.every(function(a) {
         return element.hasAttribute(a);
       });
@@ -1427,7 +1431,7 @@ function _defineProperty(obj, key, value) {
      */
     element.setAttr = function(attr, val) {
       if (!is.Def(val)) {
-        if (is.String(attr)) attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(function(Attr) {
+        if (isStr(attr)) attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(function(Attr) {
           is.Def(Attr.split('=')[1]) ? element.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : element.setAttribute(Attr.split('=')[0], '');
         }) : element.setAttribute(attr, '');
         else if (isObj(attr)) forEach(attr, function(value, Attr) {
@@ -1442,8 +1446,8 @@ function _defineProperty(obj, key, value) {
      */
     element.getAttr = element.getAttribute;
     element.attr = function(attr, val) {
-      if (is.String(val) || isObj(attr)) return element.setAttr(attr, val);
-      if (is.String(attr) && !is.Def(val)) return element.getAttr(attr);
+      if (isStr(val) || isObj(attr)) return element.setAttr(attr, val);
+      if (isStr(attr) && !is.Def(val)) return element.getAttr(attr);
     };
     element.prop = element.hasAttr;
     /**
@@ -1526,8 +1530,8 @@ function _defineProperty(obj, key, value) {
      */
     element.move = function(x, y, transform, position, chainable) {
       if (is.Bool(position)) chainable = position;
-      if (is.String(transform)) position = transfrom;
-      if (is.String(position)) element.style.position = position;
+      if (isStr(transform)) position = transfrom;
+      if (isStr(position)) element.style.position = position;
       element.css(transform == true ? {
         transform: "translateX(" + x + "px) translateY(" + y + "px)"
       } : {
@@ -1575,7 +1579,7 @@ function _defineProperty(obj, key, value) {
       };
     }
     element.observe = function(func, options, name) {
-      if (!is.String(name)) name = 'MutObserver';
+      if (!isStr(name)) name = 'MutObserver';
       element[name] = new MutationObserver(function(muts) {
         muts.forEach(function(mut) {
           func(mut, mut.type, mut.target, mut.addedNodes, mut.removedNodes);
@@ -1589,7 +1593,7 @@ function _defineProperty(obj, key, value) {
       return element;
     };
     element.unobserve = function(name) {
-      if (!is.String(name)) name = 'MutObserver';
+      if (!isStr(name)) name = 'MutObserver';
       if (is.Def(element[name])) {
         element[name].disconnect();
         delete element[name];
@@ -1622,7 +1626,7 @@ function _defineProperty(obj, key, value) {
       within = null;
     }
     if (!one) {
-      if (is.String(element)) element = queryAll(element, within);
+      if (isStr(element)) element = queryAll(element, within);
       if (is.NodeList(element)) {
         element = toArr(element).filter(function(el) {
           return is.Def(el.setAttribute);
@@ -1630,12 +1634,12 @@ function _defineProperty(obj, key, value) {
         if (element.length != 1) return domNodeList(element);
         else element = element[0];
       }
-    } else if (is.String(element)) element = query(element, within);
+    } else if (isStr(element)) element = query(element, within);
     if (is.Node(element)) return !element['_DOMM'] ? domManip(element) : element;
     return Dom;
   }
-  for (var _key in Dom) {
-    defineprop(dom, _key, getpropdescriptor(Dom, _key));
+  for (var _key2 in Dom) {
+    defineprop(dom, _key2, getpropdescriptor(Dom, _key2));
   }
   if (root.Proxy) dom = new Proxy(dom, {
     get: function(obj, key) {
@@ -1675,7 +1679,7 @@ function _defineProperty(obj, key, value) {
           }
           if (!isFunc(func)) throw new Error('no function');
           var listener = {
-              prop: is.String(prop) ? prop : '*',
+              prop: isStr(prop) ? prop : '*',
               fn: func
             },
             options = {get on() {
@@ -1697,7 +1701,7 @@ function _defineProperty(obj, key, value) {
       value: function(prop, func) {
         if (!isFunc(func)) throw new Error('no function');
         var listener = {
-            prop: is.String(prop) ? prop : '*',
+            prop: isStr(prop) ? prop : '*',
             fn: func,
             multi: true
           },
@@ -1848,6 +1852,7 @@ function _defineProperty(obj, key, value) {
     on: on,
     once: once,
     is: is,
+    exec: exec,
     UnHTML: function(html) {
       return html.replace(/<script[^>]*?>.*?<\/script>/gi, '').replace(/<style[^>]*?>.*?<\/style>/gi, '').replace(/<![\s\S]*?--[ \t\n\r]*>/gi, '');
     },
@@ -2006,8 +2011,8 @@ function _defineProperty(obj, key, value) {
      */
     concatObjects: function(host) {
       Craft.omit(arguments, host).forEach(function(obj) {
-        for (var _key2 in obj) {
-          defineprop(host, _key2, getpropdescriptor(obj, _key2));
+        for (var _key3 in obj) {
+          defineprop(host, _key3, getpropdescriptor(obj, _key3));
         }
       });
       return host;
@@ -2049,7 +2054,7 @@ function _defineProperty(obj, key, value) {
      */
     omitFrom: function(Arr) {
       var args = toArr(arguments).slice(1);
-      if (is.String(Arr)) args.forEach(function(a) {
+      if (isStr(Arr)) args.forEach(function(a) {
         while (Arr.includes(a)) {
           Arr = Arr.replace(a, '');
         }
@@ -2112,7 +2117,7 @@ function _defineProperty(obj, key, value) {
         });
       },
       handle: function(route, func) {
-        if (is.String(route)) {
+        if (isStr(route)) {
           if (Locs(function(l) {
               return l == route;
             })) func(route);
@@ -2127,7 +2132,7 @@ function _defineProperty(obj, key, value) {
       handlers: [],
       links: [],
       link: function(Selector, link, newtab, eventType) {
-        if (is.String(newtab)) eventType = newtab;
+        if (isStr(newtab)) eventType = newtab;
         Craft.router.links.push(function() {
           on(eventType || 'click', Selector, function(e) {
             Craft.router.open(link, newtab);
@@ -2158,7 +2163,7 @@ function _defineProperty(obj, key, value) {
         var expiry = "";
         if (expires) {
           if (is.Num(expires)) expiry = expires == Infinity ? "; expires=Fri, 11 April 9997 23:59:59 UTC" : "; max-age=" + expires;
-          if (is.String(expires)) expiry = "; expires=" + expires;
+          if (isStr(expires)) expiry = "; expires=" + expires;
           if (is.Date(expires)) expiry = "; expires=" + expires.toUTCString();
         }
         doc.cookie = encodeURIComponent(key) + "=" + encodeURIComponent(val) + expiry + (domain ? "; domain=" + domain : "") + (path ? "; path=" + path : "") + (secure ? "; secure" : "");
@@ -2332,7 +2337,7 @@ function _defineProperty(obj, key, value) {
         el.style[key] = prop;
       });
     });
-    else if (is.String(styles, prop)) element.style[styles] = prop;
+    else if (isStr(styles, prop)) element.style[styles] = prop;
     else throw new Error('CSS : Styles Object is not an object');
     return element;
   }), _defineProperty(_Craft, "fixURL", function(url) {
@@ -2486,7 +2491,7 @@ function _defineProperty(obj, key, value) {
     var startTime = void 0,
       elapsedTime = void 0,
       start = root.pageYoffset,
-      distance = is.String(target) ? options.offset + dom(target, true).getRect().top : target,
+      distance = isStr(target) ? options.offset + dom(target, true).getRect().top : target,
       loopIteration = 0,
       loop = function(time) {
         if (loopIteration == 0) startTime = time;
@@ -2508,9 +2513,9 @@ function _defineProperty(obj, key, value) {
     requestAnimationFrame(loop);
   }), _defineProperty(_Craft, "toFormData", function(val) {
     var formData = new FormData();
-    if (is.String(val)) val = val.split('&');
+    if (isStr(val)) val = val.split('&');
     forEach(val, function(v) {
-      if (is.String(v)) {
+      if (isStr(v)) {
         v = v.split('=');
         if (v.length == 1) v[1] = '';
         formData.append(v[0], v[1]);
@@ -2537,7 +2542,7 @@ function _defineProperty(obj, key, value) {
       }, 5500);
     });
   }, _defineProperty(_Craft, "model", function(name, func) {
-    if (isFunc(func) && is.String(name)) {
+    if (isFunc(func) && isStr(name)) {
       if (!is.Def(Craft.Models[name])) {
         var _ret5 = function() {
           var scope = observable();
@@ -2631,11 +2636,11 @@ function _defineProperty(obj, key, value) {
     var k = 1000,
       i = Math.floor(Math.log(bytes) / Math.log(k));
     return (bytes / Math.pow(k, i)).toPrecision(decimals + 1 || 3) + ' ' + 'Bytes,KB,MB,GB,TB,PB,EB,ZB,YB'.split(',')[i];
-  }), _defineProperty(_Craft, "randomNum", function(min, max) {
+  }), _defineProperty(_Craft, "randomNum", function(max, min) {
     min = min || 0;
     max = max || 100;
     return Math.random() * (max - min) + min;
-  }), _defineProperty(_Craft, "randomInt", function(min, max) {
+  }), _defineProperty(_Craft, "randomInt", function(max, min) {
     min = min || 0;
     max = max || 100;
     return Math.floor(Math.random() * (max - min)) + min;
@@ -2651,16 +2656,16 @@ function _defineProperty(obj, key, value) {
     element.createdCallback = function() {
       var el = dom(this),
         dealtWith = [];
-      for (var _key3 in config) {
-        if (!dealtWith.includes(_key3)) {
-          if (_key3.includes("set_")) {
-            var sgKey = _key3.split("_")[1];
-            dealtWith.push(_key3, "get_" + sgKey);
-            el.newSetGet(sgKey, config[_key3], config["get_" + sgKey]);
-          } else if (_key3.includes("get_")) {
-            var _sgKey = _key3.split("_")[1];
-            dealtWith.push(_key3, "set_" + _sgKey);
-            el.newSetGet(_sgKey, isFunc(config["set_" + _sgKey]) ? config["set_" + _sgKey] : function(x) {}, config[_key3]);
+      for (var _key4 in config) {
+        if (!dealtWith.includes(_key4)) {
+          if (_key4.includes("set_")) {
+            var sgKey = _key4.split("_")[1];
+            dealtWith.push(_key4, "get_" + sgKey);
+            el.newSetGet(sgKey, config[_key4], config["get_" + sgKey]);
+          } else if (_key4.includes("get_")) {
+            var _sgKey = _key4.split("_")[1];
+            dealtWith.push(_key4, "set_" + _sgKey);
+            el.newSetGet(_sgKey, isFunc(config["set_" + _sgKey]) ? config["set_" + _sgKey] : function(x) {}, config[_key4]);
           }
         }
       }
@@ -2669,21 +2674,21 @@ function _defineProperty(obj, key, value) {
       }
       if (isFunc(config['created'])) return config['created'].call(el);
     };
-    var _loop = function(_key4) {
-      if (_key4 == 'created' || _key4 == 'attr' || _key4.includes('set_') || _key4.includes('get_')) return "continue";
-      if (isFunc(config[_key4]) && _key4 != 'attr') dm = function() { // Adds dom methods to element
-        return config[_key4].apply(dom(this), arguments);
+    var _loop = function(_key5) {
+      if (_key5 == 'created' || _key5 == 'attr' || _key5.includes('set_') || _key5.includes('get_')) return "continue";
+      if (isFunc(config[_key5]) && _key5 != 'attr') dm = function() { // Adds dom methods to element
+        return config[_key5].apply(dom(this), arguments);
       };
-      _key4 == 'inserted' ? element.attachedCallback = dm : _key4 == 'destroyed' ? element.detachedCallback = dm : _key4.toLowerCase() == 'css' ? Craft.addCSS(config[_key4]) : isFunc(config[_key4]) ? element[_key4] = dm : defineprop(element, _key4, getpropdescriptor(config, _key4));
+      _key5 == 'inserted' ? element.attachedCallback = dm : _key5 == 'destroyed' ? element.detachedCallback = dm : _key5.toLowerCase() == 'css' ? Craft.addCSS(config[_key5]) : isFunc(config[_key5]) ? element[_key5] = dm : defineprop(element, _key5, getpropdescriptor(config, _key5));
     };
-    for (var _key4 in config) {
-      var _ret7 = _loop(_key4);
+    for (var _key5 in config) {
+      var _ret7 = _loop(_key5);
       if (_ret7 === "continue") continue;
     }
     settings['prototype'] = element;
     doc.registerElement(tag, settings);
   }), _defineProperty(_Craft, "SyncInput", function(input, obj, key) {
-    if (is.String(input)) input = query(input);
+    if (isStr(input)) input = query(input);
     if (is.Input(input)) {
       (function() {
         var oldval = input.value;
@@ -2699,7 +2704,7 @@ function _defineProperty(obj, key, value) {
       })();
     }
   }), _defineProperty(_Craft, "disconectInputSync", function(input) {
-    if (is.String(input)) input = query(input);
+    if (isStr(input)) input = query(input);
     if (is.Node(input) && is.Def(input[sI])) {
       input[sI].off;
       delete input[sI];
@@ -2799,7 +2804,7 @@ function _defineProperty(obj, key, value) {
     return html.replace(BracketsRegEx, function(match, text, offset, string) {
       var key = match.replace(/{{/, '').replace('}}', ''),
         val = Craft.getPath(key);
-      return "<o bind=" + key + ">" + val + "</o>";
+      return "<o bind=" + key + ">" + (val == undef ? '' : val) + "</o>";
     });
   }
   Craft.customAttr('craft-template', function(element) {
@@ -2846,9 +2851,7 @@ function _defineProperty(obj, key, value) {
   });
 
   function init() {
-    Craft.router.links.forEach(function(link) {
-      link();
-    });
+    Craft.router.links.forEach(exec);
     Ready = true;
   }!ready() ? once("DOMContentLoaded", doc, init) : init();
   on('hashchange', function() {
