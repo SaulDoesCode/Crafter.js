@@ -920,10 +920,10 @@
              */
         elements.setAttr = function (attr, val) {
             forEach(elements, el => {
-                if (!is.Def(val)) {
+                if (!def(val)) {
                     if (isStr(attr)) attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(Attr => {
                             let attribs = Attr.split('=');
-                            is.Def(attribs[1]) ? element.setAttribute(attribs[0], attribs[1]) : element.setAttribute(attribs[0], '')
+                            def(attribs[1]) ? element.setAttribute(attribs[0], attribs[1]) : element.setAttribute(attribs[0], '')
                         }) :
                         element.setAttribute(attr, '');
                     else if (isObj(attr)) forEach(attr, (value, Attr) => {
@@ -965,7 +965,7 @@
         });
 
         elements.pick = i => {
-            if (is.int(i) && is.Def(elements[i])) return dom(elements[i]);
+            if (is.int(i) && def(elements[i])) return dom(elements[i]);
             else if (elements.includes(i)) return dom(i);
         }
 
@@ -1123,7 +1123,7 @@
                     obj = path.obj,
                     val = path.val;
 
-                if (is.Def(val)) element.html(val);
+                if (def(val)) element.html(val);
                 else {
                     let getval = element.html();
                     if (getval) Craft.setDeep(obj, prop, getval);
@@ -1148,10 +1148,10 @@
         }
 
         element.unbind = bind => {
-          if(element.__binds && element.__binds[bind] != undef) {
-            element.__binds[bind].off;
-            delete element.__binds[bind];
-          }
+            if (element.__binds && element.__binds[bind] != undef) {
+                element.__binds[bind].off;
+                delete element.__binds[bind];
+            }
         }
 
         /**
@@ -1175,7 +1175,7 @@
         element.emit = (evt, detail) => {
             if (!isStr(evt)) throw new TypeError("element.emit : event name needs to be a string");
             element.dispatchEvent(new CustomEvent(evt, {
-                detail: is.Def(detail) || null
+                detail: def(detail) || null
             }))
         }
 
@@ -1293,9 +1293,9 @@
              * @param {string} Value of the Attribute to add/set
              */
         element.setAttr = (attr, val) => {
-                if (!is.Def(val)) {
+                if (!def(val)) {
                     if (isStr(attr)) attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(Attr => {
-                        is.Def(Attr.split('=')[1]) ? element.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : element.setAttribute(Attr.split('=')[0], '')
+                        def(Attr.split('=')[1]) ? element.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : element.setAttribute(Attr.split('=')[0], '')
                     }) : element.setAttribute(attr, '');
                     else if (isObj(attr)) forEach(attr, (value, Attr) => {
                         element.setAttribute(Attr, value)
@@ -1310,7 +1310,7 @@
         element.getAttr = element.getAttribute;
         element.attr = (attr, val) => {
             if (isStr(val) || isObj(attr)) return element.setAttr(attr, val);
-            if (isStr(attr) && !is.Def(val)) return element.getAttr(attr);
+            if (isStr(attr) && !def(val)) return element.getAttr(attr);
         }
         element.prop = element.hasAttr;
         /**
@@ -1450,7 +1450,7 @@
         }
         element.unobserve = name => {
             if (!isStr(name)) name = 'MutObserver';
-            if (is.Def(element[name])) {
+            if (def(element[name])) {
                 element[name].disconnect();
                 delete element[name]
             }
@@ -1460,7 +1460,7 @@
         element.observeAttrs = func => {
             if (!isObj(element.attrX)) element.attrX = eventemitter({});
             element.attrX.on('attr', function (attr) {
-                if(func) func.apply(element, arguments);
+                if (func) func.apply(element, arguments);
                 element.attrX.emit.apply(null, ['attr:' + attr].concat(arguments));
             });
         }
@@ -1487,7 +1487,7 @@
         if (!one) {
             if (isStr(element)) element = queryAll(element, within);
             if (is.NodeList(element)) {
-                element = toArr(element).filter(el => is.Def(el.setAttribute));
+                element = toArr(element).filter(is.Element);
                 if (element.length != 1) return domNodeList(element);
                 else element = element[0]
             }
@@ -1771,7 +1771,7 @@
          * @memberof Craft
          * @param {Array|Arraylike} arr - multidimentional array(like) object to flatten
          */
-        flatten: arr => (!is.Arr(arr) && is.Arraylike(arr) ? Arrat.from(arr) : is.Arr(arr) ? arr : []).reduce((flat, toFlatten) => flat.concat(is.Arr(toFlatten) ? Craft.flatten(toFlatten) : toFlatten), []),
+        flatten: arr => (!is.Arr(arr) && is.Arraylike(arr) ? toArr(arr) : is.Arr(arr) ? arr : []).reduce((flat, toFlatten) => flat.concat(is.Arr(toFlatten) ? Craft.flatten(toFlatten) : toFlatten), []),
         /**
          * Gets a value from inside an object using a reference string
          * @method getDeep
@@ -2384,7 +2384,7 @@
         },
         model(name, func) {
             if (isFunc(func) && isStr(name)) {
-                if (!is.Def(Craft.Models[name])) {
+                if (!def(Craft.Models[name])) {
                     let scope = observable();
                     Craft.Models[name] = {
                         func: func.bind(scope),
@@ -2407,10 +2407,10 @@
         },
         fromModel(key, val) {
             let cutkey = cutdot(key),
-                IsValDefined = is.Def(val),
+                IsValDefined = def(val),
                 ck = cutkey[0],
                 type = (IsValDefined ? 'set' : 'get') + 'Deep';
-            if (is.Def(Craft.Models[ck])) {
+            if (def(Craft.Models[ck])) {
                 return cutkey.length == 1 && !IsValDefined ? Craft.Models[ck].scope : Craft[type](Craft.Models[ck].scope, joindot(Craft.omit(cutkey, ck)), val)
             }
         },
@@ -2419,7 +2419,7 @@
                 let cutbind = cutdot(path),
                     prop = last(cutbind),
                     first = cutbind[0],
-                    obj = is.Def(Craft.Models[first]) ? Craft.Models[first].scope : Craft.getDeep(root, joindot(Craft.omit(cutbind, prop))),
+                    obj = def(Craft.Models[first]) ? Craft.Models[first].scope : Craft.getDeep(root, joindot(Craft.omit(cutbind, prop))),
                     val = Craft.getDeep(obj, cutbind.length > 1 ? joindot(Craft.omit(cutbind, first)) : prop);
                 if (full) return {
                     cutbind,
@@ -2427,8 +2427,8 @@
                     obj,
                     val
                 };
-                if (is.Def(val)) return val;
-                if (first === prop && is.Def(obj)) return obj;
+                if (def(val)) return val;
+                if (first === prop && def(obj)) return obj;
             } catch (e) {
                 return {}
             }
@@ -2526,7 +2526,7 @@
          * @param {object} config - Object containing all the element's lifecycle methods / extends and attached methods or properties
          */
         newComponent(tag, config) {
-            if (!is.Def(config)) throw new Error(tag + ' : config undefined');
+            if (!def(config)) throw new Error(tag + ' : config undefined');
             let element = Object.create(HTMLElement.prototype),
                 settings = {},
                 dm;
@@ -2586,7 +2586,7 @@
         },
         disconectInputSync(input) {
             if (isStr(input)) input = query(input);
-            if (is.Node(input) && is.Def(input[sI])) {
+            if (is.Node(input) && def(input[sI])) {
                 input[sI].off;
                 delete input[sI]
             }
@@ -2628,8 +2628,8 @@
     Craft.customAttr('bind', (element, bind) => {
         element.bind(bind)
         element.observeAttrs();
-        element.attrX.on('attr:bind',() => {
-          if(!element.hasAttr('bind') || element.getAttr('bind') != bind) element.unbind(bind);
+        element.attrX.on('attr:bind', () => {
+            if (!element.hasAttr('bind') || element.getAttr('bind') != bind) element.unbind(bind);
         });
     });
 
@@ -2758,9 +2758,6 @@
             if (Locs(l => l == handle.link)) handle.func(location.hash)
         });
     });
-
-
-
 
     root.Craft = Craft;
     //console.log(performance.now() - perf, 'Crafter.js');
