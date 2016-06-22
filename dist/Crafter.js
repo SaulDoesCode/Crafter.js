@@ -2802,6 +2802,7 @@ function _defineProperty(obj, key, value) {
   Craft.customAttr('link', function(element, link) {
     element.linkevt = element.Click(function(e) {
       (element.hasAttr('newtab') ? open : Craft.router.open)(link);
+      if (isFunc(element.linkhandle)) element.linkhandle(link);
     });
     if (isFunc(element.linkhandle)) Craft.router.handle(link, element.linkhandle);
   });
