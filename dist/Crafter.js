@@ -1068,10 +1068,10 @@ function _defineProperty(obj, key, value) {
      */
     elements.setAttr = function(attr, val) {
       forEach(elements, function(el) {
-        if (!is.Def(val)) {
+        if (!def(val)) {
           if (isStr(attr)) attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(function(Attr) {
             var attribs = Attr.split('=');
-            is.Def(attribs[1]) ? element.setAttribute(attribs[0], attribs[1]) : element.setAttribute(attribs[0], '');
+            def(attribs[1]) ? element.setAttribute(attribs[0], attribs[1]) : element.setAttribute(attribs[0], '');
           }) : element.setAttribute(attr, '');
           else if (isObj(attr)) forEach(attr, function(value, Attr) {
             element.setAttribute(Attr, value);
@@ -1114,7 +1114,7 @@ function _defineProperty(obj, key, value) {
       });
     };
     elements.pick = function(i) {
-      if (is.int(i) && is.Def(elements[i])) return dom(elements[i]);
+      if (is.int(i) && def(elements[i])) return dom(elements[i]);
       else if (elements.includes(i)) return dom(i);
     };
     return elements;
@@ -1266,7 +1266,7 @@ function _defineProperty(obj, key, value) {
           prop = path.prop,
           obj = path.obj,
           val = path.val;
-        if (is.Def(val)) element.html(val);
+        if (def(val)) element.html(val);
         else {
           var getval = element.html();
           if (getval) Craft.setDeep(obj, prop, getval);
@@ -1317,7 +1317,7 @@ function _defineProperty(obj, key, value) {
     element.emit = function(evt, detail) {
       if (!isStr(evt)) throw new TypeError("element.emit : event name needs to be a string");
       element.dispatchEvent(new CustomEvent(evt, {
-        detail: is.Def(detail) || null
+        detail: def(detail) || null
       }));
     };
     element.newSetGet('ondestroy', function(fn) {
@@ -1439,9 +1439,9 @@ function _defineProperty(obj, key, value) {
      * @param {string} Value of the Attribute to add/set
      */
     element.setAttr = function(attr, val) {
-      if (!is.Def(val)) {
+      if (!def(val)) {
         if (isStr(attr)) attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(function(Attr) {
-          is.Def(Attr.split('=')[1]) ? element.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : element.setAttribute(Attr.split('=')[0], '');
+          def(Attr.split('=')[1]) ? element.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : element.setAttribute(Attr.split('=')[0], '');
         }) : element.setAttribute(attr, '');
         else if (isObj(attr)) forEach(attr, function(value, Attr) {
           element.setAttribute(Attr, value);
@@ -1456,7 +1456,7 @@ function _defineProperty(obj, key, value) {
     element.getAttr = element.getAttribute;
     element.attr = function(attr, val) {
       if (isStr(val) || isObj(attr)) return element.setAttr(attr, val);
-      if (isStr(attr) && !is.Def(val)) return element.getAttr(attr);
+      if (isStr(attr) && !def(val)) return element.getAttr(attr);
     };
     element.prop = element.hasAttr;
     /**
@@ -1603,7 +1603,7 @@ function _defineProperty(obj, key, value) {
     };
     element.unobserve = function(name) {
       if (!isStr(name)) name = 'MutObserver';
-      if (is.Def(element[name])) {
+      if (def(element[name])) {
         element[name].disconnect();
         delete element[name];
       }
@@ -1637,9 +1637,7 @@ function _defineProperty(obj, key, value) {
     if (!one) {
       if (isStr(element)) element = queryAll(element, within);
       if (is.NodeList(element)) {
-        element = toArr(element).filter(function(el) {
-          return is.Def(el.setAttribute);
-        });
+        element = toArr(element).filter(is.Element);
         if (element.length != 1) return domNodeList(element);
         else element = element[0];
       }
@@ -1926,7 +1924,7 @@ function _defineProperty(obj, key, value) {
      * @param {Array|Arraylike} arr - multidimentional array(like) object to flatten
      */
     flatten: function(arr) {
-      return (!is.Arr(arr) && is.Arraylike(arr) ? Arrat.from(arr) : is.Arr(arr) ? arr : []).reduce(function(flat, toFlatten) {
+      return (!is.Arr(arr) && is.Arraylike(arr) ? toArr(arr) : is.Arr(arr) ? arr : []).reduce(function(flat, toFlatten) {
         return flat.concat(is.Arr(toFlatten) ? Craft.flatten(toFlatten) : toFlatten);
       }, []);
     },
@@ -2554,7 +2552,7 @@ function _defineProperty(obj, key, value) {
     });
   }, _defineProperty(_Craft, "model", function(name, func) {
     if (isFunc(func) && isStr(name)) {
-      if (!is.Def(Craft.Models[name])) {
+      if (!def(Craft.Models[name])) {
         var _ret5 = function() {
           var scope = observable();
           Craft.Models[name] = {
@@ -2580,10 +2578,10 @@ function _defineProperty(obj, key, value) {
     });
   }), _defineProperty(_Craft, "fromModel", function(key, val) {
     var cutkey = cutdot(key),
-      IsValDefined = is.Def(val),
+      IsValDefined = def(val),
       ck = cutkey[0],
       type = (IsValDefined ? 'set' : 'get') + 'Deep';
-    if (is.Def(Craft.Models[ck])) {
+    if (def(Craft.Models[ck])) {
       return cutkey.length == 1 && !IsValDefined ? Craft.Models[ck].scope : Craft[type](Craft.Models[ck].scope, joindot(Craft.omit(cutkey, ck)), val);
     }
   }), _defineProperty(_Craft, "getPath", function(path, full) {
@@ -2591,7 +2589,7 @@ function _defineProperty(obj, key, value) {
       var cutbind = cutdot(path),
         prop = last(cutbind),
         first = cutbind[0],
-        obj = is.Def(Craft.Models[first]) ? Craft.Models[first].scope : Craft.getDeep(root, joindot(Craft.omit(cutbind, prop))),
+        obj = def(Craft.Models[first]) ? Craft.Models[first].scope : Craft.getDeep(root, joindot(Craft.omit(cutbind, prop))),
         _val3 = Craft.getDeep(obj, cutbind.length > 1 ? joindot(Craft.omit(cutbind, first)) : prop);
       if (full) return {
         cutbind: cutbind,
@@ -2599,8 +2597,8 @@ function _defineProperty(obj, key, value) {
         obj: obj,
         val: _val3
       };
-      if (is.Def(_val3)) return _val3;
-      if (first === prop && is.Def(obj)) return obj;
+      if (def(_val3)) return _val3;
+      if (first === prop && def(obj)) return obj;
     } catch (e) {
       return {};
     }
@@ -2660,7 +2658,7 @@ function _defineProperty(obj, key, value) {
   }), _defineProperty(_Craft, "GenUID", function(len) {
     return Craft.array(len || 6, Craft.randomString).join('-');
   }), _defineProperty(_Craft, "newComponent", function(tag, config) {
-    if (!is.Def(config)) throw new Error(tag + ' : config undefined');
+    if (!def(config)) throw new Error(tag + ' : config undefined');
     var element = Object.create(HTMLElement.prototype),
       settings = {},
       dm = void 0;
@@ -2716,7 +2714,7 @@ function _defineProperty(obj, key, value) {
     }
   }), _defineProperty(_Craft, "disconectInputSync", function(input) {
     if (isStr(input)) input = query(input);
-    if (is.Node(input) && is.Def(input[sI])) {
+    if (is.Node(input) && def(input[sI])) {
       input[sI].off;
       delete input[sI];
     }
