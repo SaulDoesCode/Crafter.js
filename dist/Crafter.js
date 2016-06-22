@@ -1266,11 +1266,14 @@ function _defineProperty(obj, key, value) {
           prop = path.prop,
           obj = path.obj,
           val = path.val;
-        is.Def(val) ? element.html(val) : Craft.setDeep(obj, prop, element.html());
+        if (is.Def(val)) element.html(val);
+        else {
+          var getval = element.html();
+          if (getval) Craft.setDeep(obj, prop, getval);
+        }
         if (obj.isObservable) {
-          if (!element.isInput) element._BoundObservable = obj.on('$uberset:' + prop, function(val) {
-            element.html(val);
-          });
+          if (!is.Set(element.__binds)) element.__binds = {};
+          if (!element.isInput) element.__binds[bind] = obj.on('$uberset:' + prop, element.html);
         }
         if (element.isInput) element.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : joindot(Craft.omit(cutbind, cutbind[0])));
       }
@@ -1285,6 +1288,12 @@ function _defineProperty(obj, key, value) {
         })();
       }
       return element;
+    };
+    element.unbind = function(bind) {
+      if (element.__binds && element.__binds[bind] != undef) {
+        element.__binds[bind].off;
+        delete element.__binds[bind];
+      }
     };
     /**
      * @func element.modify - used to do things with your element without breaking scope
@@ -1603,7 +1612,7 @@ function _defineProperty(obj, key, value) {
     element.observeAttrs = function(func) {
       if (!isObj(element.attrX)) element.attrX = eventemitter({});
       element.attrX.on('attr', function(attr) {
-        func.apply(element, arguments);
+        if (func) func.apply(element, arguments);
         element.attrX.emit.apply(null, ['attr:' + attr].concat(arguments));
       });
     };
@@ -2170,7 +2179,7 @@ function _defineProperty(obj, key, value) {
         return true;
       },
       has: function(key) {
-        return key ? new RegExp("(?:^|;\\s*)" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=").test(doc.cookie) : false;
+        return key != undef && new RegExp("(?:^|;\\s*)" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=").test(doc.cookie);
       },
       remove: function(key, path, domain) {
         if (!Craft.Cookies.has(key)) return false;
@@ -2297,12 +2306,13 @@ function _defineProperty(obj, key, value) {
         timeout = null,
         previous = 0;
       if (!options) options = {};
-      var later = function() {
+
+      function later() {
         previous = !options.leading ? 0 : Date.now();
         timeout = null;
         result = func.apply(context, args);
         if (!timeout) context = args = null;
-      };
+      }
       return function() {
         var now = Date.now();
         if (is.False(previous, options.leading)) previous = now;
@@ -2353,7 +2363,7 @@ function _defineProperty(obj, key, value) {
       type: 'text/css'
     }) + "\");\n";
   }), _defineProperty(_Craft, "importCSS", function(src, gofetch) {
-    if (gofetch == true) fetch(Craft.fixURL(src), {
+    if (gofetch) fetch(Craft.fixURL(src), {
       mode: 'cors'
     }).then(function(res) {
       if (!res.ok) console.warn("loading css failed - " + src);
@@ -2394,8 +2404,8 @@ function _defineProperty(obj, key, value) {
         }).catch(fail);
       });
     });
-  }), _defineProperty(_Craft, "hasCaps", function(string) {
-    return toArr(string).some(is.Uppercase);
+  }), _defineProperty(_Craft, "hasCaps", function(str) {
+    return toArr(str).some(is.Uppercase);
   }), _defineProperty(_Craft, "hasNums", function(str) {
     return (/\d/g.test(str));
   }), _defineProperty(_Craft, "len", function(val) {
@@ -2425,10 +2435,6 @@ function _defineProperty(obj, key, value) {
       };
     return memoized;
   }), _defineProperty(_Craft, "millis", {
-    sec: 1000,
-    min: 60000,
-    hour: 3600000,
-    day: 86400000,
     seconds: function(n) {
       return (n || 1) * 1000;
     },
@@ -2448,8 +2454,13 @@ function _defineProperty(obj, key, value) {
       return n * Craft.millis.days(daysInMonth || 30);
     },
     years: function(n) {
-      return n * Craft.millis.days(365);
-    }
+      return n * Craft.millis.year;
+    },
+    sec: 1000,
+    min: 60000,
+    hour: 3600000,
+    day: 86400000,
+    year: 365 * 86400000
   }), _defineProperty(_Craft, "observable", observable), _defineProperty(_Craft, "CustomAttributes", []), _defineProperty(_Craft, "Models", observable()), _defineProperty(_Craft, "tabActive", true), _defineProperty(_Craft, "tco", function(fn) {
     var active = void 0,
       nextArgs = void 0;
@@ -2474,7 +2485,7 @@ function _defineProperty(obj, key, value) {
           return options;
         },
         stop: function() {
-          if (is.int(interval)) cancelAnimationFrame(interval);
+          cancelAnimationFrame(interval);
           return options;
         },
         reset: function(fn) {
@@ -2750,6 +2761,10 @@ function _defineProperty(obj, key, value) {
   };
   Craft.customAttr('bind', function(element, bind) {
     element.bind(bind);
+    element.observeAttrs();
+    element.attrX.on('attr:bind', function() {
+      if (!element.hasAttr('bind') || element.getAttr('bind') != bind) element.unbind(bind);
+    });
   });
   Craft.customAttr('bind-for', function(element, bind) {
     var data = Craft.fromModel(bind);
