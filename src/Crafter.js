@@ -73,8 +73,8 @@
     }
 
 
-    function exec(fn,context,...args) {
-      return fn.apply(context,args);
+    function exec(fn, context, ...args) {
+        return fn.apply(context, args);
     }
 
     // if x then return y else return z
@@ -806,7 +806,7 @@
                 });
             return Dom.element(type, list, attr);
         },
-        a: (link, inner, attr) => Dom.element('a', inner, attr,'href'+link),
+        a: (link, inner, attr) => Dom.element('a', inner, attr, 'href' + link),
         script(code, attr, defer, onload, nosrc) {
             let script = Dom.element('script', '', attr, {
                 type: 'text/javascript'
@@ -1051,7 +1051,7 @@
          * element.importview - imports a file and renders it on to the node
          * @param (string) src - url to fetch from
          */
-        element.importview = (src,fetchoptions) => {
+        element.importview = (src, fetchoptions) => {
             let cache = element.hasAttr('cache-view');
             if (cache) {
                 let view = localStorage.getItem(src);
@@ -1060,9 +1060,9 @@
                     return;
                 }
             }
-            fetch(src,fetchoptions || {
+            fetch(src, fetchoptions || {
                 mode: 'cors',
-                credentials:'same-origin',
+                credentials: 'same-origin',
             }).then(res => {
                 if (!res.ok) console.warn(`<${element.localName}> : unable to import view - ${src}`);
                 else res.text().then(view => {
@@ -1123,11 +1123,14 @@
                     obj = path.obj,
                     val = path.val;
 
-                is.Def(val) ? element.html(val) : Craft.setDeep(obj, prop, element.html());
+                if (is.Def(val)) element.html(val);
+                else {
+                    let getval = element.html();
+                    if (getval) Craft.setDeep(obj, prop, getval);
+                }
                 if (obj.isObservable) {
-                    if (!element.isInput) element._BoundObservable = obj.on('$uberset:' + prop, val => {
-                        element.html(val);
-                    })
+                    if (!is.Set(element.__binds)) element.__binds = {};
+                    if (!element.isInput) element.__binds[bind] = obj.on('$uberset:' + prop, element.html);
                 }
                 if (element.isInput) element.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : joindot(Craft.omit(cutbind, cutbind[0])))
             }
@@ -1142,6 +1145,13 @@
             }
 
             return element
+        }
+
+        element.unbind = bind => {
+          if(element.__binds && element.__binds[bind] != undef) {
+            element.__binds[bind].off;
+            delete element.__binds[bind];
+          }
         }
 
         /**
@@ -1450,7 +1460,7 @@
         element.observeAttrs = func => {
             if (!isObj(element.attrX)) element.attrX = eventemitter({});
             element.attrX.on('attr', function (attr) {
-                func.apply(element, arguments);
+                if(func) func.apply(element, arguments);
                 element.attrX.emit.apply(null, ['attr:' + attr].concat(arguments));
             });
         }
@@ -1986,7 +1996,7 @@
                 doc.cookie = encodeURIComponent(key) + "=" + encodeURIComponent(val) + expiry + (domain ? "; domain=" + domain : "") + (path ? "; path=" + path : "") + (secure ? "; secure" : "");
                 return true
             },
-            has: key => key ? (new RegExp("(?:^|;\\s*)" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=")).test(doc.cookie) : false,
+            has: key => key != undef && new RegExp("(?:^|;\\s*)" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=").test(doc.cookie),
             remove(key, path, domain) {
                 if (!Craft.Cookies.has(key)) return false;
                 doc.cookie = encodeURIComponent(key) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT" + (domain ? "; domain=" + domain : "") + (path ? "; path=" + path : "");
@@ -2086,7 +2096,7 @@
         debounce(wait, func, immediate) {
             let timeout;
             return function () {
-                let args = arguments,
+                const args = arguments,
                     scope = this,
                     later = () => {
                         timeout = null;
@@ -2103,7 +2113,8 @@
                 timeout = null,
                 previous = 0;
             if (!options) options = {};
-            let later = function () {
+
+            function later() {
                 previous = !options.leading ? 0 : Date.now();
                 timeout = null;
                 result = func.apply(context, args);
@@ -2170,7 +2181,7 @@
          * @param (src) css - css code to execute
          */
         importCSS(src, gofetch) {
-            if (gofetch == true) fetch(Craft.fixURL(src), {
+            if (gofetch) fetch(Craft.fixURL(src), {
                 mode: 'cors'
             }).then(res => {
                 if (!res.ok) console.warn(`loading css failed - ${src}`);
@@ -2214,7 +2225,7 @@
                 });
             });
         },
-        hasCaps: string => toArr(string).some(is.Uppercase),
+        hasCaps: str => toArr(str).some(is.Uppercase),
         hasNums: str => /\d/g.test(str),
         len(val) {
             try {
@@ -2244,17 +2255,18 @@
             return memoized;
         },
         millis: {
-            sec: 1000,
-            min: 60000,
-            hour: 3600000,
-            day: 86400000,
             seconds: n => (n || 1) * 1000,
             minutes: n => (n || 1) * 60000,
             hours: n => (n || 1) * 3600000,
             days: n => (n || 1) * 86400000,
             weeks: n => (n || 1) * 604800000,
             months: (n, daysInMonth) => n * Craft.millis.days((daysInMonth || 30)),
-            years: (n) => n * Craft.millis.days(365),
+            years: n => n * Craft.millis.year,
+            sec: 1000,
+            min: 60000,
+            hour: 3600000,
+            day: 86400000,
+            year: 365 * 86400000,
         },
         observable,
         CustomAttributes: [],
@@ -2285,7 +2297,7 @@
                     return options
                 },
                 stop() {
-                    if (is.int(interval)) cancelAnimationFrame(interval);
+                    cancelAnimationFrame(interval);
                     return options
                 },
                 reset(fn) {
@@ -2615,6 +2627,10 @@
     Craft.curry.adapt = fn => Craft.curry.adaptTo(fn.length, fn);
     Craft.customAttr('bind', (element, bind) => {
         element.bind(bind)
+        element.observeAttrs();
+        element.attrX.on('attr:bind',() => {
+          if(!element.hasAttr('bind') || element.getAttr('bind') != bind) element.unbind(bind);
+        });
     });
 
     Craft.customAttr('bind-for', (element, bind) => {
