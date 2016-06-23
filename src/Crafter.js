@@ -20,6 +20,14 @@
         }
     }
 
+    function has(str, strings, or) {
+        if (isStr(strings)) return strings.split('')[(!or ? 'every' : 'some')](str.includes.bind(str));
+    }
+
+    function degloveStr(str) {
+        return isStr(str) && (str.includes('"') || str.includes("'")) ? str.substring(1, str.length - 1) : str;
+    }
+
     const sI = 'Isync',
         DestructionEvent = new Event('destroy'),
         toArr = Array.from,
@@ -32,7 +40,6 @@
         isStr = o => typeof o === 'string',
         isObj = o => toString.call(o) === '[object Object]',
         head = doc.head,
-        BracketsRegEx = /(\{\{[\w\.]*\}\})/g,
         RegExps = {
             email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
             timeString: /^(2[0-3]|[01]?[0-9]):([0-5]?[0-9]):([0-5]?[0-9])$/,
@@ -1673,6 +1680,7 @@
             }
         },
         deglove: arr => is.Arraylike(arr) && arr.length == 1 ? arr[0] : arr,
+        degloveStr,
         last,
         /**
          * Splits a string at dots "."
@@ -1785,10 +1793,8 @@
             path = cutdot(path.replace(/^\./, ''));
             try {
                 for (let i = 0; i < path.length; ++i) path[i] in obj ? obj = obj[path[i]] : obj = undef
-            } catch (e) {
-                obj = undef
-            }
-            return obj
+                return obj
+            } catch (e) {}
         },
         /**
          * Craft.setDeep  is similar to getDeep it uses a string to reference to a value
@@ -1909,12 +1915,10 @@
          * Craft.has checks whether or not strings or arrays contains
          * certain values
          * @param (string|array) str - collection to check
-         * @param (...*) values - values to check for in the collection
+         * @param (string|array) values - values to check for in the collection
+         * @param (=string) or - some or every
          */
-        has(str) {
-            if (!str.includes) toArr(str);
-            return Craft.omit(arguments, str).some(e => str.includes(e))
-        },
+        has,
         /**
          * Omits values from Objects, Strings and Arraylike objects
          * @method omit
@@ -2203,8 +2207,7 @@
                     else res.text().then(code => {
                         if (funcexec) {
                             try {
-                                new Function(code).call(root);
-                                pass();
+                                pass(new Function(code).call(root));
                             } catch (e) {
                                 fail(e);
                             }
@@ -2416,6 +2419,10 @@
         },
         getPath(path, full) {
             try {
+                if (has(path, `'"`, true)) return degloveStr(path);
+                else if (path == 'true') return true;
+                else if (path == 'false') return false;
+                else if (is.Num(path)) return Number(path);
                 let cutbind = cutdot(path),
                     prop = last(cutbind),
                     first = cutbind[0],
@@ -2547,9 +2554,7 @@
                         }
                     }
                 }
-                if (isFunc(config['attr'])) {
-                    el.observeAttrs(config['attr']);
-                }
+                if (isFunc(config['attr'])) el.observeAttrs(config['attr']);
                 if (isFunc(config['created'])) return config['created'].call(el)
             }
 
@@ -2684,18 +2689,6 @@
                 element._cah.dw = false;
             }
         }
-    });
-
-    function parseTemplate(html) {
-        return html.replace(BracketsRegEx, (match, text, offset, string) => {
-            let key = match.replace(/{{/, '').replace('}}', ''),
-                val = Craft.getPath(key);
-            return `<o bind=${key}>${val == undef ? '' : val}</o>`;
-        });
-    }
-
-    Craft.customAttr('craft-template', element => {
-        element.replace(Craft.dffstr(parseTemplate(element.html())));
     });
 
     // takes in an affected element and scans it for custom attributes
