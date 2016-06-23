@@ -77,6 +77,9 @@ function _defineProperty(obj, key, value) {
     isObj = function(o) {
       return toString.call(o) === '[object Object]';
     },
+    isEl = function(o) {
+      return o.toString().includes('HTML');
+    },
     head = doc.head,
     RegExps = {
       email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
@@ -111,10 +114,7 @@ function _defineProperty(obj, key, value) {
   }
 
   function exec(fn, context) {
-    for (var _len = arguments.length, args = Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
-      args[_key - 2] = arguments[_key];
-    }
-    return fn.apply(context, args);
+    return fn.apply(context, toArr(arguments).slice(2));
   } // if x then return y else return z
   function W(x, y, z, a) {
     return a ? (x ? y : z) + a : x ? y : z;
@@ -263,9 +263,7 @@ function _defineProperty(obj, key, value) {
      * Determine if a variable is a HTMLElement
      * @param args - value/values to test
      */
-    Element: ta(function(o) {
-      return o.toString().includes('HTML');
-    }),
+    Element: ta(isEl),
     /**
      * Determine if a variable is a File Object
      * @param args - value/values to test
@@ -587,7 +585,7 @@ function _defineProperty(obj, key, value) {
      * @param {Element|Node} - element to test
      */
     Input: function(element) {
-      return is.Element(element) && ['INPUT', 'TEXTAREA'].some(function(i) {
+      return isEl(element) && ['INPUT', 'TEXTAREA'].some(function(i) {
         return element.tagName.includes(i);
       });
     }
@@ -1136,7 +1134,7 @@ function _defineProperty(obj, key, value) {
         if (is.Arraylike(val)) forEach(val, function(v) {
           is.Node(v) ? el.append(v) : el[type] += isFunc(v) ? v.call(el) : v;
         });
-        else is.Node(val) || is.Element(val) ? el.append(val) : el[type] += isFunc(val) ? val.call(el) : val;
+        else is.Node(val) || isEl(val) ? el.append(val) : el[type] += isFunc(val) ? val.call(el) : val;
       });
       return el;
     };
@@ -1507,7 +1505,7 @@ function _defineProperty(obj, key, value) {
     defineprop(element, 'Siblings', {
       get: function() {
         return Craft.omit(element.parentNode.children, element).filter(function(el) {
-          if (is.Element(el)) return el;
+          if (isEl(el)) return el;
         });
       }
     });
@@ -1644,7 +1642,7 @@ function _defineProperty(obj, key, value) {
     if (!one) {
       if (isStr(element)) element = queryAll(element, within);
       if (is.NodeList(element)) {
-        element = toArr(element).filter(is.Element);
+        element = toArr(element).filter(isEl);
         if (element.length != 1) return domNodeList(element);
         else element = element[0];
       }
@@ -1652,8 +1650,8 @@ function _defineProperty(obj, key, value) {
     if (is.Node(element)) return !element['_DOMM'] ? domManip(element) : element;
     return Dom;
   }
-  for (var _key2 in Dom) {
-    defineprop(dom, _key2, getpropdescriptor(Dom, _key2));
+  for (var _key in Dom) {
+    defineprop(dom, _key, getpropdescriptor(Dom, _key));
   }
   if (root.Proxy) dom = new Proxy(dom, {
     get: function(obj, key) {
@@ -2024,8 +2022,8 @@ function _defineProperty(obj, key, value) {
      */
     concatObjects: function(host) {
       Craft.omit(arguments, host).forEach(function(obj) {
-        for (var _key3 in obj) {
-          defineprop(host, _key3, getpropdescriptor(obj, _key3));
+        for (var _key2 in obj) {
+          defineprop(host, _key2, getpropdescriptor(obj, _key2));
         }
       });
       return host;
@@ -2342,7 +2340,7 @@ function _defineProperty(obj, key, value) {
     };
   }), _defineProperty(_Craft, "css", function(element, styles, prop) {
     if (isObj(styles)) forEach(styles, function(prop, key) {
-      if (is.Element(element)) element.style[key] = prop;
+      if (isEl(element)) element.style[key] = prop;
       else if (is.NodeList(element)) forEach(element, function(el) {
         el.style[key] = prop;
       });
@@ -2670,31 +2668,31 @@ function _defineProperty(obj, key, value) {
     element.createdCallback = function() {
       var el = dom(this),
         dealtWith = [];
-      for (var _key4 in config) {
-        if (!dealtWith.includes(_key4)) {
-          if (_key4.includes("set_")) {
-            var sgKey = _key4.split("_")[1];
-            dealtWith.push(_key4, "get_" + sgKey);
-            el.newSetGet(sgKey, config[_key4], config["get_" + sgKey]);
-          } else if (_key4.includes("get_")) {
-            var _sgKey = _key4.split("_")[1];
-            dealtWith.push(_key4, "set_" + _sgKey);
-            el.newSetGet(_sgKey, isFunc(config["set_" + _sgKey]) ? config["set_" + _sgKey] : function(x) {}, config[_key4]);
+      for (var _key3 in config) {
+        if (!dealtWith.includes(_key3)) {
+          if (_key3.includes("set_")) {
+            var sgKey = _key3.split("_")[1];
+            dealtWith.push(_key3, "get_" + sgKey);
+            el.newSetGet(sgKey, config[_key3], config["get_" + sgKey]);
+          } else if (_key3.includes("get_")) {
+            var _sgKey = _key3.split("_")[1];
+            dealtWith.push(_key3, "set_" + _sgKey);
+            el.newSetGet(_sgKey, isFunc(config["set_" + _sgKey]) ? config["set_" + _sgKey] : function(x) {}, config[_key3]);
           }
         }
       }
       if (isFunc(config['attr'])) el.observeAttrs(config['attr']);
       if (isFunc(config['created'])) return config['created'].call(el);
     };
-    var _loop = function(_key5) {
-      if (_key5 == 'created' || _key5 == 'attr' || _key5.includes('set_') || _key5.includes('get_')) return "continue";
-      if (isFunc(config[_key5]) && _key5 != 'attr') dm = function() { // Adds dom methods to element
-        return config[_key5].apply(dom(this), arguments);
+    var _loop = function(_key4) {
+      if (_key4 == 'created' || _key4 == 'attr' || _key4.includes('set_') || _key4.includes('get_')) return "continue";
+      if (isFunc(config[_key4]) && _key4 != 'attr') dm = function() { // Adds dom methods to element
+        return config[_key4].apply(dom(this), arguments);
       };
-      _key5 == 'inserted' ? element.attachedCallback = dm : _key5 == 'destroyed' ? element.detachedCallback = dm : _key5.toLowerCase() == 'css' ? Craft.addCSS(config[_key5]) : isFunc(config[_key5]) ? element[_key5] = dm : defineprop(element, _key5, getpropdescriptor(config, _key5));
+      _key4 == 'inserted' ? element.attachedCallback = dm : _key4 == 'destroyed' ? element.detachedCallback = dm : _key4.toLowerCase() == 'css' ? Craft.addCSS(config[_key4]) : isFunc(config[_key4]) ? element[_key4] = dm : defineprop(element, _key4, getpropdescriptor(config, _key4));
     };
-    for (var _key5 in config) {
-      var _ret7 = _loop(_key5);
+    for (var _key4 in config) {
+      var _ret7 = _loop(_key4);
       if (_ret7 === "continue") continue;
     }
     settings['prototype'] = element;
@@ -2791,7 +2789,7 @@ function _defineProperty(obj, key, value) {
   Craft.customAttr('toggle-element', function(element, selector) {
     var visible = true,
       toggleElement = dom(selector, true);
-    if (!is.Element(toggleElement)) console.warn(element.localName + " - toggle-element : \"" + selector + "\" is an invalid selector");
+    if (!isEl(toggleElement)) console.warn(element.localName + " - toggle-element : \"" + selector + "\" is an invalid selector");
     else element.Click(function() {
       visible = !visible;
       toggleElement[visible ? 'show' : 'hide']();
@@ -2802,8 +2800,9 @@ function _defineProperty(obj, key, value) {
   });
   Craft.customAttr('link', function(element, link) {
     element.linkevt = element.Click(function(e) {
-      (element.hasAttr('newtab') ? open : Craft.router.open)(link);
+      console.log(element.linkhandle);
       if (isFunc(element.linkhandle)) element.linkhandle(link);
+      (element.hasAttr('newtab') ? open : Craft.router.open)(link);
     });
     if (isFunc(element.linkhandle)) Craft.router.handle(link, element.linkhandle);
   });
