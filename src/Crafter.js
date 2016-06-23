@@ -39,6 +39,7 @@
         isFunc = o => typeof o === 'function',
         isStr = o => typeof o === 'string',
         isObj = o => toString.call(o) === '[object Object]',
+        isEl = o => o.toString().includes('HTML'),
         head = doc.head,
         RegExps = {
             email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
@@ -80,8 +81,8 @@
     }
 
 
-    function exec(fn, context, ...args) {
-        return fn.apply(context, args);
+    function exec(fn, context) {
+        return fn.apply(context,toArr(arguments).slice(2));
     }
 
     // if x then return y else return z
@@ -218,7 +219,7 @@
          * Determine if a variable is a HTMLElement
          * @param args - value/values to test
          */
-        Element: ta(o => o.toString().includes('HTML')),
+        Element: ta(isEl),
         /**
          * Determine if a variable is a File Object
          * @param args - value/values to test
@@ -469,7 +470,7 @@
          * Tests where a dom element is an input of some sort
          * @param {Element|Node} - element to test
          */
-        Input: element => is.Element(element) && ['INPUT', 'TEXTAREA'].some(i => element.tagName.includes(i)),
+        Input: element => isEl(element) && ['INPUT', 'TEXTAREA'].some(i => element.tagName.includes(i)),
     };
 
     /**
@@ -988,7 +989,7 @@
                 if (is.Arraylike(val)) forEach(val, v => {
                     is.Node(v) ? el.append(v) : el[type] += isFunc(v) ? v.call(el) : v;
                 });
-                else is.Node(val) || is.Element(val) ? el.append(val) : el[type] += isFunc(val) ? val.call(el) : val;
+                else is.Node(val) || isEl(val) ? el.append(val) : el[type] += isFunc(val) ? val.call(el) : val;
             });
             return el;
         }
@@ -1359,7 +1360,7 @@
         defineprop(element, 'Siblings', {
             get() {
                 return Craft.omit(element.parentNode.children, element).filter(el => {
-                    if (is.Element(el)) return el
+                    if (isEl(el)) return el
                 });
             }
         });
@@ -1494,7 +1495,7 @@
         if (!one) {
             if (isStr(element)) element = queryAll(element, within);
             if (is.NodeList(element)) {
-                element = toArr(element).filter(is.Element);
+                element = toArr(element).filter(isEl);
                 if (element.length != 1) return domNodeList(element);
                 else element = element[0]
             }
@@ -2155,7 +2156,7 @@
         css(element, styles, prop) {
             if (isObj(styles))
                 forEach(styles, (prop, key) => {
-                    if (is.Element(element)) element.style[key] = prop;
+                    if (isEl(element)) element.style[key] = prop;
                     else if (is.NodeList(element)) forEach(element, el => {
                         el.style[key] = prop;
                     });
@@ -2662,7 +2663,7 @@
     Craft.customAttr('toggle-element', (element, selector) => {
         let visible = true,
             toggleElement = dom(selector, true);
-        if (!is.Element(toggleElement)) console.warn(`${element.localName} - toggle-element : "${selector}" is an invalid selector`);
+        if (!isEl(toggleElement)) console.warn(`${element.localName} - toggle-element : "${selector}" is an invalid selector`);
         else element.Click(() => {
             visible = !visible;
             toggleElement[visible ? 'show' : 'hide']()
@@ -2675,8 +2676,9 @@
 
     Craft.customAttr('link', (element, link) => {
         element.linkevt = element.Click(e => {
-            (element.hasAttr('newtab') ? open : Craft.router.open)(link)
+            console.log(element.linkhandle);
             if (isFunc(element.linkhandle)) element.linkhandle(link);
+            (element.hasAttr('newtab') ? open : Craft.router.open)(link)
         });
         if (isFunc(element.linkhandle)) Craft.router.handle(link, element.linkhandle);
     });
