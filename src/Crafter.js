@@ -2676,7 +2676,6 @@
 
     Craft.customAttr('link', (element, link) => {
         element.linkevt = element.Click(e => {
-            console.log(element.linkhandle);
             if (isFunc(element.linkhandle)) element.linkhandle(link);
             (element.hasAttr('newtab') ? open : Craft.router.open)(link)
         });
