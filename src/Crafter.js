@@ -1802,8 +1802,7 @@
          */
         getDeep(obj, path) {
             try {
-                for (let step of cutdot(path.replace(/\[(\w+)\]/g, '.$1').replace(/^\./, '')))
-                    step in obj || (root.Reflect && Reflect.has(obj, step)) ? obj = (obj.isObservable ? obj.get(step) : obj[step]) : obj = undef;
+                forEach(cutdot(path.replace(/\[(\w+)\]/g, '.$1').replace(/^\./, '')),step => step in obj || (root.Reflect && Reflect.has(obj, step)) ? obj = (obj.isObservable ? obj.get(step) : obj[step]) : obj = undef);
                 return obj;
             } catch (e) {}
         },
