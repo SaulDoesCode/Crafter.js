@@ -58,6 +58,7 @@ function _defineProperty(obj, key, value) {
   }
   var sI = 'Isync',
     DestructionEvent = new Event('destroy'),
+    possibleText = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
     toArr = Array.from,
     undef = void 0,
     defineprop = Object.defineProperty,
@@ -857,15 +858,16 @@ function _defineProperty(obj, key, value) {
    * @returns off - when on is defined as a variable "var x = on(...)" it allows you to access all the EventHandler interfaces off,once,on
    */
   var on = EvtLT('on'),
+    /**
+     * Starts listening for an EventType on the Target/Targets ONCE after triggering the once event Listener will stop listening
+     * @param {string} EventType - set the type of event to listen for example "click" or "scroll"
+     * @param {Node|NodeList|window|document} Target - the Event Listener's target , can be a NodeList to listen on multiple Nodes
+     * @param {function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
+     * @returns on,off,once - when once is defined as a variable "var x = once(...)" it allows you to access all the EventHandler interfaces off,once,on
+     */
     once = EvtLT('once'),
     eventoptions = 'Click,Input,DoubleClick,Focus,Blur,Keydown,Mousemove,Mousedown,Mouseup,Mouseover,Mouseout'.split(',');
-  /**
-   * Starts listening for an EventType on the Target/Targets ONCE after triggering the once event Listener will stop listening
-   * @param {string} EventType - set the type of event to listen for example "click" or "scroll"
-   * @param {Node|NodeList|window|document} Target - the Event Listener's target , can be a NodeList to listen on multiple Nodes
-   * @param {function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
-   * @returns on,off,once - when once is defined as a variable "var x = once(...)" it allows you to access all the EventHandler interfaces off,once,on
-   */
+
   function craftElement(name, inner, attributes, extraAttr, stringForm) {
     var element = domManip(doc.createElement(name));
     if (isObj(inner)) {
@@ -1265,16 +1267,42 @@ function _defineProperty(obj, key, value) {
      * @example element.bind('myModel.value');
      */
     element.bind = function(bind) {
+      if (!bind.includes('.')) {
+        if (!def(root[bind])) {
+          var getval = element.html();
+          if (getval) Craft.setDeep(root, bind, getval);
+        } else element.html(root[bind]);
+        if (element.isInput) element.SyncInput(root, bind, function(val) {
+          queryEach("[bind=" + bind + "]", function(el) {
+            el.html(val);
+          });
+        });
+        return element;
+      }
+
       function attemptBind() {
         var path = Craft.getPath(bind, true),
-          cutbind = path.cutbind,
-          prop = path.prop,
           obj = path.obj,
+          cutbind = path.cutbind,
+          first = path.first,
+          prop = path.prop,
           val = path.val;
+        if (!def(obj)) {
+          var _ret2 = function() {
+            var modelListener = Craft.Models.$set(cutbind[0], function() {
+              setTimeout(attemptBind, 20);
+              modelListener.off;
+            });
+            return {
+              v: void 0
+            };
+          }();
+          if ((typeof _ret2 === "undefined" ? "undefined" : _typeof(_ret2)) === "object") return _ret2.v;
+        }
         if (def(val)) element.html(val);
         else {
-          var getval = element.html();
-          if (getval) Craft.setDeep(obj, prop, getval);
+          var _getval = element.html();
+          if (_getval) Craft.setDeep(obj, prop, _getval);
         }
         if (obj.isObservable) {
           if (!is.Set(element.__binds)) element.__binds = {};
@@ -1282,16 +1310,7 @@ function _defineProperty(obj, key, value) {
         }
         if (element.isInput) element.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : joindot(Craft.omit(cutbind, cutbind[0])));
       }
-      try {
-        attemptBind();
-      } catch (e) {
-        (function() {
-          var modelListener = Craft.Models.$set(cutdot(bind)[0], function() {
-            setTimeout(attemptBind, 20);
-            modelListener.off;
-          });
-        })();
-      }
+      attemptBind();
       return element;
     };
     element.unbind = function(bind) {
@@ -1585,8 +1604,8 @@ function _defineProperty(obj, key, value) {
       return queryAll(selector, element);
     };
     if (element.isInput) {
-      element.SyncInput = function(obj, key) {
-        return Craft.SyncInput(element, obj, key);
+      element.SyncInput = function(obj, key, onset) {
+        return Craft.SyncInput(element, obj, key, onset);
       };
       element.disconectInputSync = function() {
         return Craft.disconectInputSync(element);
@@ -1733,6 +1752,7 @@ function _defineProperty(obj, key, value) {
       enumerable: false,
       writable: false
     });
+    obj = eventemitter(obj);
     defineprop(obj, 'get', {
       value: function(key) {
         if (key != 'get' && key != 'set') {
@@ -1753,12 +1773,12 @@ function _defineProperty(obj, key, value) {
         });
         val = val != undef ? val : value;
         if (isObj(val) && !val.isObservable) val = observable(val);
-        target.emit('$uberset:' + key, val);
+        obj.emit('$uberset:' + key, val);
         obj[key] = val;
+        return val;
       },
       enumerable: false
     });
-    obj = eventemitter(obj);
     forEach(obj, function(val, key) {
       if (isObj(val) && !val.isObservable) obj[key] = observable(val);
     });
@@ -1962,18 +1982,18 @@ function _defineProperty(obj, key, value) {
      * @param {boolean} robj - should the function return the object
      */
     setDeep: function(obj, path, val, robj) {
-      path = cutdot(path);
-      var temp = obj;
-      for (var i = 0, n; i < path.length - 1; i++) {
-        n = path[i];
-        if (n in temp) temp = temp[n];
-        else {
-          temp[n] = {};
-          temp = temp[n];
+      try {
+        path = cutdot(path);
+        var temp = obj,
+          plen = path.length - 1;
+        for (var i = 0; i < plen; i++) {
+          temp = path[i] in temp ? temp[path[i]] : temp.isObservable ? temp.set(path[i], {}) : temp[path[i]] = {};
         }
+        temp.isObservable ? temp.set(path[plen], val) : temp[path[plen]] = val;
+        if (robj) return obj;
+      } catch (e) {
+        console.log(e);
       }
-      temp[path[path.length - 1]] = val;
-      if (robj) return obj;
     },
     /**
      * forEachDeep is used to loop through any multi layered object - (flattens and loops through all enumerable properties in a given object)
@@ -2656,10 +2676,18 @@ function _defineProperty(obj, key, value) {
     min = min || 0;
     max = max || 100;
     return Math.floor(Math.random() * (max - min)) + min;
-  }), _defineProperty(_Craft, "randomString", function() {
-    return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+  }), _defineProperty(_Craft, "randomStr", function(max, min) {
+    var text = "";
+    min = min || 0;
+    max = max || 6;
+    for (; min < max; min++) {
+      text += possibleText.charAt(Math.floor(Math.random() * possibleText.length));
+    }
+    return text;
   }), _defineProperty(_Craft, "GenUID", function(len) {
-    return Craft.array(len || 6, Craft.randomString).join('-');
+    return Craft.array(len || 6, function() {
+      return Craft.randomStr(4);
+    }).join('-');
   }), _defineProperty(_Craft, "newComponent", function(tag, config) {
     if (!def(config)) throw new Error(tag + ' : config undefined');
     var element = Object.create(HTMLElement.prototype),
@@ -2697,17 +2725,19 @@ function _defineProperty(obj, key, value) {
     }
     settings['prototype'] = element;
     doc.registerElement(tag, settings);
-  }), _defineProperty(_Craft, "SyncInput", function(input, obj, key) {
+  }), _defineProperty(_Craft, "SyncInput", function(input, obj, key, onset) {
     if (isStr(input)) input = query(input);
     if (is.Input(input)) {
       (function() {
-        var oldval = input.value;
+        var oldval = input.value,
+          onsetfn = is.Func(onset);
         input[sI] = on('input,blur,keydown', input, function(e) {
           setTimeout(function() {
             var val = input.value;
             if (!(Craft.getDeep(obj, key) == "" && val == "") && val != oldval) {
               oldval = val;
               Craft.setDeep(obj, key, input.value);
+              if (onsetfn) onset(input.value);
             }
           }, 0);
         });
@@ -2800,7 +2830,6 @@ function _defineProperty(obj, key, value) {
   });
   Craft.customAttr('link', function(element, link) {
     element.linkevt = element.Click(function(e) {
-      console.log(element.linkhandle);
       if (isFunc(element.linkhandle)) element.linkhandle(link);
       (element.hasAttr('newtab') ? open : Craft.router.open)(link);
     });

@@ -26,20 +26,28 @@ Craft.init(function () {
     Craft.newComponent('ripple-effect', {
         inserted() {
             let ripple = this,
-                color, timing = ripple.getAttr("timing") || 1600,
+                color, timing = ripple.getAttr("timing") || ripple.timing || 1600,
                 par = dom(ripple.parentNode),
                 rect = par.getRect(),
                 diameter = Math.max(rect.width, rect.height);
             if (ripple.hasAttr("color-accent")) color = ripple.getAttr("color-accent");
             else if (ripple.hasAttr("color")) color = ripple.getAttr("color");
             else if (par.hasAttr("color-accent")) color = par.getAttr("color-accent");
-
             ripple.css({
                 width: diameter + 'px',
                 height: diameter + 'px',
                 backgroundColor: color || '',
-                animation: `rippleanim ${timing}ms`
-            }).removeAfter(timing).move(parseInt(ripple.Rx) - rect.left - (diameter / 2), parseInt(ripple.Ry) - rect.top - (diameter / 2), !1, !0);
+            }).move(parseInt(ripple.Rx) - rect.left - (diameter / 2), parseInt(ripple.Ry) - rect.top - (diameter / 2), !1, !0);
+            anime({
+                targets: ripple,
+                scale: [0,2.5],
+                opacity : [.7,0],
+                duration : timing,
+                easing : 'easeInSine' ,
+                complete() {
+                  ripple.remove()
+                }
+            });
 
         }
     });
@@ -63,7 +71,7 @@ Craft.init(function () {
 
         let host = query(`.notifications-${side}`);
         if (host == null) {
-            document.body.insertBefore(dom.div('', `class=notifications-${side}`), document.body.firstChild);
+            dom(document.body).prepend(dom.div('', `class=notifications-${side}`));
             host = query(`.notifications-${side}`);
         }
         dom.element('craft-notification', msg, {
@@ -128,13 +136,13 @@ Craft.init(function () {
         toggle(on) {
             let el = this;
             el.toggleAttr('on', is.Bool(on) ? on : void 0);
-            if(is.Def(el.togglefunc)) el.togglefunc(el.on);
+            if (is.Def(el.togglefunc)) el.togglefunc(el.on);
         },
         set_on(v) {
-          this.toggle(v);
+            this.toggle(v);
         },
         get_on() {
-          return this.hasAttr('on')
+            return this.hasAttr('on')
         },
         destroyed() {
             this.tclick.off

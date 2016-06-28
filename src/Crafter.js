@@ -30,6 +30,7 @@
 
     const sI = 'Isync',
         DestructionEvent = new Event('destroy'),
+        possibleText = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
         toArr = Array.from,
         undef = void 0,
         defineprop = Object.defineProperty,
@@ -40,6 +41,7 @@
         isStr = o => typeof o === 'string',
         isObj = o => toString.call(o) === '[object Object]',
         isEl = o => o.toString().includes('HTML'),
+        isArr = Array.isArray,
         head = doc.head,
         RegExps = {
             email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
@@ -82,7 +84,7 @@
 
 
     function exec(fn, context) {
-        return fn.apply(context,toArr(arguments).slice(2));
+        return fn.apply(context, toArr(arguments).slice(2));
     }
 
     // if x then return y else return z
@@ -120,7 +122,7 @@
     }
 
     function joindot(arr) {
-        if (!is.Arr(arr) && is.Arraylike(arr)) arr = toArr(arr);
+        if (!isArr(arr) && is.Arraylike(arr)) arr = toArr(arr);
         return arr.join('.')
     }
 
@@ -145,12 +147,12 @@
          * Test if something is an Array
          * @param {...*} args - value/values to test
          */
-        Arr: ta(Array.isArray),
+        Arr: ta(isArr),
         /**
          * Array.isArray alias for convenience and performance when only one argument is present
          * @param {*} val - value to test
          */
-        Array: Array.isArray,
+        Array: isArr,
         /**
          * Test if something is an Array-Like
          * @param args - value/values to test
@@ -571,7 +573,7 @@
             this.state = false;
             Target = (Target !== root && Target !== doc) ? NodeOrQuerytoArr(Target, Within) : [Target];
             if (isStr(EventType) && EventType.includes(',')) EventType = EventType.split(',');
-            if (!is.Arr(EventType)) EventType = [EventType];
+            if (!isArr(EventType)) EventType = [EventType];
 
             let FuncWrapper = e => {
                     func(e, e.target, Craft.deglove(Target))
@@ -586,7 +588,7 @@
                         //  have you tried turning it on and off again? - THE IT CROWD
                         ehdl.off;
                         EventType = type.includes(',') ? type.split(',') : type;
-                        if (!is.Arr(EventType)) EventType = [EventType];
+                        if (!isArr(EventType)) EventType = [EventType];
                         ehdl.on;
                         return ehdl
                     },
@@ -665,7 +667,7 @@
     let queryAll = (selector, element) => {
             if (isStr(element)) element = queryAll(element);
             let list;
-            if (Craft.len(element) !== 1 && (is.Arr(element) || is.NodeList(element))) {
+            if (Craft.len(element) !== 1 && (isArr(element) || is.NodeList(element))) {
                 list = [];
                 forEach(element, el => {
                     if (isStr(el)) el = query(el);
@@ -675,7 +677,7 @@
                     }
                 })
             } else list = is.NodeList(element) ? element[0].querySelectorAll(selector) : is.Node(element) ? element.querySelectorAll(selector) : doc.querySelectorAll(selector);
-            return is.Null(list) ? list : is.Arr(list) ? list : toArr(list);
+            return is.Null(list) ? list : isArr(list) ? list : toArr(list);
         }
         /**
          * Easy way to loop through Nodes in the DOM using a CSS Selector or a NodeList
@@ -735,18 +737,16 @@
      * @param {function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
      * @returns off - when on is defined as a variable "var x = on(...)" it allows you to access all the EventHandler interfaces off,once,on
      */
-    let on = EvtLT('on');
-
-    /**
-     * Starts listening for an EventType on the Target/Targets ONCE after triggering the once event Listener will stop listening
-     * @param {string} EventType - set the type of event to listen for example "click" or "scroll"
-     * @param {Node|NodeList|window|document} Target - the Event Listener's target , can be a NodeList to listen on multiple Nodes
-     * @param {function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
-     * @returns on,off,once - when once is defined as a variable "var x = once(...)" it allows you to access all the EventHandler interfaces off,once,on
-     */
-    let once = EvtLT('once'),
+    let on = EvtLT('on'),
+        /**
+         * Starts listening for an EventType on the Target/Targets ONCE after triggering the once event Listener will stop listening
+         * @param {string} EventType - set the type of event to listen for example "click" or "scroll"
+         * @param {Node|NodeList|window|document} Target - the Event Listener's target , can be a NodeList to listen on multiple Nodes
+         * @param {function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
+         * @returns on,off,once - when once is defined as a variable "var x = once(...)" it allows you to access all the EventHandler interfaces off,once,on
+         */
+        once = EvtLT('once'),
         eventoptions = 'Click,Input,DoubleClick,Focus,Blur,Keydown,Mousemove,Mousedown,Mouseup,Mouseover,Mouseout'.split(',');
-
 
     function craftElement(name, inner, attributes, extraAttr, stringForm) {
         let element = domManip(doc.createElement(name));
@@ -1039,11 +1039,66 @@
          * @param {string=} sets the textContent value or when undefined gets the textContent value
          */
         element.Text = Inner('textContent', element);
+
         /**
-         * replaces a Node with another node provided as a parameter/argument
-         * @memberof dom
-         * @param {Node} Node to replace with
+         * element.bind is what drives data-binding in Crafter.js
+         * it binds to values in models and objects
+         * @param (string) bind - path to bind to
+         * @example element.bind('myModel.value');
          */
+        element.bind = bind => {
+            if (!bind.includes('.')) {
+                if (!def(root[bind])) {
+                    let getval = element.html();
+                    if (getval) Craft.setDeep(root, bind, getval);
+                } else element.html(root[bind]);
+                if (element.isInput) element.SyncInput(root, bind, val => {
+                    queryEach(`[bind=${bind}]`, el => {
+                        if (val != undef) el.html(val);
+                    });
+                });
+                return element;
+            }
+
+            let {
+                obj,
+                cutbind,
+                prop,
+                val
+            } = Craft.getPath(bind, true);
+
+            function bindval() {
+                let alt,path = joindot(Craft.omit(cutbind, cutbind[0]));
+                if(!def(val)) val = Craft.getDeep(obj,path);
+                def(val) ? element.html(val) : Craft.setDeep(obj, path, element.html());
+                if (obj.isObservable) {
+                    obj.on('$uberset:' + prop, element.html);
+                } else alt = val => {
+                    queryEach(`[bind=${bind}]`, el => {
+                        if (val != undef) el.html(val);
+                    });
+                }
+                if (element.isInput) element.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : path,alt);
+            }
+
+            if (!obj) Craft.Models.on(cutbind[0], model => {
+                if (model && model.scope) {
+                    obj = model.scope;
+                    bindval();
+                }
+            });
+            else bindval();
+            return element
+        }
+
+        element.unbind = bind => {
+
+        }
+            /**
+             * replaces a Node with another node provided as a parameter/argument
+             * @memberof dom
+             * @param {Node} Node to replace with
+             */
         element.replace = val => {
                 element.parentNode.replaceChild(val, element);
                 return element
@@ -1115,51 +1170,6 @@
             });
             element.insertBefore(domfrag, element.firstChild);
             return element
-        }
-
-        /**
-         * element.bind is what drives data-binding in Crafter.js
-         * it binds to values in models and objects
-         * @param (string) bind - path to bind to
-         * @example element.bind('myModel.value');
-         */
-        element.bind = bind => {
-            function attemptBind() {
-                let path = Craft.getPath(bind, true),
-                    cutbind = path.cutbind,
-                    prop = path.prop,
-                    obj = path.obj,
-                    val = path.val;
-
-                if (def(val)) element.html(val);
-                else {
-                    let getval = element.html();
-                    if (getval) Craft.setDeep(obj, prop, getval);
-                }
-                if (obj.isObservable) {
-                    if (!is.Set(element.__binds)) element.__binds = {};
-                    if (!element.isInput) element.__binds[bind] = obj.on('$uberset:' + prop, element.html);
-                }
-                if (element.isInput) element.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : joindot(Craft.omit(cutbind, cutbind[0])))
-            }
-
-            try {
-                attemptBind()
-            } catch (e) {
-                let modelListener = Craft.Models.$set(cutdot(bind)[0], () => {
-                    setTimeout(attemptBind, 20)
-                    modelListener.off;
-                })
-            }
-
-            return element
-        }
-
-        element.unbind = bind => {
-            if (element.__binds && element.__binds[bind] != undef) {
-                element.__binds[bind].off;
-                delete element.__binds[bind];
-            }
         }
 
         /**
@@ -1438,7 +1448,7 @@
         element.queryAll = selector => queryAll(selector, element);
 
         if (element.isInput) {
-            element.SyncInput = (obj, key) => Craft.SyncInput(element, obj, key)
+            element.SyncInput = (obj, key, onset) => Craft.SyncInput(element, obj, key, onset)
             element.disconectInputSync = () => Craft.disconectInputSync(element)
         }
 
@@ -1586,6 +1596,7 @@
             enumerable: false,
             writable: false,
         });
+        obj = eventemitter(obj);
         defineprop(obj, 'get', {
             value(key) {
                 if (key != 'get' && key != 'set') {
@@ -1607,12 +1618,12 @@
                 });
                 val = val != undef ? val : value;
                 if (isObj(val) && !val.isObservable) val = observable(val);
-                target.emit('$uberset:' + key, val);
+                obj.emit('$uberset:' + key, val);
                 obj[key] = val;
+                return val;
             },
             enumerable: false,
         });
-        obj = eventemitter(obj);
         forEach(obj, (val, key) => {
             if (isObj(val) && !val.isObservable) obj[key] = observable(val);
         });
@@ -1780,7 +1791,7 @@
          * @memberof Craft
          * @param {Array|Arraylike} arr - multidimentional array(like) object to flatten
          */
-        flatten: arr => (!is.Arr(arr) && is.Arraylike(arr) ? toArr(arr) : is.Arr(arr) ? arr : []).reduce((flat, toFlatten) => flat.concat(is.Arr(toFlatten) ? Craft.flatten(toFlatten) : toFlatten), []),
+        flatten: arr => (!isArr(arr) && is.Arraylike(arr) ? toArr(arr) : isArr(arr) ? arr : []).reduce((flat, toFlatten) => flat.concat(isArr(toFlatten) ? Craft.flatten(toFlatten) : toFlatten), []),
         /**
          * Gets a value from inside an object using a reference string
          * @method getDeep
@@ -1790,11 +1801,10 @@
          * @param {string} path - string to reference value by simple dot notation or array refference example Craft.getDeep({ a : { b : [1,2,3] }},"a.b[2]") -> 3
          */
         getDeep(obj, path) {
-            path = path.replace(/\[(\w+)\]/g, '.$1');
-            path = cutdot(path.replace(/^\./, ''));
             try {
-                for (let i = 0; i < path.length; ++i) path[i] in obj ? obj = obj[path[i]] : obj = undef
-                return obj
+                for (let step of cutdot(path.replace(/\[(\w+)\]/g, '.$1').replace(/^\./, '')))
+                    step in obj || (root.Reflect && Reflect.has(obj, step)) ? obj = (obj.isObservable ? obj.get(step) : obj[step]) : obj = undef;
+                return obj;
             } catch (e) {}
         },
         /**
@@ -1807,18 +1817,20 @@
          * @param {boolean} robj - should the function return the object
          */
         setDeep(obj, path, val, robj) {
-            path = cutdot(path);
-            let temp = obj;
-            for (let i = 0, n; i < path.length - 1; i++) {
-                n = path[i];
-                if (n in temp) temp = temp[n];
+            try {
+                if (!path.includes('.')) obj.isObservable ? obj.set(path, val) : obj[path] = val;
                 else {
-                    temp[n] = {};
-                    temp = temp[n];
+                    path = cutdot(path);
+                    for (let i = 0, temp = obj, plen = path.length - 1; i < plen; i++) {
+                        if (path[i] in temp) temp = temp[path[i]];
+                        else if (i != plen) temp = (temp.isObservable ? temp.set(path[i], {}) : temp[path[i]] = {});
+                        else temp.isObservable ? temp.set(path[plen], val) : temp[path[plen]] = val;
+                    }
                 }
+                if (robj) return obj
+            } catch (e) {
+                console.warn(`Craft.setDeep : ran into some trouble setting ${path}`);
             }
-            temp[path[path.length - 1]] = val;
-            if (robj) return obj
         },
         /**
          * forEachDeep is used to loop through any multi layered object - (flattens and loops through all enumerable properties in a given object)
@@ -1837,9 +1849,9 @@
                 if (object.hasOwnProperty(key)) val = object[key];
                 currentPath = path;
                 nestable = false;
-                is.Arr(object) ? currentPath += `[${key}]` : !currentPath ? currentPath = key : currentPath += '.' + key;
+                isArr(object) ? currentPath += `[${key}]` : !currentPath ? currentPath = key : currentPath += '.' + key;
                 nestable = func(val, key, object, currentPath) == false;
-                if (nestable && (is.Arr(val) || isObj(val))) Craft.forEachDeep(val, func, currentPath);
+                if (nestable && (isArr(val) || isObj(val))) Craft.forEachDeep(val, func, currentPath);
             }
         },
         /**
@@ -1957,7 +1969,7 @@
                 if (isStr(route)) {
                     if (Locs(l => l == route)) func(route);
                     Craft.router.addHandle(route, func)
-                } else if (is.Arr(route))
+                } else if (isArr(route))
                     forEach(route, link => {
                         if (Locs(l => l == link)) func(link);
                         Craft.router.addHandle(link, func)
@@ -2414,9 +2426,9 @@
                 IsValDefined = def(val),
                 ck = cutkey[0],
                 type = (IsValDefined ? 'set' : 'get') + 'Deep';
-            if (def(Craft.Models[ck])) {
-                return cutkey.length == 1 && !IsValDefined ? Craft.Models[ck].scope : Craft[type](Craft.Models[ck].scope, joindot(Craft.omit(cutkey, ck)), val)
-            }
+            if (def(Craft.Models[ck])) return cutkey.length == 1 && !IsValDefined ? Craft.Models[ck].scope :
+                Craft[type](Craft.Models[ck].scope, joindot(Craft.omit(cutkey, ck)), val);
+
         },
         getPath(path, full) {
             try {
@@ -2424,19 +2436,22 @@
                 else if (path == 'true') return true;
                 else if (path == 'false') return false;
                 else if (is.Num(path)) return Number(path);
+
                 let cutbind = cutdot(path),
                     prop = last(cutbind),
-                    first = cutbind[0],
-                    obj = def(Craft.Models[first]) ? Craft.Models[first].scope : Craft.getDeep(root, joindot(Craft.omit(cutbind, prop))),
-                    val = Craft.getDeep(obj, cutbind.length > 1 ? joindot(Craft.omit(cutbind, first)) : prop);
+                    objaccessor = cutbind[0],
+                    obj = def(Craft.Models[objaccessor]) ? Craft.Models[objaccessor].scope : Craft.getDeep(root, joindot(Craft.omit(cutbind, prop))),
+                    val = Craft.getDeep(obj, cutbind.length > 1 ? joindot(Craft.omit(cutbind, objaccessor)) : prop);
                 if (full) return {
                     cutbind,
+                    objaccessor,
+                    path,
                     prop,
                     obj,
                     val
                 };
                 if (def(val)) return val;
-                if (first === prop && def(obj)) return obj;
+                if (objaccessor === prop && def(obj)) return obj;
             } catch (e) {
                 return {}
             }
@@ -2458,7 +2473,7 @@
                     queryEach(`[${name}]`, el => {
                         el = dom(el);
                         if (el.hasAttr(name)) {
-                            if (!is.Arr(el.customAttr)) el.customAttr = [];
+                            if (!isArr(el.customAttr)) el.customAttr = [];
                             if (!el.customAttr.includes(name)) {
                                 el.customAttr.push(name);
                                 handle(el, el.getAttr(name));
@@ -2518,15 +2533,24 @@
         },
         /**
          * method for generating random alphanumeric strings
+         * @param (=int) max
+         * @param (=int) min
          * @return (string)
          */
-        randomString: () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1),
+        randomStr(max, min) {
+            let text = "";
+            min = min || 0;
+            max = max || 6;
+
+            for (; min < max; min++) text += possibleText.charAt(Math.floor(Math.random() * possibleText.length));
+            return text;
+        },
         /**
-         * similar to Craft.randomString in that it generates a unique string , in this case a Unique ID with random alphanumeric strings separated by hyphens
+         * similar to Craft.randomStr in that it generates a unique string , in this case a Unique ID with random alphanumeric strings separated by hyphens
          * example 0ebf-c7d2-ef81-2667-08ef-4cde
          * @param {number=} len - optional length of uid sections
          */
-        GenUID: len => Craft.array(len || 6, Craft.randomString).join('-'),
+        GenUID: len => Craft.array(len || 6, () => Craft.randomStr(4)).join('-'),
         /**
          * method for creating custom elements configuring their lifecycle's and inheritance
          * the config Object has 7 distinct options ( created , inserted , destroyed , attr, css, set_X and get_X )
@@ -2575,16 +2599,18 @@
             settings['prototype'] = element;
             doc.registerElement(tag, settings);
         },
-        SyncInput(input, obj, key) {
+        SyncInput(input, obj, key, onset) {
             if (isStr(input)) input = query(input);
             if (is.Input(input)) {
-                let oldval = input.value;
+                let oldval = input.value,
+                    onsetfn = isFunc(onset);
                 input[sI] = on('input,blur,keydown', input, e => {
                     setTimeout(() => {
                         let val = input.value;
                         if (!(Craft.getDeep(obj, key) == "" && val == "") && val != oldval) {
                             oldval = val;
                             Craft.setDeep(obj, key, input.value);
+                            if (onsetfn) onset(input.value);
                         }
                     }, 0);
                 });
@@ -2611,6 +2637,14 @@
             return options.on;
         },
     }
+
+    Craft.Models.$set((key, model) => {
+        if (!def(Craft.Models[key])) {
+            Craft.Models.emit(key, model);
+            model.func(model.scope)
+        } else return undef;
+    });
+
     head.appendChild(dom.style('', 'crafterstyles'));
     let TabChange = ta => () => {
         tabActive = ta;
@@ -2631,8 +2665,9 @@
         fn.apply(null, Craft.omit(arguments, context).slice(1).concat(context))
     }));
     Craft.curry.adapt = fn => Craft.curry.adaptTo(fn.length, fn);
+
     Craft.customAttr('bind', (element, bind) => {
-        element.bind(bind)
+        element.bind(bind);
         element.observeAttrs();
         element.attrX.on('attr:bind', () => {
             if (!element.hasAttr('bind') || element.getAttr('bind') != bind) element.unbind(bind);
@@ -2641,7 +2676,7 @@
 
     Craft.customAttr('bind-for', (element, bind) => {
         let data = Craft.fromModel(bind);
-        if (is.Arr(data) || is.Set(data)) {
+        if (isArr(data) || is.Set(data)) {
             let domfrag = dom.frag();
             element = element.stripAttr('bind-for');
             data.forEach(item => {
@@ -2680,6 +2715,9 @@
             (element.hasAttr('newtab') ? open : Craft.router.open)(link)
         });
         if (isFunc(element.linkhandle)) Craft.router.handle(link, element.linkhandle);
+        Craft.WhenReady.then(() => {
+            if (Locs(l => l == link) && isFunc(element.linkhandle)) element.linkhandle(link);
+        });
     });
 
     Craft.customAttr('color-accent', (element, color) => {
@@ -2698,7 +2736,7 @@
         for (let attr, i = 0; i < Craft.CustomAttributes.length; i++) {
             attr = Craft.CustomAttributes[i];
             if (el.hasAttribute(attr.name)) {
-                if (!is.Array(el.customAttr)) el.customAttr = [];
+                if (!isArr(el.customAttr)) el.customAttr = [];
                 if (!el.customAttr.includes(attr.name)) {
                     el.customAttr.push(attr.name);
                     attr.handle(dom(el), el.getAttribute(attr.name));
@@ -2707,11 +2745,6 @@
             }
         }
     }
-
-    Craft.Models.$set((key, model) => {
-        Craft.Models.emit(key, model);
-        model.func(model.scope)
-    });
 
     Craft.DomObserver = new MutationObserver(muts => {
         muts.forEach(mut => {

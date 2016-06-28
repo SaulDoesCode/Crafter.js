@@ -82,12 +82,6 @@
 [movehandle] {
     cursor: move;
 }
-@keyframes rippleanim {
-    100% {
-        opacity: 0;
-        transform: scale(2.5);
-    }
-}
 ripple-effect {
     display: inline-block;
     position: absolute;
@@ -311,44 +305,6 @@ button::-moz-focus-inner, input[type='button']::-moz-focus-inner, input[type='su
     background: #d11717;
 }
 .flatbutton-warning:hover {
-    background: #dfba1c;
-}
-[class*=pushbutton] {
-    border: none;
-    border-bottom: 2px solid hsla(0, 0%, 20%, 0.35);
-    border-radius: 3px;
-    font-weight: 500;
-    font-size: 16px;
-    color: #fff;
-    text-shadow: 0 1px 2px hsla(0, 0%, 40%, 0.9);
-}
-[class*=pushbutton]:hover {
-    -webkit-transform: translateZ(5px);
-    transform: translateZ(5px);
-    color: hsl(0, 0%, 95%);
-    filter: brightness(1.2);
-    -webkit-filter: brightness(1.2);
-    -moz-filter: brightness(1.2);
-}
-[class*=pushbutton]:active {
-    text-shadow: 0 2px 2px hsla(0, 0%, 35%, 0.8);
-    box-shadow: inset 0 2px 5px hsla(0, 0%, 10%, 0.4);
-    border-bottom: 0 solid grey;
-    outline: 0 none !important;
-}
-.pushbutton {
-    background: #9f9f9f;
-}
-.pushbutton-go {
-    background: #1e8f13;
-}
-.pushbutton-info {
-    background: #2666cd;
-}
-.pushbutton-danger {
-    background: #d11717;
-}
-.pushbutton-warning {
     background: #dfba1c;
 }
 code {
