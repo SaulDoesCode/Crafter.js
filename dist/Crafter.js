@@ -1955,9 +1955,9 @@ function _defineProperty(obj, key, value) {
      */
     getDeep: function(obj, path) {
       try {
-        for (var step of cutdot(path.replace(/\[(\w+)\]/g, '.$1').replace(/^\./, ''))) {
-          step in obj || root.Reflect && Reflect.has(obj, step) ? obj = obj.isObservable ? obj.get(step) : obj[step] : obj = undef;
-        }
+        forEach(cutdot(path.replace(/\[(\w+)\]/g, '.$1').replace(/^\./, '')), function(step) {
+          return step in obj || root.Reflect && Reflect.has(obj, step) ? obj = obj.isObservable ? obj.get(step) : obj[step] : obj = undef;
+        });
         return obj;
       } catch (e) {}
     },
