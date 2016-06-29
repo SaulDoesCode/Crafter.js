@@ -1068,8 +1068,8 @@
             } = Craft.getPath(bind, true);
 
             function bindval() {
-                let alt,path = joindot(Craft.omit(cutbind, cutbind[0]));
-                if(!def(val)) val = Craft.getDeep(obj,path);
+                let alt, path = joindot(Craft.omit(cutbind, cutbind[0]));
+                if (!def(val)) val = Craft.getDeep(obj, path);
                 def(val) ? element.html(val) : Craft.setDeep(obj, path, element.html());
                 if (obj.isObservable) {
                     obj.on('$uberset:' + prop, element.html);
@@ -1078,7 +1078,7 @@
                         if (val != undef) el.html(val);
                     });
                 }
-                if (element.isInput) element.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : path,alt);
+                if (element.isInput) element.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : path, alt);
             }
 
             if (!obj) Craft.Models.on(cutbind[0], model => {
@@ -1093,7 +1093,7 @@
 
         element.unbind = bind => {
 
-        }
+            }
             /**
              * replaces a Node with another node provided as a parameter/argument
              * @memberof dom
@@ -1802,7 +1802,7 @@
          */
         getDeep(obj, path) {
             try {
-                forEach(cutdot(path.replace(/\[(\w+)\]/g, '.$1').replace(/^\./, '')),step => step in obj || (root.Reflect && Reflect.has(obj, step)) ? obj = (obj.isObservable ? obj.get(step) : obj[step]) : obj = undef);
+                forEach(cutdot(path.replace(/\[(\w+)\]/g, '.$1').replace(/^\./, '')), step => step in obj || (root.Reflect && Reflect.has(obj, step)) ? obj = (obj.isObservable ? obj.get(step) : obj[step]) : obj = undef);
                 return obj;
             } catch (e) {}
         },
@@ -1959,30 +1959,54 @@
         },
         router: {
             addHandle(link, func) {
-                Craft.router.handlers.push({
-                    link: link,
-                    func: func
-                })
+                let handler = {
+                        link,
+                        func
+                    },
+                    options = {
+                        off(fn) {
+                            if(fn) fn(link);
+                            Craft.router.handlers.delete(handler);
+                            return options;
+                        },
+                        on(wrap) {
+                            if (isFunc(wrap)) handler.func = () => {
+                                handler.func(link);
+                                wrap(link, handler.func);
+                            }
+                            Craft.router.handlers.add(handler);
+                            return options;
+                        },
+                        once() {
+                            options.off();
+                            options.on(options.off);
+                        }
+                    }
+                return options.on();
             },
             handle(route, func) {
                 if (isStr(route)) {
                     if (Locs(l => l == route)) func(route);
-                    Craft.router.addHandle(route, func)
-                } else if (isArr(route))
-                    forEach(route, link => {
-                        if (Locs(l => l == link)) func(link);
-                        Craft.router.addHandle(link, func)
-                    });
+                    return Craft.router.addHandle(route, func);
+                } else if (isArr(route)) {
+                  let handlers = [];
+                  forEach(route, link => {
+                      handlers.push(Craft.router.handle(route, func));
+                  });
+                  return handlers;
+                }
             },
-            handlers: [],
+            handlers: new Set,
             links: [],
-            link(Selector, link, newtab, eventType) {
-                if (isStr(newtab)) eventType = newtab
-                Craft.router.links.push(() => {
-                    on(eventType || 'click', Selector, e => {
-                        Craft.router.open(link, newtab)
-                    })
-                })
+            link(Selector, link, newtab) {
+                let target = dom(Selector);
+                if(is.NodeList(target) || is.Node(target)) {
+                  let attr = {
+                    link,
+                  };
+                  if(newtab) attr.newtab = true;
+                  target.setAttr(attr);
+                }
             },
             open(link, newtab) {
                 !newtab ? location = link : open(link)
@@ -1992,9 +2016,6 @@
             },
             get title() {
                 return doc.title
-            },
-            clearViews() {
-                for (let i in localStorage) localStorage.removeItem(localStorage.key(i).includes("Cr:"))
             }
         },
         Cookies: {
@@ -2685,37 +2706,26 @@
         } else element.remove();
     });
 
-    Craft.customAttr('toggle-parent', element => {
-        let visible = true,
-            parent = dom(element.parentNode);
-        element.Click(() => {
-            visible = !visible;
-            parent[visible ? 'show' : 'hide']()
-        })
-    });
-
-    Craft.customAttr('toggle-element', (element, selector) => {
-        let visible = true,
-            toggleElement = dom(selector, true);
-        if (!isEl(toggleElement)) console.warn(`${element.localName} - toggle-element : "${selector}" is an invalid selector`);
-        else element.Click(() => {
-            visible = !visible;
-            toggleElement[visible ? 'show' : 'hide']()
-        })
-    });
-
     Craft.customAttr('import-view', (element, src) => {
         element.importview(src)
     });
 
     Craft.customAttr('link', (element, link) => {
-        element.linkevt = element.Click(e => {
-            if (isFunc(element.linkhandle)) element.linkhandle(link);
+        let handle,linkevt;
+        element.newSetGet('onlink', fn => {
+            if (isFunc(fn)) handle = Craft.router.handle(link, (element.linkhandle = fn));
+        });
+        linkevt = element.Click(e => {
             (element.hasAttr('newtab') ? open : Craft.router.open)(link)
         });
-        if (isFunc(element.linkhandle)) Craft.router.handle(link, element.linkhandle);
-        Craft.WhenReady.then(() => {
-            if (Locs(l => l == link) && isFunc(element.linkhandle)) element.linkhandle(link);
+        element.observeAttrs();
+        element.attrX.on('attr:link', () => {
+            if (!element.hasAttr('link') || element.getAttr('link') != link) {
+              if(isObj(handle)) handle.off(() => {
+                if(isFunc(element.onunlink)) element.onunlink(link);
+              });
+              if(def(linkevt)) linkevt.off;
+            }
         });
     });
 
