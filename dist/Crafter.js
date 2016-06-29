@@ -2129,33 +2129,61 @@ function _defineProperty(obj, key, value) {
     },
     router: {
       addHandle: function(link, func) {
-        Craft.router.handlers.push({
-          link: link,
-          func: func
-        });
+        var handler = {
+            link: link,
+            func: func
+          },
+          options = {
+            off: function(fn) {
+              if (fn) fn(link);
+              Craft.router.handlers.delete(handler);
+              return options;
+            },
+            on: function(wrap) {
+              if (isFunc(wrap)) handler.func = function() {
+                handler.func(link);
+                wrap(link, handler.func);
+              };
+              Craft.router.handlers.add(handler);
+              return options;
+            },
+            once: function() {
+              options.off();
+              options.on(options.off);
+            }
+          };
+        return options.on();
       },
       handle: function(route, func) {
         if (isStr(route)) {
           if (Locs(function(l) {
               return l == route;
             })) func(route);
-          Craft.router.addHandle(route, func);
-        } else if (isArr(route)) forEach(route, function(link) {
-          if (Locs(function(l) {
-              return l == link;
-            })) func(link);
-          Craft.router.addHandle(link, func);
-        });
+          return Craft.router.addHandle(route, func);
+        } else if (isArr(route)) {
+          var _ret2 = function() {
+            var handlers = [];
+            forEach(route, function(link) {
+              handlers.push(Craft.router.handle(route, func));
+            });
+            return {
+              v: handlers
+            };
+          }();
+          if ((typeof _ret2 === "undefined" ? "undefined" : _typeof(_ret2)) === "object") return _ret2.v;
+        }
       },
-      handlers: [],
+      handlers: new Set(),
       links: [],
-      link: function(Selector, link, newtab, eventType) {
-        if (isStr(newtab)) eventType = newtab;
-        Craft.router.links.push(function() {
-          on(eventType || 'click', Selector, function(e) {
-            Craft.router.open(link, newtab);
-          });
-        });
+      link: function(Selector, link, newtab) {
+        var target = dom(Selector);
+        if (is.NodeList(target) || is.Node(target)) {
+          var attr = {
+            link: link
+          };
+          if (newtab) attr.newtab = true;
+          target.setAttr(attr);
+        }
       },
       open: function(link, newtab) {
         !newtab ? location = link : open(link);
@@ -2165,11 +2193,6 @@ function _defineProperty(obj, key, value) {
       },
       get title() {
         return doc.title;
-      },
-      clearViews: function() {
-        for (var i in localStorage) {
-          localStorage.removeItem(localStorage.key(i).includes("Cr:"));
-        }
       }
     },
     Cookies: {
@@ -2215,7 +2238,7 @@ function _defineProperty(obj, key, value) {
       }
       if (!address.includes('ws://') && !address.includes('wss://')) address = (location.protocol === 'http:' ? 'ws://' : 'wss://') + address;
       if (is.URL(address)) {
-        var _ret2 = function() {
+        var _ret3 = function() {
           var newSock = function() {
               return protocols ? new WebSocket(address, protocols) : new WebSocket(address);
             },
@@ -2273,7 +2296,7 @@ function _defineProperty(obj, key, value) {
             v: Options
           };
         }();
-        if ((typeof _ret2 === "undefined" ? "undefined" : _typeof(_ret2)) === "object") return _ret2.v;
+        if ((typeof _ret3 === "undefined" ? "undefined" : _typeof(_ret3)) === "object") return _ret3.v;
       }
     },
     keyhandles: {
@@ -2563,7 +2586,7 @@ function _defineProperty(obj, key, value) {
   }, _defineProperty(_Craft, "model", function(name, func) {
     if (isFunc(func) && isStr(name)) {
       if (!def(Craft.Models[name])) {
-        var _ret4 = function() {
+        var _ret5 = function() {
           var scope = observable();
           Craft.Models[name] = {
             func: func.bind(scope),
@@ -2577,7 +2600,7 @@ function _defineProperty(obj, key, value) {
             }
           };
         }();
-        if ((typeof _ret4 === "undefined" ? "undefined" : _typeof(_ret4)) === "object") return _ret4.v;
+        if ((typeof _ret5 === "undefined" ? "undefined" : _typeof(_ret5)) === "object") return _ret5.v;
       }
       throw new Error('Craft Model already exists');
     }
@@ -2711,8 +2734,8 @@ function _defineProperty(obj, key, value) {
       _key4 == 'inserted' ? element.attachedCallback = dm : _key4 == 'destroyed' ? element.detachedCallback = dm : _key4.toLowerCase() == 'css' ? Craft.addCSS(config[_key4]) : isFunc(config[_key4]) ? element[_key4] = dm : defineprop(element, _key4, getpropdescriptor(config, _key4));
     };
     for (var _key4 in config) {
-      var _ret6 = _loop(_key4);
-      if (_ret6 === "continue") continue;
+      var _ret7 = _loop(_key4);
+      if (_ret7 === "continue") continue;
     }
     settings['prototype'] = element;
     doc.registerElement(tag, settings);
@@ -2805,36 +2828,26 @@ function _defineProperty(obj, key, value) {
       })();
     } else element.remove();
   });
-  Craft.customAttr('toggle-parent', function(element) {
-    var visible = true,
-      parent = dom(element.parentNode);
-    element.Click(function() {
-      visible = !visible;
-      parent[visible ? 'show' : 'hide']();
-    });
-  });
-  Craft.customAttr('toggle-element', function(element, selector) {
-    var visible = true,
-      toggleElement = dom(selector, true);
-    if (!isEl(toggleElement)) console.warn(element.localName + " - toggle-element : \"" + selector + "\" is an invalid selector");
-    else element.Click(function() {
-      visible = !visible;
-      toggleElement[visible ? 'show' : 'hide']();
-    });
-  });
   Craft.customAttr('import-view', function(element, src) {
     element.importview(src);
   });
   Craft.customAttr('link', function(element, link) {
-    element.linkevt = element.Click(function(e) {
-      if (isFunc(element.linkhandle)) element.linkhandle(link);
+    var handle = void 0,
+      linkevt = void 0;
+    element.newSetGet('onlink', function(fn) {
+      if (isFunc(fn)) handle = Craft.router.handle(link, element.linkhandle = fn);
+    });
+    linkevt = element.Click(function(e) {
       (element.hasAttr('newtab') ? open : Craft.router.open)(link);
     });
-    if (isFunc(element.linkhandle)) Craft.router.handle(link, element.linkhandle);
-    Craft.WhenReady.then(function() {
-      if (Locs(function(l) {
-          return l == link;
-        }) && isFunc(element.linkhandle)) element.linkhandle(link);
+    element.observeAttrs();
+    element.attrX.on('attr:link', function() {
+      if (!element.hasAttr('link') || element.getAttr('link') != link) {
+        if (isObj(handle)) handle.off(function() {
+          if (isFunc(element.onunlink)) element.onunlink(link);
+        });
+        if (def(linkevt)) linkevt.off;
+      }
     });
   });
   Craft.customAttr('color-accent', function(element, color) {

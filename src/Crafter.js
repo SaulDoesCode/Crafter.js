@@ -3,12 +3,12 @@
  *  @author Saul van der Walt - https://github.com/SaulDoesCode/
  *  @license MIT
  */
-//var perf = performance.now();
+// var perf = performance.now();
 (function (doc, root) {
-    "use strict";
+    'use strict';
     let Ready = false,
         tabActive = true,
-        ready = () => Ready || doc.readyState == "complete",
+        ready = () => Ready || doc.readyState == 'complete',
         ua = navigator.userAgent,
         tabListeners = new Set,
         tem, Br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
@@ -16,8 +16,8 @@
     // tests arguments with Array.prototype.every;
     function ta(test) {
         return function () {
-            return arguments.length && toArr(arguments).every(test)
-        }
+            return arguments.length && toArr(arguments).every(test);
+        };
     }
 
     function has(str, strings, or) {
@@ -25,12 +25,12 @@
     }
 
     function degloveStr(str) {
-        return isStr(str) && (str.includes('"') || str.includes("'")) ? str.substring(1, str.length - 1) : str;
+        return isStr(str) && (str.includes('"') || str.includes('\'')) ? str.substring(1, str.length - 1) : str;
     }
 
     const sI = 'Isync',
         DestructionEvent = new Event('destroy'),
-        possibleText = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
+        possibleText = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
         toArr = Array.from,
         undef = void 0,
         defineprop = Object.defineProperty,
@@ -48,40 +48,39 @@
             timeString: /^(2[0-3]|[01]?[0-9]):([0-5]?[0-9]):([0-5]?[0-9])$/,
             dateString: /^(1[0-2]|0?[1-9])\/(3[01]|[12][0-9]|0?[1-9])\/(?:[0-9]{2})?[0-9]{2}$/,
             hexadecimal: /^[0-9a-fA-F]+$/,
-            hexColor: /^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/,
-        }
+            hexColor: /^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/
+        };
 
     if (Br && (tem = ua.match(/version\/([\.\d]+)/i)) !== null) Br[2] = tem[1];
     Br = (Br ? [Br[1], Br[2]] : [navigator.appName, navigator.appVersion, '-?']).join(' ');
 
     function promise(func) {
-        return new Promise(func)
+        return new Promise(func);
     }
 
     function Locs(test) {
-        return [location.hash, location.href, location.pathname].some(test)
+        return [location.hash, location.href, location.pathname].some(test);
     }
 
     // get the last item in an array
     function last(arr) {
-        return arr[arr.length - 1]
+        return arr[arr.length - 1];
     }
 
     // document , fragment , from , string -   dffstr
     function dffstr(html) {
-        return doc.createRange().createContextualFragment(html || '')
+        return doc.createRange().createContextualFragment(html || '');
     }
 
     // get the string form of any object
     // then compare it to a given string
     function type(obj, str) {
-        return toString.call(obj) === str
+        return toString.call(obj) === str;
     }
 
     function rif(b, e) {
-        if (b) return e
+        if (b) return e;
     }
-
 
     function exec(fn, context) {
         return fn.apply(context, toArr(arguments).slice(2));
@@ -89,7 +88,7 @@
 
     // if x then return y else return z
     function W(x, y, z, a) {
-        return a ? (x ? y : z) + a : x ? y : z
+        return a ? (x ? y : z) + a : x ? y : z;
     }
 
     function toInt(num) {
@@ -107,8 +106,8 @@
             let a = [];
             for (let i = arity; 0 > i; i--) a.push('a' + i.toString());
             return function () {
-                return doInvok(fn, toArr(arguments).concat(a))
-            }
+                return doInvok(fn, toArr(arguments).concat(a));
+            };
         })(fn, args, remainingArity);
     }
 
@@ -118,12 +117,12 @@
     }
 
     function cutdot(str) {
-        return str.split('.')
+        return str.split('.');
     }
 
     function joindot(arr) {
         if (!isArr(arr) && is.Arraylike(arr)) arr = toArr(arr);
-        return arr.join('.')
+        return arr.join('.');
     }
 
     /**
@@ -159,7 +158,7 @@
          */
         Arraylike: ta(o => {
             try {
-                return def(o.length)
+                return def(o.length);
             } catch (e) {}
             return false;
         }),
@@ -418,7 +417,7 @@
          * @param {...*} arguments to compare with value
          */
         neither(value) {
-            return toArr(arguments).slice(1).every(val => value !== val)
+            return toArr(arguments).slice(1).every(val => value !== val);
         },
         /**
          * Determines if two variables are equal
@@ -456,9 +455,9 @@
          */
         empty: ta(val => {
             try {
-                return !(isObj(val) ? Object.keys(val).length : is.Map(val) || is.Set(val) ? val.size : val.length) || val === ''
+                return !(isObj(val) ? Object.keys(val).length : is.Map(val) || is.Set(val) ? val.size : val.length) || val === '';
             } catch (e) {}
-            return false
+            return false;
         }),
         /**
          * Test if something is a Native JavaScript feature
@@ -472,7 +471,7 @@
          * Tests where a dom element is an input of some sort
          * @param {Element|Node} - element to test
          */
-        Input: element => isEl(element) && ['INPUT', 'TEXTAREA'].some(i => element.tagName.includes(i)),
+        Input: element => isEl(element) && ['INPUT', 'TEXTAREA'].some(i => element.tagName.includes(i))
     };
 
     /**
@@ -517,8 +516,8 @@
                         options.evtlisteners.add(func);
                         return options;
                     },
-                    off: () => options.off(func),
-                }
+                    off: () => options.off(func)
+                };
             },
             once(type, func) {
                 function funcwrapper() {
@@ -548,14 +547,14 @@
                 if (!type) type = name;
                 this[name] = (fn, once) => options[once == true ? 'once' : 'on'](type, fn);
                 return options;
-            },
+            }
         };
         forEach(options, (val, key) => {
             defineprop(obj, key, {
                 value: val,
                 enumerable: false,
-                writable: false,
-            })
+                writable: false
+            });
         });
         return obj;
     }
@@ -576,40 +575,40 @@
             if (!isArr(EventType)) EventType = [EventType];
 
             let FuncWrapper = e => {
-                    func(e, e.target, Craft.deglove(Target))
-                }
-                /**
-                 * Change the Event type to listen for
-                 * {string} type - the name of the event/s to listen for
-                 */
+                func(e, e.target, Craft.deglove(Target));
+            };
+            /**
+             * Change the Event type to listen for
+             * {string} type - the name of the event/s to listen for
+             */
             defineprop(this, 'Type', {
-                    set(type) {
-                        let ehdl = this;
-                        //  have you tried turning it on and off again? - THE IT CROWD
-                        ehdl.off;
-                        EventType = type.includes(',') ? type.split(',') : type;
-                        if (!isArr(EventType)) EventType = [EventType];
-                        ehdl.on;
-                        return ehdl
-                    },
-                    get() {
-                        return EventType
-                    },
-                    enumerable: true
-                })
-                /**
-                 * Activates the EventHandler to start listening for the EventType on the Target/Targets
-                 */
+                set(type) {
+                    let ehdl = this;
+                    //  have you tried turning it on and off again? - THE IT CROWD
+                    ehdl.off;
+                    EventType = type.includes(',') ? type.split(',') : type;
+                    if (!isArr(EventType)) EventType = [EventType];
+                    ehdl.on;
+                    return ehdl;
+                },
+                get() {
+                    return EventType;
+                },
+                enumerable: true
+            });
+            /**
+             * Activates the EventHandler to start listening for the EventType on the Target/Targets
+             */
             defineprop(this, 'on', {
                 get() {
                     let ehdl = this;
                     Target.forEach(target => {
                         EventType.forEach(evt => {
-                            target.addEventListener(evt, FuncWrapper)
+                            target.addEventListener(evt, FuncWrapper);
                         });
                     });
                     ehdl.state = true;
-                    return ehdl
+                    return ehdl;
                 },
                 enumerable: true
             });
@@ -622,11 +621,11 @@
                     let ehdl = this;
                     Target.forEach(target => {
                         EventType.forEach(evt => {
-                            target.removeEventListener(evt, FuncWrapper)
+                            target.removeEventListener(evt, FuncWrapper);
                         });
                     });
                     ehdl.state = false;
-                    return ehdl
+                    return ehdl;
                 },
                 enumerable: true
             });
@@ -641,12 +640,12 @@
                     FuncWrapper = e => {
                         func(e, e.target, Craft.deglove(Target));
                         ehdl.off.state = false;
-                    }
+                    };
                     return ehdl.on;
                 },
                 enumerable: true
             });
-        }
+        };
     }
 
     /**
@@ -657,7 +656,7 @@
     let query = (selector, element) => {
         if (isStr(element)) element = doc.querySelector(element);
         return is.Node(element) ? element.querySelector(selector) : doc.querySelector(selector);
-    }
+    };
 
     /**
      * Easy way to get a DOM NodeList or NodeList within another DOM Node using CSS selectors
@@ -665,33 +664,33 @@
      * @param {Node|NodeList|string=} element - Optional Node or CSS selector to search within insead of document
      */
     let queryAll = (selector, element) => {
-            if (isStr(element)) element = queryAll(element);
-            let list;
-            if (Craft.len(element) !== 1 && (isArr(element) || is.NodeList(element))) {
-                list = [];
-                forEach(element, el => {
-                    if (isStr(el)) el = query(el);
-                    if (is.Node(el)) {
-                        el = queryAll(selector, el);
-                        if (is.NodeList(el)) list.concat(toArr(el));
-                    }
-                })
-            } else list = is.NodeList(element) ? element[0].querySelectorAll(selector) : is.Node(element) ? element.querySelectorAll(selector) : doc.querySelectorAll(selector);
-            return is.Null(list) ? list : isArr(list) ? list : toArr(list);
-        }
-        /**
-         * Easy way to loop through Nodes in the DOM using a CSS Selector or a NodeList
-         * @param {string|NodeList|Node} selector - CSS selector to query the DOM Nodes with or NodeList to iterate through
-         * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
-         * @param {function} func - function called on each iteration -> "function( Element , index ) {...}"
-         * @param {boolean=} returnList - should queryEach also return the list of nodes
-         */
+        if (isStr(element)) element = queryAll(element);
+        let list;
+        if (Craft.len(element) !== 1 && (isArr(element) || is.NodeList(element))) {
+            list = [];
+            forEach(element, el => {
+                if (isStr(el)) el = query(el);
+                if (is.Node(el)) {
+                    el = queryAll(selector, el);
+                    if (is.NodeList(el)) list.concat(toArr(el));
+                }
+            });
+        } else list = is.NodeList(element) ? element[0].querySelectorAll(selector) : is.Node(element) ? element.querySelectorAll(selector) : doc.querySelectorAll(selector);
+        return is.Null(list) ? list : isArr(list) ? list : toArr(list);
+    };
+    /**
+     * Easy way to loop through Nodes in the DOM using a CSS Selector or a NodeList
+     * @param {string|NodeList|Node} selector - CSS selector to query the DOM Nodes with or NodeList to iterate through
+     * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
+     * @param {function} func - function called on each iteration -> "function( Element , index ) {...}"
+     * @param {boolean=} returnList - should queryEach also return the list of nodes
+     */
     let queryEach = (selector, element, func, returnList) => {
         if (isFunc(element)) func = element;
         let list = NodeOrQuerytoArr(selector, element);
         forEach(list, func);
         if (returnList) return list;
-    }
+    };
 
     function EventTypes(Target, within, listen) {
         listen = listen || 'on';
@@ -710,14 +709,14 @@
             Mouseout: etype('mouseout'),
             Mouseenter: etype('mouseenter'),
             Mouseleave: etype('mouseleave'),
-            Scroll: etype('scroll'),
+            Scroll: etype('scroll')
         };
     }
 
     function keyhandle(keycode) {
         return (fn, context) => function (evt) {
             if (evt.keyCode === keycode) fn.apply(context || this, arguments);
-        }
+        };
     }
 
     function EvtLT(ListenType) {
@@ -727,7 +726,7 @@
                 args.length < 3 && !args.some(isFunc) ? EventTypes(EventType, Target, ListenType) :
                 isFunc(element) ? EventHandler(EventType, Target, element)[ListenType] :
                 EventHandler(EventType, Target, func, element)[ListenType];
-        }
+        };
     }
 
     /**
@@ -768,7 +767,7 @@
         }
         if (extraAttr != undef) is.Bool(extraAttr) ? stringForm = extraAttr : element.setAttr(extraAttr);
         if (stringForm) element = element.outerHTML;
-        return element
+        return element;
     }
 
     /**
@@ -826,7 +825,7 @@
                 };
                 let random = Craft.randomInt(1000);
                 script.setAttribute('initx', random);
-                code += `\ndocument.head.querySelector('script[initx="${random}"]').dispatchEvent(new UIEvent('load'));\n`
+                code += `\ndocument.head.querySelector('script[initx="${random}"]').dispatchEvent(new UIEvent('load'));\n`;
             }
             if (defer == true) script.defer = defer != false;
             if (nosrc == true) script.text = code;
@@ -835,14 +834,13 @@
             });
             return script;
         }
-    }
+    };
     'table,td,th,tr,article,aside,ul,ol,li,h1,h2,h3,h4,h5,h6,div,span,section,button,br,label,header,i,style,nav,menu,main,menuitem'.split(',').forEach(tag => {
         Dom[tag] = (inner, attr, ea) => Dom.element(tag, inner, attr, ea);
     });
 
     function domNodeList(elements) {
-
-        Craft.omit(Object.getOwnPropertyNames(Array.prototype), "length").forEach(method => {
+        Craft.omit(Object.getOwnPropertyNames(Array.prototype), 'length').forEach(method => {
             elements[method] = Array.prototype[method];
         });
 
@@ -860,30 +858,30 @@
         elements.css = styles => Craft.css(elements, styles);
         elements.addClass = function (Class) {
             elements.forEach(el => {
-                el.classList.add(Class)
+                el.classList.add(Class);
             });
-            return elements
-        }
+            return elements;
+        };
         elements.gotClass = function () {
-            return elements.every(el => toArr(arguments).every(Class => el.classList.contains(Class)))
-        }
+            return elements.every(el => toArr(arguments).every(Class => el.classList.contains(Class)));
+        };
 
         elements.GotSomeClass = function () {
-            return elements.some(el => toArr(arguments).every(Class => el.classList.contains(Class)))
-        }
+            return elements.some(el => toArr(arguments).every(Class => el.classList.contains(Class)));
+        };
 
         elements.stripClass = Class => {
             elements.forEach(el => {
-                el.classList.remove(Class)
+                el.classList.remove(Class);
             });
-            return elements
-        }
+            return elements;
+        };
         elements.toggleClass = (Class, state) => {
             forEach(elements, el => {
                 (is.Bool(state) ? state : el.classList.contains(Class)) ? el.classList.remove(Class): el.classList.add(Class);
             });
-            return elements
-        }
+            return elements;
+        };
 
         /**
          * removes a specific Attribute from the this.element
@@ -891,56 +889,56 @@
          * @param {...string} name of the Attribute/s to strip
          */
         elements.stripAttr = function () {
-                elements.forEach(el => {
-                    forEach(arguments, attr => {
-                        el.removeAttribute(attr)
-                    })
+            elements.forEach(el => {
+                forEach(arguments, attr => {
+                    el.removeAttribute(attr);
                 });
-                return elements
-            }
-            /**
-             * checks if the element has a specific Attribute or Attributes
-             * @memberof dom
-             * @param {string|boolean} name of the Attribute or if true checks that it has some (||) of the attributes or if false checks that it has all of the attributes (&&)
-             * @param {...string} names of attributes to check for
-             */
+            });
+            return elements;
+        };
+        /**
+         * checks if the element has a specific Attribute or Attributes
+         * @memberof dom
+         * @param {string|boolean} name of the Attribute or if true checks that it has some (||) of the attributes or if false checks that it has all of the attributes (&&)
+         * @param {...string} names of attributes to check for
+         */
         elements.hasAttr = function (attr) {
-                if (isStr(attr)) return elements.every(el => el.hasAttribute(attr));
-                return elements.every(el => Craft.flatten(arguments).every(a => el.hasAttribute(a)))
-            }
-            /**
-             * Toggles an attribute on element , optionally add value when toggle is adding attribute
-             * @param {string} name - name of the attribute to toggle
-             * @param {string} val - value to set attribute to
-             * @param {boolean=} rtst - optionally return a bool witht the toggle state otherwise returns the element
-             */
+            if (isStr(attr)) return elements.every(el => el.hasAttribute(attr));
+            return elements.every(el => Craft.flatten(arguments).every(a => el.hasAttribute(a)));
+        };
+        /**
+         * Toggles an attribute on element , optionally add value when toggle is adding attribute
+         * @param {string} name - name of the attribute to toggle
+         * @param {string} val - value to set attribute to
+         * @param {boolean=} rtst - optionally return a bool witht the toggle state otherwise returns the element
+         */
         elements.toggleAttr = function (name, val, rtst) {
-                forEach(elements, el => {
-                    el[W(is.Bool(val) ? !val : el.hasAttr(name), 'strip', 'set', 'Attr')](name, val);
-                });
-                return rtst ? elements.every(el => el.hasAttr(name)) : elements
-            }
-            /**
-             * Sets or adds an Attribute on the element
-             * @memberof dom
-             * @param {string} Name of the Attribute to add/set
-             * @param {string} Value of the Attribute to add/set
-             */
+            forEach(elements, el => {
+                el[W(is.Bool(val) ? !val : el.hasAttr(name), 'strip', 'set', 'Attr')](name, val);
+            });
+            return rtst ? elements.every(el => el.hasAttr(name)) : elements;
+        };
+        /**
+         * Sets or adds an Attribute on the element
+         * @memberof dom
+         * @param {string} Name of the Attribute to add/set
+         * @param {string} Value of the Attribute to add/set
+         */
         elements.setAttr = function (attr, val) {
             forEach(elements, el => {
                 if (!def(val)) {
                     if (isStr(attr)) attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(Attr => {
                             let attribs = Attr.split('=');
-                            def(attribs[1]) ? element.setAttribute(attribs[0], attribs[1]) : element.setAttribute(attribs[0], '')
+                            def(attribs[1]) ? element.setAttribute(attribs[0], attribs[1]) : element.setAttribute(attribs[0], '');
                         }) :
                         element.setAttribute(attr, '');
                     else if (isObj(attr)) forEach(attr, (value, Attr) => {
-                        element.setAttribute(Attr, value)
+                        element.setAttribute(Attr, value);
                     });
                 } else element.setAttribute(attr, val || '');
             });
-            return elements
-        }
+            return elements;
+        };
 
         elements.append = function () {
             forEach(arguments, arg => {
@@ -948,23 +946,23 @@
                     el.appendChild((is.Node(val) ? val : dffstr(val)).cloneNode(true));
                 });
             });
-            return elements
-        }
+            return elements;
+        };
         elements.appendTo = (val, within) => {
             forEach(elements, el => {
                 if (isStr(el)) el = query(val, within);
                 if (is.Node(el)) el.appendChild(el);
             });
-            return elements
-        }
+            return elements;
+        };
         elements.prepend = function () {
             forEach(arguments, val => {
                 forEach(elements, el => {
                     el.insertBefore(W(is.Node(val), val, dffstr(val)).cloneNode(true), el.firstChild);
                 });
             });
-            return elements
-        }
+            return elements;
+        };
         elements.hide = () => elements.css({
             display: 'none'
         });
@@ -975,9 +973,9 @@
         elements.pick = i => {
             if (is.int(i) && def(elements[i])) return dom(elements[i]);
             else if (elements.includes(i)) return dom(i);
-        }
+        };
 
-        return elements
+        return elements;
     }
 
     function Inner(type, el) {
@@ -992,14 +990,14 @@
                 else is.Node(val) || isEl(val) ? el.append(val) : el[type] += isFunc(val) ? val.call(el) : val;
             });
             return el;
-        }
+        };
     }
 
     function newSetGet(key, set, get) {
         defineprop(this, key, {
             set: set,
             get: get
-        })
+        });
     }
 
     function domManip(element, within) {
@@ -1016,12 +1014,12 @@
                 element._cah = {
                     fn: func,
                     dw: true
-                }
+                };
             } else {
                 element._cah = {
                     fn: func,
                     dw: false
-                }
+                };
             }
         }, () => element._cah);
 
@@ -1031,7 +1029,6 @@
          * @param {string=} sets the innerHTML value or when undefined gets the innerHTML value
          */
         element.html = Inner('innerHTML', element);
-
 
         /**
          * changes or returns the textContent value of a Node
@@ -1077,37 +1074,37 @@
                     queryEach(`[bind=${bind}]`, el => {
                         if (val != undef) el.html(val);
                     });
-                }
+                };
                 if (element.isInput) element.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : path, alt);
             }
 
-            if (!obj) Craft.Models.on(cutbind[0], model => {
-                if (model && model.scope) {
-                    obj = model.scope;
+            if (!obj) Craft.modelInit(cutbind[0], scope => {
+                if (scope) {
+                    obj = scope;
                     bindval();
                 }
             });
             else bindval();
-            return element
-        }
+            return element;
+        };
 
         element.unbind = bind => {
 
-            }
-            /**
-             * replaces a Node with another node provided as a parameter/argument
-             * @memberof dom
-             * @param {Node} Node to replace with
-             */
+        };
+        /**
+         * replaces a Node with another node provided as a parameter/argument
+         * @memberof dom
+         * @param {Node} Node to replace with
+         */
         element.replace = val => {
-                element.parentNode.replaceChild(val, element);
-                return element
-            }
-            /**
-             * replaces a Node with another node provided as a parameter/argument
-             * @memberof dom
-             * @param {Node} Node to replace with
-             */
+            element.parentNode.replaceChild(val, element);
+            return element;
+        };
+        /**
+         * replaces a Node with another node provided as a parameter/argument
+         * @memberof dom
+         * @param {Node} Node to replace with
+         */
         element.clone = val => domManip(element.cloneNode(val == undef ? true : val));
 
         /**
@@ -1125,15 +1122,15 @@
             }
             fetch(src, fetchoptions || {
                 mode: 'cors',
-                credentials: 'same-origin',
+                credentials: 'same-origin'
             }).then(res => {
                 if (!res.ok) console.warn(`<${element.localName}> : unable to import view - ${src}`);
                 else res.text().then(view => {
                     if (cache) localStorage.setItem(src, view);
-                    element.html(view)
+                    element.html(view);
                 });
             });
-        }
+        };
 
         /**
          * append the Element to another node using either a CSS selector or a Node
@@ -1141,36 +1138,36 @@
          * @param {Node|string} CSS selector or Node to append the this.element to
          */
         element.appendTo = function (val, within) {
-                if (isStr(val)) val = query(val, within);
-                if (is.Node(val)) val.appendChild(element);
-                return element
-            }
-            /**
-             * append text or a Node to the element
-             * @memberof dom
-             * @param {Node|string} String or Node to append to the this.element
-             */
+            if (isStr(val)) val = query(val, within);
+            if (is.Node(val)) val.appendChild(element);
+            return element;
+        };
+        /**
+         * append text or a Node to the element
+         * @memberof dom
+         * @param {Node|string} String or Node to append to the this.element
+         */
         element.append = function () {
-                let domfrag = dom.frag();
-                forEach(arguments, val => {
-                    domfrag.appendChild(is.Node(val) ? val : dffstr(val))
-                });
-                element.appendChild(domfrag);
-                return element
-            }
-            /**
-             * prepend text or a Node to the element
-             * @memberof dom
-             * @param {Node|string} String or Node to prepend to the this.element
-             */
+            let domfrag = dom.frag();
+            forEach(arguments, val => {
+                domfrag.appendChild(is.Node(val) ? val : dffstr(val));
+            });
+            element.appendChild(domfrag);
+            return element;
+        };
+        /**
+         * prepend text or a Node to the element
+         * @memberof dom
+         * @param {Node|string} String or Node to prepend to the this.element
+         */
         element.prepend = function () {
             let domfrag = dom.frag();
             forEach(arguments, val => {
-                domfrag.appendChild(is.Node(val) ? val : dffstr(val))
+                domfrag.appendChild(is.Node(val) ? val : dffstr(val));
             });
             element.insertBefore(domfrag, element.firstChild);
-            return element
-        }
+            return element;
+        };
 
         /**
          * @func element.modify - used to do things with your element without breaking scope
@@ -1178,31 +1175,31 @@
          * @returns (element) to make it chainable
          */
         element.modify = func => {
-                func.call(element, element);
-                return element;
-            }
-            /**
-             * Listen for Events on the element or on all the elements in the NodeList
-             * @memberof dom
-             * @param {string} string indicating the type of event to listen for
-             * @param {function} func - handler function for the event
-             * @returns handler (off,once,on)
-             */
+            func.call(element, element);
+            return element;
+        };
+        /**
+         * Listen for Events on the element or on all the elements in the NodeList
+         * @memberof dom
+         * @param {string} string indicating the type of event to listen for
+         * @param {function} func - handler function for the event
+         * @returns handler (off,once,on)
+         */
         element.on = (eventType, func) => on(eventType, element, func);
 
         element.emit = (evt, detail) => {
-            if (!isStr(evt)) throw new TypeError("element.emit : event name needs to be a string");
+            if (!isStr(evt)) throw new TypeError('element.emit : event name needs to be a string');
             element.dispatchEvent(new CustomEvent(evt, {
                 detail: def(detail) || null
-            }))
-        }
+            }));
+        };
 
         element.newSetGet('ondestroy', fn => {
-            if (isFunc(fn)) element.on('destroy', fn)
+            if (isFunc(fn)) element.on('destroy', fn);
         });
 
         function evlt(type) {
-            return (fn, ltype) => (ltype ? once : on)(type, element, fn)
+            return (fn, ltype) => (ltype ? once : on)(type, element, fn);
         }
 
         element.Click = evlt('click');
@@ -1221,7 +1218,7 @@
 
         element.onScroll = (func, pd) => Craft.onScroll(element, func, pd);
 
-        /*let keypress = code => (fn, type) => evlt('keydown')(element, e => {
+        /* let keypress = code => (fn, type) => evlt('keydown')(element, e => {
             if (e.which == code || e.keyCode == code) fn(e, element)
         }, type);
         element.Enter = keypress(13);
@@ -1248,8 +1245,7 @@
          */
         element.gotClass = function () {
             return toArr(arguments).every(Class => element.classList.contains(Class));
-        }
-
+        };
 
         /**
          * Add a CSS class to the element
@@ -1257,79 +1253,79 @@
          * @param {string} name of the class to add
          */
         element.addClass = function () {
-                forEach(arguments, Class => {
-                    element.classList.add(Class)
-                });
-                return element
-            }
-            /**
-             * removes a specific CSS class from the element
-             * @memberof dom
-             * @param {...string} name of the class to strip
-             */
+            forEach(arguments, Class => {
+                element.classList.add(Class);
+            });
+            return element;
+        };
+        /**
+         * removes a specific CSS class from the element
+         * @memberof dom
+         * @param {...string} name of the class to strip
+         */
         element.stripClass = function () {
-                forEach(arguments, Class => {
-                    element.classList.remove(Class)
-                });
-                return element
-            }
-            /**
-             * Toggle a CSS class to the element
-             * @memberof dom
-             * @param {string} name of the class to add
-             * @param {boolean=} state - optionally toggle class either on or off with bool
-             */
+            forEach(arguments, Class => {
+                element.classList.remove(Class);
+            });
+            return element;
+        };
+        /**
+         * Toggle a CSS class to the element
+         * @memberof dom
+         * @param {string} name of the class to add
+         * @param {boolean=} state - optionally toggle class either on or off with bool
+         */
         element.toggleClass = function (Class, state) {
-                if (!is.Bool(state)) state = element.gotClass(Class);
-                element[W(state, 'strip', 'add', 'Class')](Class);
-                return element
-            }
-            /**
-             * removes a specific Attribute from the this.element
-             * @memberof dom
-             * @param {...string} name of the Attribute/s to strip
-             */
+            if (!is.Bool(state)) state = element.gotClass(Class);
+            element[W(state, 'strip', 'add', 'Class')](Class);
+            return element;
+        };
+        /**
+         * removes a specific Attribute from the this.element
+         * @memberof dom
+         * @param {...string} name of the Attribute/s to strip
+         */
         element.stripAttr = function () {
-                forEach(arguments, element.removeAttribute.bind(element));
-                return element
-            }
-            /**
-             * checks if the element has a specific Attribute or Attributes
-             * @memberof dom
-             * @param {string|boolean} name of the Attribute or if true checks that it has some (||) of the attributes or if false checks that it has all of the attributes (&&)
-             * @param {...string} names of attributes to check for
-             */
+            forEach(arguments, element.removeAttribute.bind(element));
+            return element;
+        };
+        /**
+         * checks if the element has a specific Attribute or Attributes
+         * @memberof dom
+         * @param {string|boolean} name of the Attribute or if true checks that it has some (||) of the attributes or if false checks that it has all of the attributes (&&)
+         * @param {...string} names of attributes to check for
+         */
         element.hasAttr = function () {
-                let args = toArr(arguments);
-                if (isStr(args[0]) && args.length == 1) return element.hasAttribute(args[0]);
-                return args.every(a => element.hasAttribute(a))
-            }
-            /**
-             * Sets or adds an Attribute on the element
-             * @memberof dom
-             * @param {string} Name of the Attribute to add/set
-             * @param {string} Value of the Attribute to add/set
-             */
+            let args = toArr(arguments);
+            if (isStr(args[0]) && args.length == 1) return element.hasAttribute(args[0]);
+            return args.every(a => element.hasAttribute(a));
+        };
+        /**
+         * Sets or adds an Attribute on the element
+         * @memberof dom
+         * @param {string} Name of the Attribute to add/set
+         * @param {string} Value of the Attribute to add/set
+         */
         element.setAttr = (attr, val) => {
-                if (!def(val)) {
-                    if (isStr(attr)) attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(Attr => {
-                        def(Attr.split('=')[1]) ? element.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : element.setAttribute(Attr.split('=')[0], '')
-                    }) : element.setAttribute(attr, '');
-                    else if (isObj(attr)) forEach(attr, (value, Attr) => {
-                        element.setAttribute(Attr, value)
-                    });
-                } else element.setAttribute(attr, val || '');
-                return element
-            }
-            /**
-             * Gets the value of an attribute , short alias for element.getAttribute
-             * {string} attr - name of attribute to get
-             */
+            if (!def(val)) {
+                if (isStr(attr)) attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(Attr => {
+                    def(Attr.split('=')[1]) ? element.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : element.setAttribute(Attr.split('=')[0], '');
+                }) : element.setAttribute(attr, '');
+                else if (isObj(attr)) forEach(attr, (value, Attr) => {
+                    element.setAttribute(Attr, value);
+                });
+            } else element.setAttribute(attr, val || '');
+            return element;
+        };
+        /**
+         * Gets the value of an attribute , short alias for element.getAttribute
+         * {string} attr - name of attribute to get
+         */
         element.getAttr = element.getAttribute;
         element.attr = (attr, val) => {
             if (isStr(val) || isObj(attr)) return element.setAttr(attr, val);
             if (isStr(attr) && !def(val)) return element.getAttr(attr);
-        }
+        };
         element.prop = element.hasAttr;
         /**
          * Toggles an attribute on element , optionally add value when toggle is adding attribute
@@ -1338,13 +1334,13 @@
          * @param {boolean=} rtst - optionally return a bool witht the toggle state otherwise returns the element
          */
         element.toggleAttr = (name, val, rtst) => {
-                element[W(is.Bool(val) ? !val : element.hasAttr(name), 'strip', 'set', 'Attr')](name, val);
-                return rtst ? element.hasAttr(name) : element
-            }
-            /**
-             * Hides and element by setting display none
-             * @todo : Smooth animation
-             */
+            element[W(is.Bool(val) ? !val : element.hasAttr(name), 'strip', 'set', 'Attr')](name, val);
+            return rtst ? element.hasAttr(name) : element;
+        };
+        /**
+         * Hides and element by setting display none
+         * @todo : Smooth animation
+         */
         element.hide = () => element.css({
             display: 'none'
         });
@@ -1362,15 +1358,15 @@
          */
         element.removeAfter = time => {
             setTimeout(() => {
-                element.remove()
+                element.remove();
             }, time || 5000);
-            return element
-        }
+            return element;
+        };
 
         defineprop(element, 'Siblings', {
             get() {
                 return Craft.omit(element.parentNode.children, element).filter(el => {
-                    if (isEl(el)) return el
+                    if (isEl(el)) return el;
                 });
             }
         });
@@ -1386,9 +1382,8 @@
          * @param {string|number=} pixel value to set
          */
         element.newSetGet('Width', pixels => {
-            element.style.width = pixels
+            element.style.width = pixels;
         }, () => element.getRect().with);
-
 
         /**
          * sets or gets the element's pixel height
@@ -1396,7 +1391,7 @@
          * @param {string|number=} pixel value to set
          */
         element.newSetGet('Height', pixels => {
-            element.style.height = pixels
+            element.style.height = pixels;
         }, () => element.getRect().height);
         /**
          * move the element using either css transforms or plain css possitioning
@@ -1407,23 +1402,23 @@
          * @param {boolean=} chainable - should this method be chainable defaults to false for performance reasons
          */
         element.move = function (x, y, transform, position, chainable) {
-                if (is.Bool(position)) chainable = position;
-                if (isStr(transform)) position = transfrom;
-                if (isStr(position)) element.style.position = position;
-                element.css(transform == true ? {
-                    transform: `translateX(${x}px) translateY(${y}px)`
-                } : {
-                    left: x + 'px',
-                    top: y + 'px'
-                });
-                if (chainable) return element
-            }
-            /**
-             * performs a query inside the element
-             * @memberof dom
-             * @param {string} CSS selector
-             * @returns {Node|Null}
-             */
+            if (is.Bool(position)) chainable = position;
+            if (isStr(transform)) position = transfrom;
+            if (isStr(position)) element.style.position = position;
+            element.css(transform == true ? {
+                transform: `translateX(${x}px) translateY(${y}px)`
+            } : {
+                left: x + 'px',
+                top: y + 'px'
+            });
+            if (chainable) return element;
+        };
+        /**
+         * performs a query inside the element
+         * @memberof dom
+         * @param {string} CSS selector
+         * @returns {Node|Null}
+         */
         element.query = selector => query(selector, element);
 
         element.next = (reset, dm) => {
@@ -1431,13 +1426,13 @@
                 nextnode = sb.indexOf(element) + 1;
             if (!sb[nextnode]) return reset ? (dm ? dom(sb[0]) : sb[0]) : null;
             return dm ? dom(sb[nextnode]) : sb[nextnode];
-        }
+        };
         element.previous = (reset, dm) => {
             let sb = toArr(element.parentNode.children),
                 nextnode = sb.indexOf(element) - 1;
             if (!sb[nextnode]) return reset ? (dm ? dom(sb[sb.length - 1]) : sb[sb.length - 1]) : null;
             return dm ? dom(sb[nextnode]) : sb[nextnode];
-        }
+        };
 
         /**
          * performs a queryAll inside the element
@@ -1448,15 +1443,15 @@
         element.queryAll = selector => queryAll(selector, element);
 
         if (element.isInput) {
-            element.SyncInput = (obj, key, onset) => Craft.SyncInput(element, obj, key, onset)
-            element.disconectInputSync = () => Craft.disconectInputSync(element)
+            element.SyncInput = (obj, key, onset) => Craft.SyncInput(element, obj, key, onset);
+            element.disconectInputSync = () => Craft.disconectInputSync(element);
         }
 
         element.observe = (func, options, name) => {
             if (!isStr(name)) name = 'MutObserver';
             element[name] = new MutationObserver(muts => {
                 muts.forEach(mut => {
-                    func(mut, mut.type, mut.target, mut.addedNodes, mut.removedNodes)
+                    func(mut, mut.type, mut.target, mut.addedNodes, mut.removedNodes);
                 });
             });
             element[name].observe(element, options || {
@@ -1464,30 +1459,34 @@
                 childList: true,
                 subtree: true
             });
-            return element
-        }
+            return element;
+        };
         element.unobserve = name => {
             if (!isStr(name)) name = 'MutObserver';
             if (def(element[name])) {
                 element[name].disconnect();
-                delete element[name]
+                delete element[name];
             }
-            return element
-        }
-
+            return element;
+        };
+        let hasAttrEmitter = false;
         element.observeAttrs = func => {
             if (!isObj(element.attrX)) element.attrX = eventemitter({});
-            element.attrX.on('attr', function (attr) {
-                if (func) func.apply(element, arguments);
-                element.attrX.emit.apply(null, ['attr:' + attr].concat(arguments));
+            if(!hasAttrEmitter) element.attrX.on('attr', function (attr) {
+              if(!hasAttrEmitter) {
+                element.attrX.emit.apply(element, ['attr:' + attr].concat(arguments));
+                hasAttrEmitter = true;
+              }
             });
-        }
-        element.stopAttrObserve = state => {
+            if(isFunc(func)) return element.attrX.on('attr', function (attr) {
+              func.apply(element,arguments);
+            });
+        };
+        element.unobserveAttrs = state => {
             if (element.attrX) element.attrX.stopall(state);
-        }
-        return element
-    };
-
+        };
+        return element;
+    }
 
     /**
      * Function that returns many useful methods for interacting with and manipulating the DOM or creating elements
@@ -1507,11 +1506,11 @@
             if (is.NodeList(element)) {
                 element = toArr(element).filter(isEl);
                 if (element.length != 1) return domNodeList(element);
-                else element = element[0]
+                else element = element[0];
             }
         } else if (isStr(element)) element = query(element, within);
         if (is.Node(element)) return !element['_DOMM'] ? domManip(element) : element;
-        return Dom
+        return Dom;
     }
     for (let key in Dom) defineprop(dom, key, getpropdescriptor(Dom, key));
     if (root.Proxy) dom = new Proxy(dom, {
@@ -1520,25 +1519,24 @@
                 if (Dom.hasOwnProperty(key)) return Dom[key];
                 return (inner, attr, eattr, str) => Dom.element(key, inner, attr, eattr, str);
             }
-            return obj[key]
+            return obj[key];
         }
     });
-
 
     function observable(obj) {
         if (obj == undefined) obj = {};
         defineprop(obj, 'listeners', {
             value: {
                 Get: new Set,
-                Set: new Set,
+                Set: new Set
             },
             enumerable: false,
-            writable: false,
+            writable: false
         });
         defineprop(obj, 'isObservable', {
             value: true,
             enumerable: false,
-            writable: false,
+            writable: false
         });
         ['$get', '$set'].forEach(t => {
             let Type = 'Set';
@@ -1552,22 +1550,22 @@
                     if (!isFunc(func)) throw new Error('no function');
                     let listener = {
                         prop: isStr(prop) ? prop : '*',
-                        fn: func,
-                    }
+                        fn: func
+                    };
                     let options = {
                         get on() {
                             obj.listeners[Type].add(listener);
-                            return options
+                            return options;
                         },
                         get off() {
                             obj.listeners[Type].delete(listener);
-                            return options
-                        },
+                            return options;
+                        }
                     };
                     return options.on;
                 },
                 enumerable: false,
-                writable: false,
+                writable: false
             });
         });
 
@@ -1577,24 +1575,24 @@
                 let listener = {
                     prop: isStr(prop) ? prop : '*',
                     fn: func,
-                    multi: true,
-                }
+                    multi: true
+                };
                 let options = {
                     get on() {
                         obj.listeners.Get.add(listener);
                         obj.listeners.Set.add(listener);
-                        return options
+                        return options;
                     },
                     get off() {
                         obj.listeners.Get.delete(listener);
                         obj.listeners.Set.delete(listener);
-                        return options
-                    },
+                        return options;
+                    }
                 };
                 return options.on;
             },
             enumerable: false,
-            writable: false,
+            writable: false
         });
         obj = eventemitter(obj);
         defineprop(obj, 'get', {
@@ -1607,7 +1605,7 @@
                     return val != undefined ? val : obj[key];
                 } else return obj[key];
             },
-            enumerable: false,
+            enumerable: false
         });
         defineprop(obj, 'set', {
             value(key, value) {
@@ -1622,7 +1620,7 @@
                 obj[key] = val;
                 return val;
             },
-            enumerable: false,
+            enumerable: false
         });
         forEach(obj, (val, key) => {
             if (isObj(val) && !val.isObservable) obj[key] = observable(val);
@@ -1676,10 +1674,10 @@
          */
         arrDiff(arr, newArr, func) {
             let added = newArr.filter(item => {
-                    if (!arr.includes(item)) return item
+                    if (!arr.includes(item)) return item;
                 }),
                 removed = arr.filter(item => {
-                    if (newArr.includes(item)) return item
+                    if (newArr.includes(item)) return item;
                 }),
                 diff = Craft.omit(added.concat(removed), undef);
             if (isFunc(func) && !is.empty(diff)) func(arr, newArr, added, removed, diff);
@@ -1689,7 +1687,7 @@
                 diff: diff,
                 added: added,
                 removed: removed
-            }
+            };
         },
         deglove: arr => is.Arraylike(arr) && arr.length == 1 ? arr[0] : arr,
         degloveStr,
@@ -1768,7 +1766,7 @@
                 for (; len > 0; len--) arr.push(isFunc(val[0]) ? val[0]() : val[0]);
             else
                 for (; len > 0; len--) arr.push(Craft.array(val.length, val));
-            return arr
+            return arr;
         },
         /**
          * Gets all the property keys in any object even the hiden ones
@@ -1780,9 +1778,9 @@
         getAllKeys(obj) {
             let props = [];
             do {
-                props = props.concat(Object.getOwnPropertyNames(obj))
+                props = props.concat(Object.getOwnPropertyNames(obj));
             } while (obj = Object.getPrototypeOf(obj));
-            return props
+            return props;
         },
         unique: arr => toArr(new Set(Craft.flatten(arr))),
         /**
@@ -1826,7 +1824,7 @@
                         else temp.isObservable ? temp.set(path[plen], val) : temp[path[plen]] = val;
                     }
                 }
-                if (robj) return obj
+                if (robj) return obj;
             } catch (e) {
                 console.warn(`Craft.setDeep : ran into some trouble setting ${path}`);
             }
@@ -1876,7 +1874,7 @@
             Craft.omit(arguments, host).forEach(obj => {
                 for (let key in obj) defineprop(host, key, getpropdescriptor(obj, key));
             });
-            return host
+            return host;
         },
         completeAssign(host) {
             Craft.omit(arguments, host).forEach(source => {
@@ -1904,7 +1902,7 @@
          * @returns {Array|Object} cloned result
          */
         clone(val) {
-            return isObj(val) ? Object.create(val) : toArr(val)
+            return isObj(val) ? Object.create(val) : toArr(val);
         },
         /**
          * Craft.omitFrom will omit values from any arraylike object or string
@@ -1919,9 +1917,9 @@
                     while (Arr.includes(a)) Arr = Arr.replace(a, '');
                 });
             else Arr = (is.Arraylike(Arr) ? toArr(Arr) : Arr).filter(e => {
-                if (!args.some(v => v == e)) return e
+                if (!args.some(v => v == e)) return e;
             });
-            return Arr
+            return Arr;
         },
         /**
          * Craft.has checks whether or not strings or arrays contains
@@ -1965,7 +1963,7 @@
                     },
                     options = {
                         off(fn) {
-                            if(fn) fn(link);
+                            if (fn) fn(link);
                             Craft.router.handlers.delete(handler);
                             return options;
                         },
@@ -1973,7 +1971,7 @@
                             if (isFunc(wrap)) handler.func = () => {
                                 handler.func(link);
                                 wrap(link, handler.func);
-                            }
+                            };
                             Craft.router.handlers.add(handler);
                             return options;
                         },
@@ -1981,7 +1979,7 @@
                             options.off();
                             options.on(options.off);
                         }
-                    }
+                    };
                 return options.on();
             },
             handle(route, func) {
@@ -1989,61 +1987,61 @@
                     if (Locs(l => l == route)) func(route);
                     return Craft.router.addHandle(route, func);
                 } else if (isArr(route)) {
-                  let handlers = [];
-                  forEach(route, link => {
-                      handlers.push(Craft.router.handle(route, func));
-                  });
-                  return handlers;
+                    let handlers = [];
+                    forEach(route, link => {
+                        handlers.push(Craft.router.handle(route, func));
+                    });
+                    return handlers;
                 }
             },
             handlers: new Set,
             links: [],
             link(Selector, link, newtab) {
                 let target = dom(Selector);
-                if(is.NodeList(target) || is.Node(target)) {
-                  let attr = {
-                    link,
-                  };
-                  if(newtab) attr.newtab = true;
-                  target.setAttr(attr);
+                if (is.NodeList(target) || is.Node(target)) {
+                    let attr = {
+                        link
+                    };
+                    if (newtab) attr.newtab = true;
+                    target.setAttr(attr);
                 }
             },
             open(link, newtab) {
-                !newtab ? location = link : open(link)
+                !newtab ? location = link : open(link);
             },
             set title(title) {
-                doc.title = title
+                doc.title = title;
             },
             get title() {
-                return doc.title
+                return doc.title;
             }
         },
         Cookies: {
             get(key) {
-                return decodeURIComponent(doc.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1")) || null
+                return decodeURIComponent(doc.cookie.replace(new RegExp('(?:(?:^|.*;)\\s*' + encodeURIComponent(key).replace(/[\-\.\+\*]/g, '\\$&') + '\\s*\\=\\s*([^;]*).*$)|^.*$'), '$1')) || null;
             },
             set(key, val, expires, path, domain, secure) {
                 if (!key || /^(?:expires|max\-age|path|domain|secure)$/i.test(key)) return false;
-                let expiry = "";
+                let expiry = '';
                 if (expires) {
-                    if (is.Num(expires)) expiry = expires == Infinity ? "; expires=Fri, 11 April 9997 23:59:59 UTC" : "; max-age=" + expires;
-                    if (isStr(expires)) expiry = "; expires=" + expires;
-                    if (is.Date(expires)) expiry = "; expires=" + expires.toUTCString();
+                    if (is.Num(expires)) expiry = expires == Infinity ? '; expires=Fri, 11 April 9997 23:59:59 UTC' : '; max-age=' + expires;
+                    if (isStr(expires)) expiry = '; expires=' + expires;
+                    if (is.Date(expires)) expiry = '; expires=' + expires.toUTCString();
                 }
-                doc.cookie = encodeURIComponent(key) + "=" + encodeURIComponent(val) + expiry + (domain ? "; domain=" + domain : "") + (path ? "; path=" + path : "") + (secure ? "; secure" : "");
-                return true
+                doc.cookie = encodeURIComponent(key) + '=' + encodeURIComponent(val) + expiry + (domain ? '; domain=' + domain : '') + (path ? '; path=' + path : '') + (secure ? '; secure' : '');
+                return true;
             },
-            has: key => key != undef && new RegExp("(?:^|;\\s*)" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=").test(doc.cookie),
+            has: key => key != undef && new RegExp('(?:^|;\\s*)' + encodeURIComponent(key).replace(/[\-\.\+\*]/g, '\\$&') + '\\s*\\=').test(doc.cookie),
             remove(key, path, domain) {
                 if (!Craft.Cookies.has(key)) return false;
-                doc.cookie = encodeURIComponent(key) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT" + (domain ? "; domain=" + domain : "") + (path ? "; path=" + path : "");
-                return true
+                doc.cookie = encodeURIComponent(key) + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT' + (domain ? '; domain=' + domain : '') + (path ? '; path=' + path : '');
+                return true;
             },
             keys() {
-                return doc.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/).map(c => {
+                return doc.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, '').split(/\s*(?:\=[^;]*)?;\s*/).map(c => {
                     decodeURIComponent(c);
-                    return c
-                })
+                    return c;
+                });
             }
         },
         /**
@@ -2060,7 +2058,7 @@
             if (!address.includes('ws://') && !address.includes('wss://')) address = (location.protocol === 'http:' ? 'ws://' : 'wss://') + address;
             if (is.URL(address)) {
                 function newSock() {
-                    return protocols ? new WebSocket(address, protocols) : new WebSocket(address)
+                    return protocols ? new WebSocket(address, protocols) : new WebSocket(address);
                 }
 
                 let Options = {
@@ -2087,12 +2085,12 @@
                         return Options.message;
                     },
                     close() {
-                        Options.socket.close()
+                        Options.socket.close();
                     },
                     reopen() {
-                        OpenSock(Options.open ? Options.socket : (Options.socket = newSock()))
+                        OpenSock(Options.open ? Options.socket : (Options.socket = newSock()));
                     }
-                }
+                };
 
                 function OpenSock(sock) {
                     sock.onopen = () => {
@@ -2100,16 +2098,16 @@
                         sock.onmessage = e => {
                             Options.message = e.data;
                             Options.recievers.forEach(fn => {
-                                fn(e.data, e)
-                            })
-                        }
-                    }
+                                fn(e.data, e);
+                            });
+                        };
+                    };
                     sock.onclose = () => {
-                        Options.open = false
-                    }
+                        Options.open = false;
+                    };
                     sock.onerror = e => {
-                        throw e
-                    }
+                        throw e;
+                    };
                 }
                 OpenSock((Options.socket = newSock()));
                 return Options;
@@ -2120,15 +2118,15 @@
             enter: keyhandle(13),
             delete: keyhandle(8),
             escape: keyhandle(27),
-            spacebar: keyhandle(32),
+            spacebar: keyhandle(32)
         },
         curry: fn => makeFn(fn, [], fn.length),
         after(n, func) {
-            !isFunc(func) && isFunc(n) ? func = n : console.error("after: no function");
+            !isFunc(func) && isFunc(n) ? func = n : console.error('after: no function');
             n = Number.isFinite(n = +n) ? n : 0;
             if (--n < 1) return function () {
-                return func.apply(this, arguments)
-            }
+                return func.apply(this, arguments);
+            };
         },
         debounce(wait, func, immediate) {
             let timeout;
@@ -2142,8 +2140,8 @@
                     callNow = immediate && !timeout;
                 clearTimeout(timeout);
                 timeout = setTimeout(later, wait);
-                if (callNow) func.apply(scope, args)
-            }
+                if (callNow) func.apply(scope, args);
+            };
         },
         throttle(wait, func, options) {
             let context, args, result,
@@ -2172,8 +2170,8 @@
                     result = func.apply(context, args);
                     if (!timeout) context = args = null;
                 } else if (!timeout && options.trailing == true) timeout = setTimeout(later, remaining);
-                return result
-            }
+                return result;
+            };
         },
         once(func, context) {
             let result;
@@ -2182,8 +2180,8 @@
                     result = func.apply(context || this, arguments);
                     func = null;
                 }
-                return result
-            }
+                return result;
+            };
         },
         css(element, styles, prop) {
             if (isObj(styles))
@@ -2211,7 +2209,7 @@
          * @param (string) css - css code to execute
          */
         addCSS(css, noimport) {
-            query('style[crafterstyles]', head).textContent += noimport ? css : `@import url("${Craft.URLfrom(css,{type : 'text/css'})}");\n`;
+            query('style[crafterstyles]', head).textContent += noimport ? css : `@import url("${Craft.URLfrom(css, {type: 'text/css'})}");\n`;
         },
         /**
          * Craft.importCSS takes in a source then attempts to fetch and execute it
@@ -2248,7 +2246,7 @@
                             head.appendChild(dom.script(code, {}, false, pass, true));
                     });
                 });
-            })
+            });
         },
         loadScripts(urls, funcexec, fetchattr) {
             return promise((pass, fail) => {
@@ -2265,9 +2263,9 @@
         hasNums: str => /\d/g.test(str),
         len(val) {
             try {
-                return isObj(val) ? Object.keys(val).length : is.Map(val) || is.Set(val) ? val.size : val.length
+                return isObj(val) ? Object.keys(val).length : is.Map(val) || is.Set(val) ? val.size : val.length;
             } catch (e) {}
-            return -1
+            return -1;
         },
         DateIndex(Collection, date) {
             for (let i = 0; i < Collection.length; i++)
@@ -2275,10 +2273,10 @@
             return -1;
         },
         type() {
-            return Craft.deglove(toArr(arguments).map(t => typeof t))
+            return Craft.deglove(toArr(arguments).map(t => typeof t));
         },
         memoize(func, resolver) {
-            if (!isFunc(func) || (resolver && !isFunc(resolver))) throw new TypeError("no function");
+            if (!isFunc(func) || (resolver && !isFunc(resolver))) throw new TypeError('no function');
             let cache = new WeakMap,
                 memoized = function () {
                     let args = arguments,
@@ -2302,7 +2300,7 @@
             min: 60000,
             hour: 3600000,
             day: 86400000,
-            year: 365 * 86400000,
+            year: 365 * 86400000
         },
         observable,
         CustomAttributes: [],
@@ -2322,26 +2320,26 @@
                     while (nextArgs) result = fn.apply(this, [nextArgs, nextArgs = null][0]);
                     active = false;
                 }
-                return result
-            }
+                return result;
+            };
         },
         animFrame(func) {
             let interval, options = {
                 start() {
                     func();
                     interval = requestAnimationFrame(options.start);
-                    return options
+                    return options;
                 },
                 stop() {
                     cancelAnimationFrame(interval);
-                    return options
+                    return options;
                 },
                 reset(fn) {
                     options.stop();
                     if (isFunc(fn)) func = fn;
                     return options.start();
                 }
-            }
+            };
             return options;
         },
         JumpTo(target, options) {
@@ -2362,14 +2360,14 @@
                         t--;
                         return -c / 2 * (t * (t - 2) - 1) + b;
                     })(elapsedTime, start, distance, options.duration));
-                    if (elapsedTime < options.duration) requestAnimationFrame(loop)
+                    if (elapsedTime < options.duration) requestAnimationFrame(loop);
                     else {
                         scrollTo(0, start + distance);
                         if (isFunc(options.func)) options.func();
                         startTime = undef;
                     }
-                }
-            requestAnimationFrame(loop)
+                };
+            requestAnimationFrame(loop);
         },
         /**
          * converts Objects or URL variable strings to a FormData object
@@ -2382,10 +2380,10 @@
                 if (isStr(v)) {
                     v = v.split('=');
                     if (v.length == 1) v[1] = '';
-                    formData.append(v[0], v[1])
-                } else formData.append(key, v)
+                    formData.append(v[0], v[1]);
+                } else formData.append(key, v);
             });
-            return formData
+            return formData;
         },
         /**
          * handles scrolling events
@@ -2396,8 +2394,8 @@
         onScroll(element, func, preventDefault) {
             return on('wheel', element, e => {
                 if (preventDefault) e.preventDefault();
-                func(e.deltaY < 1, e)
-            })
+                func(e.deltaY < 1, e);
+            });
         },
         /**
          * returns a promise when the DOM and WebComponents are all finished loading
@@ -2414,32 +2412,35 @@
                 }, 20);
                 setTimeout(() => {
                     clearInterval(check);
-                    if (!Ready || doc.readyState === "complete") fail('loading took too long loaded with errors :(')
-                }, 5500)
-            })
+                    if (!Ready || doc.readyState === 'complete') fail('loading took too long loaded with errors :(');
+                }, 5500);
+            });
         },
         model(name, func) {
             if (isFunc(func) && isStr(name)) {
                 if (!def(Craft.Models[name])) {
                     let scope = observable();
-                    Craft.Models[name] = {
-                        func: func.bind(scope),
-                        scope,
-                    }
+                    func = func.bind(scope);
+                    Craft.Models.set(name, {
+                        func,
+                        scope
+                    });
+                    Craft.Models.emit(name, scope);
+                    func(scope);
                     return {
                         view(fn) {
-                            Craft.WhenReady.then(fn.bind(scope, scope))
+                            Craft.WhenReady.then(fn.bind(scope, scope));
                         }
-                    }
+                    };
                 }
                 throw new Error('Craft Model already exists');
             }
         },
         modelInit(name, func) {
-            if (Craft.Models[name] != undef) func.call(Craft, Craft.Models[name].scope);
-            else Craft.Models.once(name, model => {
-                func.call(Craft, model.scope);
-            });
+            Craft.Models[name] != undef ? func.call(Craft, Craft.Models[name].scope) :
+                Craft.Models.once(name, scope => {
+                    func.call(Craft, scope);
+                });
         },
         fromModel(key, val) {
             let cutkey = cutdot(key),
@@ -2448,7 +2449,6 @@
                 type = (IsValDefined ? 'set' : 'get') + 'Deep';
             if (def(Craft.Models[ck])) return cutkey.length == 1 && !IsValDefined ? Craft.Models[ck].scope :
                 Craft[type](Craft.Models[ck].scope, joindot(Craft.omit(cutkey, ck)), val);
-
         },
         getPath(path, full) {
             try {
@@ -2473,7 +2473,7 @@
                 if (def(val)) return val;
                 if (objaccessor === prop && def(obj)) return obj;
             } catch (e) {
-                return {}
+                return {};
             }
         },
         /**
@@ -2502,7 +2502,7 @@
                     });
                 }
                 ready() ? apply() : Craft.WhenReady.then(() => {
-                    setTimeout(apply, 20)
+                    setTimeout(apply, 20);
                 });
             }
         },
@@ -2522,9 +2522,9 @@
             if (caps && !Craft.hasCaps(pass)) return reasons ? pw + 'should have a Capital letter' : false;
             if (number && !Craft.hasNums(pass)) return reasons ? pw + 'should have a number' : false;
             if (includeChars.length) {
-                if (!includeChars.some(ch => pass.includes(ch))) return reasons ? '' : false
+                if (!includeChars.some(ch => pass.includes(ch))) return reasons ? '' : false;
             }
-            return false
+            return false;
         },
         /**
          * converts camel case strings to dashed strings
@@ -2539,7 +2539,7 @@
             if (bytes == 0) return '0 Bytes';
             let k = 1000,
                 i = Math.floor(Math.log(bytes) / Math.log(k));
-            return (bytes / Math.pow(k, i)).toPrecision(decimals + 1 || 3) + ' ' + 'Bytes,KB,MB,GB,TB,PB,EB,ZB,YB'.split(',')[i]
+            return (bytes / Math.pow(k, i)).toPrecision(decimals + 1 || 3) + ' ' + 'Bytes,KB,MB,GB,TB,PB,EB,ZB,YB'.split(',')[i];
         },
         randomNum(max, min) {
             min = min || 0;
@@ -2558,7 +2558,7 @@
          * @return (string)
          */
         randomStr(max, min) {
-            let text = "";
+            let text = '';
             min = min || 0;
             max = max || 6;
 
@@ -2588,27 +2588,27 @@
                     dealtWith = [];
                 for (let key in config) {
                     if (!dealtWith.includes(key)) {
-                        if (key.includes("set_")) {
-                            let sgKey = key.split("_")[1];
-                            dealtWith.push(key, "get_" + sgKey);
-                            el.newSetGet(sgKey, config[key], config["get_" + sgKey]);
-                        } else if (key.includes("get_")) {
-                            let sgKey = key.split("_")[1];
-                            dealtWith.push(key, "set_" + sgKey);
-                            el.newSetGet(sgKey, (isFunc(config["set_" + sgKey]) ? config["set_" + sgKey] : x => {}), config[key]);
+                        if (key.includes('set_')) {
+                            let sgKey = key.split('_')[1];
+                            dealtWith.push(key, 'get_' + sgKey);
+                            el.newSetGet(sgKey, config[key], config['get_' + sgKey]);
+                        } else if (key.includes('get_')) {
+                            let sgKey = key.split('_')[1];
+                            dealtWith.push(key, 'set_' + sgKey);
+                            el.newSetGet(sgKey, (isFunc(config['set_' + sgKey]) ? config['set_' + sgKey] : x => {}), config[key]);
                         }
                     }
                 }
                 if (isFunc(config['attr'])) el.observeAttrs(config['attr']);
-                if (isFunc(config['created'])) return config['created'].call(el)
-            }
+                if (isFunc(config['created'])) return config['created'].call(el);
+            };
 
             for (let key in config) {
                 if (key == 'created' || key == 'attr' || (key.includes('set_') || key.includes('get_'))) continue;
 
                 if (isFunc(config[key]) && key != 'attr') dm = function () { // Adds dom methods to element
-                    return config[key].apply(dom(this), arguments)
-                }
+                    return config[key].apply(dom(this), arguments);
+                };
                 key == 'inserted' ? element.attachedCallback = dm :
                     key == 'destroyed' ? element.detachedCallback = dm :
                     key.toLowerCase() == 'css' ? Craft.addCSS(config[key]) :
@@ -2627,7 +2627,7 @@
                 input[sI] = on('input,blur,keydown', input, e => {
                     setTimeout(() => {
                         let val = input.value;
-                        if (!(Craft.getDeep(obj, key) == "" && val == "") && val != oldval) {
+                        if (!(Craft.getDeep(obj, key) == '' && val == '') && val != oldval) {
                             oldval = val;
                             Craft.setDeep(obj, key, input.value);
                             if (onsetfn) onset(input.value);
@@ -2640,7 +2640,7 @@
             if (isStr(input)) input = query(input);
             if (is.Node(input) && def(input[sI])) {
                 input[sI].off;
-                delete input[sI]
+                delete input[sI];
             }
         },
         onTabChange(fn) {
@@ -2653,25 +2653,18 @@
                     tabListeners.add(fn);
                     return options;
                 }
-            }
+            };
             return options.on;
-        },
-    }
-
-    Craft.Models.$set((key, model) => {
-        if (!def(Craft.Models[key])) {
-            Craft.Models.emit(key, model);
-            model.func(model.scope)
-        } else return undef;
-    });
+        }
+    };
 
     head.appendChild(dom.style('', 'crafterstyles'));
     let TabChange = ta => () => {
         tabActive = ta;
         tabListeners.forEach(listener => {
-            listener(tabActive)
-        })
-    }
+            listener(tabActive);
+        });
+    };
 
     defineprop(Craft, 'tabActive', {
         get: () => tabActive
@@ -2682,7 +2675,7 @@
 
     Craft.curry.to = Craft.curry((arity, fn) => makeFn(fn, [], arity));
     Craft.curry.adaptTo = Craft.curry((num, fn) => Craft.curry.to(num, function (context) {
-        fn.apply(null, Craft.omit(arguments, context).slice(1).concat(context))
+        fn.apply(null, Craft.omit(arguments, context).slice(1).concat(context));
     }));
     Craft.curry.adapt = fn => Craft.curry.adaptTo(fn.length, fn);
 
@@ -2707,24 +2700,24 @@
     });
 
     Craft.customAttr('import-view', (element, src) => {
-        element.importview(src)
+        element.importview(src);
     });
 
     Craft.customAttr('link', (element, link) => {
-        let handle,linkevt;
+        let handle, linkevt;
         element.newSetGet('onlink', fn => {
             if (isFunc(fn)) handle = Craft.router.handle(link, (element.linkhandle = fn));
         });
         linkevt = element.Click(e => {
-            (element.hasAttr('newtab') ? open : Craft.router.open)(link)
+            (element.hasAttr('newtab') ? open : Craft.router.open)(link);
         });
         element.observeAttrs();
         element.attrX.on('attr:link', () => {
             if (!element.hasAttr('link') || element.getAttr('link') != link) {
-              if(isObj(handle)) handle.off(() => {
-                if(isFunc(element.onunlink)) element.onunlink(link);
-              });
-              if(def(linkevt)) linkevt.off;
+                if (isObj(handle)) handle.off(() => {
+                    if (isFunc(element.onunlink)) element.onunlink(link);
+                });
+                if (def(linkevt)) linkevt.off;
             }
         });
     });
@@ -2750,7 +2743,7 @@
                     el.customAttr.push(attr.name);
                     attr.handle(dom(el), el.getAttribute(attr.name));
                 }
-                break
+                break;
             }
         }
     }
@@ -2784,17 +2777,17 @@
 
     function init() {
         Craft.router.links.forEach(exec);
-        Ready = true
+        Ready = true;
     }
 
-    !ready() ? once("DOMContentLoaded", doc, init) : init();
+    !ready() ? once('DOMContentLoaded', doc, init) : init();
 
     on('hashchange', () => {
         Craft.router.handlers.forEach(handle => {
-            if (Locs(l => l == handle.link)) handle.func(location.hash)
+            if (Locs(l => l == handle.link)) handle.func(location.hash);
         });
     });
 
     root.Craft = Craft;
-    //console.log(performance.now() - perf, 'Crafter.js');
-})(document, self)
+    // console.log(performance.now() - perf, 'Crafter.js');
+})(document, self);
