@@ -31,13 +31,13 @@ function _defineProperty(obj, key, value) {
  *  @overview Crafter.js , minimalist front-end library
  *  @author Saul van der Walt - https://github.com/SaulDoesCode/
  *  @license MIT
- */ //var perf = performance.now();
+ */ // var perf = performance.now();
 (function(doc, root) {
-  "use strict";
+  'use strict';
   var _WhenReady, _Craft, _mutatorMap, Ready = false,
     tabActive = true,
     ready = function() {
-      return Ready || doc.readyState == "complete";
+      return Ready || doc.readyState == 'complete';
     },
     ua = navigator.userAgent,
     tabListeners = new Set(),
@@ -54,11 +54,11 @@ function _defineProperty(obj, key, value) {
   }
 
   function degloveStr(str) {
-    return isStr(str) && (str.includes('"') || str.includes("'")) ? str.substring(1, str.length - 1) : str;
+    return isStr(str) && (str.includes('"') || str.includes('\'')) ? str.substring(1, str.length - 1) : str;
   }
   var sI = 'Isync',
     DestructionEvent = new Event('destroy'),
-    possibleText = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
+    possibleText = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
     toArr = Array.from,
     undef = void 0,
     defineprop = Object.defineProperty,
@@ -579,7 +579,7 @@ function _defineProperty(obj, key, value) {
      * @param val - value to test
      */
     Native: function(val) {
-      var type = typeof val === "undefined" ? "undefined" : _typeof(val);
+      var type = typeof val === 'undefined' ? 'undefined' : _typeof(val);
       return isFunc(val) ? RegExp('^' + String(Object.prototype.toString).replace(/[.*+?^${}()|[\]\/\\]/g, '\\$&').replace(/toString|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$').test(Function.prototype.toString.call(val)) : val && type == 'object' && /^\[object .+?Constructor\]$/.test(val.toString) || false;
     },
     /**
@@ -627,7 +627,7 @@ function _defineProperty(obj, key, value) {
       evtlisteners: new Set(),
       stop: false,
       on: function(type, func) {
-        if (!isFunc(func)) throw new TypeError(".on(" + type + ",func) : func is not a function");
+        if (!isFunc(func)) throw new TypeError('.on(' + type + ',func) : func is not a function');
         func.etype = type;
         options.evtlisteners.add(func);
         return {
@@ -932,7 +932,7 @@ function _defineProperty(obj, key, value) {
       });
     },
     list: function(type, items, attr) {
-      var list = "";
+      var list = '';
       if (is.Arrylike(items)) forEach(items, function(item) {
         if (isStr(item)) list += Dom.element('li', item).outerHTML;
         else if (isObj(items)) list += Dom.element('li', item.inner, item.attr).outerHTML;
@@ -953,7 +953,7 @@ function _defineProperty(obj, key, value) {
         };
         var random = Craft.randomInt(1000);
         script.setAttribute('initx', random);
-        code += "\ndocument.head.querySelector('script[initx=\"" + random + "\"]').dispatchEvent(new UIEvent('load'));\n";
+        code += '\ndocument.head.querySelector(\'script[initx="' + random + '"]\').dispatchEvent(new UIEvent(\'load\'));\n';
       }
       if (defer == true) script.defer = defer != false;
       if (nosrc == true) script.text = code;
@@ -970,7 +970,7 @@ function _defineProperty(obj, key, value) {
   });
 
   function domNodeList(elements) {
-    Craft.omit(Object.getOwnPropertyNames(Array.prototype), "length").forEach(function(method) {
+    Craft.omit(Object.getOwnPropertyNames(Array.prototype), 'length').forEach(function(method) {
       elements[method] = Array.prototype[method];
     });
     /**
@@ -1197,7 +1197,7 @@ function _defineProperty(obj, key, value) {
           if (getval) Craft.setDeep(root, bind, getval);
         } else element.html(root[bind]);
         if (element.isInput) element.SyncInput(root, bind, function(val) {
-          queryEach("[bind=" + bind + "]", function(el) {
+          queryEach('[bind=' + bind + ']', function(el) {
             if (val != undef) el.html(val);
           });
         });
@@ -1217,15 +1217,15 @@ function _defineProperty(obj, key, value) {
         if (obj.isObservable) {
           obj.on('$uberset:' + prop, element.html);
         } else alt = function(val) {
-          queryEach("[bind=" + bind + "]", function(el) {
+          queryEach('[bind=' + bind + ']', function(el) {
             if (val != undef) el.html(val);
           });
         };
         if (element.isInput) element.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : path, alt);
       }
-      if (!obj) Craft.Models.on(cutbind[0], function(model) {
-        if (model && model.scope) {
-          obj = model.scope;
+      if (!obj) Craft.modelInit(cutbind[0], function(scope) {
+        if (scope) {
+          obj = scope;
           bindval();
         }
       });
@@ -1267,7 +1267,7 @@ function _defineProperty(obj, key, value) {
         mode: 'cors',
         credentials: 'same-origin'
       }).then(function(res) {
-        if (!res.ok) console.warn("<" + element.localName + "> : unable to import view - " + src);
+        if (!res.ok) console.warn('<' + element.localName + '> : unable to import view - ' + src);
         else res.text().then(function(view) {
           if (cache) localStorage.setItem(src, view);
           element.html(view);
@@ -1330,7 +1330,7 @@ function _defineProperty(obj, key, value) {
       return on(eventType, element, func);
     };
     element.emit = function(evt, detail) {
-      if (!isStr(evt)) throw new TypeError("element.emit : event name needs to be a string");
+      if (!isStr(evt)) throw new TypeError('element.emit : event name needs to be a string');
       element.dispatchEvent(new CustomEvent(evt, {
         detail: def(detail) || null
       }));
@@ -1360,19 +1360,19 @@ function _defineProperty(obj, key, value) {
     element.onScroll = function(func, pd) {
       return Craft.onScroll(element, func, pd);
     };
-    /*let keypress = code => (fn, type) => evlt('keydown')(element, e => {
-               if (e.which == code || e.keyCode == code) fn(e, element)
-           }, type);
-           element.Enter = keypress(13);
-           element.Escape = keypress(27);
-           element.Delete = keypress(46);
-           element.Space = keypress(32);
-           element.UpArrow = keypress(38);
-           element.DownArrow = keypress(40);
-           element.LeftArrow = keypress(37);
-           element.RightArrow = keypress(39);
+    /* let keypress = code => (fn, type) => evlt('keydown')(element, e => {
+                   if (e.which == code || e.keyCode == code) fn(e, element)
+               }, type);
+               element.Enter = keypress(13);
+               element.Escape = keypress(27);
+               element.Delete = keypress(46);
+               element.Space = keypress(32);
+               element.UpArrow = keypress(38);
+               element.DownArrow = keypress(40);
+               element.LeftArrow = keypress(37);
+               element.RightArrow = keypress(39);
 
-           */
+               */
     /**
      * add CSS style rules to the Element or NodeList
      * @memberof dom
@@ -1557,7 +1557,7 @@ function _defineProperty(obj, key, value) {
       if (isStr(transform)) position = transfrom;
       if (isStr(position)) element.style.position = position;
       element.css(transform == true ? {
-        transform: "translateX(" + x + "px) translateY(" + y + "px)"
+        transform: 'translateX(' + x + 'px) translateY(' + y + 'px)'
       } : {
         left: x + 'px',
         top: y + 'px'
@@ -1624,18 +1624,24 @@ function _defineProperty(obj, key, value) {
       }
       return element;
     };
+    var hasAttrEmitter = false;
     element.observeAttrs = function(func) {
       if (!isObj(element.attrX)) element.attrX = eventemitter({});
-      element.attrX.on('attr', function(attr) {
-        if (func) func.apply(element, arguments);
-        element.attrX.emit.apply(null, ['attr:' + attr].concat(arguments));
+      if (!hasAttrEmitter) element.attrX.on('attr', function(attr) {
+        if (!hasAttrEmitter) {
+          element.attrX.emit.apply(element, ['attr:' + attr].concat(arguments));
+          hasAttrEmitter = true;
+        }
+      });
+      if (isFunc(func)) return element.attrX.on('attr', function(attr) {
+        func.apply(element, arguments);
       });
     };
-    element.stopAttrObserve = function(state) {
+    element.unobserveAttrs = function(state) {
       if (element.attrX) element.attrX.stopall(state);
     };
     return element;
-  };
+  }
   /**
    * Function that returns many useful methods for interacting with and manipulating the DOM or creating elements
    * in the absence of parameters the function will return methods for created elements
@@ -1983,7 +1989,7 @@ function _defineProperty(obj, key, value) {
         }
         if (robj) return obj;
       } catch (e) {
-        console.warn("Craft.setDeep : ran into some trouble setting " + path);
+        console.warn('Craft.setDeep : ran into some trouble setting ' + path);
       }
     },
     /**
@@ -2005,7 +2011,7 @@ function _defineProperty(obj, key, value) {
         if (object.hasOwnProperty(key)) val = object[key];
         currentPath = path;
         nestable = false;
-        isArr(object) ? currentPath += "[" + key + "]" : !currentPath ? currentPath = key : currentPath += '.' + key;
+        isArr(object) ? currentPath += '[' + key + ']' : !currentPath ? currentPath = key : currentPath += '.' + key;
         nestable = func(val, key, object, currentPath) == false;
         if (nestable && (isArr(val) || isObj(val))) Craft.forEachDeep(val, func, currentPath);
       }
@@ -2170,7 +2176,7 @@ function _defineProperty(obj, key, value) {
               v: handlers
             };
           }();
-          if ((typeof _ret2 === "undefined" ? "undefined" : _typeof(_ret2)) === "object") return _ret2.v;
+          if ((typeof _ret2 === 'undefined' ? 'undefined' : _typeof(_ret2)) === "object") return _ret2.v;
         }
       },
       handlers: new Set(),
@@ -2197,29 +2203,29 @@ function _defineProperty(obj, key, value) {
     },
     Cookies: {
       get: function(key) {
-        return decodeURIComponent(doc.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1")) || null;
+        return decodeURIComponent(doc.cookie.replace(new RegExp('(?:(?:^|.*;)\\s*' + encodeURIComponent(key).replace(/[\-\.\+\*]/g, '\\$&') + '\\s*\\=\\s*([^;]*).*$)|^.*$'), '$1')) || null;
       },
       set: function(key, val, expires, path, domain, secure) {
         if (!key || /^(?:expires|max\-age|path|domain|secure)$/i.test(key)) return false;
-        var expiry = "";
+        var expiry = '';
         if (expires) {
-          if (is.Num(expires)) expiry = expires == Infinity ? "; expires=Fri, 11 April 9997 23:59:59 UTC" : "; max-age=" + expires;
-          if (isStr(expires)) expiry = "; expires=" + expires;
-          if (is.Date(expires)) expiry = "; expires=" + expires.toUTCString();
+          if (is.Num(expires)) expiry = expires == Infinity ? '; expires=Fri, 11 April 9997 23:59:59 UTC' : '; max-age=' + expires;
+          if (isStr(expires)) expiry = '; expires=' + expires;
+          if (is.Date(expires)) expiry = '; expires=' + expires.toUTCString();
         }
-        doc.cookie = encodeURIComponent(key) + "=" + encodeURIComponent(val) + expiry + (domain ? "; domain=" + domain : "") + (path ? "; path=" + path : "") + (secure ? "; secure" : "");
+        doc.cookie = encodeURIComponent(key) + '=' + encodeURIComponent(val) + expiry + (domain ? '; domain=' + domain : '') + (path ? '; path=' + path : '') + (secure ? '; secure' : '');
         return true;
       },
       has: function(key) {
-        return key != undef && new RegExp("(?:^|;\\s*)" + encodeURIComponent(key).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=").test(doc.cookie);
+        return key != undef && new RegExp('(?:^|;\\s*)' + encodeURIComponent(key).replace(/[\-\.\+\*]/g, '\\$&') + '\\s*\\=').test(doc.cookie);
       },
       remove: function(key, path, domain) {
         if (!Craft.Cookies.has(key)) return false;
-        doc.cookie = encodeURIComponent(key) + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT" + (domain ? "; domain=" + domain : "") + (path ? "; path=" + path : "");
+        doc.cookie = encodeURIComponent(key) + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT' + (domain ? '; domain=' + domain : '') + (path ? '; path=' + path : '');
         return true;
       },
       keys: function() {
-        return doc.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, "").split(/\s*(?:\=[^;]*)?;\s*/).map(function(c) {
+        return doc.cookie.replace(/((?:^|\s*;)[^\=]+)(?=;|$)|^\s*|\s*(?:\=[^;]*)?(?:\1|$)/g, '').split(/\s*(?:\=[^;]*)?;\s*/).map(function(c) {
           decodeURIComponent(c);
           return c;
         });
@@ -2296,7 +2302,7 @@ function _defineProperty(obj, key, value) {
             v: Options
           };
         }();
-        if ((typeof _ret3 === "undefined" ? "undefined" : _typeof(_ret3)) === "object") return _ret3.v;
+        if ((typeof _ret3 === 'undefined' ? 'undefined' : _typeof(_ret3)) === "object") return _ret3.v;
       }
     },
     keyhandles: {
@@ -2310,7 +2316,7 @@ function _defineProperty(obj, key, value) {
       return makeFn(fn, [], fn.length);
     },
     after: function(n, func) {
-      !isFunc(func) && isFunc(n) ? func = n : console.error("after: no function");
+      !isFunc(func) && isFunc(n) ? func = n : console.error('after: no function');
       n = Number.isFinite(n = +n) ? n : 0;
       if (--n < 1) return function() {
         return func.apply(this, arguments);
@@ -2363,7 +2369,7 @@ function _defineProperty(obj, key, value) {
         return result;
       };
     }
-  }, _defineProperty(_Craft, "once", function(func, context) {
+  }, _defineProperty(_Craft, 'once', function(func, context) {
     var result = void 0;
     return function() {
       if (isFunc(func)) {
@@ -2372,7 +2378,7 @@ function _defineProperty(obj, key, value) {
       }
       return result;
     };
-  }), _defineProperty(_Craft, "css", function(element, styles, prop) {
+  }), _defineProperty(_Craft, 'css', function(element, styles, prop) {
     if (isObj(styles)) forEach(styles, function(prop, key) {
       if (isEl(element)) element.style[key] = prop;
       else if (is.NodeList(element)) forEach(element, function(el) {
@@ -2382,7 +2388,7 @@ function _defineProperty(obj, key, value) {
     else if (isStr(styles, prop)) element.style[styles] = prop;
     else throw new Error('CSS : Styles Object is not an object');
     return element;
-  }), _defineProperty(_Craft, "fixURL", function(url) {
+  }), _defineProperty(_Craft, 'fixURL', function(url) {
     if (!is.URL(url)) {
       var match = url.match(/^(\/.*?)?$/);
       if (is.empty(match)) throw new Error('invalid src');
@@ -2390,30 +2396,30 @@ function _defineProperty(obj, key, value) {
     }
     if (!url.includes('http://') && !url.includes('https://')) url = location.protocol + '//' + url;
     return url;
-  }), _defineProperty(_Craft, "addCSS", function(css, noimport) {
-    query('style[crafterstyles]', head).textContent += noimport ? css : "@import url(\"" + Craft.URLfrom(css, {
+  }), _defineProperty(_Craft, 'addCSS', function(css, noimport) {
+    query('style[crafterstyles]', head).textContent += noimport ? css : '@import url("' + Craft.URLfrom(css, {
       type: 'text/css'
-    }) + "\");\n";
-  }), _defineProperty(_Craft, "importCSS", function(src, gofetch) {
+    }) + '");\n';
+  }), _defineProperty(_Craft, 'importCSS', function(src, gofetch) {
     if (gofetch) fetch(Craft.fixURL(src), {
       mode: 'cors'
     }).then(function(res) {
-      if (!res.ok) console.warn("loading css failed - " + src);
+      if (!res.ok) console.warn('loading css failed - ' + src);
       else res.text().then(function(css) {
         return Craft.addCSS('\n' + css, true);
       });
     });
-    else Craft.addCSS("@import url(\"" + Craft.fixURL(src) + "\");\n", true);
-  }), _defineProperty(_Craft, "importFont", function(name, src) {
-    Craft.addCSS("@font-face {font-family:" + name + ";src:url(\"" + Craft.fixURL(src) + "\");}", true);
-  }), _defineProperty(_Craft, "loadScript", function(src, funcexec, fetchattr) {
+    else Craft.addCSS('@import url("' + Craft.fixURL(src) + '");\n', true);
+  }), _defineProperty(_Craft, 'importFont', function(name, src) {
+    Craft.addCSS('@font-face {font-family:' + name + ';src:url("' + Craft.fixURL(src) + '");}', true);
+  }), _defineProperty(_Craft, 'loadScript', function(src, funcexec, fetchattr) {
     var fetchAttr = {
       mode: 'cors'
     };
     if (isObj(fetchattr)) fetchAttr = Object.assign(fetchAttr, fetchattr);
     return promise(function(pass, fail) {
       fetch(Craft.fixURL(src), fetchAttr).then(function(res) {
-        if (!res.ok) console.warn("loading script failed - " + src);
+        if (!res.ok) console.warn('loading script failed - ' + src);
         else res.text().then(function(code) {
           if (funcexec) {
             try {
@@ -2425,7 +2431,7 @@ function _defineProperty(obj, key, value) {
         });
       });
     });
-  }), _defineProperty(_Craft, "loadScripts", function(urls, funcexec, fetchattr) {
+  }), _defineProperty(_Craft, 'loadScripts', function(urls, funcexec, fetchattr) {
     return promise(function(pass, fail) {
       var len = 0;
       urls.forEach(function(src) {
@@ -2435,26 +2441,26 @@ function _defineProperty(obj, key, value) {
         }).catch(fail);
       });
     });
-  }), _defineProperty(_Craft, "hasCaps", function(str) {
+  }), _defineProperty(_Craft, 'hasCaps', function(str) {
     return toArr(str).some(is.Uppercase);
-  }), _defineProperty(_Craft, "hasNums", function(str) {
+  }), _defineProperty(_Craft, 'hasNums', function(str) {
     return (/\d/g.test(str));
-  }), _defineProperty(_Craft, "len", function(val) {
+  }), _defineProperty(_Craft, 'len', function(val) {
     try {
       return isObj(val) ? Object.keys(val).length : is.Map(val) || is.Set(val) ? val.size : val.length;
     } catch (e) {}
     return -1;
-  }), _defineProperty(_Craft, "DateIndex", function(Collection, date) {
+  }), _defineProperty(_Craft, 'DateIndex', function(Collection, date) {
     for (var i = 0; i < Collection.length; i++) {
       if (+Collection[i] === +date) return i;
     }
     return -1;
-  }), _defineProperty(_Craft, "type", function() {
+  }), _defineProperty(_Craft, 'type', function() {
     return Craft.deglove(toArr(arguments).map(function(t) {
-      return typeof t === "undefined" ? "undefined" : _typeof(t);
+      return typeof t === 'undefined' ? 'undefined' : _typeof(t);
     }));
-  }), _defineProperty(_Craft, "memoize", function(func, resolver) {
-    if (!isFunc(func) || resolver && !isFunc(resolver)) throw new TypeError("no function");
+  }), _defineProperty(_Craft, 'memoize', function(func, resolver) {
+    if (!isFunc(func) || resolver && !isFunc(resolver)) throw new TypeError('no function');
     var cache = new WeakMap(),
       memoized = function() {
         var args = arguments,
@@ -2465,7 +2471,7 @@ function _defineProperty(obj, key, value) {
         return result;
       };
     return memoized;
-  }), _defineProperty(_Craft, "millis", {
+  }), _defineProperty(_Craft, 'millis', {
     seconds: function(n) {
       return (n || 1) * 1000;
     },
@@ -2492,7 +2498,7 @@ function _defineProperty(obj, key, value) {
     hour: 3600000,
     day: 86400000,
     year: 365 * 86400000
-  }), _defineProperty(_Craft, "observable", observable), _defineProperty(_Craft, "CustomAttributes", []), _defineProperty(_Craft, "Models", observable()), _defineProperty(_Craft, "tabActive", true), _defineProperty(_Craft, "tco", function(fn) {
+  }), _defineProperty(_Craft, 'observable', observable), _defineProperty(_Craft, 'CustomAttributes', []), _defineProperty(_Craft, 'Models', observable()), _defineProperty(_Craft, 'tabActive', true), _defineProperty(_Craft, 'tco', function(fn) {
     var active = void 0,
       nextArgs = void 0;
     return function() {
@@ -2507,7 +2513,7 @@ function _defineProperty(obj, key, value) {
       }
       return result;
     };
-  }), _defineProperty(_Craft, "animFrame", function(func) {
+  }), _defineProperty(_Craft, 'animFrame', function(func) {
     var interval = void 0,
       options = {
         start: function() {
@@ -2526,7 +2532,7 @@ function _defineProperty(obj, key, value) {
         }
       };
     return options;
-  }), _defineProperty(_Craft, "JumpTo", function(target, options) {
+  }), _defineProperty(_Craft, 'JumpTo', function(target, options) {
     options = options || {};
     options.duration = options.duration || 400;
     options.offset = options.offset || 0;
@@ -2553,7 +2559,7 @@ function _defineProperty(obj, key, value) {
         }
       };
     requestAnimationFrame(loop);
-  }), _defineProperty(_Craft, "toFormData", function(val) {
+  }), _defineProperty(_Craft, 'toFormData', function(val) {
     var formData = new FormData();
     if (isStr(val)) val = val.split('&');
     forEach(val, function(v) {
@@ -2564,12 +2570,12 @@ function _defineProperty(obj, key, value) {
       } else formData.append(key, v);
     });
     return formData;
-  }), _defineProperty(_Craft, "onScroll", function(element, func, preventDefault) {
+  }), _defineProperty(_Craft, 'onScroll', function(element, func, preventDefault) {
     return on('wheel', element, function(e) {
       if (preventDefault) e.preventDefault();
       func(e.deltaY < 1, e);
     });
-  }), _WhenReady = "WhenReady", _mutatorMap = {}, _mutatorMap[_WhenReady] = _mutatorMap[_WhenReady] || {}, _mutatorMap[_WhenReady].get = function() {
+  }), _WhenReady = 'WhenReady', _mutatorMap = {}, _mutatorMap[_WhenReady] = _mutatorMap[_WhenReady] || {}, _mutatorMap[_WhenReady].get = function() {
     return promise(function(pass, fail) {
       if (ready()) return pass();
       var check = setInterval(function() {
@@ -2580,18 +2586,21 @@ function _defineProperty(obj, key, value) {
       }, 20);
       setTimeout(function() {
         clearInterval(check);
-        if (!Ready || doc.readyState === "complete") fail('loading took too long loaded with errors :(');
+        if (!Ready || doc.readyState === 'complete') fail('loading took too long loaded with errors :(');
       }, 5500);
     });
-  }, _defineProperty(_Craft, "model", function(name, func) {
+  }, _defineProperty(_Craft, 'model', function(name, func) {
     if (isFunc(func) && isStr(name)) {
       if (!def(Craft.Models[name])) {
         var _ret5 = function() {
           var scope = observable();
-          Craft.Models[name] = {
-            func: func.bind(scope),
+          func = func.bind(scope);
+          Craft.Models.set(name, {
+            func: func,
             scope: scope
-          };
+          });
+          Craft.Models.emit(name, scope);
+          func(scope);
           return {
             v: {
               view: function(fn) {
@@ -2600,24 +2609,23 @@ function _defineProperty(obj, key, value) {
             }
           };
         }();
-        if ((typeof _ret5 === "undefined" ? "undefined" : _typeof(_ret5)) === "object") return _ret5.v;
+        if ((typeof _ret5 === 'undefined' ? 'undefined' : _typeof(_ret5)) === "object") return _ret5.v;
       }
       throw new Error('Craft Model already exists');
     }
-  }), _defineProperty(_Craft, "modelInit", function(name, func) {
-    if (Craft.Models[name] != undef) func.call(Craft, Craft.Models[name].scope);
-    else Craft.Models.once(name, function(model) {
-      func.call(Craft, model.scope);
+  }), _defineProperty(_Craft, 'modelInit', function(name, func) {
+    Craft.Models[name] != undef ? func.call(Craft, Craft.Models[name].scope) : Craft.Models.once(name, function(scope) {
+      func.call(Craft, scope);
     });
-  }), _defineProperty(_Craft, "fromModel", function(key, val) {
+  }), _defineProperty(_Craft, 'fromModel', function(key, val) {
     var cutkey = cutdot(key),
       IsValDefined = def(val),
       ck = cutkey[0],
       type = (IsValDefined ? 'set' : 'get') + 'Deep';
     if (def(Craft.Models[ck])) return cutkey.length == 1 && !IsValDefined ? Craft.Models[ck].scope : Craft[type](Craft.Models[ck].scope, joindot(Craft.omit(cutkey, ck)), val);
-  }), _defineProperty(_Craft, "getPath", function(path, full) {
+  }), _defineProperty(_Craft, 'getPath', function(path, full) {
     try {
-      if (has(path, "'\"", true)) return degloveStr(path);
+      if (has(path, '\'"', true)) return degloveStr(path);
       else if (path == 'true') return true;
       else if (path == 'false') return false;
       else if (is.Num(path)) return Number(path);
@@ -2639,11 +2647,11 @@ function _defineProperty(obj, key, value) {
     } catch (e) {
       return {};
     }
-  }), _defineProperty(_Craft, "customAttr", function(name, handle) {
+  }), _defineProperty(_Craft, 'customAttr', function(name, handle) {
     if (isFunc(handle)) {
       (function() {
         var apply = function() {
-          queryEach("[" + name + "]", function(el) {
+          queryEach('[' + name + ']', function(el) {
             el = dom(el);
             if (el.hasAttr(name)) {
               if (!isArr(el.customAttr)) el.customAttr = [];
@@ -2663,7 +2671,7 @@ function _defineProperty(obj, key, value) {
         });
       })();
     }
-  }), _defineProperty(_Craft, "strongPassword", function(pass, length, caps, number, reasons) {
+  }), _defineProperty(_Craft, 'strongPassword', function(pass, length, caps, number, reasons) {
     var pw = 'Password ',
       includeChars = toArr(arguments).slice(5);
     if (pass.length <= length - 1) return reasons ? pw + 'too short' : false;
@@ -2675,34 +2683,34 @@ function _defineProperty(obj, key, value) {
         })) return reasons ? '' : false;
     }
     return false;
-  }), _defineProperty(_Craft, "camelDash", function(val) {
+  }), _defineProperty(_Craft, 'camelDash', function(val) {
     return val.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-  }), _defineProperty(_Craft, "formatBytes", function(bytes, decimals) {
+  }), _defineProperty(_Craft, 'formatBytes', function(bytes, decimals) {
     if (bytes == 0) return '0 Bytes';
     var k = 1000,
       i = Math.floor(Math.log(bytes) / Math.log(k));
     return (bytes / Math.pow(k, i)).toPrecision(decimals + 1 || 3) + ' ' + 'Bytes,KB,MB,GB,TB,PB,EB,ZB,YB'.split(',')[i];
-  }), _defineProperty(_Craft, "randomNum", function(max, min) {
+  }), _defineProperty(_Craft, 'randomNum', function(max, min) {
     min = min || 0;
     max = max || 100;
     return Math.random() * (max - min) + min;
-  }), _defineProperty(_Craft, "randomInt", function(max, min) {
+  }), _defineProperty(_Craft, 'randomInt', function(max, min) {
     min = min || 0;
     max = max || 100;
     return Math.floor(Math.random() * (max - min)) + min;
-  }), _defineProperty(_Craft, "randomStr", function(max, min) {
-    var text = "";
+  }), _defineProperty(_Craft, 'randomStr', function(max, min) {
+    var text = '';
     min = min || 0;
     max = max || 6;
     for (; min < max; min++) {
       text += possibleText.charAt(Math.floor(Math.random() * possibleText.length));
     }
     return text;
-  }), _defineProperty(_Craft, "GenUID", function(len) {
+  }), _defineProperty(_Craft, 'GenUID', function(len) {
     return Craft.array(len || 6, function() {
       return Craft.randomStr(4);
     }).join('-');
-  }), _defineProperty(_Craft, "newComponent", function(tag, config) {
+  }), _defineProperty(_Craft, 'newComponent', function(tag, config) {
     if (!def(config)) throw new Error(tag + ' : config undefined');
     var element = Object.create(HTMLElement.prototype),
       settings = {},
@@ -2712,14 +2720,14 @@ function _defineProperty(obj, key, value) {
         dealtWith = [];
       for (var _key3 in config) {
         if (!dealtWith.includes(_key3)) {
-          if (_key3.includes("set_")) {
-            var sgKey = _key3.split("_")[1];
-            dealtWith.push(_key3, "get_" + sgKey);
-            el.newSetGet(sgKey, config[_key3], config["get_" + sgKey]);
-          } else if (_key3.includes("get_")) {
-            var _sgKey = _key3.split("_")[1];
-            dealtWith.push(_key3, "set_" + _sgKey);
-            el.newSetGet(_sgKey, isFunc(config["set_" + _sgKey]) ? config["set_" + _sgKey] : function(x) {}, config[_key3]);
+          if (_key3.includes('set_')) {
+            var sgKey = _key3.split('_')[1];
+            dealtWith.push(_key3, 'get_' + sgKey);
+            el.newSetGet(sgKey, config[_key3], config['get_' + sgKey]);
+          } else if (_key3.includes('get_')) {
+            var _sgKey = _key3.split('_')[1];
+            dealtWith.push(_key3, 'set_' + _sgKey);
+            el.newSetGet(_sgKey, isFunc(config['set_' + _sgKey]) ? config['set_' + _sgKey] : function(x) {}, config[_key3]);
           }
         }
       }
@@ -2727,7 +2735,7 @@ function _defineProperty(obj, key, value) {
       if (isFunc(config['created'])) return config['created'].call(el);
     };
     var _loop = function(_key4) {
-      if (_key4 == 'created' || _key4 == 'attr' || _key4.includes('set_') || _key4.includes('get_')) return "continue";
+      if (_key4 == 'created' || _key4 == 'attr' || _key4.includes('set_') || _key4.includes('get_')) return 'continue';
       if (isFunc(config[_key4]) && _key4 != 'attr') dm = function() { // Adds dom methods to element
         return config[_key4].apply(dom(this), arguments);
       };
@@ -2735,11 +2743,11 @@ function _defineProperty(obj, key, value) {
     };
     for (var _key4 in config) {
       var _ret7 = _loop(_key4);
-      if (_ret7 === "continue") continue;
+      if (_ret7 === 'continue') continue;
     }
     settings['prototype'] = element;
     doc.registerElement(tag, settings);
-  }), _defineProperty(_Craft, "SyncInput", function(input, obj, key, onset) {
+  }), _defineProperty(_Craft, 'SyncInput', function(input, obj, key, onset) {
     if (isStr(input)) input = query(input);
     if (is.Input(input)) {
       (function() {
@@ -2748,7 +2756,7 @@ function _defineProperty(obj, key, value) {
         input[sI] = on('input,blur,keydown', input, function(e) {
           setTimeout(function() {
             var val = input.value;
-            if (!(Craft.getDeep(obj, key) == "" && val == "") && val != oldval) {
+            if (!(Craft.getDeep(obj, key) == '' && val == '') && val != oldval) {
               oldval = val;
               Craft.setDeep(obj, key, input.value);
               if (onsetfn) onset(input.value);
@@ -2757,30 +2765,58 @@ function _defineProperty(obj, key, value) {
         });
       })();
     }
-  }), _defineProperty(_Craft, "disconectInputSync", function(input) {
+  }), _defineProperty(_Craft, 'disconectInputSync', function(input) {
     if (isStr(input)) input = query(input);
     if (is.Node(input) && def(input[sI])) {
       input[sI].off;
       delete input[sI];
     }
-  }), _defineProperty(_Craft, "onTabChange", function(fn) {
-    var options = {get off() {
+  }), _defineProperty(_Craft, 'onTabChange', function(fn) {
+    var options = {
+      off: function() {
         tabListeners.delete(fn);
         return options;
       },
-      get on() {
+      on: function() {
         tabListeners.add(fn);
         return options;
       }
     };
-    return options.on;
+    return options.on();
+  }), _defineProperty(_Craft, 'tabpause', function(state, options) {
+    if (state) options.tablistener = Craft.onTabChange(function(focused) {
+      options[focused ? 'on' : 'off']();
+    });
+    else {
+      if (options.tablistner) options.tablistener.off();
+    }
+    return options;
+  }), _defineProperty(_Craft, 'every', function(time, fn, context, pauseondefocus) {
+    if (isFunc(fn)) {
+      var _ret9 = function() {
+        var options = {
+          interval: undef,
+          set tabpause(state) {
+            if (is.Bool(state)) Craft.tabpause(state, options);
+          },
+          on: function() {
+            if (def(options.interval)) options.off();
+            options.interval = setInterval(fn.bind(is.Bool(context) || !def(context) ? options : context), isFunc(time) ? time() : time);
+            return options;
+          },
+          off: function() {
+            clearInterval(options.interval);
+            return options;
+          }
+        };
+        if (is.Bool(context) && context == true || pauseondefocus == true) options.tabpause = true;
+        return {
+          v: options.on()
+        };
+      }();
+      if ((typeof _ret9 === 'undefined' ? 'undefined' : _typeof(_ret9)) === "object") return _ret9.v;
+    }
   }), _defineEnumerableProperties(_Craft, _mutatorMap), _Craft);
-  Craft.Models.$set(function(key, model) {
-    if (!def(Craft.Models[key])) {
-      Craft.Models.emit(key, model);
-      model.func(model.scope);
-    } else return undef;
-  });
   head.appendChild(dom.style('', 'crafterstyles'));
   var TabChange = function(ta) {
     return function() {
@@ -2898,7 +2934,7 @@ function _defineProperty(obj, key, value) {
   function init() {
     Craft.router.links.forEach(exec);
     Ready = true;
-  }!ready() ? once("DOMContentLoaded", doc, init) : init();
+  }!ready() ? once('DOMContentLoaded', doc, init) : init();
   on('hashchange', function() {
     Craft.router.handlers.forEach(function(handle) {
       if (Locs(function(l) {
@@ -2906,5 +2942,5 @@ function _defineProperty(obj, key, value) {
         })) handle.func(location.hash);
     });
   });
-  root.Craft = Craft; //console.log(performance.now() - perf, 'Crafter.js');
+  root.Craft = Craft; // console.log(performance.now() - perf, 'Crafter.js');
 })(document, self);
