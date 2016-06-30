@@ -46,8 +46,8 @@ adds several useful CSS classes and effects such as grids, ripple effects, sideb
 
 create elements on the fly with ease using the `dom` method!
 
-#### at the top of your script use destructuring to
-deglove usefull methods and features from the Craft object
+##### at the top of your script use destructuring to
+##### deglove usefull methods and features from the Craft object
 
 ```javascript
   const {dom,queryEach,on} = Craft;
