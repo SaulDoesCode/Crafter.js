@@ -13,14 +13,26 @@ Craft.init(function () {
 
     dom.ripple = attr => dom.element('ripple-effect', '', attr);
     Craft.ripple = (selector, options) => queryEach(selector, element => {
-        on(element).Mousedown(e => {
+        element.ripplehandle = on(element).Mousedown(e => {
             if (e.buttons == 1) {
                 let ripple = dom.ripple(options);
                 ripple.Rx = e.clientX;
                 ripple.Ry = e.clientY;
                 ripple.appendTo(element);
             }
-        })
+        });
+    });
+
+    Craft.directive('ripple', {
+        bind(el, color) {
+            if (color == '') color = el.getAttr('color-accent') || el.getAttr('color');
+            Craft.ripple(el, {
+                color
+            });
+        },
+        unbind(element) {
+            if (element.ripplehandle) element.ripplehandle.off;
+        }
     });
 
     Craft.newComponent('ripple-effect', {
@@ -40,12 +52,12 @@ Craft.init(function () {
             }).move(parseInt(ripple.Rx) - rect.left - (diameter / 2), parseInt(ripple.Ry) - rect.top - (diameter / 2), !1, !0);
             anime({
                 targets: ripple,
-                scale: [0,2.5],
-                opacity : [.7,0],
-                duration : timing,
-                easing : 'easeInSine' ,
+                scale: [0, 2.5],
+                opacity: [.7, 0],
+                duration: timing,
+                easing: 'easeInSine',
                 complete() {
-                  ripple.remove()
+                    ripple.remove()
                 }
             });
 
@@ -223,13 +235,12 @@ Craft.init(function () {
             });
             el.append(clearText);
         },
-        attr(name, nv) {
+        attr(name, nv, ov, hasAttr) {
             let el = this,
                 input = el.input;
             if (is.Def(input)) {
                 if (__InputAttributes.includes(name)) {
-                    if (el.hasAttr(name)) input.setAttr(name, nv);
-                    else if (input.hasAttr(i)) input.stripAttr(name);
+                    if (hasAttr) input.setAttr(name, nv);
                 }
             }
         }
@@ -264,116 +275,104 @@ Craft.init(function () {
             })
 
         },
-        attr(name) {
+        attr(name, val, oldval, hasAttr) {
             let element = this;
-            if (name === "checked" && element.hasAttr("checked")) element.CheckGroup(element);
+            if (name === "checked" && hasAttr) element.CheckGroup(element);
             else if ((name === "name" || name === "label") && (element.hasAttr("name") || element.hasAttr("label"))) element.name = element.getAttr("name") || element.getAttr("label");
         }
     });
 
-    Craft.customAttr('ripple', (el, color) => {
-        if (color == '') color = el.getAttr('color-accent') || el.getAttr('color');
-        Craft.ripple(el, {
-            color
-        });
-    });
-
-    Craft.customAttr('tooltip', (element, val) => {
-        queryEach(`.craft-tooltip`, el => {
-            if (el.owner == element) {
-                el.owner.unobserve('ttObserve');
-                el.EventListeners.forEach(ev => {
-                    ev.off
-                });
-                el.remove();
-            } else if (!is.Def(el.owner)) el.remove();
-        });
-        let show = !1,
-            tooltip = dom
-            .span(element.getAttr('tooltip') || '', `direction=${element.getAttr('tooltip-direction') || 'right'}&class=craft-tooltip`);
-
-        tooltip.owner = element;
-        tooltip.EventListeners = [];
-
-        if (element.hasAttr('ripple')) tooltip.style.borderColor = element.getAttr('ripple');
-        if (element.hasAttr('color-accent')) tooltip.style.borderColor = element.getAttr('color-accent');
-        if (element.hasAttr('color')) tooltip.style.borderColor = element.getAttr('color');
-        if (element.hasAttr('text-color')) tooltip.style.color = element.getAttr('text-color');
-
-        tooltip.mover = element.Mousemove(e => {
-            tooltip.move(e.clientX, e.clientY)
-        }).off;
-
-        function toggleTT() {
-            tooltip.style.display = show ? 'block' : 'none';
-            setTimeout(() => {
-                tooltip.style.opacity = show ? '1' : '0'
-            }, 10);
-        }
-
-        tooltip.EventListeners.push(element.Mouseenter(ev => {
-            show = !0;
-            tooltip.mover.on;
-            if (ev.target !== element || ev.target.parentNode !== element) element.hasAttr('tooltip-delay') ?
-                setTimeout(toggleTT, parseInt(element.getAttr('tooltip-delay'))) :
-                toggleTT();
-
-        }));
-        tooltip.EventListeners.push(element.Mouseleave(ev => {
-            show = !1;
-            tooltip.mover.off;
-            toggleTT()
-        }));
-
-        element.observe((mut, type) => {
-            if (type === 'attributes') {
-                let name = mut.attributeName;
-                if (name === 'tooltip' && element.hasAttr('tooltip')) tooltip.html(element.getAttr('tooltip'));
-                else if (name === 'tooltip-delay' && element.hasAttr('tooltip-delay')) setTimeout(() => {
-                    tooltip.style.display = show ? 'block' : 'none';
-                    setTimeout(() => {
-                        tooltip.style.opacity = show ? '1' : '0'
-                    }, 10);
-                }, parseInt(element.getAttr('tooltip-delay')));
-                else if (name === 'tooltip-direction' && element.hasAttr('tooltip-direction')) tooltip.setAttr('direction', element.getAttr('tooltip-direction') || 'right');
-                else if (!element.hasAttr('tooltip')) {
-                    element.unobserve('ttObserve');
-                    if (is.Def(tooltip.EventListeners)) tooltip.EventListeners.forEach(ev => {
+    Craft.directive('tooltip', {
+        bind(element, val) {
+            queryEach(`.craft-tooltip`, el => {
+                if (el.owner == element) {
+                    el.EventListeners.forEach(ev => {
                         ev.off
                     });
-                    tooltip.remove()
-                }
-            }
-        }, {
-            attributes: !0
-        }, 'ttObserve');
+                    el.remove();
+                } else if (!is.Def(el.owner)) el.remove();
+            });
+            let show = !1,
+                tooltip = dom
+                .span(element.getAttr('tooltip') || '', `direction=${element.getAttr('tooltip-direction') || 'right'}&class=craft-tooltip`);
 
-        tooltip.appendTo(document.body);
-    });
+            tooltip.owner = element;
+            tooltip.EventListeners = [];
 
-    Craft.customAttr('movable', element => {
-        element.style.position = 'fixed';
+            if (element.hasAttr('ripple')) tooltip.style.borderColor = element.getAttr('ripple');
+            if (element.hasAttr('color-accent')) tooltip.style.borderColor = element.getAttr('color-accent');
 
-        let rect = element.getRect(),
-            movehandle = query('[movehandle]', element),
-            cx = 0,
-            cy = 0,
-            move = on(window).Mousemove(e => {
-                element.move(e.clientX - cx + rect.left, e.clientY - cy + rect.top)
+            tooltip.mover = element.Mousemove(e => {
+                tooltip.move(e.clientX, e.clientY)
             }).off;
 
-        on(movehandle == null ? element : movehandle).Mousedown(e => {
-            if (e.button == 1 || e.buttons == 1) {
-                rect = element.getRect();
-                cx = e.clientX;
-                cy = e.clientY;
-                move.on
+            function toggleTT() {
+                tooltip.style.display = show ? 'block' : 'none';
+                setTimeout(() => {
+                    tooltip.style.opacity = show ? '1' : '0'
+                }, 10);
             }
-        });
 
-        on(document).Mouseup(e => {
-            move.off
-        });
-    })
+            tooltip.EventListeners.push(element.Mouseenter(ev => {
+                show = !0;
+                tooltip.mover.on;
+                if (ev.target !== element || ev.target.parentNode !== element) element.hasAttr('tooltip-delay') ?
+                    setTimeout(toggleTT, parseInt(element.getAttr('tooltip-delay'))) :
+                    toggleTT();
+
+            }));
+            tooltip.EventListeners.push(element.Mouseleave(ev => {
+                show = !1;
+                tooltip.mover.off;
+                toggleTT()
+            }));
+
+            element.observeAttrs((name, val, oldval, hasAttr) => {
+                if (name === 'tooltip' && hasAttr) tooltip.html(val);
+                else if (name === 'tooltip' && !hasAttr) {
+                    if (is.Def(tooltip.EventListeners)) tooltip.EventListeners.forEach(ev => {
+                        ev.off;
+                    });
+                    tooltip.remove()
+                } else if (name === 'tooltip-delay' && hasAttr) setTimeout(toggleTT, parseInt(element.getAttr('tooltip-delay')));
+                else if (name === 'tooltip-direction' && hasAttr) tooltip.setAttr('direction', val || 'right');
+            });
+
+            tooltip.appendTo(document.body);
+        }
+    });
+
+    Craft.directive('movable', {
+        bind(element) {
+            element.style.position = 'fixed';
+            element.mlisteners = [];
+            let rect = element.getRect(),
+                movehandle = query('[movehandle]', element),
+                cx = 0,
+                cy = 0,
+                move = on(window).Mousemove(e => {
+                    element.move(e.clientX - cx + rect.left, e.clientY - cy + rect.top)
+                }).off;
+
+            element.mlisteners.push(on(movehandle == null ? element : movehandle).Mousedown(e => {
+                if (e.button == 1 || e.buttons == 1) {
+                    rect = element.getRect();
+                    cx = e.clientX;
+                    cy = e.clientY;
+                    move.on
+                }
+            }));
+
+            element.mlisteners.push(on(document).Mouseup(e => {
+                move.off
+            }));
+        },
+        unbind(element) {
+          element.mlisteners.forEach(hndl => {
+            hndl.off;
+          });
+          delete element.mlisteners;
+        }
+    });
 
 });
