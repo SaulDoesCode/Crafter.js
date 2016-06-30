@@ -1,4 +1,4 @@
-Craft.init(function () {
+Craft.exec(function () {
     "use strict";
     let {
         on,
@@ -8,7 +8,7 @@ Craft.init(function () {
         query,
         queryEach,
         queryAll
-    } = this;
+    } = Craft;
 
 
     dom.ripple = attr => dom.element('ripple-effect', '', attr);
