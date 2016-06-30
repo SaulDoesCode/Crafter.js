@@ -1,9 +1,11 @@
 # Crafter.js
+
 a Toolkit for the Modern Web
 
-Crafter.js is still very W.I.P , so tread carefully
+note Crafter.js is still a work in progress! feel free to explore, fork, contribute or offer constructive criticism, it would be much appreciated :+1:.
 
 ## Crafter.js makes use of
+
 - Promises
 - Fetch API
 - Proxy (optional)
@@ -13,6 +15,7 @@ Crafter.js is still very W.I.P , so tread carefully
 Crafter.js uses Babel to ensure compatibility on older browsers
 
 ## Crafter.js offers
+
 - DOM Manipulation
 - Observe elements and react to changes
 - Event emitter system
@@ -36,10 +39,43 @@ Crafter.js uses Babel to ensure compatibility on older browsers
 - WhenReady method to execute code after everything has loaded
 
 ### The CrafterWidgets extension
- adds several useful CSS classes and effects such as grids, ripple effects, sidebar , notifications , custom context menus,  tooltips and more.
+
+adds several useful CSS classes and effects such as grids, ripple effects, sidebar , notifications , custom context menus, tooltips and more.
 
 ### Crafter Code Example
+
 create elements on the fly with ease using the `dom` method!
+
+#### at the top of your script use destructuring to
+deglove usefull methods and features from the Craft object
+
+```javascript
+  const {dom,queryEach,on} = Craft;
+```
+
+Create and Use Custom Attributes AKA directives
+
+```javascript
+  Craft.directive('custom-attrib',{
+    // called when the directive is attached or discovered
+    bind(element,value,oldvalue) {
+      console.log('custom-attrib added to:',this,value);
+    },
+    // called when the directive is changed
+    update(element,value,oldvalue) {
+      console.log('custom-attrib changed on:',this,value);
+    },
+    // called when the directive is removed
+    unbind(element,value,oldvalue) {
+      console.log('custom-attrib removed from:',this);
+    },
+  })
+```
+and in the dom
+```html
+  <div custom-attrib>I have a custom attribute</div>
+```
+
 
 ```javascript
 
@@ -51,6 +87,93 @@ create elements on the fly with ease using the `dom` method!
    div
    .prepend(dom.span().addClass('icon-haunting-div'}))
    .appendTo(document.body);
+```
+
+#### Models and Views
+
+Crafter.js allows the creation of scoped models to manipulate your app, models execute immediately then the views they return executes after the page has loaded
+
+```javascript
+  const {dom} = Craft;
+  // Create models using Craft.model
+  Craft.model('MyModel', scope => {
+    scope.headline = 'New Headline , this Just in...';
+    scope.articles = ['article1...','article2...','article3...','article4...','article5...'];
+
+
+    // you can listen for changes on model scope variables
+    scope.$set('newinfo',(key,value,object,isValueNew) => {
+      if(isValueNew) console.log('new info recieved!')
+    });
+
+    // if your browser does not support Proxy and Reflect
+    // you'd have to use ember observable style accessors
+    // .get(key) and .set(key,val)
+    scope.set('newinfo','I will change when there is new info');
+
+  }).view(scope => {
+    // do any dom manips or post DOM load code here
+
+    // create article element with class news-article,
+    // bind it then append it to a <div class="news">...</div>
+    dom.article('class=news-article').bind('MyModel.articles[2]').appendTo('div.news');
+  })
+
+  // You can assign to variables from the model scope via Craft.fromModel
+  Craft.fromModel('MyModel').newinfo = 'a new piece of info!';
+
+  // Easily access variables from a model's scope using Craft.fromModel
+  Craft.fromModel('MyModel.headline'); // -> 'New Headline , this Just in...'
+  Craft.fromModel('MyModel.articles[3]'); // -> 'article4...'
+  // you may also use Craft.fromModel to set values
+  Craft.fromModel('MyModel.headline','New Headline');
+  Craft.fromModel('MyModel.articles[3]','new article');
+```
+
+You can easily bind scope variables to the dom using the bind="ModelName.xyz" attribute and all your changes will reflect in the dom
+
+```html
+  <div class="news">
+    <header bind='MyModel.headline' class='news'> New Headline , this Just in... </header>
+    <article class="news-article"> article3... </article>
+  </div>
+```
+
+#### Data Binding
+
+```html
+<header bind='News.Headline'></header>
+```
+
+```javascript
+
+// Craft.observer creates an observable object
+var News = Craft.observable({
+  Headline : 'New Headline , this Just in...',
+  Article : `raw text article`
+});
+// The Changes will be instantly reflected in the DOM
+News.Headline = 'New information, data-binding is a thing';
+
+// you can change the output of any get by returning a value
+News.$get('Article',(key,value,object) => dom.article(value));
+
+// You can also optionally add change listeners for a specific property or properties
+News.$set('Headline',(key,value,object) => {
+  if(!Craft.tabActive) Craft.router.title = '(1) ' + document.title
+});
+```
+
+If a bind does not exist it gets bound as a property of the gobal CraftScope Binds on inputs will set the property when the value changes
+
+```html
+<textarea bind="truestory">
+  All Changes gets reflected instantly
+</textarea>
+
+<article bind="truestory">
+  All Changes gets reflected instantly
+</article>
 ```
 
 ```javascript
@@ -71,22 +194,20 @@ create elements on the fly with ease using the `dom` method!
     // add attributes with an object { title : 'x' , id : 'mydiv' }
     dom.div('New div',{ class : 'page-element'}) // -> `<div class="page-element">New div</div>`
 
-    /* if your browser supports Proxy
-     * then you may use this method to create elements that are not available by default in the dom object
-    */
-    // for hyphenated names use the square brackets and string notation
+    // if your browser supports Proxy
+    // then you may use this method to create elements that are not available by default in the Craft.dom object
+    // for hyphenated names use square bracket string notation
     dom['my-element']('inner html goes here', { id : 'element-one', class : 'fancy-el'});
     // otherwise normal dot notation will work for more excentric tag names
     dom.address('2 mainstreet codeshire','class=address-fancy')
 
     // for less common elements or custom elements use dom.element
     // when Proxy is not available in your browser
-    // you could also add attributes URI style
-
-    dom.element('aside','text to go inside','id=asidecontent&class=side-content');
+    // you could also add attributes URI style for brevity
+    dom.element('figcaption','description of some sort','id=figure-three&class=fig-description');
     // -> <aside id="aside2" class="side-content"> text to go inside </aside>
 
-    // for hirarchies arrays with elements are also accepted
+    // for hirarchies arrays with elements or strings are also accepted
     dom.table([
       dom.tr([
         dom.td('Row 1, Column 1'),
@@ -98,19 +219,23 @@ create elements on the fly with ease using the `dom` method!
       ])
     ]);
 
-  })
+  });
 ```
 
-import views using some of the built in custom attributes in Crafter.js
+import views using some of the built in directives in Crafter.js
+
 ```html
   <article importview="/views/article.html" class="fancy-article"></article>
 ```
+
 or do it in code using dom methods
+
 ```javascript
   dom('article.fancy-article').importview('/views/article.html');
 ```
 
 #### Custom Elements
+
 Create a new Custom Element using the Craft.newComponent method
 
 ```javascript
@@ -130,7 +255,7 @@ Create a new Custom Element using the Craft.newComponent method
       .append( dom.div(this.news.article) );
 
     },
-    attr(name, oldValue , newValue) {
+    attr(name, value , oldvalue, hasAttr) {
       // handle Attibute changes on the element
     },
     destroyed() {
@@ -139,6 +264,7 @@ Create a new Custom Element using the Craft.newComponent method
     }
   });
 ```
+
 ```javascript
   // You can add style to your custom element using the css property
   Craft.newComponent('check-box', {
@@ -185,56 +311,15 @@ Create a new Custom Element using the Craft.newComponent method
           this.check.off
       }
   });
-
-```
-
-#### Models and Views
-Crafter.js allows the creation of scoped models to manipulate your app, models execute immediately then the views they return executes after the page has loaded
-
-```javascript
-  let {dom} = Craft;
-  // Create models using Craft.model
-  Craft.model('MyModel', scope => {
-    scope.headline = 'New Headline , this Just in...';
-    scope.articles = ['article1...','article2...','article3...','article4...','article5...'];
-
-
-    // you can listen for changes on model scope variables
-    scope.$set('newinfo',(key,value,object,isValueNew) => {
-      if(isValueNew) console.log('new info recieved!')
-    });
-
-    scope.newinfo = 'I will change when there is new info';
-
-  }).view(scope => {
-    // do any dom manips or post DOM load code here
-    dom.article('class=news-article').bind('MyModel.articles[2]').appendTo('div.news');
-  })
-
-  // You can assign to variables from the model scope via Craft.fromModel
-  Craft.fromModel('MyModel').newinfo = 'a new piece of info!';
-
-  // Easily access variables from a model's scope using Craft.fromModel
-  Craft.fromModel('MyModel.headline') // -> 'New Headline , this Just in...'
-  Craft.fromModel('MyModel.articles[3]') // -> 'article4...'
-```
-
-You can easily bind scope variables to the dom using the bind="ModelName.xyz" attribute and all your changes will reflect in the dom
-
-```html
-  <div class="news">
-    <header bind='MyModel.headline' class='news'> New Headline , this Just in... </header>
-    <article class="news-article"> article3... </article>
-  </div>
 ```
 
 #### EventHandling
-  Event handeling has never been easier   on and once are methods provided by Crafter.js to make Event Handling a breeze
 
-  The EventHandlers can use either CSS selectors or Element variables to attatch listeners to   example
-  `on('css-selector', ...) or on('css-selector', NodeToLookWithIn , ...)`
+Event handeling has never been easier on and once are methods provided by Crafter.js to make Event Handling a breeze
 
-  these are the basic parameter layout options
+The EventHandlers can use either CSS selectors or Element variables to attatch listeners to example `on('css-selector', ...) or on('css-selector', NodeToLookWithIn , ...)`
+
+these are the basic parameter layout options
 
 ```javascript
     let {on} = Craft;
@@ -250,7 +335,7 @@ You can easily bind scope variables to the dom using the bind="ModelName.xyz" at
     on(EventType, target_element_or_elements , parent_element /* optional */ , handler_function)
 ```
 
-  an EventHandler always returns it self no matter how it's been accessed example
+an EventHandler always returns it self no matter how it's been accessed example
 
 ```javascript
   EventHandler.off // -> EventHandler with .on , .once , .off and .Type methods
@@ -258,7 +343,7 @@ You can easily bind scope variables to the dom using the bind="ModelName.xyz" at
   EventHandler.once // -> EventHandler with .on , .once , .off and .Type methods
 ```
 
-  here's a simple example
+here's a simple example
 
 ```javascript
     let EventHandler = Craft.on('.css-class').Click(event => {
@@ -271,7 +356,7 @@ You can easily bind scope variables to the dom using the bind="ModelName.xyz" at
     EventHandler.Type = 'mouseover'; // changes the type of event to listen for
 ```
 
-  here's a more complex example
+here's a more complex example
 
 ```javascript
     let NodeListEventHandler = on('mouseover,mouseout','.elements-in-list', evt => {
@@ -319,44 +404,8 @@ Display the Websocket messages in the dom
   <input type='text'>
 ```
 
-#### Data Binding
-
-```html
-<header bind='News.Headline'></header>
-```
-
-```javascript
-
-// Craft.observer creates an observable object
-var News = Craft.observable({
-  Headline : 'New Headline , this Just in...',
-  Article : `raw text article`
-});
-// The Changes will be instantly reflected in the DOM
-News.Headline = 'New information, data-binding is a thing';
-
-// you can change the output of any get by returning a value
-News.$get('Article',(key,value,object) => dom.article(value));
-
-// You can also optionally add change listeners for a specific property or properties
-News.$set('Headline',(key,value,object) => {
-  if(!Craft.tabActive) Craft.router.title = '(1) ' + document.title
-});
-```
-
-If a bind does not exist it gets bound as a property of the gobal CraftScope Binds on inputs will set the property when the value changes
-
-```html
-<textarea bind="truestory">
-  All Changes gets reflected instantly
-</textarea>
-
-<article bind="truestory">
-  All Changes gets reflected instantly
-</article>
-```
-
 #### TODO
+
 - DOCUMENTATION!!!
 - Feature standardisation
 - Fully featured CSS / Widgets library

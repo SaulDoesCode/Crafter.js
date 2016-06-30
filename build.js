@@ -68,12 +68,11 @@ function mincss(css) {
     return new CleanCSS().minify(css).styles
 }
 
-function transformWC(name, js, css, outloc) {
-
+function transformWC(name, js, css, outloc,hasbs) {
     fs.writeFile(outloc + name + '.pwc', `Craft.addCSS("${mincss(css)}");\n${babelize(js)}`, 'utf8', err => {
         if (err) throw err;
 
-        minjs(outloc + name + '.pwc').then(out => {
+        minjs(hasbs ? [wcPath + name + '.bs',outloc + name + '.pwc'] : outloc + name + '.pwc').then(out => {
             fs.writeFile(outloc + name + '.js', out, 'utf8', err => {
                 if (err) throw err;
                 try {
@@ -102,7 +101,7 @@ function BundlePolyfills() {
     });
 }
 
-function BabelizeBeatifyMinify(inloc, outloc) {
+function BabelizeBeautifyMinify(inloc, outloc) {
 
     babel.transformFile(inloc, BabelOptions, (err, result) => {
         if (err) throw err;
@@ -132,7 +131,7 @@ process.argv.forEach((val, index, array) => {
             if (file.includes('.js')) {
                 let name = file.replace('.js', '');
                 if (files.includes(name + '.css')) {
-                    transformWC(name, fs.readFileSync(wcPath + name + '.js', 'utf8'), fs.readFileSync(wcPath + name + '.css', 'utf8'), './dist/WebComponents/');
+                    transformWC(name, fs.readFileSync(wcPath + name + '.js', 'utf8'), fs.readFileSync(wcPath + name + '.css', 'utf8'), './dist/WebComponents/',files.includes(name + '.bs'));
                 }
             }
         });
@@ -150,5 +149,5 @@ process.argv.forEach((val, index, array) => {
                 }
             }
         });
-    } else if (val == 'craft') BabelizeBeatifyMinify("./src/Crafter.js", "./dist/Crafter.js");
+    } else if (val == 'craft') BabelizeBeautifyMinify("./src/Crafter.js", "./dist/Crafter.js");
 });
