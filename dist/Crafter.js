@@ -1155,22 +1155,13 @@ function _defineProperty(obj, key, value) {
     if (element._DOMM == true) return element;
     element._DOMM = true;
     element.isInput = is.Input(element);
+    element.attrX = eventemitter({});
+    element.attrX.on('attr', function(attr) {
+      element.attrX.emit.apply(element, ['attr:' + attr].concat(arguments));
+    });
     element.newSetGet = newSetGet;
     element.newSetGet('colorAccent', function(func) {
-      if (element.hasAttr('color-accent')) {
-        func(element.getAttr('color-accent'));
-        element._cah = {
-          fn: func,
-          dw: true
-        };
-      } else {
-        element._cah = {
-          fn: func,
-          dw: false
-        };
-      }
-    }, function() {
-      return element._cah;
+      if (element.hasAttr('color-accent') && isFunc(func)) func(element.getAttr('color-accent'));
     });
     /**
      * changes or returns the innerHTML value of a Node
@@ -1361,18 +1352,18 @@ function _defineProperty(obj, key, value) {
       return Craft.onScroll(element, func, pd);
     };
     /* let keypress = code => (fn, type) => evlt('keydown')(element, e => {
-                   if (e.which == code || e.keyCode == code) fn(e, element)
-               }, type);
-               element.Enter = keypress(13);
-               element.Escape = keypress(27);
-               element.Delete = keypress(46);
-               element.Space = keypress(32);
-               element.UpArrow = keypress(38);
-               element.DownArrow = keypress(40);
-               element.LeftArrow = keypress(37);
-               element.RightArrow = keypress(39);
+               if (e.which == code || e.keyCode == code) fn(e, element)
+           }, type);
+           element.Enter = keypress(13);
+           element.Escape = keypress(27);
+           element.Delete = keypress(46);
+           element.Space = keypress(32);
+           element.UpArrow = keypress(38);
+           element.DownArrow = keypress(40);
+           element.LeftArrow = keypress(37);
+           element.RightArrow = keypress(39);
 
-               */
+           */
     /**
      * add CSS style rules to the Element or NodeList
      * @memberof dom
@@ -1624,21 +1615,10 @@ function _defineProperty(obj, key, value) {
       }
       return element;
     };
-    var hasAttrEmitter = false;
     element.observeAttrs = function(func) {
-      if (!isObj(element.attrX)) element.attrX = eventemitter({});
-      if (!hasAttrEmitter) element.attrX.on('attr', function(attr) {
-        if (!hasAttrEmitter) {
-          element.attrX.emit.apply(element, ['attr:' + attr].concat(arguments));
-          hasAttrEmitter = true;
-        }
-      });
       if (isFunc(func)) return element.attrX.on('attr', function(attr) {
         func.apply(element, arguments);
       });
-    };
-    element.unobserveAttrs = function(state) {
-      if (element.attrX) element.attrX.stopall(state);
     };
     return element;
   }
@@ -1842,6 +1822,12 @@ function _defineProperty(obj, key, value) {
         removed: removed
       };
     },
+    /**
+     * checks an array's length if the array contains only
+     * a single item it is returned
+     * @param (array|arraylike) arr - collection to deglove
+     * @returns (array|*)
+     */
     deglove: function(arr) {
       return is.Arraylike(arr) && arr.length == 1 ? arr[0] : arr;
     },
@@ -2498,7 +2484,7 @@ function _defineProperty(obj, key, value) {
     hour: 3600000,
     day: 86400000,
     year: 365 * 86400000
-  }), _defineProperty(_Craft, 'observable', observable), _defineProperty(_Craft, 'CustomAttributes', []), _defineProperty(_Craft, 'Models', observable()), _defineProperty(_Craft, 'tabActive', true), _defineProperty(_Craft, 'tco', function(fn) {
+  }), _defineProperty(_Craft, 'observable', observable), _defineProperty(_Craft, 'Directives', new Map()), _defineProperty(_Craft, 'Models', observable()), _defineProperty(_Craft, 'tabActive', true), _defineProperty(_Craft, 'tco', function(fn) {
     var active = void 0,
       nextArgs = void 0;
     return function() {
@@ -2647,29 +2633,34 @@ function _defineProperty(obj, key, value) {
     } catch (e) {
       return {};
     }
-  }), _defineProperty(_Craft, 'customAttr', function(name, handle) {
-    if (isFunc(handle)) {
-      (function() {
-        var apply = function() {
+  }), _defineProperty(_Craft, 'directive', function(name, handle) {
+    if (!Craft.Directives.has(name) && isObj(handle) && isFunc(handle.bind)) {
+      Craft.Directives.set(name, handle);
+      Craft.WhenReady.then(function() {
+        setTimeout(function() {
           queryEach('[' + name + ']', function(el) {
             el = dom(el);
             if (el.hasAttr(name)) {
-              if (!isArr(el.customAttr)) el.customAttr = [];
-              if (!el.customAttr.includes(name)) {
-                el.customAttr.push(name);
-                handle(el, el.getAttr(name));
+              if (!is.Set(el.directive)) el.directive = new Set();
+              if (!el.directive.has(name)) {
+                (function() {
+                  el.directive.add(name);
+                  el.observeAttrs();
+                  var directiveChangeDetetor = el.attrX.on('attr:' + name, function(name, val, oldval, hasAttr) {
+                    if (hasAttr || !def(oldval)) {
+                      if (isFunc(handle.update)) handle.update.call(el, el, val, oldval, hasAttr);
+                    } else if (isFunc(handle.unbind)) {
+                      handle.unbind.call(el, el, val, oldval);
+                      directiveChangeDetetor.off();
+                    }
+                  });
+                  handle.bind.call(el, el, el.getAttr(name));
+                })();
               }
             }
           });
-        };
-        Craft.CustomAttributes.push({
-          name: name,
-          handle: handle
-        });
-        ready() ? apply() : Craft.WhenReady.then(function() {
-          setTimeout(apply, 20);
-        });
-      })();
+        }, 20);
+      });
     }
   }), _defineProperty(_Craft, 'strongPassword', function(pass, length, caps, number, reasons) {
     var pw = 'Password ',
@@ -2844,90 +2835,108 @@ function _defineProperty(obj, key, value) {
   Craft.curry.adapt = function(fn) {
     return Craft.curry.adaptTo(fn.length, fn);
   };
-  Craft.customAttr('bind', function(element, bind) {
-    element.bind(bind);
-    element.observeAttrs();
-    element.attrX.on('attr:bind', function() {
-      if (!element.hasAttr('bind') || element.getAttr('bind') != bind) element.unbind(bind);
-    });
+  Craft.directive('bind', {
+    bind: function(element, bind) {
+      element.bind(bind);
+    },
+    update: function(element, bind, oldbind) {
+      if (bind != bind) {
+        element.unbind(oldbind);
+        element.bind(bind);
+      }
+    },
+    unbind: function(element, bind) {
+      element.unbind(bind);
+    }
   });
-  Craft.customAttr('bind-for', function(element, bind) {
-    var data = Craft.fromModel(bind);
-    if (isArr(data) || is.Set(data)) {
-      (function() {
-        var domfrag = dom.frag();
-        element = element.stripAttr('bind-for');
-        data.forEach(function(item) {
-          domfrag.appendChild(element.html(item).clone(true));
-        });
-        element.replace(domfrag);
-      })();
-    } else element.remove();
+  Craft.directive('bind-for', {
+    bind: function(element, bind) {
+      var data = Craft.fromModel(bind);
+      if (def(data) && data.forEach) {
+        (function() {
+          var domfrag = dom.frag();
+          element = element.stripAttr('bind-for');
+          data.forEach(function(item) {
+            domfrag.appendChild(element.html(item).clone(true));
+          });
+          element.replace(domfrag);
+        })();
+      } else element.remove();
+    }
   });
-  Craft.customAttr('import-view', function(element, src) {
-    element.importview(src);
+  Craft.directive('import-view', {
+    bind: function(element, src) {
+      element.importview(src);
+    },
+    update: function(element, src) {
+      element.importview(src);
+    }
   });
-  Craft.customAttr('link', function(element, link) {
-    var handle = void 0,
-      linkevt = void 0;
-    element.newSetGet('onlink', function(fn) {
-      if (isFunc(fn)) handle = Craft.router.handle(link, element.linkhandle = fn);
-    });
-    linkevt = element.Click(function(e) {
-      (element.hasAttr('newtab') ? open : Craft.router.open)(link);
-    });
-    element.observeAttrs();
-    element.attrX.on('attr:link', function() {
-      if (!element.hasAttr('link') || element.getAttr('link') != link) {
-        if (isObj(handle)) handle.off(function() {
+  Craft.directive('link', {
+    bind: function(element, link) {
+      if (isFunc(element.onlink)) element.linkhandle = Craft.router.handle(link, element.onlink);
+      element.newSetGet('onlink', function(fn) {
+        if (element.linkhandle) element.linkhandle.off();
+        if (isFunc(fn)) element.linkhandle = Craft.router.handle(link, fn);
+      });
+      element.linkevt = element.Click(function(e) {
+        (element.hasAttr('newtab') ? open : Craft.router.open)(link);
+      });
+    },
+    update: function(element, link, oldlink) {
+      if (link != oldlink) {
+        if (isObj(element.linkhandle)) element.linkhandle.off(function() {
           if (isFunc(element.onunlink)) element.onunlink(link);
         });
-        if (def(linkevt)) linkevt.off;
+        if (def(element.linkevt)) element.linkevt.off;
       }
-    });
+    },
+    unbind: function(element, link) {
+      if (isObj(element.linkhandle)) element.linkhandle.off(function() {
+        if (isFunc(element.onunlink)) element.onunlink(link);
+      });
+      if (def(element.linkevt)) element.linkevt.off;
+    }
   });
-  Craft.customAttr('color-accent', function(element, color) {
-    if (isFunc(element.colorAccent)) element.colorAccent(color);
-    else if (isObj(element.colorAccent)) {
-      if (!element._cah.dw) {
-        element._cah.fn(color);
-        element._cah.dw = false;
-      }
+  Craft.directive('color-accent', {
+    bind: function(element, color) {
+      if (isFunc(element.colorAccent)) element.colorAccent(color);
     }
   }); // takes in an affected element and scans it for custom attributes
-  // then handles the custom attribute if it was registered with Craft.customAttr
-  function manageAttr(el, attr) {
-    for (var _attr, i = 0; i < Craft.CustomAttributes.length; i++) {
-      _attr = Craft.CustomAttributes[i];
-      if (el.hasAttribute(_attr.name)) {
-        if (!isArr(el.customAttr)) el.customAttr = [];
-        if (!el.customAttr.includes(_attr.name)) {
-          el.customAttr.push(_attr.name);
-          _attr.handle(dom(el), el.getAttribute(_attr.name));
-        }
-        break;
-      }
+  // then handles the custom attribute if it was registered with Craft.directive
+  function manageAttr(el, name, val, oldval, hasAttr) {
+    if (Craft.Directives.has(name)) {
+      var handle = Craft.Directives.get(name);
+      if (hasAttr && val != oldval) {
+        if (!is.Set(el.directive)) el.directive = new Set();
+        if (!el.directive.has(name)) {
+          el.directive.add(name);
+          el = dom(el);
+          handle.bind.call(el, el, val);
+        } else if (handle.update) handle.update.call(el, el, val, hasAttr);
+      } else if (!hasAttr && handle.unbind) handle.unbind.call(el, el, val, oldval);
+      if (el.attrX) el.attrX.emit('attr', name, val, oldval, hasAttr);
     }
   }
-  Craft.DomObserver = new MutationObserver(function(muts) {
+
+  function distAttr(mut, func) {
+    var element = mut.target,
+      name = mut.attributeName;
+    func(element, name, element.getAttribute(name), mut.oldValue, element.hasAttribute(name));
+  }
+  new MutationObserver(function(muts) {
     muts.forEach(function(mut) {
       mut.removedNodes.forEach(function(el) {
         el.dispatchEvent(DestructionEvent);
       });
       mut.addedNodes.forEach(function(el) {
-        if (el.hasAttribute) manageAttr(el);
+        if (isEl(el)) manageAttr(el);
       });
-      if (mut.type == 'attributes') {
-        manageAttr(mut.target, mut.attributeName);
-        if (mut.target.attrX) mut.target.attrX.emit('attr', mut.attributeName, mut.target.getAttribute(mut.attributeName), mut.oldValue, mut.target.hasAttribute(mut.attributeName));
-      }
+      if (mut.type == 'attributes' && mut.attributeName != 'style') distAttr(mut, manageAttr);
     });
-  });
-  Craft.DomObserver.observe(doc, {
+  }).observe(doc, {
     attributes: true,
-    childList: true,
-    characterData: true,
-    characterDataOldValue: true,
+    childList: true, //characterData: true,
     subtree: true
   });
 
