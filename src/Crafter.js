@@ -1009,7 +1009,7 @@
         element.isInput = is.Input(element);
         element.attrX = eventemitter({});
         element.attrX.on('attr', function (attr) {
-                element.attrX.emit.apply(element, ['attr:' + attr].concat(arguments));
+            element.attrX.emit.apply(element, ['attr:' + attr].concat(arguments));
         });
 
         element.newSetGet = newSetGet;
@@ -2311,14 +2311,15 @@
             };
         },
         animFrame(func) {
-            let interval, options = {
+            const options = {
                 start() {
                     func();
-                    interval = requestAnimationFrame(options.start);
+                    options.interval = requestAnimationFrame(options.start);
                     return options;
                 },
                 stop() {
-                    cancelAnimationFrame(interval);
+                    cancelAnimationFrame(options.interval);
+                    options.interval = 0;
                     return options;
                 },
                 reset(fn) {
@@ -2328,33 +2329,6 @@
                 }
             };
             return options;
-        },
-        JumpTo(target, options) {
-            options = options || {};
-            options.duration = options.duration || 400;
-            options.offset = options.offset || 0;
-
-            let startTime, elapsedTime, start = root.pageYoffset,
-                distance = isStr(target) ? options.offset + dom(target, true).getRect().top : target,
-                loopIteration = 0,
-                loop = time => {
-                    if (loopIteration == 0) startTime = time;
-                    loopIteration++;
-                    elapsedTime = time - startTime;
-                    scrollTo(0, ((t, b, c, d) => {
-                        t /= d / 2;
-                        if (t < 1) return c / 2 * t * t + b;
-                        t--;
-                        return -c / 2 * (t * (t - 2) - 1) + b;
-                    })(elapsedTime, start, distance, options.duration));
-                    if (elapsedTime < options.duration) requestAnimationFrame(loop);
-                    else {
-                        scrollTo(0, start + distance);
-                        if (isFunc(options.func)) options.func();
-                        startTime = undef;
-                    }
-                };
-            requestAnimationFrame(loop);
         },
         /**
          * converts Objects or URL variable strings to a FormData object
@@ -2740,10 +2714,10 @@
 
     Craft.directive('link', {
         bind(element, link) {
-            if(isFunc(element.onlink)) element.linkhandle = Craft.router.handle(link,element.onlink);
+            if (isFunc(element.onlink)) element.linkhandle = Craft.router.handle(link, element.onlink);
             element.newSetGet('onlink', fn => {
-                if(element.linkhandle) element.linkhandle.off();
-                if (isFunc(fn)) element.linkhandle = Craft.router.handle(link,fn);
+                if (element.linkhandle) element.linkhandle.off();
+                if (isFunc(fn)) element.linkhandle = Craft.router.handle(link, fn);
             });
             element.linkevt = element.Click(e => {
                 (element.hasAttr('newtab') ? open : Craft.router.open)(link);
@@ -2785,7 +2759,7 @@
                     handle.bind.call(el, el, val);
                 } else if (handle.update) handle.update.call(el, el, val, hasAttr);
             } else if (!hasAttr && handle.unbind) handle.unbind.call(el, el, val, oldval);
-            if(el.attrX) el.attrX.emit('attr', name, val, oldval, hasAttr);
+            if (el.attrX) el.attrX.emit('attr', name, val, oldval, hasAttr);
         }
     }
 
