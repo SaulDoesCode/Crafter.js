@@ -174,6 +174,7 @@ function _defineProperty(obj, key, value) {
      * Test if something is a String
      * @param args - value/values to test
      */
+    Str: isStr,
     String: ta(isStr),
     /**
      * Test if something is an Array
@@ -250,6 +251,7 @@ function _defineProperty(obj, key, value) {
      * @param args - value/values to test
      */
     Object: ta(isObj),
+    Obj: isObj,
     /**
      * Determine if a sring is JSON
      * @param args - value/values to test
@@ -1871,9 +1873,6 @@ function _defineProperty(obj, key, value) {
     exec: exec,
     UnHTML: function(html) {
       return html.replace(/<script[^>]*?>.*?<\/script>/gi, '').replace(/<style[^>]*?>.*?<\/style>/gi, '').replace(/<![\s\S]*?--[ \t\n\r]*>/gi, '');
-    },
-    init: function(func) {
-      return func.apply(Craft, toArr(arguments).slice(1));
     },
     /**
      * Compares two arrays and determines if they are the same array
