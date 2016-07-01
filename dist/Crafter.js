@@ -2499,51 +2499,24 @@ function _defineProperty(obj, key, value) {
       return result;
     };
   }), _defineProperty(_Craft, 'animFrame', function(func) {
-    var interval = void 0,
-      options = {
-        start: function() {
-          func();
-          interval = requestAnimationFrame(options.start);
-          return options;
-        },
-        stop: function() {
-          cancelAnimationFrame(interval);
-          return options;
-        },
-        reset: function(fn) {
-          options.stop();
-          if (isFunc(fn)) func = fn;
-          return options.start();
-        }
-      };
+    var options = {
+      start: function() {
+        func();
+        options.interval = requestAnimationFrame(options.start);
+        return options;
+      },
+      stop: function() {
+        cancelAnimationFrame(options.interval);
+        options.interval = 0;
+        return options;
+      },
+      reset: function(fn) {
+        options.stop();
+        if (isFunc(fn)) func = fn;
+        return options.start();
+      }
+    };
     return options;
-  }), _defineProperty(_Craft, 'JumpTo', function(target, options) {
-    options = options || {};
-    options.duration = options.duration || 400;
-    options.offset = options.offset || 0;
-    var startTime = void 0,
-      elapsedTime = void 0,
-      start = root.pageYoffset,
-      distance = isStr(target) ? options.offset + dom(target, true).getRect().top : target,
-      loopIteration = 0,
-      loop = function(time) {
-        if (loopIteration == 0) startTime = time;
-        loopIteration++;
-        elapsedTime = time - startTime;
-        scrollTo(0, function(t, b, c, d) {
-          t /= d / 2;
-          if (t < 1) return c / 2 * t * t + b;
-          t--;
-          return -c / 2 * (t * (t - 2) - 1) + b;
-        }(elapsedTime, start, distance, options.duration));
-        if (elapsedTime < options.duration) requestAnimationFrame(loop);
-        else {
-          scrollTo(0, start + distance);
-          if (isFunc(options.func)) options.func();
-          startTime = undef;
-        }
-      };
-    requestAnimationFrame(loop);
   }), _defineProperty(_Craft, 'toFormData', function(val) {
     var formData = new FormData();
     if (isStr(val)) val = val.split('&');

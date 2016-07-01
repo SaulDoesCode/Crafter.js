@@ -738,7 +738,7 @@
      * @param {function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
      * @returns off - when on is defined as a variable "var x = on(...)" it allows you to access all the EventHandler interfaces off,once,on
      */
-    let on = EvtLT('on'),
+    const on = EvtLT('on'),
         /**
          * Starts listening for an EventType on the Target/Targets ONCE after triggering the once event Listener will stop listening
          * @param {string} EventType - set the type of event to listen for example "click" or "scroll"
@@ -2160,7 +2160,7 @@
                 return result;
             };
         },
-        once(func, context) {
+        Once(func, context) {
             let result;
             return function () {
                 if (isFunc(func)) {

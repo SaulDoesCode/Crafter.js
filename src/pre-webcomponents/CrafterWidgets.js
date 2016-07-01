@@ -10,6 +10,9 @@ Craft.exec(function () {
         queryAll
     } = Craft;
 
+    if(!anime) {
+      if(typeof require != 'undefined') var anime = require('anime');
+    }
 
     dom.ripple = attr => dom.element('ripple-effect', '', attr);
     Craft.ripple = (selector, options) => queryEach(selector, element => {
