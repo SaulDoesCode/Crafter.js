@@ -3,30 +3,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 } : function(obj) {
   return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj;
 };
-
-function _defineEnumerableProperties(obj, descs) {
-  for (var key in descs) {
-    var desc = descs[key];
-    desc.configurable = desc.enumerable = true;
-    if ("value" in desc) desc.writable = true;
-    Object.defineProperty(obj, key, desc);
-  }
-  return obj;
-}
-
-function _defineProperty(obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-  return obj;
-}
 /**
  *  @overview Crafter.js , minimalist front-end library
  *  @author Saul van der Walt - https://github.com/SaulDoesCode/
@@ -34,7 +10,7 @@ function _defineProperty(obj, key, value) {
  */ // var perf = performance.now();
 (function(doc, root) {
   'use strict';
-  var _WhenReady, _Craft, _mutatorMap, Ready = false,
+  var Ready = false,
     tabActive = true,
     ready = function() {
       return Ready || doc.readyState == 'complete';
@@ -1798,7 +1774,7 @@ function _defineProperty(obj, key, value) {
    * Craft is Crafter.js's Core containing most functionality.
    * @namespace Craft
    */
-  var Craft = (_Craft = {
+  var Craft = {
     /**
      * Returns an object or calls a function with all the differences between two arrays
      * @method arrDiff
@@ -2353,433 +2329,539 @@ function _defineProperty(obj, key, value) {
         } else if (!timeout && options.trailing == true) timeout = setTimeout(later, remaining);
         return result;
       };
-    }
-  }, _defineProperty(_Craft, 'once', function(func, context) {
-    var result = void 0;
-    return function() {
-      if (isFunc(func)) {
-        result = func.apply(context || this, arguments);
-        func = null;
-      }
-      return result;
-    };
-  }), _defineProperty(_Craft, 'css', function(element, styles, prop) {
-    if (isObj(styles)) forEach(styles, function(prop, key) {
-      if (isEl(element)) element.style[key] = prop;
-      else if (is.NodeList(element)) forEach(element, function(el) {
-        el.style[key] = prop;
-      });
-    });
-    else if (isStr(styles, prop)) element.style[styles] = prop;
-    else throw new Error('CSS : Styles Object is not an object');
-    return element;
-  }), _defineProperty(_Craft, 'fixURL', function(url) {
-    if (!is.URL(url)) {
-      var match = url.match(/^(\/.*?)?$/);
-      if (is.empty(match)) throw new Error('invalid src');
-      url = location.host + match[0];
-    }
-    if (!url.includes('http://') && !url.includes('https://')) url = location.protocol + '//' + url;
-    return url;
-  }), _defineProperty(_Craft, 'addCSS', function(css, noimport) {
-    query('style[crafterstyles]', head).textContent += noimport ? css : '@import url("' + Craft.URLfrom(css, {
-      type: 'text/css'
-    }) + '");\n';
-  }), _defineProperty(_Craft, 'importCSS', function(src, gofetch) {
-    if (gofetch) fetch(Craft.fixURL(src), {
-      mode: 'cors'
-    }).then(function(res) {
-      if (!res.ok) console.warn('loading css failed - ' + src);
-      else res.text().then(function(css) {
-        return Craft.addCSS('\n' + css, true);
-      });
-    });
-    else Craft.addCSS('@import url("' + Craft.fixURL(src) + '");\n', true);
-  }), _defineProperty(_Craft, 'importFont', function(name, src) {
-    Craft.addCSS('@font-face {font-family:' + name + ';src:url("' + Craft.fixURL(src) + '");}', true);
-  }), _defineProperty(_Craft, 'loadScript', function(src, funcexec, fetchattr) {
-    var fetchAttr = {
-      mode: 'cors'
-    };
-    if (isObj(fetchattr)) fetchAttr = Object.assign(fetchAttr, fetchattr);
-    return promise(function(pass, fail) {
-      fetch(Craft.fixURL(src), fetchAttr).then(function(res) {
-        if (!res.ok) console.warn('loading script failed - ' + src);
-        else res.text().then(function(code) {
-          if (funcexec) {
-            try {
-              pass(new Function(code).call(root));
-            } catch (e) {
-              fail(e);
-            }
-          } else head.appendChild(dom.script(code, {}, false, pass, true));
-        });
-      });
-    });
-  }), _defineProperty(_Craft, 'loadScripts', function(urls, funcexec, fetchattr) {
-    return promise(function(pass, fail) {
-      var len = 0;
-      urls.forEach(function(src) {
-        Craft.loadScript(src, funcexec, fetchattr).then(function() {
-          len++;
-          if (len == urls.length) pass();
-        }).catch(fail);
-      });
-    });
-  }), _defineProperty(_Craft, 'hasCaps', function(str) {
-    return toArr(str).some(is.Uppercase);
-  }), _defineProperty(_Craft, 'hasNums', function(str) {
-    return (/\d/g.test(str));
-  }), _defineProperty(_Craft, 'len', function(val) {
-    try {
-      return isObj(val) ? Object.keys(val).length : is.Map(val) || is.Set(val) ? val.size : val.length;
-    } catch (e) {}
-    return -1;
-  }), _defineProperty(_Craft, 'DateIndex', function(Collection, date) {
-    for (var i = 0; i < Collection.length; i++) {
-      if (+Collection[i] === +date) return i;
-    }
-    return -1;
-  }), _defineProperty(_Craft, 'type', function() {
-    return Craft.deglove(toArr(arguments).map(function(t) {
-      return typeof t === 'undefined' ? 'undefined' : _typeof(t);
-    }));
-  }), _defineProperty(_Craft, 'memoize', function(func, resolver) {
-    if (!isFunc(func) || resolver && !isFunc(resolver)) throw new TypeError('no function');
-    var cache = new WeakMap(),
-      memoized = function() {
-        var args = arguments,
-          key = resolver ? resolver.apply(this, args) : args[0];
-        if (cache.has(key)) return cache.get(key);
-        var result = func.apply(this, args);
-        memoized.cache = cache.set(key, result);
+    },
+    Once: function(func, context) {
+      var result = void 0;
+      return function() {
+        if (isFunc(func)) {
+          result = func.apply(context || this, arguments);
+          func = null;
+        }
         return result;
       };
-    return memoized;
-  }), _defineProperty(_Craft, 'millis', {
-    seconds: function(n) {
-      return (n || 1) * 1000;
     },
-    minutes: function(n) {
-      return (n || 1) * 60000;
+    css: function(element, styles, prop) {
+      if (isObj(styles)) forEach(styles, function(prop, key) {
+        if (isEl(element)) element.style[key] = prop;
+        else if (is.NodeList(element)) forEach(element, function(el) {
+          el.style[key] = prop;
+        });
+      });
+      else if (isStr(styles, prop)) element.style[styles] = prop;
+      else throw new Error('CSS : Styles Object is not an object');
+      return element;
     },
-    hours: function(n) {
-      return (n || 1) * 3600000;
-    },
-    days: function(n) {
-      return (n || 1) * 86400000;
-    },
-    weeks: function(n) {
-      return (n || 1) * 604800000;
-    },
-    months: function(n, daysInMonth) {
-      return n * Craft.millis.days(daysInMonth || 30);
-    },
-    years: function(n) {
-      return n * Craft.millis.year;
-    },
-    sec: 1000,
-    min: 60000,
-    hour: 3600000,
-    day: 86400000,
-    year: 365 * 86400000
-  }), _defineProperty(_Craft, 'observable', observable), _defineProperty(_Craft, 'Directives', new Map()), _defineProperty(_Craft, 'Models', observable()), _defineProperty(_Craft, 'tabActive', true), _defineProperty(_Craft, 'tco', function(fn) {
-    var active = void 0,
-      nextArgs = void 0;
-    return function() {
-      var result = void 0;
-      nextArgs = arguments;
-      if (!active) {
-        active = true;
-        while (nextArgs) {
-          result = fn.apply(this, [nextArgs, nextArgs = null][0]);
-        }
-        active = false;
+    fixURL: function(url) {
+      if (!is.URL(url)) {
+        var match = url.match(/^(\/.*?)?$/);
+        if (is.empty(match)) throw new Error('invalid src');
+        url = location.host + match[0];
       }
-      return result;
-    };
-  }), _defineProperty(_Craft, 'animFrame', function(func) {
-    var options = {
-      start: function() {
-        func();
-        options.interval = requestAnimationFrame(options.start);
-        return options;
-      },
-      stop: function() {
-        cancelAnimationFrame(options.interval);
-        options.interval = 0;
-        return options;
-      },
-      reset: function(fn) {
-        options.stop();
-        if (isFunc(fn)) func = fn;
-        return options.start();
-      }
-    };
-    return options;
-  }), _defineProperty(_Craft, 'toFormData', function(val) {
-    var formData = new FormData();
-    if (isStr(val)) val = val.split('&');
-    forEach(val, function(v) {
-      if (isStr(v)) {
-        v = v.split('=');
-        if (v.length == 1) v[1] = '';
-        formData.append(v[0], v[1]);
-      } else formData.append(key, v);
-    });
-    return formData;
-  }), _defineProperty(_Craft, 'onScroll', function(element, func, preventDefault) {
-    return on('wheel', element, function(e) {
-      if (preventDefault) e.preventDefault();
-      func(e.deltaY < 1, e);
-    });
-  }), _WhenReady = 'WhenReady', _mutatorMap = {}, _mutatorMap[_WhenReady] = _mutatorMap[_WhenReady] || {}, _mutatorMap[_WhenReady].get = function() {
-    return promise(function(pass, fail) {
-      if (ready()) return pass();
-      var check = setInterval(function() {
-        if (ready()) {
-          pass();
-          clearInterval(check);
-        }
-      }, 20);
-      setTimeout(function() {
-        clearInterval(check);
-        if (!Ready || doc.readyState === 'complete') fail('loading took too long loaded with errors :(');
-      }, 5500);
-    });
-  }, _defineProperty(_Craft, 'model', function(name, func) {
-    if (isFunc(func) && isStr(name)) {
-      if (!def(Craft.Models[name])) {
-        var _ret5 = function() {
-          var scope = observable();
-          func = func.bind(scope);
-          Craft.Models.set(name, {
-            func: func,
-            scope: scope
-          });
-          Craft.Models.emit(name, scope);
-          func(scope);
-          return {
-            v: {
-              view: function(fn) {
-                Craft.WhenReady.then(fn.bind(scope, scope));
+      if (!url.includes('http://') && !url.includes('https://')) url = location.protocol + '//' + url;
+      return url;
+    },
+    /**
+     * Craft.addCSS takes in any string of valid css code and executes it
+     * @param (string) css - css code to execute
+     */
+    addCSS: function(css, noimport) {
+      query('style[crafterstyles]', head).textContent += noimport ? css : '@import url("' + Craft.URLfrom(css, {
+        type: 'text/css'
+      }) + '");\n';
+    },
+    /**
+     * Craft.importCSS takes in a source then attempts to fetch and execute it
+     * @param (src) css - css code to execute
+     */
+    importCSS: function(src, gofetch) {
+      if (gofetch) fetch(Craft.fixURL(src), {
+        mode: 'cors'
+      }).then(function(res) {
+        if (!res.ok) console.warn('loading css failed - ' + src);
+        else res.text().then(function(css) {
+          return Craft.addCSS('\n' + css, true);
+        });
+      });
+      else Craft.addCSS('@import url("' + Craft.fixURL(src) + '");\n', true);
+    },
+    importFont: function(name, src) {
+      Craft.addCSS('@font-face {font-family:' + name + ';src:url("' + Craft.fixURL(src) + '");}', true);
+    },
+    loadScript: function(src, funcexec, fetchattr) {
+      var fetchAttr = {
+        mode: 'cors'
+      };
+      if (isObj(fetchattr)) fetchAttr = Object.assign(fetchAttr, fetchattr);
+      return promise(function(pass, fail) {
+        fetch(Craft.fixURL(src), fetchAttr).then(function(res) {
+          if (!res.ok) console.warn('loading script failed - ' + src);
+          else res.text().then(function(code) {
+            if (funcexec) {
+              try {
+                pass(new Function(code).call(root));
+              } catch (e) {
+                fail(e);
               }
+            } else head.appendChild(dom.script(code, {}, false, pass, true));
+          });
+        });
+      });
+    },
+    loadScripts: function(urls, funcexec, fetchattr) {
+      return promise(function(pass, fail) {
+        var len = 0;
+        urls.forEach(function(src) {
+          Craft.loadScript(src, funcexec, fetchattr).then(function() {
+            len++;
+            if (len == urls.length) pass();
+          }).catch(fail);
+        });
+      });
+    },
+    hasCaps: function(str) {
+      return toArr(str).some(is.Uppercase);
+    },
+    hasNums: function(str) {
+      return (/\d/g.test(str));
+    },
+    len: function(val) {
+      try {
+        return isObj(val) ? Object.keys(val).length : is.Map(val) || is.Set(val) ? val.size : val.length;
+      } catch (e) {}
+      return -1;
+    },
+    DateIndex: function(Collection, date) {
+      for (var i = 0; i < Collection.length; i++) {
+        if (+Collection[i] === +date) return i;
+      }
+      return -1;
+    },
+    type: function() {
+      return Craft.deglove(toArr(arguments).map(function(t) {
+        return typeof t === 'undefined' ? 'undefined' : _typeof(t);
+      }));
+    },
+    memoize: function(func, resolver) {
+      if (!isFunc(func) || resolver && !isFunc(resolver)) throw new TypeError('no function');
+      var cache = new WeakMap(),
+        memoized = function() {
+          var args = arguments,
+            key = resolver ? resolver.apply(this, args) : args[0];
+          if (cache.has(key)) return cache.get(key);
+          var result = func.apply(this, args);
+          memoized.cache = cache.set(key, result);
+          return result;
+        };
+      return memoized;
+    },
+    millis: {
+      seconds: function(n) {
+        return (n || 1) * 1000;
+      },
+      minutes: function(n) {
+        return (n || 1) * 60000;
+      },
+      hours: function(n) {
+        return (n || 1) * 3600000;
+      },
+      days: function(n) {
+        return (n || 1) * 86400000;
+      },
+      weeks: function(n) {
+        return (n || 1) * 604800000;
+      },
+      months: function(n, daysInMonth) {
+        return n * Craft.millis.days(daysInMonth || 30);
+      },
+      years: function(n) {
+        return n * Craft.millis.year;
+      },
+      sec: 1000,
+      min: 60000,
+      hour: 3600000,
+      day: 86400000,
+      year: 365 * 86400000
+    },
+    observable: observable,
+    Directives: new Map(),
+    Models: observable(),
+    tabActive: true,
+    /**
+     * Tail Call Optimization for recursive functions
+     * @param fn - function that uses recursion inside
+     */
+    tco: function(fn) {
+      var active = void 0,
+        nextArgs = void 0;
+      return function() {
+        var result = void 0;
+        nextArgs = arguments;
+        if (!active) {
+          active = true;
+          while (nextArgs) {
+            result = fn.apply(this, [nextArgs, nextArgs = null][0]);
+          }
+          active = false;
+        }
+        return result;
+      };
+    },
+    animFrame: function(func) {
+      var options = {
+        start: function() {
+          func();
+          options.interval = requestAnimationFrame(options.start);
+          return options;
+        },
+        stop: function() {
+          cancelAnimationFrame(options.interval);
+          options.interval = 0;
+          return options;
+        },
+        reset: function(fn) {
+          options.stop();
+          if (isFunc(fn)) func = fn;
+          return options.start();
+        }
+      };
+      return options;
+    },
+    /**
+     * converts Objects or URL variable strings to a FormData object
+     * @param {object|string} val - values to convert
+     */
+    toFormData: function(val) {
+      var formData = new FormData();
+      if (isStr(val)) val = val.split('&');
+      forEach(val, function(v) {
+        if (isStr(v)) {
+          v = v.split('=');
+          if (v.length == 1) v[1] = '';
+          formData.append(v[0], v[1]);
+        } else formData.append(key, v);
+      });
+      return formData;
+    },
+    /**
+     * handles scrolling events
+     * @param {Node} element - target of listener
+     * @param {function} func - callback to handle the event
+     * @param {boolean=} preventDefault - event.preventDefault() or not
+     */
+    onScroll: function(element, func, preventDefault) {
+      return on('wheel', element, function(e) {
+        if (preventDefault) e.preventDefault();
+        func(e.deltaY < 1, e);
+      });
+    },
+    /**
+     * returns a promise when the DOM and WebComponents are all finished loading
+     * @returns {promise} - when everything is done loading WhenReady will return a promise
+     */
+    get WhenReady() {
+      return promise(function(pass, fail) {
+        if (ready()) return pass();
+        var check = setInterval(function() {
+          if (ready()) {
+            pass();
+            clearInterval(check);
+          }
+        }, 20);
+        setTimeout(function() {
+          clearInterval(check);
+          if (!Ready || doc.readyState === 'complete') fail('loading took too long loaded with errors :(');
+        }, 5500);
+      });
+    },
+    model: function(name, func) {
+      if (isFunc(func) && isStr(name)) {
+        if (!def(Craft.Models[name])) {
+          var _ret5 = function() {
+            var scope = observable();
+            func = func.bind(scope);
+            Craft.Models.set(name, {
+              func: func,
+              scope: scope
+            });
+            Craft.Models.emit(name, scope);
+            func(scope);
+            return {
+              v: {
+                view: function(fn) {
+                  Craft.WhenReady.then(fn.bind(scope, scope));
+                }
+              }
+            };
+          }();
+          if ((typeof _ret5 === 'undefined' ? 'undefined' : _typeof(_ret5)) === "object") return _ret5.v;
+        }
+        throw new Error('Craft Model already exists');
+      }
+    },
+    modelInit: function(name, func) {
+      Craft.Models[name] != undef ? func.call(Craft, Craft.Models[name].scope) : Craft.Models.once(name, function(scope) {
+        func.call(Craft, scope);
+      });
+    },
+    fromModel: function(key, val) {
+      var cutkey = cutdot(key),
+        IsValDefined = def(val),
+        ck = cutkey[0],
+        type = (IsValDefined ? 'set' : 'get') + 'Deep';
+      if (def(Craft.Models[ck])) return cutkey.length == 1 && !IsValDefined ? Craft.Models[ck].scope : Craft[type](Craft.Models[ck].scope, joindot(Craft.omit(cutkey, ck)), val);
+    },
+    getPath: function(path, full) {
+      try {
+        if (has(path, '\'"', true)) return degloveStr(path);
+        else if (path == 'true') return true;
+        else if (path == 'false') return false;
+        else if (is.Num(path)) return Number(path);
+        var cutbind = cutdot(path),
+          prop = last(cutbind),
+          objaccessor = cutbind[0],
+          obj = def(Craft.Models[objaccessor]) ? Craft.Models[objaccessor].scope : Craft.getDeep(root, joindot(Craft.omit(cutbind, prop))),
+          _val3 = Craft.getDeep(obj, cutbind.length > 1 ? joindot(Craft.omit(cutbind, objaccessor)) : prop);
+        if (full) return {
+          cutbind: cutbind,
+          objaccessor: objaccessor,
+          path: path,
+          prop: prop,
+          obj: obj,
+          val: _val3
+        };
+        if (def(_val3)) return _val3;
+        if (objaccessor === prop && def(obj)) return obj;
+      } catch (e) {
+        return {};
+      }
+    },
+    /**
+     * defines custom attributes/directives
+     * @param {string} name - the name of your custom attribute
+     * @param {function} handle - a function to handle how your custom attribute behaves
+     * @example Craft.directive('turngreen', element => element.css({ background : 'green'}));
+     **/
+    directive: function(name, handle) {
+      if (!Craft.Directives.has(name) && isObj(handle) && isFunc(handle.bind)) {
+        Craft.Directives.set(name, handle);
+        Craft.WhenReady.then(function() {
+          setTimeout(function() {
+            queryEach('[' + name + ']', function(el) {
+              el = dom(el);
+              if (el.hasAttr(name)) {
+                if (!is.Set(el.directive)) el.directive = new Set();
+                if (!el.directive.has(name)) {
+                  (function() {
+                    el.directive.add(name);
+                    el.observeAttrs();
+                    var directiveChangeDetetor = el.attrX.on('attr:' + name, function(name, val, oldval, hasAttr) {
+                      if (hasAttr || !def(oldval)) {
+                        if (isFunc(handle.update)) handle.update.call(el, el, val, oldval, hasAttr);
+                      } else if (isFunc(handle.unbind)) {
+                        handle.unbind.call(el, el, val, oldval);
+                        directiveChangeDetetor.off();
+                      }
+                    });
+                    handle.bind.call(el, el, el.getAttr(name));
+                  })();
+                }
+              }
+            });
+          }, 20);
+        });
+      }
+    },
+    /**
+     * Usefull method for validating passwords , example Craft.strongPassword('#MyFancyPassword18',8,true,true,"#") -> true requirements met
+     * @param {string} pass - string containing the password
+     * @param {Number} length - Character length in numbers (Minimum password length)
+     * @param {Boolean} caps - Should the password contains Capital Letters
+     * @param {Boolean} number - should the password contain Numbers
+     * @param {Boolean} reasons - should the function return a short string explaining the reason exept when it's a pass then it gives a bool;
+     * @param {...string} includeChars - every extra argument should be a string containing a character you want the password to include
+     */
+    strongPassword: function(pass, length, caps, number, reasons) {
+      var pw = 'Password ',
+        includeChars = toArr(arguments).slice(5);
+      if (pass.length <= length - 1) return reasons ? pw + 'too short' : false;
+      if (caps && !Craft.hasCaps(pass)) return reasons ? pw + 'should have a Capital letter' : false;
+      if (number && !Craft.hasNums(pass)) return reasons ? pw + 'should have a number' : false;
+      if (includeChars.length) {
+        if (!includeChars.some(function(ch) {
+            return pass.includes(ch);
+          })) return reasons ? '' : false;
+      }
+      return false;
+    },
+    /**
+     * converts camel case strings to dashed strings
+     * usefull for css properties and such
+     * @example Craft.camelDash('MyCamelCaseName') // -> my-camel-case-name
+     * @param (string) val - string to convert
+     */
+    camelDash: function(val) {
+      return val.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+    },
+    formatBytes: function(bytes, decimals) {
+      if (bytes == 0) return '0 Bytes';
+      var k = 1000,
+        i = Math.floor(Math.log(bytes) / Math.log(k));
+      return (bytes / Math.pow(k, i)).toPrecision(decimals + 1 || 3) + ' ' + 'Bytes,KB,MB,GB,TB,PB,EB,ZB,YB'.split(',')[i];
+    },
+    randomNum: function(max, min) {
+      min = min || 0;
+      max = max || 100;
+      return Math.random() * (max - min) + min;
+    },
+    randomInt: function(max, min) {
+      min = min || 0;
+      max = max || 100;
+      return Math.floor(Math.random() * (max - min)) + min;
+    },
+    /**
+     * method for generating random alphanumeric strings
+     * @param (=int) max
+     * @param (=int) min
+     * @return (string)
+     */
+    randomStr: function(max, min) {
+      var text = '';
+      min = min || 0;
+      max = max || 6;
+      for (; min < max; min++) {
+        text += possibleText.charAt(Math.floor(Math.random() * possibleText.length));
+      }
+      return text;
+    },
+    /**
+     * similar to Craft.randomStr in that it generates a unique string , in this case a Unique ID with random alphanumeric strings separated by hyphens
+     * example 0ebf-c7d2-ef81-2667-08ef-4cde
+     * @param {number=} len - optional length of uid sections
+     */
+    GenUID: function(len) {
+      return Craft.array(len || 6, function() {
+        return Craft.randomStr(4);
+      }).join('-');
+    },
+    /**
+     * method for creating custom elements configuring their lifecycle's and inheritance
+     * the config Object has 7 distinct options ( created , inserted , destroyed , attr, css, set_X and get_X )
+     * @param {string} tag - a hyphenated custom HTML tagname for the new element -> "custom-element"
+     * @param {object} config - Object containing all the element's lifecycle methods / extends and attached methods or properties
+     */
+    newComponent: function(tag, config) {
+      if (!def(config)) throw new Error(tag + ' : config undefined');
+      var element = Object.create(HTMLElement.prototype),
+        settings = {},
+        dm = void 0;
+      element.createdCallback = function() {
+        var el = dom(this),
+          dealtWith = [];
+        for (var _key3 in config) {
+          if (!dealtWith.includes(_key3)) {
+            if (_key3.includes('set_')) {
+              var sgKey = _key3.split('_')[1];
+              dealtWith.push(_key3, 'get_' + sgKey);
+              el.newSetGet(sgKey, config[_key3], config['get_' + sgKey]);
+            } else if (_key3.includes('get_')) {
+              var _sgKey = _key3.split('_')[1];
+              dealtWith.push(_key3, 'set_' + _sgKey);
+              el.newSetGet(_sgKey, isFunc(config['set_' + _sgKey]) ? config['set_' + _sgKey] : function(x) {}, config[_key3]);
+            }
+          }
+        }
+        if (isFunc(config['attr'])) el.observeAttrs(config['attr']);
+        if (isFunc(config['created'])) return config['created'].call(el);
+      };
+      var _loop = function(_key4) {
+        if (_key4 == 'created' || _key4 == 'attr' || _key4.includes('set_') || _key4.includes('get_')) return 'continue';
+        if (isFunc(config[_key4]) && _key4 != 'attr') dm = function() { // Adds dom methods to element
+          return config[_key4].apply(dom(this), arguments);
+        };
+        _key4 == 'inserted' ? element.attachedCallback = dm : _key4 == 'destroyed' ? element.detachedCallback = dm : _key4.toLowerCase() == 'css' ? Craft.addCSS(config[_key4]) : isFunc(config[_key4]) ? element[_key4] = dm : defineprop(element, _key4, getpropdescriptor(config, _key4));
+      };
+      for (var _key4 in config) {
+        var _ret7 = _loop(_key4);
+        if (_ret7 === 'continue') continue;
+      }
+      settings['prototype'] = element;
+      doc.registerElement(tag, settings);
+    },
+    SyncInput: function(input, obj, key, onset) {
+      if (isStr(input)) input = query(input);
+      if (is.Input(input)) {
+        (function() {
+          var oldval = input.value,
+            onsetfn = isFunc(onset);
+          input[sI] = on('input,blur,keydown', input, function(e) {
+            setTimeout(function() {
+              var val = input.value;
+              if (!(Craft.getDeep(obj, key) == '' && val == '') && val != oldval) {
+                oldval = val;
+                Craft.setDeep(obj, key, input.value);
+                if (onsetfn) onset(input.value);
+              }
+            }, 0);
+          });
+        })();
+      }
+    },
+    disconectInputSync: function(input) {
+      if (isStr(input)) input = query(input);
+      if (is.Node(input) && def(input[sI])) {
+        input[sI].off;
+        delete input[sI];
+      }
+    },
+    onTabChange: function(fn) {
+      var options = {
+        off: function() {
+          tabListeners.delete(fn);
+          return options;
+        },
+        on: function() {
+          tabListeners.add(fn);
+          return options;
+        }
+      };
+      return options.on();
+    },
+    tabpause: function(state, options) {
+      if (state) options.tablistener = Craft.onTabChange(function(focused) {
+        options[focused ? 'on' : 'off']();
+      });
+      else {
+        if (options.tablistner) options.tablistener.off();
+      }
+      return options;
+    },
+    every: function(time, fn, context, pauseondefocus) {
+      if (isFunc(fn)) {
+        var _ret9 = function() {
+          var options = {
+            interval: undef,
+            set tabpause(state) {
+              if (is.Bool(state)) Craft.tabpause(state, options);
+            },
+            on: function() {
+              if (def(options.interval)) options.off();
+              options.interval = setInterval(fn.bind(is.Bool(context) || !def(context) ? options : context), isFunc(time) ? time() : time);
+              return options;
+            },
+            off: function() {
+              clearInterval(options.interval);
+              return options;
             }
           };
+          if (is.Bool(context) && context == true || pauseondefocus == true) options.tabpause = true;
+          return {
+            v: options.on()
+          };
         }();
-        if ((typeof _ret5 === 'undefined' ? 'undefined' : _typeof(_ret5)) === "object") return _ret5.v;
+        if ((typeof _ret9 === 'undefined' ? 'undefined' : _typeof(_ret9)) === "object") return _ret9.v;
       }
-      throw new Error('Craft Model already exists');
     }
-  }), _defineProperty(_Craft, 'modelInit', function(name, func) {
-    Craft.Models[name] != undef ? func.call(Craft, Craft.Models[name].scope) : Craft.Models.once(name, function(scope) {
-      func.call(Craft, scope);
-    });
-  }), _defineProperty(_Craft, 'fromModel', function(key, val) {
-    var cutkey = cutdot(key),
-      IsValDefined = def(val),
-      ck = cutkey[0],
-      type = (IsValDefined ? 'set' : 'get') + 'Deep';
-    if (def(Craft.Models[ck])) return cutkey.length == 1 && !IsValDefined ? Craft.Models[ck].scope : Craft[type](Craft.Models[ck].scope, joindot(Craft.omit(cutkey, ck)), val);
-  }), _defineProperty(_Craft, 'getPath', function(path, full) {
-    try {
-      if (has(path, '\'"', true)) return degloveStr(path);
-      else if (path == 'true') return true;
-      else if (path == 'false') return false;
-      else if (is.Num(path)) return Number(path);
-      var cutbind = cutdot(path),
-        prop = last(cutbind),
-        objaccessor = cutbind[0],
-        obj = def(Craft.Models[objaccessor]) ? Craft.Models[objaccessor].scope : Craft.getDeep(root, joindot(Craft.omit(cutbind, prop))),
-        _val3 = Craft.getDeep(obj, cutbind.length > 1 ? joindot(Craft.omit(cutbind, objaccessor)) : prop);
-      if (full) return {
-        cutbind: cutbind,
-        objaccessor: objaccessor,
-        path: path,
-        prop: prop,
-        obj: obj,
-        val: _val3
-      };
-      if (def(_val3)) return _val3;
-      if (objaccessor === prop && def(obj)) return obj;
-    } catch (e) {
-      return {};
-    }
-  }), _defineProperty(_Craft, 'directive', function(name, handle) {
-    if (!Craft.Directives.has(name) && isObj(handle) && isFunc(handle.bind)) {
-      Craft.Directives.set(name, handle);
-      Craft.WhenReady.then(function() {
-        setTimeout(function() {
-          queryEach('[' + name + ']', function(el) {
-            el = dom(el);
-            if (el.hasAttr(name)) {
-              if (!is.Set(el.directive)) el.directive = new Set();
-              if (!el.directive.has(name)) {
-                (function() {
-                  el.directive.add(name);
-                  el.observeAttrs();
-                  var directiveChangeDetetor = el.attrX.on('attr:' + name, function(name, val, oldval, hasAttr) {
-                    if (hasAttr || !def(oldval)) {
-                      if (isFunc(handle.update)) handle.update.call(el, el, val, oldval, hasAttr);
-                    } else if (isFunc(handle.unbind)) {
-                      handle.unbind.call(el, el, val, oldval);
-                      directiveChangeDetetor.off();
-                    }
-                  });
-                  handle.bind.call(el, el, el.getAttr(name));
-                })();
-              }
-            }
-          });
-        }, 20);
-      });
-    }
-  }), _defineProperty(_Craft, 'strongPassword', function(pass, length, caps, number, reasons) {
-    var pw = 'Password ',
-      includeChars = toArr(arguments).slice(5);
-    if (pass.length <= length - 1) return reasons ? pw + 'too short' : false;
-    if (caps && !Craft.hasCaps(pass)) return reasons ? pw + 'should have a Capital letter' : false;
-    if (number && !Craft.hasNums(pass)) return reasons ? pw + 'should have a number' : false;
-    if (includeChars.length) {
-      if (!includeChars.some(function(ch) {
-          return pass.includes(ch);
-        })) return reasons ? '' : false;
-    }
-    return false;
-  }), _defineProperty(_Craft, 'camelDash', function(val) {
-    return val.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-  }), _defineProperty(_Craft, 'formatBytes', function(bytes, decimals) {
-    if (bytes == 0) return '0 Bytes';
-    var k = 1000,
-      i = Math.floor(Math.log(bytes) / Math.log(k));
-    return (bytes / Math.pow(k, i)).toPrecision(decimals + 1 || 3) + ' ' + 'Bytes,KB,MB,GB,TB,PB,EB,ZB,YB'.split(',')[i];
-  }), _defineProperty(_Craft, 'randomNum', function(max, min) {
-    min = min || 0;
-    max = max || 100;
-    return Math.random() * (max - min) + min;
-  }), _defineProperty(_Craft, 'randomInt', function(max, min) {
-    min = min || 0;
-    max = max || 100;
-    return Math.floor(Math.random() * (max - min)) + min;
-  }), _defineProperty(_Craft, 'randomStr', function(max, min) {
-    var text = '';
-    min = min || 0;
-    max = max || 6;
-    for (; min < max; min++) {
-      text += possibleText.charAt(Math.floor(Math.random() * possibleText.length));
-    }
-    return text;
-  }), _defineProperty(_Craft, 'GenUID', function(len) {
-    return Craft.array(len || 6, function() {
-      return Craft.randomStr(4);
-    }).join('-');
-  }), _defineProperty(_Craft, 'newComponent', function(tag, config) {
-    if (!def(config)) throw new Error(tag + ' : config undefined');
-    var element = Object.create(HTMLElement.prototype),
-      settings = {},
-      dm = void 0;
-    element.createdCallback = function() {
-      var el = dom(this),
-        dealtWith = [];
-      for (var _key3 in config) {
-        if (!dealtWith.includes(_key3)) {
-          if (_key3.includes('set_')) {
-            var sgKey = _key3.split('_')[1];
-            dealtWith.push(_key3, 'get_' + sgKey);
-            el.newSetGet(sgKey, config[_key3], config['get_' + sgKey]);
-          } else if (_key3.includes('get_')) {
-            var _sgKey = _key3.split('_')[1];
-            dealtWith.push(_key3, 'set_' + _sgKey);
-            el.newSetGet(_sgKey, isFunc(config['set_' + _sgKey]) ? config['set_' + _sgKey] : function(x) {}, config[_key3]);
-          }
-        }
-      }
-      if (isFunc(config['attr'])) el.observeAttrs(config['attr']);
-      if (isFunc(config['created'])) return config['created'].call(el);
-    };
-    var _loop = function(_key4) {
-      if (_key4 == 'created' || _key4 == 'attr' || _key4.includes('set_') || _key4.includes('get_')) return 'continue';
-      if (isFunc(config[_key4]) && _key4 != 'attr') dm = function() { // Adds dom methods to element
-        return config[_key4].apply(dom(this), arguments);
-      };
-      _key4 == 'inserted' ? element.attachedCallback = dm : _key4 == 'destroyed' ? element.detachedCallback = dm : _key4.toLowerCase() == 'css' ? Craft.addCSS(config[_key4]) : isFunc(config[_key4]) ? element[_key4] = dm : defineprop(element, _key4, getpropdescriptor(config, _key4));
-    };
-    for (var _key4 in config) {
-      var _ret7 = _loop(_key4);
-      if (_ret7 === 'continue') continue;
-    }
-    settings['prototype'] = element;
-    doc.registerElement(tag, settings);
-  }), _defineProperty(_Craft, 'SyncInput', function(input, obj, key, onset) {
-    if (isStr(input)) input = query(input);
-    if (is.Input(input)) {
-      (function() {
-        var oldval = input.value,
-          onsetfn = isFunc(onset);
-        input[sI] = on('input,blur,keydown', input, function(e) {
-          setTimeout(function() {
-            var val = input.value;
-            if (!(Craft.getDeep(obj, key) == '' && val == '') && val != oldval) {
-              oldval = val;
-              Craft.setDeep(obj, key, input.value);
-              if (onsetfn) onset(input.value);
-            }
-          }, 0);
-        });
-      })();
-    }
-  }), _defineProperty(_Craft, 'disconectInputSync', function(input) {
-    if (isStr(input)) input = query(input);
-    if (is.Node(input) && def(input[sI])) {
-      input[sI].off;
-      delete input[sI];
-    }
-  }), _defineProperty(_Craft, 'onTabChange', function(fn) {
-    var options = {
-      off: function() {
-        tabListeners.delete(fn);
-        return options;
-      },
-      on: function() {
-        tabListeners.add(fn);
-        return options;
-      }
-    };
-    return options.on();
-  }), _defineProperty(_Craft, 'tabpause', function(state, options) {
-    if (state) options.tablistener = Craft.onTabChange(function(focused) {
-      options[focused ? 'on' : 'off']();
-    });
-    else {
-      if (options.tablistner) options.tablistener.off();
-    }
-    return options;
-  }), _defineProperty(_Craft, 'every', function(time, fn, context, pauseondefocus) {
-    if (isFunc(fn)) {
-      var _ret9 = function() {
-        var options = {
-          interval: undef,
-          set tabpause(state) {
-            if (is.Bool(state)) Craft.tabpause(state, options);
-          },
-          on: function() {
-            if (def(options.interval)) options.off();
-            options.interval = setInterval(fn.bind(is.Bool(context) || !def(context) ? options : context), isFunc(time) ? time() : time);
-            return options;
-          },
-          off: function() {
-            clearInterval(options.interval);
-            return options;
-          }
-        };
-        if (is.Bool(context) && context == true || pauseondefocus == true) options.tabpause = true;
-        return {
-          v: options.on()
-        };
-      }();
-      if ((typeof _ret9 === 'undefined' ? 'undefined' : _typeof(_ret9)) === "object") return _ret9.v;
-    }
-  }), _defineEnumerableProperties(_Craft, _mutatorMap), _Craft);
+  };
   head.appendChild(dom.style('', 'crafterstyles'));
   var TabChange = function(ta) {
     return function() {
