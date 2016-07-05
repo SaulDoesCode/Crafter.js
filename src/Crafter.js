@@ -12,11 +12,10 @@
         tabListeners = new Set,
         tem, Br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
 
-    const slice = Array.prototype.slice.call;
+    const slice = (ctx,i) => Array.prototype.slice.call(ctx,i || 0);
 
     function curry(fn, ctx) {
         const arity = fn.length;
-
         function curried() {
             const args = slice(arguments);
             return args.length < arity ? function () {
@@ -28,7 +27,7 @@
     }
     // tests arguments with Array.prototype.every;
     function ta(test) {
-        return (...args) => args.length == 1 ? test(args[0]) : curry((...args) => args.length && args.every(test));
+        return (...args) => args.length == 1 ? test(args[0]) : args.length && args.every(test);
     }
 
     function has(host, value, or) {
@@ -314,7 +313,7 @@
          * tests if a value is a space character
          * @param {...string} values to test
          */
-        space: val => is.char(val) && (val.charCodeAt(0) > 8 && val.charCodeAt(0) < 14) || val.charCodeAt(0) === 32,
+        space: ta(val => is.char(val) && (val.charCodeAt(0) > 8 && val.charCodeAt(0) < 14) || val.charCodeAt(0) === 32),
         /**
          * Determine if a String is UPPERCASE
          * @param {string} char - variable to test
