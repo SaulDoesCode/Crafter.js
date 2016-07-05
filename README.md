@@ -9,10 +9,11 @@ note Crafter.js is still a work in progress! feel free to explore, fork, contrib
 - Promises
 - Fetch API
 - Proxy (optional)
-- ES6
+- ES6 Syntax
+- ES6 Classes
 - WebComponents
 
-Crafter.js uses Babel to ensure compatibility on older browsers
+Crafter.js also uses Babel to ensure compatibility on older browsers
 
 ## Crafter.js offers
 
@@ -46,8 +47,9 @@ adds several useful CSS classes and effects such as grids, ripple effects, sideb
 
 create elements on the fly with ease using the `dom` method!
 
-##### at the top of your script use destructuring to
-##### deglove usefull methods and features from the Craft object
+#### at the top of your script use destructuring to
+
+#### deglove usefull methods and features from the Craft object
 
 ```javascript
   const {dom,queryEach,on} = Craft;
@@ -71,15 +73,16 @@ Create and Use Custom Attributes AKA directives
     },
   })
 ```
+
 and in the dom
+
 ```html
   <div custom-attrib>I have a custom attribute</div>
 ```
 
-
 ```javascript
 
-   let div = dom.div('div that haunts your dreams',{ class : 'fancy-div' , bind : 'model.hauntingDiv'})
+   const div = dom.div('div that haunts your dreams',{ class : 'fancy-div' , bind : 'model.hauntingDiv'});
    // div -> <div class="fancy-div" bind="model.hauntingDiv"> div that haunts your dreams </div>
 
    div.Click(evt => div.toggleClass('anim-wiggle'));
@@ -89,38 +92,48 @@ and in the dom
    .appendTo(document.body);
 ```
 
-#### Models and Views
+#### Using Crafter.js Models
 
 Crafter.js allows the creation of scoped models to manipulate your app, models execute immediately then the views they return executes after the page has loaded
 
 ```javascript
   const {dom} = Craft;
   // Create models using Craft.model
-  Craft.model('MyModel', scope => {
-    scope.headline = 'New Headline , this Just in...';
-    scope.articles = ['article1...','article2...','article3...','article4...','article5...'];
+  // Craft.model( name , class )
+  Craft.model('MyModel', class {
+    constructor() {
+      const scope = this;
+      scope.headline = 'New Headline , this Just in...';
+      scope.articles = ['article1...','article2...','article3...','article4...','article5...'];
 
 
-    // you can listen for changes on model scope variables
-    scope.$set('newinfo',(key,value,object,isValueNew) => {
-      if(isValueNew) console.log('new info recieved!')
-    });
+      // you can listen for changes on model scope variables
+      scope.$set('newinfo',(key,value,object,isValueNew) => {
+        if(isValueNew) console.log('new info recieved!')
+      });
 
-    // if your browser does not support Proxy and Reflect
-    // you'd have to use ember observable style accessors
-    // .get(key) and .set(key,val)
-    scope.set('newinfo','I will change when there is new info');
+      // if your browser does not support Proxy and Reflect
+      // you'd have to use ember observable style accessors
+      // .get(key) and .set(key,val)
+      scope.set('newinfo','I will change when there is new info');
+    }
+    init() {
+      const scope = this;
+      // do any dom manips or post DOM load code here
 
-  }).view(scope => {
-    // do any dom manips or post DOM load code here
-
-    // create article element with class news-article,
-    // bind it then append it to a <div class="news">...</div>
-    dom.article('class=news-article').bind('MyModel.articles[2]').appendTo('div.news');
-  })
+      // create article element with class news-article,
+      // bind it then append it to a <div class="news">...</div>
+      dom.article('class=news-article').bind('MyModel.articles[2]').appendTo('div.news');
+    }
+  });
 
   // You can assign to variables from the model scope via Craft.fromModel
+  Craft.fromModel('MyModel.newinfo','a new piece of info!');
+  // this is also possible
+  // however if proxy and reflect is not available in your browser
   Craft.fromModel('MyModel').newinfo = 'a new piece of info!';
+  // then you'd have to use the .set(key,val) method
+  Craft.fromModel('MyModel').set('newinfo','a new piece of info!');
 
   // Easily access variables from a model's scope using Craft.fromModel
   Craft.fromModel('MyModel.headline'); // -> 'New Headline , this Just in...'
@@ -240,30 +253,35 @@ Create a new Custom Element using the Craft.newComponent method
 
 ```javascript
   // has to be a hyphenated tag name
-  Craft.newComponent('news-element',{
+  Craft.newComponent('news-element', class {
   // optionally manage each stage of the element's lifecycle
     created() {
       // hypothetically fetch a news article
       fetch('/news/latest-article')
       .then(response => response.json())
       .then(news => this.news = news);
-    },
+    }
+
     inserted() {
       // when the news-element is insterted fill it with content
       this
       .prepend( dom.h(3, this.news.headline) /* -> <h3>News Headling...</h3> */ )
       .append( dom.div(this.news.article) );
 
-    },
+    }
+
     attr(name, value , oldvalue, hasAttr) {
       // handle Attibute changes on the element
-    },
+    }
+
     destroyed() {
       // executed when the element is no more
       // useful for stopping event listeners
     }
   });
 ```
+
+example using an plain object
 
 ```javascript
   // You can add style to your custom element using the css property

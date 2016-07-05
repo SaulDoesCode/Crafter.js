@@ -10,10 +10,6 @@ Craft.exec(function () {
         queryAll
     } = Craft;
 
-    if(!anime) {
-      if(typeof require != 'undefined') var anime = require('anime');
-    }
-
     dom.ripple = attr => dom.element('ripple-effect', '', attr);
     Craft.ripple = (selector, options) => queryEach(selector, element => {
         element.ripplehandle = on(element).Mousedown(e => {
@@ -41,12 +37,11 @@ Craft.exec(function () {
     Craft.newComponent('ripple-effect', {
         inserted() {
             let ripple = this,
-                color, timing = ripple.getAttr("timing") || ripple.timing || 1600,
+                color, timing = Number(ripple.getAttr("ripple-timing")) || ripple.timing || 1600,
                 par = dom(ripple.parentNode),
                 rect = par.getRect(),
                 diameter = Math.max(rect.width, rect.height);
-            if (ripple.hasAttr("color-accent")) color = ripple.getAttr("color-accent");
-            else if (ripple.hasAttr("color")) color = ripple.getAttr("color");
+            if(ripple.hasAttr('color')) color = ripple.getAttr('color');
             else if (par.hasAttr("color-accent")) color = par.getAttr("color-accent");
             ripple.css({
                 width: diameter + 'px',
