@@ -1217,12 +1217,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @returns {DocumentFragment}
      */
     frag: function(inner) {
-      var dfrag = void 0;
+      var dfrag = doc.createDocumentFragment();
       if (isStr(inner)) dfrag = dffstr(inner);
-      if (is.Node(inner)) {
-        dfrag = doc.createDocumentFragment();
-        dfrag.appendChild(inner);
-      }
+      if (is.Node(inner)) dfrag.appendChild(inner);
       return dfrag;
     },
     /**
