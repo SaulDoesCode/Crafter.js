@@ -1,7 +1,35 @@
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function(obj) {
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: Crafter.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: Crafter.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>var _typeof = typeof Symbol === "function" &amp;&amp; typeof Symbol.iterator === "symbol" ? function(obj) {
   return typeof obj;
 } : function(obj) {
-  return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj;
+  return obj &amp;&amp; typeof Symbol === "function" &amp;&amp; obj.constructor === Symbol ? "symbol" : typeof obj;
 };
 /**
  *  @version 0.0.8
@@ -40,7 +68,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
     function curried() {
       var args = slice(arguments);
-      return args.length < arity ? function() {
+      return args.length &lt; arity ? function() {
         var more = slice(arguments);
         return curried.apply(null, args.concat(more));
       } : fn.apply(ctx || this, args);
@@ -49,10 +77,10 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   } // tests arguments with Array.prototype.every;
   function ta(test) {
     return function() {
-      for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+      for (var _len = arguments.length, args = Array(_len), _key = 0; _key &lt; _len; _key++) {
         args[_key] = arguments[_key];
       }
-      return args.length == 1 ? test(args[0]) : args.length && args.every(test);
+      return args.length == 1 ? test(args[0]) : args.length &amp;&amp; args.every(test);
     };
   }
   /**
@@ -98,7 +126,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     },
     head = doc.head,
     RegExps = {
-      email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
+      email: /^((([a-z]|\d|[!#\$%&amp;'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&amp;'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
       timeString: /^(2[0-3]|[01]?[0-9]):([0-5]?[0-9]):([0-5]?[0-9])$/,
       dateString: /^(1[0-2]|0?[1-9])\/(3[01]|[12][0-9]|0?[1-9])\/(?:[0-9]{2})?[0-9]{2}$/,
       hexadecimal: /^[0-9a-fA-F]+$/,
@@ -111,7 +139,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         enumerable: is.Bool(enumerable) ? enumerable : false
       };
     };
-  if (Br && (tem = ua.match(/version\/([\.\d]+)/i)) !== null) Br[2] = tem[1];
+  if (Br &amp;&amp; (tem = ua.match(/version\/([\.\d]+)/i)) !== null) Br[2] = tem[1];
   Br = (Br ? [Br[1], Br[2]] : [navigator.appName, navigator.appVersion, '-?']).join(' ');
 
   function promise(func) {
@@ -184,7 +212,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
    * @param {Array|Arraylike} arr - array to join with dots
    */
   function joindot(arr) {
-    if (!isArr(arr) && is.Arraylike(arr)) arr = toArr(arr);
+    if (!isArr(arr) &amp;&amp; is.Arraylike(arr)) arr = toArr(arr);
     return arr.join('.');
   }
   /**
@@ -434,7 +462,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {*} val - value/values to test
      */
     Args: function(val) {
-      return !nil(val) && type(val, '[object Arguments]');
+      return !nil(val) &amp;&amp; type(val, '[object Arguments]');
     },
     /**
      * @memberof is
@@ -452,7 +480,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {...String} values to test
      */
     char: ta(function(val) {
-      return isStr(val) && val.length == 1;
+      return isStr(val) &amp;&amp; val.length == 1;
     }),
     /**
      * @memberof is
@@ -461,7 +489,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {...String} values to test
      */
     space: ta(function(val) {
-      return is.char(val) && val.charCodeAt(0) > 8 && val.charCodeAt(0) < 14 || val.charCodeAt(0) === 32;
+      return is.char(val) &amp;&amp; val.charCodeAt(0) > 8 &amp;&amp; val.charCodeAt(0) &lt; 14 || val.charCodeAt(0) === 32;
     }),
     /**
      * @memberof is
@@ -470,7 +498,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {String} char - value to test
      */
     Uppercase: function(str) {
-      return isStr(str) && !is.Num(str) && str === str.toUpperCase();
+      return isStr(str) &amp;&amp; !is.Num(str) &amp;&amp; str === str.toUpperCase();
     },
     /**
      * @memberof is
@@ -479,7 +507,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {String} char - value to test
      */
     Lowercase: function(str) {
-      return isStr(str) && str === str.toLowerCase();
+      return isStr(str) &amp;&amp; str === str.toLowerCase();
     },
     /**
      * @memberof is
@@ -537,7 +565,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {Date} obj - Date to test
      */
     today: function(obj) {
-      return is.Date(obj) && obj.toDateString() === new Date().toDateString();
+      return is.Date(obj) &amp;&amp; obj.toDateString() === new Date().toDateString();
     },
     /**
      * @memberof is
@@ -561,7 +589,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     tomorrow: function(obj) {
       if (is.Date(obj)) {
         var now = new Date();
-        return is.Date(obj) && obj.toDateString() === new Date(now.setDate(now.getDate() + 1)).toDateString();
+        return is.Date(obj) &amp;&amp; obj.toDateString() === new Date(now.setDate(now.getDate() + 1)).toDateString();
       }
       return false;
     },
@@ -575,7 +603,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       try {
         if (!is.Date(obj)) obj = isStr(obj) ? new Date(is.Num(obj) ? Number(obj) : obj) : new Date(obj);
       } catch (e) {}
-      return is.Date(obj) && obj.getTime() < new Date().getTime();
+      return is.Date(obj) &amp;&amp; obj.getTime() &lt; new Date().getTime();
     },
     /**
      * @memberof is
@@ -614,7 +642,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @returns {Boolean} wether or not the value is between the max and min
      */
     between: curry(function(val, max, min) {
-      return val <= max && val >= min;
+      return val &lt;= max &amp;&amp; val >= min;
     }),
     /**
      * @memberof is
@@ -623,7 +651,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {*} val - value to test
      */
     int: function(val) {
-      return is.Num(val) && val % 1 === 0;
+      return is.Num(val) &amp;&amp; val % 1 === 0;
     },
     /**
      * @memberof is
@@ -632,7 +660,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {*} val - value to test
      */
     even: function(val) {
-      return is.Num(val) && val % 2 === 0;
+      return is.Num(val) &amp;&amp; val % 2 === 0;
     },
     /**
      * @memberof is
@@ -641,7 +669,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {*} val - value to test
      */
     odd: function(val) {
-      return is.Num(val) && val % 2 !== 0;
+      return is.Num(val) &amp;&amp; val % 2 !== 0;
     },
     /**
      * @memberof is
@@ -650,7 +678,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {*} val - value to test
      */
     positive: function(val) {
-      return is.Num(val) && val > 0;
+      return is.Num(val) &amp;&amp; val > 0;
     },
     /**
      * @memberof is
@@ -659,7 +687,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {*} val - value to test
      */
     negative: function(val) {
-      return is.Num(val) && val < 0;
+      return is.Num(val) &amp;&amp; val &lt; 0;
     },
     /**
      * @memberof is
@@ -701,7 +729,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {Number} other - num to test with value
      */
     lt: curry(function(val, other) {
-      return val < other;
+      return val &lt; other;
     }),
     /**
      * @memberof is
@@ -711,7 +739,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {Number} other - num to test with value
      */
     lte: curry(function(val, other) {
-      return val <= other;
+      return val &lt;= other;
     }),
     /**
      * @memberof is
@@ -753,7 +781,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      */
     Native: function(val) {
       var type = typeof val === 'undefined' ? 'undefined' : _typeof(val);
-      return isFunc(val) ? RegExp('^' + String(Object.prototype.toString).replace(/[.*+?^${}()|[\]\/\\]/g, '\\$&').replace(/toString|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$').test(Function.prototype.toString.call(val)) : val && type == 'object' && /^\[object .+?Constructor\]$/.test(val.toString) || false;
+      return isFunc(val) ? RegExp('^' + String(Object.prototype.toString).replace(/[.*+?^${}()|[\]\/\\]/g, '\\$&amp;').replace(/toString|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$').test(Function.prototype.toString.call(val)) : val &amp;&amp; type == 'object' &amp;&amp; /^\[object .+?Constructor\]$/.test(val.toString) || false;
     },
     /**
      * @memberof is
@@ -762,7 +790,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {Element|Node} - element to test
      */
     Input: function(element) {
-      return isEl(element) && ['INPUT', 'TEXTAREA'].some(function(i) {
+      return isEl(element) &amp;&amp; ['INPUT', 'TEXTAREA'].some(function(i) {
         return element.tagName.includes(i);
       });
     }
@@ -777,10 +805,10 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   function forEach(iterable, func) {
     if (isFunc(func)) {
       var i = 0;
-      if (is.Arraylike(iterable) && !localStorage)
-        for (; i < iterable.length; i++) {
+      if (is.Arraylike(iterable) &amp;&amp; !localStorage)
+        for (; i &lt; iterable.length; i++) {
           func(iterable[i], i, iterable);
-        } else if (is.int(iterable) && !isStr(iterable))
+        } else if (is.int(iterable) &amp;&amp; !isStr(iterable))
           while (iterable != i) {
             func(i++);
           } else
@@ -844,12 +872,12 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       emit: function(type) {
         var _arguments = arguments,
           _this = this;
-        if (!stop && listeners.size > 0) {
+        if (!stop &amp;&amp; listeners.size > 0) {
           (function() {
             var args = [].slice.call(_arguments, 1),
               ctx = _this;
             listeners.forEach(function(ln) {
-              if (ln.type == type && !stop) ln.apply(ctx, args);
+              if (ln.type == type &amp;&amp; !stop) ln.apply(ctx, args);
             });
           })();
         }
@@ -930,7 +958,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return options.on();
     }));
     defineprop(obj, 'get', desc(function(key) {
-      if (key != 'get' && key != 'set') {
+      if (key != 'get' &amp;&amp; key != 'set') {
         var _val = void 0;
         listeners.Get.forEach(function(ln) {
           if (ln.prop === '*' || ln.prop === key) _val = ln.multi ? ln.fn('get', key, obj) : ln.fn(key, obj);
@@ -944,16 +972,16 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         if (ln.prop === '*' || ln.prop === key) val = ln.multi ? ln.fn('set', key, value, obj, Object.hasOwnProperty(obj, key)) : ln.fn(key, value, obj, Object.hasOwnProperty(obj, key));
       });
       val = val != undef ? val : value;
-      if (isObj(val) && !val.isObservable) val = observable(val);
+      if (isObj(val) &amp;&amp; !val.isObservable) val = observable(val);
       obj.emit('$uberset:' + key, val);
       obj[key] = val;
     }));
     for (var _key2 in obj) {
-      if (isObj(obj[_key2]) && !obj[_key2].isObservable) obj[_key2] = observable(obj[_key2]);
+      if (isObj(obj[_key2]) &amp;&amp; !obj[_key2].isObservable) obj[_key2] = observable(obj[_key2]);
     }
     if (typeof Proxy != "undefined") return new Proxy(obj, {
       get: function(target, key) {
-        if (key != 'get' && key != 'set') {
+        if (key != 'get' &amp;&amp; key != 'set') {
           var _val2 = void 0;
           listeners.Get.forEach(function(ln) {
             if (ln.prop === '*' || ln.prop === key) _val2 = ln.multi ? ln.fn('get', key, target) : ln.fn(key, target);
@@ -974,7 +1002,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           }
         });
         val = val != undef ? val : value;
-        if (isObj(val) && !val.isObservable) val = observable(val);
+        if (isObj(val) &amp;&amp; !val.isObservable) val = observable(val);
         target.emit('$uberset:' + key, val);
         return Reflect.set(target, key, val);
       }
@@ -997,8 +1025,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       var _this2 = this;
       EventType = EventType || 'click';
       this.state = false;
-      Target = Target !== root && Target !== doc ? NodeOrQuerytoArr(Target, Within) : [Target];
-      if (isStr(EventType) && EventType.includes(',')) EventType = EventType.split(',');
+      Target = Target !== root &amp;&amp; Target !== doc ? NodeOrQuerytoArr(Target, Within) : [Target];
+      if (isStr(EventType) &amp;&amp; EventType.includes(',')) EventType = EventType.split(',');
       if (!isArr(EventType)) EventType = [EventType];
       var FuncWrapper = function(e) {
         return func(e, e.target, Craft.deglove(Target));
@@ -1083,7 +1111,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   function queryAll(selector, element) {
     if (isStr(element)) element = queryAll(element);
     var list = void 0;
-    if (Craft.len(element) !== 1 && (isArr(element) || is.NodeList(element))) {
+    if (Craft.len(element) !== 1 &amp;&amp; (isArr(element) || is.NodeList(element))) {
       list = [];
       forEach(element, function(el) {
         if (isStr(el)) el = query(el);
@@ -1146,7 +1174,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   function EvtLT(ListenType) {
     return function(EventType, Target, element, func) {
       var args = toArr(arguments);
-      return isFunc(Target) ? EventHandler(EventType, root, Target)[ListenType]() : args.length < 3 && !args.some(isFunc) ? EventTypes(EventType, Target, ListenType) : isFunc(element) ? EventHandler(EventType, Target, element)[ListenType]() : EventHandler(EventType, Target, func, element)[ListenType]();
+      return isFunc(Target) ? EventHandler(EventType, root, Target)[ListenType]() : args.length &lt; 3 &amp;&amp; !args.some(isFunc) ? EventTypes(EventType, Target, ListenType) : isFunc(element) ? EventHandler(EventType, Target, element)[ListenType]() : EventHandler(EventType, Target, func, element)[ListenType]();
     };
   }
   /**
@@ -1190,7 +1218,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       if (isObj(attributes)) Object.keys(attributes).forEach(function(key) {
         if (eventoptions.some(function(evo) {
             return evo == key;
-          }) && isFunc(attributes[key])) {
+          }) &amp;&amp; isFunc(attributes[key])) {
           var func = attributes[key];
           key == 'DoubleClick' ? key = 'dblclick' : key = key.toLowerCase();
           element[key + 'handle'] = on(key, element, func);
@@ -1359,11 +1387,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @method hasAttr
      * @summary checks if the element has a specific Attribute or Attributes
      * @memberof dom
-     * @param {String|boolean} name of the Attribute or if true checks that it has some (||) of the attributes or if false checks that it has all of the attributes (&&)
+     * @param {String|boolean} name of the Attribute or if true checks that it has some (||) of the attributes or if false checks that it has all of the attributes (&amp;&amp;)
      * @param {...String} names of attributes to check for
      */
     elements.hasAttr = function(attr) {
-      if (isStr(attr) && arguments.length == 1) return elements.every(function(el) {
+      if (isStr(attr) &amp;&amp; arguments.length == 1) return elements.every(function(el) {
         return el.hasAttribute(attr);
       });
       var args = Craft.flatten(arguments);
@@ -1399,7 +1427,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     elements.setAttr = function(attr, val) {
       forEach(elements, function(el) {
         if (!def(val)) {
-          if (isStr(attr)) attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(function(Attr) {
+          if (isStr(attr)) attr.includes('=') || attr.includes('&amp;') ? attr.split('&amp;').forEach(function(Attr) {
             var attribs = Attr.split('=');
             def(attribs[1]) ? element.setAttribute(attribs[0], attribs[1]) : element.setAttribute(attribs[0], '');
           }) : element.setAttribute(attr, '');
@@ -1444,7 +1472,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       });
     };
     elements.pick = function(i) {
-      if (is.int(i) && def(elements[i])) return dom(elements[i]);
+      if (is.int(i) &amp;&amp; def(elements[i])) return dom(elements[i]);
       else if (elements.includes(i)) return dom(i);
     };
     return elements;
@@ -1483,7 +1511,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     });
     element.newSetGet = newSetGet;
     element.newSetGet('colorAccent', function(func) {
-      if (element.hasAttr('color-accent') && isFunc(func)) func(element.getAttr('color-accent'));
+      if (element.hasAttr('color-accent') &amp;&amp; isFunc(func)) func(element.getAttr('color-accent'));
     });
     /**
      * @method Text
@@ -1586,7 +1614,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         mode: 'cors',
         credentials: 'same-origin'
       }).then(function(res) {
-        if (!res.ok) console.warn('<' + element.localName + '> : unable to import view - ' + src);
+        if (!res.ok) console.warn('&lt;' + element.localName + '> : unable to import view - ' + src);
         else res.text().then(function(view) {
           if (cache) localStorage.setItem(src, view);
           element.html(view);
@@ -1766,7 +1794,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     /**
      * checks if the element has a specific Attribute or Attributes
      * @memberof dom
-     * @param {String|boolean} name of the Attribute or if true checks that it has some (||) of the attributes or if false checks that it has all of the attributes (&&)
+     * @param {String|boolean} name of the Attribute or if true checks that it has some (||) of the attributes or if false checks that it has all of the attributes (&amp;&amp;)
      * @param {...String} names of attributes to check for
      */
     element.hasAttr = function() {
@@ -1783,7 +1811,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      */
     element.setAttr = function(attr, val) {
       if (!def(val)) {
-        if (isStr(attr)) attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(function(Attr) {
+        if (isStr(attr)) attr.includes('=') || attr.includes('&amp;') ? attr.split('&amp;').forEach(function(Attr) {
           def(Attr.split('=')[1]) ? element.setAttribute(Attr.split('=')[0], Attr.split('=')[1]) : element.setAttribute(Attr.split('=')[0], '');
         }) : element.setAttribute(attr, '');
         else if (isObj(attr)) forEach(attr, function(value, Attr) {
@@ -1798,7 +1826,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      */
     element.getAttr = element.getAttribute;
     element.attr = function(attr, val) {
-      return isStr(attr) && !def(val) ? element.getAttr(attr) : element.setAttr(attr, val);
+      return isStr(attr) &amp;&amp; !def(val) ? element.getAttr(attr) : element.setAttr(attr, val);
     };
     element.prop = element.hasAttr;
     /**
@@ -1999,7 +2027,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           if (arrb.includes(item)) return item;
         }),
         diff = Craft.omit(same.concat(added), undef);
-      if (isFunc(func) && !is.empty(diff)) func(arr, arrb, added, same, diff);
+      if (isFunc(func) &amp;&amp; !is.empty(diff)) func(arr, arrb, added, same, diff);
       else return {
         added: added,
         same: same,
@@ -2016,7 +2044,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @returns (array|*)
      */
     deglove: function(arr) {
-      return is.Arraylike(arr) && arr.length == 1 ? arr[0] : arr;
+      return is.Arraylike(arr) &amp;&amp; arr.length == 1 ? arr[0] : arr;
     },
     last: last,
     cutdot: cutdot,
@@ -2045,7 +2073,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     is: is,
     exec: exec,
     UnHTML: function(html) {
-      return html.replace(/<script[^>]*?>.*?<\/script>/gi, '').replace(/<style[^>]*?>.*?<\/style>/gi, '').replace(/<![\s\S]*?--[ \t\n\r]*>/gi, '');
+      return html.replace(/&lt;script[^>]*?>.*?&lt;\/script>/gi, '').replace(/&lt;style[^>]*?>.*?&lt;\/style>/gi, '').replace(/&lt;![\s\S]*?--[ \t\n\r]*>/gi, '');
     },
     /**
      * Compares two arrays and determines if they are the same array
@@ -2105,7 +2133,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {Array|Arraylike} arr - multidimentional array(like) object to flatten
      */
     flatten: function(arr) {
-      return (!isArr(arr) && is.Arraylike(arr) ? toArr(arr) : isArr(arr) ? arr : []).reduce(function(flat, toFlatten) {
+      return (!isArr(arr) &amp;&amp; is.Arraylike(arr) ? toArr(arr) : isArr(arr) ? arr : []).reduce(function(flat, toFlatten) {
         return flat.concat(isArr(toFlatten) ? Craft.flatten(toFlatten) : toFlatten);
       }, []);
     },
@@ -2120,7 +2148,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     getDeep: function(obj, path) {
       try {
         cutdot(path.replace(/\[(\w+)\]/g, '.$1').replace(/^\./, '')).map(function(step) {
-          return step in obj || root.Reflect && Reflect.has(obj, step) ? obj = obj.isObservable ? obj.get(step) : obj[step] : obj = undef;
+          return step in obj || root.Reflect &amp;&amp; Reflect.has(obj, step) ? obj = obj.isObservable ? obj.get(step) : obj[step] : obj = undef;
         });
         return obj;
       } catch (e) {}
@@ -2139,7 +2167,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         if (!path.includes('.')) obj.isObservable ? obj.set(path, val) : obj[path] = val;
         else {
           path = cutdot(path);
-          for (var i = 0, temp = obj, plen = path.length - 1; i < plen; i++) {
+          for (var i = 0, temp = obj, plen = path.length - 1; i &lt; plen; i++) {
             if (path[i] in temp) temp = temp[path[i]];
             else if (i != plen) temp = temp.isObservable ? temp.set(path[i], {}) : temp[path[i]] = {};
             else temp.isObservable ? temp.set(path[plen], val) : temp[path[plen]] = val;
@@ -2171,7 +2199,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         nestable = false;
         isArr(object) ? currentPath += '[' + key + ']' : !currentPath ? currentPath = key : currentPath += '.' + key;
         nestable = func(val, key, object, currentPath) == false;
-        if (nestable && (isArr(val) || isObj(val))) Craft.forEachDeep(val, func, currentPath);
+        if (nestable &amp;&amp; (isArr(val) || isObj(val))) Craft.forEachDeep(val, func, currentPath);
       }
     },
     /**
@@ -2182,7 +2210,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return URL.createObjectURL(new Blob([text], type));
     },
     checkStatus: function(response) {
-      if (response.status >= 200 && response.status < 300) return response;
+      if (response.status >= 200 &amp;&amp; response.status &lt; 300) return response;
       var error = new Error(response.statusText);
       error.response = response;
       throw error;
@@ -2273,7 +2301,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     omit: function(val) {
       if (is.Arraylike(val)) val = Craft.omitFrom.apply(this, arguments);
       var args = toArr(arguments).slice(1);
-      if (isObj(val) && !args.some(function(v) {
+      if (isObj(val) &amp;&amp; !args.some(function(v) {
           return v == val;
         })) forEach(val, function(prop, key) {
         if (args.some(function(v) {
@@ -2362,7 +2390,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     },
     Cookies: {
       get: function(key) {
-        return decodeURIComponent(doc.cookie.replace(new RegExp('(?:(?:^|.*;)\\s*' + encodeURIComponent(key).replace(/[\-\.\+\*]/g, '\\$&') + '\\s*\\=\\s*([^;]*).*$)|^.*$'), '$1')) || null;
+        return decodeURIComponent(doc.cookie.replace(new RegExp('(?:(?:^|.*;)\\s*' + encodeURIComponent(key).replace(/[\-\.\+\*]/g, '\\$&amp;') + '\\s*\\=\\s*([^;]*).*$)|^.*$'), '$1')) || null;
       },
       set: function(key, val, expires, path, domain, secure) {
         if (!key || /^(?:expires|max\-age|path|domain|secure)$/i.test(key)) return false;
@@ -2376,7 +2404,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         return true;
       },
       has: function(key) {
-        return key != undef && new RegExp('(?:^|;\\s*)' + encodeURIComponent(key).replace(/[\-\.\+\*]/g, '\\$&') + '\\s*\\=').test(doc.cookie);
+        return key != undef &amp;&amp; new RegExp('(?:^|;\\s*)' + encodeURIComponent(key).replace(/[\-\.\+\*]/g, '\\$&amp;') + '\\s*\\=').test(doc.cookie);
       },
       remove: function(key, path, domain) {
         if (!Craft.Cookies.has(key)) return false;
@@ -2401,7 +2429,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         if (is.empty(match)) throw new Error('invalid url');
         address = location.host + match[0];
       }
-      if (!address.includes('ws://') && !address.includes('wss://')) address = (location.protocol === 'http:' ? 'ws://' : 'wss://') + address;
+      if (!address.includes('ws://') &amp;&amp; !address.includes('wss://')) address = (location.protocol === 'http:' ? 'ws://' : 'wss://') + address;
       if (is.URL(address)) {
         var _ret3 = function() {
           var newSock = function() {
@@ -2472,9 +2500,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       spacebar: keyhandle(32)
     },
     after: function(n, func) {
-      !isFunc(func) && isFunc(n) ? func = n : console.error('after: no function');
+      !isFunc(func) &amp;&amp; isFunc(n) ? func = n : console.error('after: no function');
       n = Number.isFinite(n = +n) ? n : 0;
-      if (--n < 1) return function() {
+      if (--n &lt; 1) return function() {
         return func.apply(this, arguments);
       };
     },
@@ -2487,7 +2515,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
             timeout = null;
             if (!immediate) func.apply(scope, args);
           },
-          callNow = immediate && !timeout;
+          callNow = immediate &amp;&amp; !timeout;
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);
         if (callNow) func.apply(scope, args);
@@ -2513,7 +2541,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         var remaining = wait - (now - previous);
         context = this;
         args = arguments;
-        if (remaining <= 0 || remaining > wait) {
+        if (remaining &lt;= 0 || remaining > wait) {
           if (timeout) {
             clearTimeout(timeout);
             timeout = null;
@@ -2521,13 +2549,13 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           previous = now;
           result = func.apply(context, args);
           if (!timeout) context = args = null;
-        } else if (!timeout && options.trailing == true) timeout = setTimeout(later, remaining);
+        } else if (!timeout &amp;&amp; options.trailing == true) timeout = setTimeout(later, remaining);
         return result;
       };
     },
     curry: curry,
     memoize: function(func, resolver) {
-      if (!isFunc(func) || resolver && !isFunc(resolver)) throw new TypeError('no function');
+      if (!isFunc(func) || resolver &amp;&amp; !isFunc(resolver)) throw new TypeError('no function');
       var cache = new WeakMap(),
         memoized = function() {
           var args = arguments,
@@ -2566,7 +2594,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         if (is.empty(match)) throw new Error('invalid src');
         url = location.host + match[0];
       }
-      if (!url.includes('http://') && !url.includes('https://')) url = location.protocol + '//' + url;
+      if (!url.includes('http://') &amp;&amp; !url.includes('https://')) url = location.protocol + '//' + url;
       return url;
     },
     /**
@@ -2668,7 +2696,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return -1;
     },
     DateIndex: function(Collection, date) {
-      for (var i = 0; i < Collection.length; i++) {
+      for (var i = 0; i &lt; Collection.length; i++) {
         if (+Collection[i] === +date) return i;
       }
       return -1;
@@ -2751,7 +2779,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      */
     toFormData: function(val) {
       var formData = new FormData();
-      if (isStr(val)) val = val.split('&');
+      if (isStr(val)) val = val.split('&amp;');
       forEach(val, function(v) {
         if (isStr(v)) {
           v = v.split('=');
@@ -2770,7 +2798,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     onScroll: function(element, func, preventDefault) {
       return on('wheel', element, function(e) {
         if (preventDefault) e.preventDefault();
-        func(e.deltaY < 1, e);
+        func(e.deltaY &lt; 1, e);
       });
     },
     /**
@@ -2790,7 +2818,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       });
     },
     model: function(name, modelclass) {
-      if (isStr(name) && !def(Craft.Models[name])) {
+      if (isStr(name) &amp;&amp; !def(Craft.Models[name])) {
         if (isFunc(modelclass)) {
           var _ret5 = function() {
             var scope = Object.create(Craft.observable(modelclass.prototype)),
@@ -2821,7 +2849,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         type = (IsValDefined ? 'set' : 'get') + 'Deep';
       if (def(Craft.Models[ck])) {
         var model = Craft.Models[ck];
-        return cutkey.length == 1 && !IsValDefined ? Craft.Models[ck] : Craft[type](Craft.Models[ck], joindot(Craft.omit(cutkey, ck)), val);
+        return cutkey.length == 1 &amp;&amp; !IsValDefined ? Craft.Models[ck] : Craft[type](Craft.Models[ck], joindot(Craft.omit(cutkey, ck)), val);
       }
     },
     getPath: function(path, full) {
@@ -2840,7 +2868,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           val: _val3
         };
         if (def(_val3)) return _val3;
-        if (objaccessor === prop && def(obj)) return obj;
+        if (objaccessor === prop &amp;&amp; def(obj)) return obj;
       } catch (e) {
         return {};
       }
@@ -2852,7 +2880,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @example Craft.directive('turngreen', element => element.css({ background : 'green'}));
      **/
     directive: function(name, handle) {
-      if (!Craft.Directives.has(name) && isObj(handle) && isFunc(handle.bind)) {
+      if (!Craft.Directives.has(name) &amp;&amp; isObj(handle) &amp;&amp; isFunc(handle.bind)) {
         Craft.Directives.set(name, handle);
         Craft.WhenReady.then(function() {
           queryEach('[' + name + ']', function(el) {
@@ -2916,7 +2944,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       var text = '';
       min = min || 0;
       max = max || 6;
-      for (; min < max; min++) {
+      for (; min &lt; max; min++) {
         text += possibleText.charAt(Math.floor(Math.random() * possibleText.length));
       }
       return text;
@@ -2973,7 +3001,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       };
       var _loop = function(_key6) {
         if (_key6 == 'created' || _key6 == 'attr' || _key6.includes('set_') || _key6.includes('get_')) return 'continue';
-        if (isFunc(config[_key6]) && _key6 != 'attr') dm = function() { // Adds dom methods to element
+        if (isFunc(config[_key6]) &amp;&amp; _key6 != 'attr') dm = function() { // Adds dom methods to element
           return config[_key6].apply(dom(this), arguments);
         };
         _key6 == 'inserted' ? element.attachedCallback = dm : _key6 == 'destroyed' ? element.detachedCallback = dm : _key6.toLowerCase() == 'css' ? Craft.addCSS(config[_key6]) : isFunc(config[_key6]) ? element[_key6] = dm : defineprop(element, _key6, getpropdescriptor(config, _key6));
@@ -2994,7 +3022,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           input[sI] = on('input,blur,keydown', input, function(e) {
             setTimeout(function() {
               var val = input.value;
-              if (!(Craft.getDeep(obj, key) == '' && val == '') && val != oldval) {
+              if (!(Craft.getDeep(obj, key) == '' &amp;&amp; val == '') &amp;&amp; val != oldval) {
                 oldval = val;
                 Craft.setDeep(obj, key, input.value);
                 if (onsetfn) onset(input.value);
@@ -3006,7 +3034,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     },
     disconectInputSync: function(input) {
       if (isStr(input)) input = query(input);
-      if (is.Node(input) && def(input[sI])) {
+      if (is.Node(input) &amp;&amp; def(input[sI])) {
         input[sI].off();
         delete input[sI];
       }
@@ -3093,7 +3121,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   Craft.directive('bind-for', {
     bind: function(element, bind) {
       var data = Craft.fromModel(bind);
-      if (def(data) && data.forEach) {
+      if (def(data) &amp;&amp; data.forEach) {
         (function() {
           var domfrag = dom.frag();
           element = element.stripAttr('bind-for');
@@ -3143,14 +3171,14 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   function manageAttr(el, name, val, oldval, hasAttr) {
     if (Craft.Directives.has(name)) {
       var handle = Craft.Directives.get(name);
-      if (hasAttr && val != oldval) {
+      if (hasAttr &amp;&amp; val != oldval) {
         if (!is.Set(el.directives)) el.directives = new Set();
         if (!el.directives.has(name)) {
           el.directives.add(name);
           el = dom(el);
           handle.bind.call(el, el, val);
         } else if (handle.update) handle.update.call(el, el, val, hasAttr);
-      } else if (!hasAttr && handle.unbind) handle.unbind.call(el, el, val, oldval);
+      } else if (!hasAttr &amp;&amp; handle.unbind) handle.unbind.call(el, el, val, oldval);
     }
     if (el.state) el.state.emit('attr', name, val, oldval, hasAttr);
   }
@@ -3164,7 +3192,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           if (Craft.Directives.has(attr.name)) manageAttr(el, attr, attr.textContent, '', true);
         });
       });
-      if (mut.type == 'attributes' && isEl(mut.target) && mut.attributeName != 'style') manageAttr(mut.target, mut.attributeName, mut.target.getAttribute(mut.attributeName), mut.oldValue, mut.target.hasAttribute(mut.attributeName));
+      if (mut.type == 'attributes' &amp;&amp; isEl(mut.target) &amp;&amp; mut.attributeName != 'style') manageAttr(mut.target, mut.attributeName, mut.target.getAttribute(mut.attributeName), mut.oldValue, mut.target.hasAttribute(mut.attributeName));
     });
   }).observe(doc, {
     attributes: true,
@@ -3191,9 +3219,31 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       });
     }
   });
-  if (typeof define === 'function' && define.amd) define(['Craft', 'craft'], Craft); // Node. Does not work with strict CommonJS, but
+  if (typeof define === 'function' &amp;&amp; define.amd) define(['Craft', 'craft'], Craft); // Node. Does not work with strict CommonJS, but
   // only CommonJS-like environments that support module.exports,
   // like Node.
-  else if ((typeof module === 'undefined' ? 'undefined' : _typeof(module)) === 'object' && module.exports) module.exports = Craft; // Browser globals (root is window)
+  else if ((typeof module === 'undefined' ? 'undefined' : _typeof(module)) === 'object' &amp;&amp; module.exports) module.exports = Craft; // Browser globals (root is window)
   else root.Craft = Craft; // console.log(performance.now() - perf, 'Crafter.js');
-})(document, self);
+})(document, self);</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="Craft.html">Craft</a></li><li><a href="Craft.EventHandler.html">EventHandler</a></li><li><a href="dom.html">dom</a></li><li><a href="is.html">is</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Jul 06 2016 23:17:57 GMT+0200 (SAST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

@@ -1,9 +1,9 @@
 /**
+ *  @version 0.0.8
  *  @overview Crafter.js , minimalist front-end library
  *  @author Saul van der Walt - https://github.com/SaulDoesCode/
- *  @license MIT
+ *  @license MIT  Licence (c) Copyright 2016 Saul van der Walt
  */
-// var perf = performance.now();
 (function (doc, root) {
     'use strict';
     let Ready = false,
@@ -12,10 +12,26 @@
         tabListeners = new Set,
         tem, Br = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
 
-    const slice = (ctx,i) => Array.prototype.slice.call(ctx,i || 0);
+    /**
+     * @summary Slices any arraylike object.
+     * @method slice
+     * @memberof Craft
+     * @param {arraylike} ctx - object to slice
+     * @param {int|String} i - value to slice defaults to 0
+     */
+    const slice = (ctx, i) => Array.prototype.slice.call(ctx, i || 0);
 
+    /**
+     * @summary curry takes a function as a parameter and returns another function until all the arguments of the initializer function has been provided.
+     * @method curry
+     * @memberof Craft
+     * @param {Function} fn - function to curry
+     * @param {Class|Function|Object} ctx - context to bind the function to
+     * @returns {Function|*}
+     */
     function curry(fn, ctx) {
         const arity = fn.length;
+
         function curried() {
             const args = slice(arguments);
             return args.length < arity ? function () {
@@ -30,16 +46,20 @@
         return (...args) => args.length == 1 ? test(args[0]) : args.length && args.every(test);
     }
 
+    /**
+     * @summary Checks whether a collection or object contains a certain value.
+     * @method has
+     * @memberof Craft
+     * @param {object|arraylike|set|map} host - collection or object to search in
+     * @param {*} value - the value to look for
+     */
     function has(host, value, or) {
-        if (is.Arraylike(host)) return (isStr(value) ? value.split('') : value)[(!or ? 'every' : 'some')](host.includes.bind(host));
+        if (is.Arraylike(host)) return (isStr(value) ? value.split('') : is.Arr(value) ? value : slice(value))[(!or ? 'every' : 'some')](host.includes.bind(host));
         if (isObj(host)) return Object.prototype.hasOwnProperty.call(host, value);
+        if (is.Set(host) || is.Map(host)) return host.has(value);
     }
 
-    function degloveStr(str) {
-        return isStr(str) && (str.includes('"') || str.includes('\'')) ? str.substring(1, str.length - 1) : str;
-    }
-
-    const sI = 'Isync',
+    const sI = 'InputSync',
         DestructionEvent = new Event('destroy'),
         possibleText = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
         toArr = Array.from,
@@ -84,7 +104,13 @@
         return arr[arr.length - 1];
     }
 
-    // document , fragment , from , string -   dffstr
+
+    /**
+     * @method dffstr
+     * @memberof Craft
+     * @summary creates a document fragment from a string (document, fragment, from, String} - dffstr
+     * @param {String} html - text to convert to html
+     */
     function dffstr(html) {
         return doc.createRange().createContextualFragment(html || '');
     }
@@ -95,12 +121,16 @@
         return toString.call(obj) === str;
     }
 
-    const rif = curry((b, e) => {
-        if (b) return e;
-    });
-
-    const exec = function (noreturn, context) {
-        if (isFunc(noreturn)) return noreturn.apply(context || this, arguments);
+    /**
+     * @method exec
+     * @summary imediately executes a function or optionally returns internal callback that executes and returns the function.
+     * @memberof Craft
+     * @param {Function|Boolean} noreturn - if function imediately returns and executes if bool func doesn't get returned in callback
+     * @param {*} [context] - context to bind the funcion to
+     * @returns {Function|*} conditionally returns closure and executes func or returns executed func
+     */
+    function exec(noreturn, context) {
+        if (isFunc(noreturn)) return noreturn.apply(context || this, slice(arguments, 2));
         return function () {
             if (noreturn) fn.apply(context, arguments);
             return fn.apply(context || this, arguments);
@@ -112,6 +142,14 @@
         return a ? (x ? y : z) + a : x ? y : z;
     }
 
+
+    /**
+     * @method toInt
+     * @summary converts a number or string value to an integer
+     * @memberof Craft
+     * @param {Number|String} num - number to convert
+     * @return {Number} integer number
+     */
     function toInt(num) {
         if (isStr(num)) num = Number(num);
         if (isNaN(num)) return 0;
@@ -119,64 +157,71 @@
         return (num > 0 ? 1 : -1) * Math.floor(Math.abs(num));
     }
 
-    function makeFn(fn, Args, totalArity) {
-        let remainingArity = totalArity - Args.length;
-        return is.between(remainingArity, 10, 0) ? function () {
-            return doInvok(fn, Args.concat(toArr(arguments)), totalArity);
-        } : ((fn, args, arity) => {
-            let a = [];
-            for (let i = arity; 0 > i; i--) a.push('a' + i.toString());
-            return function () {
-                return doInvok(fn, toArr(arguments).concat(a));
-            };
-        })(fn, args, remainingArity);
-    }
-
-    function doInvok(fn, argsArr, totalArity) {
-        if (argsArr.length > totalArity) argsArr = argsArr.slice(0, totalArity);
-        return argsArr.length == totalArity ? fn.apply(null, argsArr) : makeFn(fn, argsArr, totalArity);
-    }
-
+    /**
+     * @summary Splits a string at dots ".".
+     * @method cutdot
+     * @memberof Craft
+     * @param {String} str - string to split at the dots
+     */
     function cutdot(str) {
         return str.split('.');
     }
-
+    /**
+     * @summary joins a string array with dots "."
+     * @method joindot
+     * @memberof Craft
+     * @param {Array|Arraylike} arr - array to join with dots
+     */
     function joindot(arr) {
         if (!isArr(arr) && is.Arraylike(arr)) arr = toArr(arr);
         return arr.join('.');
     }
 
     /**
-     * is - Type Testing / Assertion *
-     *
+     * @summary is - Type Testing / Assertion
+     * @namespace is
      */
-
-    let is = {
+    const is = {
         /**
+         * @memberof is
+         * @summary Test if something is a boolean type
          * @method Bool
-         * Test if something is a boolean type
-         * @param val - value to test
+         * @param {...*} args - value/values to test
          */
         Bool: ta(o => typeof o === 'boolean'),
         /**
-         * Test if something is a String
-         * @param args - value/values to test
+         * @memberof is
+         * @summary Test if something is a String
+         * @method Str
+         * @param {*} val - value to test
          */
         Str: isStr,
+        /**
+         * @memberof is
+         * @summary Test if values are strings
+         * @method Str
+         * @param {...*} args - value/values to test
+         */
         String: ta(isStr),
         /**
-         * Test if something is an Array
+         * @memberof is
+         * @summary Test if something is an Array
+         * @method Arr
          * @param {...*} args - value/values to test
          */
         Arr: ta(isArr),
         /**
-         * Array.isArray alias for convenience and performance when only one argument is present
+         * @memberof is
+         * @summary Array.isArray alias for convenience and performance when only one argument is present
+         * @method Array
          * @param {*} val - value to test
          */
         Array: isArr,
         /**
-         * Test if something is an Array-Like
-         * @param args - value/values to test
+         * @memberof is
+         * @summary Test if a value or multiple values are Array-Like
+         * @method Arraylike
+         * @param {...*} args - value/values to test
          */
         Arraylike: ta(o => {
             try {
@@ -185,52 +230,76 @@
             return false;
         }),
         /**
-         * Determine whether a variable is undefined
-         * @param args - value/values to test
+         * @memberof is
+         * @summary Determine whether a value is undefined
+         * @method Undef
+         * @param {...*} args - value/values to test
          */
         Undef() {
             return !def.apply(this, arguments);
         },
         /**
-         * Determine whether a variable is in fact defined
-         * @param args - value/values to test
+         * @memberof is
+         * @summary Determine whether a value is in fact defined
+         * @method Def
+         * @param {...*} args - value/values to test
          */
         Def: def,
         /**
-         * Determine whether a variable is null
-         * @param args - value/values to test
+         * @memberof is
+         * @summary Determine whether a value is null
+         * @method Null
+         * @param {...*} args - value/values to test
          */
         Null: ta(o => o === null),
         /**
-         * Determine whether a variable is a DOM Node
-         * @param args - value/values to test
+         * @memberof is
+         * @summary Determine whether a value is a DOM Node
+         * @method Node
+         * @param {...*} args - value/values to test
          */
         Node: ta(o => o instanceof Node),
         /**
-         * Test an element's tagname
+         * @memberof is
+         * @summary Test an element's tagname
+         * @method Tag
          * @param {Node} element - node to test
-         * @param {string} tag - tag to test node for
+         * @param {String} tag - tag to test node for
          */
-        Tag: (element, tag) => is.Node(element) ? element.tagName === tag.toUpperCase() : false,
+        Tag: (element, tag) => isEl(element) ? element.tagName === tag.toUpperCase() : false,
         /**
-         * Determine whether a variable is a DOM NodeList or Collection of Nodes
-         * @param args - value/values to test
+         * @memberof is
+         * @summary Determine whether a value is a DOM NodeList or Collection of Nodes
+         * @method NodeList
+         * @param {...*} args - value/values to test
          */
         NodeList: ta(nl => nl instanceof NodeList || is.Arraylike(nl) ? ta(n => n instanceof Node).apply(null, nl) : false),
         /**
-         * Determine if a variable is a Number
+         * @memberof is
+         * @method Num
+         * @summary Determine if a value is a Number
          * @param {...*} args - value/values to test
          */
         Num: ta(o => !isNaN(Number(o))),
         /**
-         * Determine if a variable is an Object
-         * @param args - value/values to test
+         * @memberof is
+         * @method Object
+         * @summary Determine if a value is an Object
+         * @param {...*} args - value/values to test
          */
         Object: ta(isObj),
+        /**
+         * @memberof is
+         * @method Obj
+         * @summary Determine if a value is an Object
+         * @param {...*} args - value/values to test
+         */
         Obj: isObj,
         /**
-         * Determine if a sring is JSON
-         * @param args - value/values to test
+         * @memberof is
+         * @method Json
+         * @summary Determine if a sring is JSON
+         * @param {...*} args - value/values to test
          */
         Json: ta(str => {
             try {
@@ -240,103 +309,143 @@
             return false;
         }),
         /**
-         * Determine if a variable is a HTMLElement
-         * @param args - value/values to test
+         * @memberof is
+         * @method Element
+         * @summary Determine if a value is a HTMLElement
+         * @param {...*} args - value/values to test
          */
         Element: ta(isEl),
         /**
-         * Determine if a variable is a File Object
-         * @param args - value/values to test
+         * @memberof is
+         * @method File
+         * @summary Determine if a value is a File Object
+         * @param {...*} args - value/values to test
          */
         File: ta(o => type(o, '[object File]')),
         /**
-         * Determine if a variable is of a FormData type
-         * @param args - value/values to test
+         * @memberof is
+         * @method FormData
+         * @summary Determine if a value is of a FormData type
+         * @param {...*} args - value/values to test
          */
         FormData: ta(o => type(o, '[object FormData]')),
         /**
-         * Determine if a variable is a Map
-         * @param args - value/values to test
+         * @memberof is
+         * @method Map
+         * @summary Determine if a value is a Map
+         * @param {...*} args - value/values to test
          */
         Map: ta(o => type(o, '[object Map]')),
         /**
-         * Determine if a variable is a function
-         * @param args - value/values to test
+         * @memberof is
+         * @method Func
+         * @summary Determine if a value is a function
+         * @param {...*} args - value/values to test
          */
         Func: ta(isFunc),
         /**
-         * Determine if a variable/s are true
-         * @param args - value/values to test
+         * @memberof is
+         * @method True
+         * @summary Determine if a variable/s are true
+         * @param {...*} args - value/values to test
          */
         True: ta(o => o === true),
         /**
-         * Determine if a variable/s are false
-         * @param args - value/values to test
+         * @memberof is
+         * @method False
+         * @summary Determine if a variable/s are false
+         * @param {...*} args - value/values to test
          */
         False: ta(o => !o),
         /**
-         * Determine if a variable is of Blob type
-         * @param obj - variable to test
+         * @memberof is
+         * @method Blob
+         * @summary Determine if a value is of Blob type
+         * @param {...*} args - value/values to test
          */
         Blob: ta(o => type(o, '[object Blob]')),
         /**
-         * Determine if a variable is a Regular Expression
-         * @param obj - variable to test
+         * @memberof is
+         * @method RegExp
+         * @summary Determine if a value is a Regular Expression
+         * @param {...*} args - value/values to test
          */
         RegExp: ta(o => type(o, '[object RegExp]')),
         /**
-         * Determine if a variable is a Date type
-         * @param {...*} variable to test
+         * @memberof is
+         * @method Date
+         * @summary Determine if a value is a Date type
+         * @param {...*} args - value/values to test
          */
         Date: ta(o => type(o, '[object Date]')),
         /**
-         * Determine if a variable is a Set
-         * @param obj - variable to test
+         * @memberof is
+         * @method Set
+         * @summary Determine if a value is a Set.
+         * @param {...*} args - value/values to test
          */
         Set: ta(o => type(o, '[object Set]')),
         /**
-         * Determine if a variable is of an arguments type
-         * @param obj - variables to test
+         * @memberof is
+         * @method Args
+         * @summary Determine if a value is of type Arguments
+         * @param {*} val - value/values to test
          */
         Args: val => !nil(val) && type(val, '[object Arguments]'),
         /**
-         * Determine if a variable is a Symbol
-         * @param obj - variables to test
+         * @memberof is
+         * @method Symbol
+         * @summary Determine if a value is a Symbol
+         * @param {...*} args - value/values to test
          */
         Symbol: ta(obj => type(obj, '[object Symbol]')),
         /**
-         * tests if a value is a single character
-         * @param {...string} values to test
+         * @memberof is
+         * @method char
+         * @summary tests if a value is a single character
+         * @param {...String} values to test
          */
         char: ta(val => isStr(val) && val.length == 1),
         /**
-         * tests if a value is a space character
-         * @param {...string} values to test
+         * @memberof is
+         * @method space
+         * @summary tests if a value is a space character
+         * @param {...String} values to test
          */
         space: ta(val => is.char(val) && (val.charCodeAt(0) > 8 && val.charCodeAt(0) < 14) || val.charCodeAt(0) === 32),
         /**
-         * Determine if a String is UPPERCASE
-         * @param {string} char - variable to test
+         * @memberof is
+         * @method Uppercase
+         * @summary Determine if a String is UPPERCASE
+         * @param {String} char - value to test
          */
         Uppercase: str => isStr(str) && !is.Num(str) && str === str.toUpperCase(),
         /**
-         * Determine if a String is LOWERCASE
-         * @param {string} char - variable to test
+         * @memberof is
+         * @method Lowercase
+         * @summary Determine if a String is LOWERCASE
+         * @param {String} char - value to test
          */
         Lowercase: str => isStr(str) && str === str.toLowerCase(),
         /**
-         * Determine if a String contains only characters and numbers (alphanumeric)
-         * @param {string} str - variable to test
+         * @memberof is
+         * @method Alphanumeric
+         * @summary Determine if a String contains only characters and numbers (alphanumeric)
+         * @param {String} str - value to test
          */
         Alphanumeric: str => /^[0-9a-zA-Z]+$/.test(str),
         /**
-         * Determines whether a String is a valid email
-         * @param {string} email - variable to test
+         * @memberof is
+         * @method email
+         * @summary Determines whether a String is a valid email
+         * @param {String} email - value to test
          */
         email: email => RegExps.email.test(email),
         /**
-         * Determines whether a String is a URL
-         * @param {string} url - variable to test
+         * @memberof is
+         * @method URL
+         * @summary Determines whether a String is a URL
+         * @param {String} url - value to test
          */
         URL(url) {
             try {
@@ -346,39 +455,57 @@
             return false;
         },
         /**
-         * Determines whether a String is a HEX-COLOR (#fff123)
-         * @param {string} HexColor - variable to test
+         * @memberof is
+         * @method HexColor
+         * @summary Determines whether a String is a HEX-COLOR (#fff123)
+         * @param {String} HexColor - value to test
          */
         HexColor: hexColor => RegExps.hexColor.test(hexColor),
         /**
-         * Determines whether a String is hexadecimal
-         * @param {string} hexadecimal - variable to test
+         * @memberof is
+         * @method hexadecimal
+         * @summary Determines whether a String is hexadecimal
+         * @param {String} hexadecimal - value to test
          */
         hexadecimal: hexadecimal => RegExps.hexadecimal.test(hexadecimal),
         /**
-         * checks wether a date is today
-         * @param obj - Date to test
+         * @memberof is
+         * @summary checks wether a date is today
+         * @method today
+         * @param {Date} obj - Date to test
          */
         today: obj => is.Date(obj) && obj.toDateString() === new Date().toDateString(),
         /**
-         * checks wether a date is yesterday
-         * @param obj - Date to test
+         * @memberof is
+         * @summary checks wether a date is yesterday
+         * @method yesterday
+         * @param {Date} obj - Date to test
          */
         yesterday(obj) {
-            let now = new Date();
-            return is.Date(obj) && obj.toDateString() === new Date(now.setDate(now.getDate() - 1)).toDateString();
+            if (is.Date(obj)) {
+                let now = new Date();
+                return obj.toDateString() === new Date(now.setDate(now.getDate() - 1)).toDateString();
+            }
+            return false;
         },
         /**
-         * checks wether a date is tommorow
-         * @param obj - Date to test
+         * @memberof is
+         * @summary checks wether a date is tommorow
+         * @method tomorrow
+         * @param {Date} obj - Date to test
          */
         tomorrow(obj) {
-            let now = new Date();
-            return is.Date(obj) && obj.toDateString() === new Date(now.setDate(now.getDate() + 1)).toDateString();
+            if (is.Date(obj)) {
+                let now = new Date();
+                return is.Date(obj) && obj.toDateString() === new Date(now.setDate(now.getDate() + 1)).toDateString();
+            }
+            return false;
         },
         /**
-         * Determines if a date is in the past
-         * @param obj - Date to test
+         * @memberof is
+         * @summary Determines if a date is in the past
+         * @method past
+         * @param {String|Date} obj - Date to test
          */
         past(obj) {
             try {
@@ -387,95 +514,134 @@
             return is.Date(obj) && obj.getTime() < new Date().getTime();
         },
         /**
-         * Determines if a date is in the future
-         * @param obj - Date to test
+         * @memberof is
+         * @method future
+         * @summary Determines if a date is in the future
+         * @param {String|Date} obj - Date to test
          */
         future: obj => !is.past(obj),
         /**
-         * Determines whether a String is a timeString
-         * @param time - variable to test
+         * @memberof is
+         * @method time
+         * @summary Determines whether a String is a timeString
+         * @param {String} time - value to test
          */
         time: time => RegExps.timeString.test(time),
         /**
-         * Determines whether a String is a dateString
-         * @param {string} dateString - variable to test
+         * @memberof is
+         * @method dateString
+         * @summary Determines whether a String is a dateString
+         * @param {String} dateString - value to test
          */
         dateString: dateString => RegExps.dateString.test(dateString),
         /**
-         * Determines whether a Number is between a maximum and a minimum
+         * @memberof is
+         * @method between
+         * @summary Determines whether a Number is between a maximum and a minimum
          * @param {Number} val - number value to test
          * @param {Number} max - maximum to compare the value with
          * @param {Number} min - minimum to compare the value with
          * @returns {Boolean} wether or not the value is between the max and min
          */
-        between: (val, max, min) => (val <= max && val >= min),
+        between: curry((val, max, min) => (val <= max && val >= min)),
         /**
-         * checks if a number is an integer
-         * @param val - variable / value to test
+         * @memberof is
+         * @summary checks if a number is an integer
+         * @method int
+         * @param {*} val - value to test
          */
         int: val => is.Num(val) && val % 1 === 0,
         /**
-         * checks if a number is an even number
-         * @param val - variable / value to test
+         * @memberof is
+         * @summary checks if a number is an even number
+         * @method even
+         * @param {*} val - value to test
          */
         even: val => is.Num(val) && val % 2 === 0,
         /**
-         * checks if a number is an odd number
-         * @param val - variable / value to test
+         * @memberof is
+         * @summary checks if a number is an odd number
+         * @method odd
+         * @param {*} val - value to test
          */
         odd: val => is.Num(val) && val % 2 !== 0,
         /**
-         * checks if a number is positive
-         * @param val - variable / value to test
+         * @memberof is
+         * @method positive
+         * @summary checks if a number is positive
+         * @param {*} val - value to test
          */
         positive: val => is.Num(val) && val > 0,
         /**
-         * checks if a number is positive
-         * @param val - variable / value to test
+         * @memberof is
+         * @method negative
+         * @summary checks if a number is positive
+         * @param {*} val - value to test
          */
         negative: val => is.Num(val) && val < 0,
         /**
-         * tests that all parameters following the first are not the same as the first
+         * @memberof is
+         * @method neither
+         * @summary tests that all parameters following the first are not the same as the first
          * @param {*} value - inital value to compare all other params with
          * @param {...*} arguments to compare with value
          */
         neither(value) {
-            return toArr(arguments).slice(1).every(val => value !== val);
+            return slice(arguments, 1).every(val => value !== val);
         },
         /**
-         * Determines if two variables are equal
+         * @memberof is
+         * @method eq
+         * @summary Determines if two variables are equal
          * @param a - first value to compare
          * @param b - second value to compare
          */
         eq: curry((a, b) => a === b),
+        /**
+         * @memberof is
+         * @method or
+         * @summary Returns the a || b
+         * @param a - first value to compare
+         * @param b - second value to compare
+         */
         or: curry((a, b) => a || b),
         /**
-         * Determines if a number is LOWER than another
+         * @memberof is
+         * @method lt
+         * @summary Determines if a number is LOWER than another
          * @param {Number} val - value to test
          * @param {Number} other - num to test with value
          */
-        lt: (val, other) => val < other,
+        lt: curry((val, other) => val < other),
         /**
-         * Determines if a number is LOWER than or equal to another
+         * @memberof is
+         * @method lte
+         * @summary Determines if a number is LOWER than or equal to another
          * @param {Number} val - value to test
          * @param {Number} other - num to test with value
          */
-        lte: (val, other) => val <= other,
+        lte: curry((val, other) => val <= other),
         /**
-         * Determines if a number is BIGGER than another
+         * @memberof is
+         * @method bt
+         * @summary Determines if a number is BIGGER than another
          * @param {Number} val - value to test
          * @param {Number} other - num to test with value
          */
-        bt: (val, other) => val > other,
+        bt: curry((val, other) => val > other),
         /**
-         * Determines if a number is BIGGER than or equal to another
+         * @memberof is
+         * @method bte
+         * @summary Determines if a number is BIGGER than or equal to another
          * @param {Number} val - value to test
          * @param {Number} other - num to test with value
          */
-        bte: (val, other) => val >= other,
+        bte: curry((val, other) => val >= other),
         /**
-         * Determine if a given collection or string is empty
-         * @param {Object|Array|string} val - value to test if empty
+         * @memberof is
+         * @method empty
+         * @summary Determines if a given collection or string is empty
+         * @param {Object|Array|String} val - value to test if empty
          */
         empty: ta(val => {
             try {
@@ -484,24 +650,30 @@
             return false;
         }),
         /**
-         * Test if something is a Native JavaScript feature
-         * @param val - value to test
+         * @memberof is
+         * @method Native
+         * @summary Tests if something is a Native JavaScript feature
+         * @param {*} val - value to test
          */
         Native(val) {
             let type = typeof val;
             return isFunc(val) ? RegExp('^' + String(Object.prototype.toString).replace(/[.*+?^${}()|[\]\/\\]/g, '\\$&').replace(/toString|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$').test(Function.prototype.toString.call(val)) : (val && type == 'object' && /^\[object .+?Constructor\]$/.test(val.toString)) || false;
         },
         /**
-         * Tests where a dom element is an input of some sort
+         * @memberof is
+         * @method Input
+         * @summary Tests where a dom element is an input of some sort
          * @param {Element|Node} - element to test
          */
         Input: element => isEl(element) && ['INPUT', 'TEXTAREA'].some(i => element.tagName.includes(i))
     };
 
     /**
-     * Easy way to loop through Collections and Objects and Numbers as well
-     * @param {Array|Object|NodeList|Number} iterable - any collection that is either an Object or has a .length value
-     * @param {function} func - function called on each iteration -> "function( value , indexOrKey ) {...}"
+     * @method forEach
+     * @summary Easy way to loop through Collections, Objects and Numbers
+     * @memberof Craft
+     * @param {Array|Object|NodeList|Number|Arguments} iterable - any collection that is either an Object or has a .length value
+     * @param {Function} func - function called on each iteration -> "function( value , indexOrKey ) {...}"
      */
     function forEach(iterable, func) {
         if (isFunc(func)) {
@@ -517,7 +689,8 @@
     }
 
     /**
-     * Converts any Query/QueryAll to an Array of Nodes even if there is only one Node , this is error proof when no arguments are present it returns an empty array
+     * @private
+     * @summary Converts any Query/QueryAll to an Array of Nodes even if there is only one Node , this is error proof when no arguments are present it returns an empty array.
      * @param {Node|NodeList|Array|String} val - pass either a CSS Selector string , Node/NodeList or Array of Nodes
      * @param {Node|NodeList|Array|String} within - pass either a CSS Selector string , Node/NodeList or Array of Nodes to search for val in
      */
@@ -526,6 +699,12 @@
         return is.Node(val) ? [val] : is.NodeList(val) ? toArr(val) : [];
     }
 
+    /**
+     * @method eventsys
+     * @memberof Craft
+     * @summary Adds an Event System to Arbitrary Objects and Classes.
+     * @param {Object|Function|Class} obj - object to convert
+     */
     function eventsys(obj) {
         if (!obj) obj = {};
         let listeners = new Set,
@@ -578,7 +757,12 @@
             }
         });
     }
-
+    /**
+     * @method observable
+     * @memberof Craft
+     * @summary Creates observables.
+     * @param {Object|Function|Class} obj - object to convert
+     */
     function observable(obj) {
         if (!obj) obj = {};
         obj = eventsys(obj);
@@ -636,7 +820,7 @@
                     return options
                 },
             };
-            return options.on;
+            return options.on();
         }));
         defineprop(obj, 'get', desc(key => {
             if (key != 'get' && key != 'set') {
@@ -696,9 +880,12 @@
 
     /**
      * Event Handler
-     * @param {string} EventType - set the type of event to listen for example "click" or "scroll"
+     * @method EventHandler
+     * @memberof Craft
+     * @namespace EventHandler
+     * @param {String} EventType - set the type of event to listen for example "click" or "scroll"
      * @param {Node|NodeList|window|document} Target - the Event Listener's target , can also be a NodeList to listen on multiple Nodes
-     * @param {function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
+     * @param {Function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
      * @returns Interface on,off,once
      */
     function EventHandler(EventType, Target, func, Within) {
@@ -709,21 +896,20 @@
             if (isStr(EventType) && EventType.includes(',')) EventType = EventType.split(',');
             if (!isArr(EventType)) EventType = [EventType];
 
-            let FuncWrapper = e => {
-                    func(e, e.target, Craft.deglove(Target));
-                }
-                /**
-                 * Change the Event type to listen for
-                 * {string} type - the name of the event/s to listen for
-                 */
+            let FuncWrapper = e => func(e, e.target, Craft.deglove(Target));
+
+            /**
+             * @summary Change the Event type to listen for
+             * @return {String} type - the name of the event/s to listen for
+             */
             defineprop(this, 'Type', {
                 set(type) {
                     let ehdl = this;
                     //  have you tried turning it on and off again? - THE IT CROWD
-                    ehdl.off;
+                    ehdl.off();
                     EventType = type.includes(',') ? type.split(',') : type;
                     if (!isArr(EventType)) EventType = [EventType];
-                    ehdl.on;
+                    ehdl.on();
                     return ehdl;
                 },
                 get() {
@@ -732,70 +918,68 @@
                 enumerable: true
             });
             /**
-             * Activates the EventHandler to start listening for the EventType on the Target/Targets
+             * @summary Activates the EventHandler to start listening for the EventType on the Target/Targets
              */
-            defineprop(this, 'on', {
-                get() {
-                    let ehdl = this;
-                    Target.forEach(target => {
-                        EventType.forEach(evt => {
-                            target.addEventListener(evt, FuncWrapper);
-                        });
+            this.on = function () {
+                let ehdl = this;
+                Target.forEach(target => {
+                    EventType.forEach(evt => {
+                        target.addEventListener(evt, FuncWrapper);
                     });
-                    ehdl.state = true;
-                    return ehdl;
-                },
-                enumerable: true
-            });
-            /**
-             * De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
-             * can still optionally be re-activated with on again
-             */
-            defineprop(this, 'off', {
-                get() {
-                    let ehdl = this;
-                    Target.forEach(target => {
-                        EventType.forEach(evt => {
-                            target.removeEventListener(evt, FuncWrapper);
-                        });
-                    });
-                    ehdl.state = false;
-                    return ehdl;
-                },
-                enumerable: true
-            });
+                });
+                ehdl.state = true;
+                return ehdl;
+            }
 
             /**
-             * once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
+             * @summary De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets
+             * can still optionally be re-activated with on again
+             */
+            this.off = function () {
+                let ehdl = this;
+                Target.forEach(target => {
+                    EventType.forEach(evt => {
+                        target.removeEventListener(evt, FuncWrapper);
+                    });
+                });
+                ehdl.state = false;
+                return ehdl;
+            }
+
+            /**
+             * @summary once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets
              * the Handler function will be called only once
              */
-            defineprop(this, 'once', {
-                get() {
-                    let ehdl = this;
-                    FuncWrapper = e => {
-                        func(e, e.target, Craft.deglove(Target));
-                        ehdl.off.state = false;
-                    };
-                    return ehdl.on;
-                },
-                enumerable: true
-            });
-        };
+            this.once = () => {
+                let ehdl = this;
+                FuncWrapper = e => {
+                    func(e, e.target, Craft.deglove(Target));
+                    ehdl.off.state = false;
+                };
+                return ehdl.on();
+            }
+
+
+        }
     }
 
     /**
-     * Easy way to get a DOM Node or Node within another DOM Node using CSS selectors
-     * @param {string} selector - CSS selector to query the DOM Node with
+     * @summary Easy way to get a DOM Node or Node within another DOM Node using CSS selectors.
+     * @method query
+     * @memberof Craft
+     * @param {String} selector - CSS selector to query the DOM Node with
      * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
      */
-    let query = (selector, element) => {
+    function query(selector, element) {
         if (isStr(element)) element = doc.querySelector(element);
         return is.Node(element) ? element.querySelector(selector) : doc.querySelector(selector);
     };
 
     /**
-     * Easy way to get a DOM NodeList or NodeList within another DOM Node using CSS selectors
-     * @param {string} selector - CSS selector to query the DOM Nodes with
+     * @method queryAll
+     * @memberof Craft
+     * @summary Easy way to get a DOM NodeList or NodeList within another DOM Node using CSS selectors
+     * @param {String} selector - CSS selector to query the DOM Nodes with
      * @param {Node|NodeList|string=} element - Optional Node or CSS selector to search within insead of document
      */
     function queryAll(selector, element) {
@@ -814,10 +998,12 @@
         return is.Null(list) ? list : isArr(list) ? list : toArr(list);
     };
     /**
-     * Easy way to loop through Nodes in the DOM using a CSS Selector or a NodeList
-     * @param {string|NodeList|Node} selector - CSS selector to query the DOM Nodes with or NodeList to iterate through
-     * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
-     * @param {function} func - function called on each iteration -> "function( Element , index ) {...}"
+     * @method queryEach
+     * @memberof Craft
+     * @summary Easy way to loop through Nodes in the DOM using a CSS Selector or a NodeList
+     * @param {String|NodeList|Node} selector - CSS selector to query the DOM Nodes with or NodeList to iterate through
+     * @param {Node|String=} element - Optional Node or CSS selector to search within insead of document
+     * @param {Function} func - function called on each iteration -> "function( Element , index ) {...}"
      * @param {boolean=} returnList - should queryEach also return the list of nodes
      */
     function queryEach(selector, element, func, returnList) {
@@ -828,8 +1014,7 @@
     };
 
     function EventTypes(Target, within, listen) {
-        listen = listen || 'on';
-        let etype = type => fn => EventHandler(type, Target, fn, within)[listen];
+        let etype = type => fn => EventHandler(type, Target, fn, within)[listen || 'on']();
         return {
             Click: etype('click'),
             Input: etype('input'),
@@ -857,31 +1042,45 @@
     function EvtLT(ListenType) {
         return function (EventType, Target, element, func) {
             let args = toArr(arguments);
-            return isFunc(Target) ? EventHandler(EventType, root, Target)[ListenType] :
+            return isFunc(Target) ? EventHandler(EventType, root, Target)[ListenType]() :
                 args.length < 3 && !args.some(isFunc) ? EventTypes(EventType, Target, ListenType) :
-                isFunc(element) ? EventHandler(EventType, Target, element)[ListenType] :
-                EventHandler(EventType, Target, func, element)[ListenType];
+                isFunc(element) ? EventHandler(EventType, Target, element)[ListenType]() :
+                EventHandler(EventType, Target, func, element)[ListenType]();
         };
     }
 
     /**
-     * Starts listening for an EventType on the Target/Targets
-     * @param {string} EventType - set the type of event to listen for example "click" or "scroll"
+     * @method on
+     * @memberof Craft
+     * @summary Starts listening for an EventType on the Target/Targets
+     * @param {String} EventType - set the type of event to listen for example "click" or "scroll"
      * @param {Node|NodeList|window|document} Target - the Event Listener's target , can be a NodeList to listen on multiple Nodes
-     * @param {function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
+     * @param {Function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
      * @returns off - when on is defined as a variable "var x = on(...)" it allows you to access all the EventHandler interfaces off,once,on
      */
-    const on = EvtLT('on'),
-        /**
-         * Starts listening for an EventType on the Target/Targets ONCE after triggering the once event Listener will stop listening
-         * @param {string} EventType - set the type of event to listen for example "click" or "scroll"
-         * @param {Node|NodeList|window|document} Target - the Event Listener's target , can be a NodeList to listen on multiple Nodes
-         * @param {function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
-         * @returns on,off,once - when once is defined as a variable "var x = once(...)" it allows you to access all the EventHandler interfaces off,once,on
-         */
-        once = EvtLT('once'),
-        eventoptions = 'Click,Input,DoubleClick,Focus,Blur,Keydown,Mousemove,Mousedown,Mouseup,Mouseover,Mouseout'.split(',');
+    const on = EvtLT('on');
+    /**
+     * @method once
+     * @memberof Craft
+     * @summary Starts listening for an EventType on the Target/Targets ONCE after triggering the once event Listener will stop listening
+     * @param {String} EventType - set the type of event to listen for example "click" or "scroll"
+     * @param {Node|NodeList|window|document} Target - the Event Listener's target , can be a NodeList to listen on multiple Nodes
+     * @param {Function} Func - Handler function that will be called when the event is triggered -> "function( event , event.srcElement ) {...}"
+     * @returns on,off,once - when once is defined as a variable "var x = once(...)" it allows you to access all the EventHandler interfaces off,once,on
+     */
+    const once = EvtLT('once');
 
+    const eventoptions = 'Click,Input,DoubleClick,Focus,Blur,Keydown,Mousemove,Mousedown,Mouseup,Mouseover,Mouseout'.split(',');
+
+    /**
+     * @summary craft elements on the fly using this nifty method
+     * @method craftElement
+     * @memberof Craft
+     * @param {String} name - tag name of element to be created
+     * @param {String|NodeList|Array|Node} inner - inner value(s) of element
+     * @param {Object|String} attributes - Key value pair object defining element attributes or URI variable style string
+     * @returns {Element} newly created element
+     */
     function craftElement(name, inner, attributes, extraAttr, stringForm) {
         let element = domManip(doc.createElement(name));
         if (isObj(inner)) {
@@ -906,25 +1105,34 @@
     }
 
     /**
-     * Contains several methods for Element Creation
+     * @summary Contains several methods for Element Creation
      * @namespace dom
      */
     let Dom = {
         element: craftElement,
+        /**
+         * @memberof dom
+         * @summary Makes document fragments also allows attaching nodes or strings that get converted to html.
+         * @method frag
+         * @param {String|Node} [inner] - node or string to convert to html
+         * @returns {DocumentFragment}
+         */
         frag(inner) {
-            let dfrag = doc.createDocumentFragment();
-            if (isStr(inner)) inner = dffstr(inner);
-            if (is.Node(inner)) dfrag.appendChild(dfrag);
+            let dfrag;
+            if (isStr(inner)) dfrag = dffstr(inner);
+            if (is.Node(inner)) {
+                dfrag = doc.createDocumentFragment();
+                dfrag.appendChild(inner);
+            }
             return dfrag;
         },
-        br: () => Dom.element('br'),
         /**
-         * creates an img element with the options provided
+         * @summary creates an img element with the options provided
          * @method img
          * @memberof dom
-         * @param {string} sets src of the img
-         * @param {string} sets alt of the img
-         * @param {string|Object=} sets p attributes with URL variable style string ("id=123&class=big-header") or Object with properties {id : 123 , class : 'big-header'}
+         * @param {String} sets src of the img
+         * @param {String} sets alt of the img
+         * @param {String|Object} [attr] Key value pair object defining element attributes or URI variable style string
          */
         img: (src, alt, attr) => Dom.element('img', '', attr, {
             src: src,
@@ -948,11 +1156,12 @@
                 });
             return Dom.element(type, list, attr);
         },
-        a: (link, inner, attr) => Dom.element('a', inner, attr, 'href' + link),
+        a: (link, inner, attr) => Dom.element('a', inner, attr, 'href=' + link),
         script(code, attr, defer, onload, nosrc) {
             let script = Dom.element('script', '', attr, {
                 type: 'text/javascript'
             });
+            if (code.slice(0, 4) === 'src=') return script.setAttr(code);
             if (isFunc(onload)) {
                 script.onload = () => {
                     script.removeAttribute('initx');
@@ -970,7 +1179,7 @@
             return script;
         }
     };
-    'table,td,th,tr,article,aside,ul,ol,li,h1,h2,h3,h4,h5,h6,div,span,section,button,br,label,header,i,style,nav,menu,main,menuitem'.split(',').forEach(tag => {
+    'table,td,th,tr,article,aside,ul,ol,li,h1,h2,h3,h4,h5,h6,div,span,pre,code,section,button,br,label,header,i,style,nav,menu,main,menuitem'.split(',').forEach(tag => {
         Dom[tag] = (inner, attr, ea) => Dom.element(tag, inner, attr, ea);
     });
 
@@ -980,14 +1189,14 @@
         });
 
         /**
-         * Listen for Events on the NodeList
-         * @param {string} string indicating the type of event to listen for
-         * @param {function} func - handler function for the event
+         * @summary Listen for Events on the NodeList
+         * @param {String} string indicating the type of event to listen for
+         * @param {Function} func - handler function for the event
          * @returns handler (off,once,on)
          */
         elements.on = (eventType, func) => on(eventType, elements, func);
         /**
-         * add CSS style rules to NodeList
+         * @summary add CSS style rules to NodeList
          * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
          */
         elements.css = styles => Craft.css(elements, styles);
@@ -1019,9 +1228,9 @@
         };
 
         /**
-         * removes a specific Attribute from the this.element
+         * @summary removes a specific Attribute from the this.element
          * @memberof dom
-         * @param {...string} name of the Attribute/s to strip
+         * @param {...String} name of the Attribute/s to strip
          */
         elements.stripAttr = function () {
             elements.forEach(el => {
@@ -1032,10 +1241,11 @@
             return elements;
         };
         /**
-         * checks if the element has a specific Attribute or Attributes
+         * @method hasAttr
+         * @summary checks if the element has a specific Attribute or Attributes
          * @memberof dom
-         * @param {string|boolean} name of the Attribute or if true checks that it has some (||) of the attributes or if false checks that it has all of the attributes (&&)
-         * @param {...string} names of attributes to check for
+         * @param {String|boolean} name of the Attribute or if true checks that it has some (||) of the attributes or if false checks that it has all of the attributes (&&)
+         * @param {...String} names of attributes to check for
          */
         elements.hasAttr = function (attr) {
             if (isStr(attr) && arguments.length == 1) return elements.every(el => el.hasAttribute(attr));
@@ -1043,9 +1253,11 @@
             return elements.every(el => args.every(a => el.hasAttribute(a)));
         };
         /**
-         * Toggles an attribute on element , optionally add value when toggle is adding attribute
-         * @param {string} name - name of the attribute to toggle
-         * @param {string} val - value to set attribute to
+         * @method toggleAttr
+         * @memberof dom
+         * @summary Toggles an attribute on element , optionally add value when toggle is adding attribute.
+         * @param {String} name - name of the attribute to toggle
+         * @param {String} val - value to set attribute to
          * @param {boolean=} rtst - optionally return a bool witht the toggle state otherwise returns the element
          */
         elements.toggleAttr = function (name, val, rtst) {
@@ -1055,10 +1267,11 @@
             return rtst ? elements.every(el => el.hasAttr(name)) : elements;
         };
         /**
-         * Sets or adds an Attribute on the element
+         * @method setAttr
+         * @summary Sets or adds an Attribute on elements of a NodeList
          * @memberof dom
-         * @param {string} Name of the Attribute to add/set
-         * @param {string} Value of the Attribute to add/set
+         * @param {String} Name of the Attribute to add/set
+         * @param {String} Value of the Attribute to add/set
          */
         elements.setAttr = function (attr, val) {
             forEach(elements, el => {
@@ -1141,10 +1354,11 @@
         if (element._DOMM == true) return element;
         element._DOMM = true;
         element.isInput = is.Input(element);
-        element.attrX = eventsys();
-        element.attrX.on('attr', function (attr) {
-            element.attrX.emit.apply(element, ['attr:' + attr].concat(arguments));
+        element.state = eventsys();
+        element.state.on('attr', function (attr) {
+            element.state.emit.apply(element, ['attr:' + attr].concat(arguments));
         });
+
 
         element.newSetGet = newSetGet;
 
@@ -1153,23 +1367,26 @@
         });
 
         /**
-         * changes or returns the innerHTML value of a Node
+         * @method Text
+         * @summary changes or returns the innerHTML value of a Node
          * @memberof dom
-         * @param {string=} sets the innerHTML value or when undefined gets the innerHTML value
+         * @param {String=} sets the innerHTML value or when undefined gets the innerHTML value
          */
         element.html = Inner('innerHTML', element);
 
         /**
-         * changes or returns the textContent value of a Node
+         * @method Text
+         * @summary changes or returns the textContent value of a Node
          * @memberof dom
-         * @param {string=} sets the textContent value or when undefined gets the textContent value
+         * @param {String=} sets the textContent value or when undefined gets the textContent value
          */
         element.Text = Inner('textContent', element);
 
         /**
-         * element.bind is what drives data-binding in Crafter.js
-         * it binds to values in models and objects
-         * @param (string) bind - path to bind to
+         * @method bind
+         * @memberof dom
+         * @summary element.bind is what drives data-binding in Crafter.js it binds to values in models and objects
+         * @param {String} bind - path to bind to
          * @example element.bind('myModel.value');
          */
         element.bind = bind => {
@@ -1197,9 +1414,8 @@
                 let alt, path = joindot(Craft.omit(cutbind, cutbind[0]));
                 if (!def(val)) val = Craft.getDeep(obj, path);
                 def(val) ? element.html(val) : Craft.setDeep(obj, path, element.html());
-                if (obj.isObservable) {
-                    obj.on('$uberset:' + prop, element.html);
-                } else alt = val => {
+                if (obj.isObservable) obj.on('$uberset:' + prop, element.html);
+                else alt = val => {
                     queryEach(`[bind=${bind}]`, el => {
                         if (val != undef) el.html(val);
                     });
@@ -1221,7 +1437,8 @@
 
         };
         /**
-         * replaces a Node with another node provided as a parameter/argument
+         * @method replace
+         * @summary replaces a Node with another node provided as a parameter/argument
          * @memberof dom
          * @param {Node} Node to replace with
          */
@@ -1230,15 +1447,18 @@
             return element;
         };
         /**
-         * replaces a Node with another node provided as a parameter/argument
+         * @method clone
          * @memberof dom
-         * @param {Node} Node to replace with
+         * @summary clones an element it's children, optionally
+         * @param {Boolean} val - defaults to true if set to false children of element won't be cloned
          */
         element.clone = val => domManip(element.cloneNode(val == undef ? true : val));
 
         /**
-         * element.importview - imports a file and renders it on to the node
-         * @param (string) src - url to fetch from
+         * @method importview
+         * @memberof dom
+         * @summary imports a file and renders it on to the node
+         * @param {String) src - url to fetch from
          */
         element.importview = (src, fetchoptions) => {
             let cache = element.hasAttr('cache-view');
@@ -1264,7 +1484,7 @@
         /**
          * append the Element to another node using either a CSS selector or a Node
          * @memberof dom
-         * @param {Node|string} CSS selector or Node to append the this.element to
+         * @param {Node|String} CSS selector or Node to append the this.element to
          */
         element.appendTo = function (val, within) {
             if (isStr(val)) val = query(val, within);
@@ -1272,9 +1492,19 @@
             return element;
         };
         /**
+         * prepend the Element to another node using either a CSS selector or a Node
+         * @memberof dom
+         * @param {Node|String} CSS selector or Node to append the this.element to
+         */
+        element.prependTo = function (val, within) {
+            if (isStr(val)) val = query(val, within);
+            if (is.Node(val)) val.insertBefore(element, val.firstChild);
+            return element;
+        };
+        /**
          * append text or a Node to the element
          * @memberof dom
-         * @param {Node|string} String or Node to append to the this.element
+         * @param {Node|String} String or Node to append to the this.element
          */
         element.append = function () {
             let domfrag = dom.frag();
@@ -1287,7 +1517,7 @@
         /**
          * prepend text or a Node to the element
          * @memberof dom
-         * @param {Node|string} String or Node to prepend to the this.element
+         * @param {Node|String} String or Node to prepend to the this.element
          */
         element.prepend = function () {
             let domfrag = dom.frag();
@@ -1300,7 +1530,7 @@
 
         /**
          * @func element.modify - used to do things with your element without breaking scope
-         * @param (function) func - callback to execute
+         * @param {function) func - callback to execute
          * @returns (element) to make it chainable
          */
         element.modify = func => {
@@ -1310,8 +1540,8 @@
         /**
          * Listen for Events on the element or on all the elements in the NodeList
          * @memberof dom
-         * @param {string} string indicating the type of event to listen for
-         * @param {function} func - handler function for the event
+         * @param {String} string indicating the type of event to listen for
+         * @param {Function} func - handler function for the event
          * @returns handler (off,once,on)
          */
         element.on = (eventType, func) => on(eventType, element, func);
@@ -1370,16 +1600,16 @@
         /**
          * check if the element has got a specific CSS class
          * @memberof dom
-         * @param {...string} name of the class to check for
+         * @param {...String} name of the class to check for
          */
         element.gotClass = function () {
-            return toArr(arguments).every(Class => element.classList.contains(Class));
+            return slice(arguments).every(Class => element.classList.contains(Class));
         };
 
         /**
          * Add a CSS class to the element
          * @memberof dom
-         * @param {string} name of the class to add
+         * @param {String} name of the class to add
          */
         element.addClass = function () {
             forEach(arguments, Class => {
@@ -1390,7 +1620,7 @@
         /**
          * removes a specific CSS class from the element
          * @memberof dom
-         * @param {...string} name of the class to strip
+         * @param {...String} name of the class to strip
          */
         element.stripClass = function () {
             forEach(arguments, Class => {
@@ -1401,7 +1631,7 @@
         /**
          * Toggle a CSS class to the element
          * @memberof dom
-         * @param {string} name of the class to add
+         * @param {String} name of the class to add
          * @param {boolean=} state - optionally toggle class either on or off with bool
          */
         element.toggleClass = function (Class, state) {
@@ -1412,7 +1642,7 @@
         /**
          * removes a specific Attribute from the this.element
          * @memberof dom
-         * @param {...string} name of the Attribute/s to strip
+         * @param {...String} name of the Attribute/s to strip
          */
         element.stripAttr = function () {
             forEach(arguments, element.removeAttribute.bind(element));
@@ -1421,8 +1651,8 @@
         /**
          * checks if the element has a specific Attribute or Attributes
          * @memberof dom
-         * @param {string|boolean} name of the Attribute or if true checks that it has some (||) of the attributes or if false checks that it has all of the attributes (&&)
-         * @param {...string} names of attributes to check for
+         * @param {String|boolean} name of the Attribute or if true checks that it has some (||) of the attributes or if false checks that it has all of the attributes (&&)
+         * @param {...String} names of attributes to check for
          */
         element.hasAttr = function () {
             if (isStr(arguments[0])) return element.hasAttribute(arguments[0]);
@@ -1431,8 +1661,8 @@
         /**
          * Sets or adds an Attribute on the element
          * @memberof dom
-         * @param {string} Name of the Attribute to add/set
-         * @param {string} Value of the Attribute to add/set
+         * @param {String} Name of the Attribute to add/set
+         * @param {String} Value of the Attribute to add/set
          */
         element.setAttr = (attr, val) => {
             if (!def(val)) {
@@ -1447,7 +1677,7 @@
         };
         /**
          * Gets the value of an attribute , short alias for element.getAttribute
-         * {string} attr - name of attribute to get
+         * {String} attr - name of attribute to get
          */
         element.getAttr = element.getAttribute;
         element.attr = (attr, val) => isStr(attr) && !def(val) ? element.getAttr(attr) : element.setAttr(attr, val);
@@ -1455,8 +1685,8 @@
         element.prop = element.hasAttr;
         /**
          * Toggles an attribute on element , optionally add value when toggle is adding attribute
-         * @param {string} name - name of the attribute to toggle
-         * @param {string} val - value to set attribute to
+         * @param {String} name - name of the attribute to toggle
+         * @param {String} val - value to set attribute to
          * @param {boolean=} rtst - optionally return a bool witht the toggle state otherwise returns the element
          */
         element.toggleAttr = (name, val, rtst) => {
@@ -1487,7 +1717,7 @@
         /**
          * sets or gets the element's pixel width
          * @memberof dom
-         * @param {string|number=} pixel value to set
+         * @param {String|number=} pixel value to set
          */
         element.newSetGet('Width', pixels => {
             element.style.width = pixels;
@@ -1496,36 +1726,32 @@
         /**
          * sets or gets the element's pixel height
          * @memberof dom
-         * @param {string|number=} pixel value to set
+         * @param {String|number=} pixel value to set
          */
         element.newSetGet('Height', pixels => {
             element.style.height = pixels;
         }, () => element.getRect().height);
         /**
          * move the element using either css transforms or plain css possitioning
-         * @param {string|num} x - x-axis position in pixels
-         * @param {string|num} y - y-axis position in pixels
+         * @param {String|num} x - x-axis position in pixels
+         * @param {String|num} y - y-axis position in pixels
          * @param {boolean=} transform - should move set the position using css transforms or not
-         * @param {string=} position - set the position style of the element absolute/fixed...
+         * @param {String=} position - set the position style of the element absolute/fixed...
          * @param {boolean=} chainable - should this method be chainable defaults to false for performance reasons
          */
-        element.move = function (x, y, transform, position, chainable) {
-            if (is.Bool(position)) chainable = position;
-            if (isStr(transform)) position = transfrom;
-            if (isStr(position)) element.style.position = position;
-            element.css(transform == true ? {
-                willChange: 'transform,opacity',
-                transform: `translateX(${x}px) translateY(${y}px)`
-            } : {
-                left: x + 'px',
-                top: y + 'px'
-            });
-            if (chainable) return element;
+        element.move = function (x, y, transform) {
+            if (transform === true) {
+                //element.style.willChange = 'transform';
+                element.style.transform = `translateX(${x}px) translateY(${y}px)`;
+            } else {
+                element.top = y + 'px';
+                element.left = x + 'px';
+            }
         };
         /**
          * performs a query inside the element
          * @memberof dom
-         * @param {string} CSS selector
+         * @param {String} CSS selector
          * @returns {Node|Null}
          */
         element.query = selector => query(selector, element);
@@ -1546,7 +1772,7 @@
         /**
          * performs a queryAll inside the element
          * @memberof dom
-         * @param {string} CSS selector
+         * @param {String} CSS selector
          * @returns {NodeList|Null}
          */
         element.queryAll = selector => queryAll(selector, element);
@@ -1579,7 +1805,7 @@
             return element;
         };
         element.observeAttrs = func => {
-            if (isFunc(func)) return element.attrX.on('attr', function (attr) {
+            if (isFunc(func)) return element.state.on('attr', function (attr) {
                 func.apply(element, arguments);
             });
         };
@@ -1587,12 +1813,12 @@
     }
 
     /**
-     * Function that returns many useful methods for interacting with and manipulating the DOM or creating elements
-     * in the absence of parameters the function will return methods for created elements
-     * @function dom
+     * @method dom
+     * @summary returns many useful methods for interacting with and manipulating the DOM or creating elements
+     * @memberof dom
      * @param {Node|NodeList|string=} element - optional Node, NodeList or CSS Selector that will be affected by the methods returned
      * @param {Node|string=} within - optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
-     * @param {boolean=} one - even if there are more than one elements matching a selector only return the first one
+     * @param {Boolean=} one - even if there are more than one elements matching a selector only return the first one
      */
     function dom(element, within, one) {
         if (within == true) {
@@ -1622,68 +1848,62 @@
     });
 
     /**
-     * Craft is Crafter.js's Core containing most functionality.
+     * @global
      * @namespace Craft
+     * @summary Craft is Crafter.js's Core containing most functionality.
      */
     var Craft = {
+        /**
+         * @memberof Craft
+         * @summary general Crafter notification event system
+         */
         notifier: eventsys(),
         /**
-         * Returns an object or calls a function with all the differences between two arrays
          * @method arrDiff
          * @memberof Craft
+         * @summary Returns an object or calls a function with all the differences between two arrays
          * @param {Array} arr - array to be compared
          * @param {Array} newArr - second array to be compared
-         * @param {function=} func - optional function that recieves all the info as parameters
+         * @param {Function=} func - optional function that recieves all the info as parameters
          */
-        arrDiff(arr, newArr, func) {
-            let added = newArr.filter(item => {
+        arrDiff(arr, arrb, func) {
+            let added = arrb.filter(item => {
                     if (!arr.includes(item)) return item;
                 }),
-                removed = arr.filter(item => {
-                    if (newArr.includes(item)) return item;
+                same = arr.filter(item => {
+                    if (arrb.includes(item)) return item;
                 }),
-                diff = Craft.omit(added.concat(removed), undef);
-            if (isFunc(func) && !is.empty(diff)) func(arr, newArr, added, removed, diff);
+                diff = Craft.omit(same.concat(added), undef);
+            if (isFunc(func) && !is.empty(diff)) func(arr, arrb, added, same, diff);
             else return {
-                arr: arr,
-                newArr: newArr,
-                diff: diff,
-                added: added,
-                removed: removed
+                added,
+                same,
+                diff,
+                arr,
+                arrb,
             };
         },
         /**
-         * checks an array's length if the array contains only
-         * a single item it is returned
-         * @param (array|arraylike) arr - collection to deglove
+         * @method deglove
+         * @summary Checks an array's length if the array contains only a single item it is returned.
+         * @memberof Craft
+         * @param {array|arraylike) arr - collection to deglove
          * @returns (array|*)
          */
         deglove: arr => is.Arraylike(arr) && arr.length == 1 ? arr[0] : arr,
-        degloveStr,
         last,
-        /**
-         * Splits a string at dots "."
-         * @method cutdot
-         * @memberof Craft
-         * @param {string} str - string to split at the dots
-         */
         cutdot,
-        /**
-         * joins a string array with dots "."
-         * @method joindot
-         * @memberof Craft
-         * @param {Array|Arraylike} arr - array to join with dots
-         */
+
         joindot,
         dffstr,
         /**
          * Convert Arraylike variables to Array
-         * {...*} val - arraylike variable to convert to array
+         * {...*} val - arraylike value to convert to array
          */
         toArr,
         /**
          * Convert numbers to integers
-         * {number|string} val - number to convert to an integer
+         * {number|String} val - number to convert to an integer
          */
         toInt,
         promise,
@@ -1693,6 +1913,7 @@
         query,
         queryAll,
         queryEach,
+        craftElement,
         forEach,
         on,
         once,
@@ -1762,12 +1983,13 @@
          * @memberof Craft
          * @example Craft.getDeep(myObj,'Company.employees[16].person.name') -> Mr Smithers or Craft.getDeep(anObj,'Colony.Queen.brood') -> [...ants]
          * @param {Object} obj - the object to extract values from
-         * @param {string} path - string to reference value by simple dot notation or array refference example Craft.getDeep({ a : { b : [1,2,3] }},"a.b[2]") -> 3
+         * @param {String} path - string to reference value by simple dot notation or array refference example Craft.getDeep({ a : { b : [1,2,3] }},"a.b[2]") -> 3
          */
         getDeep(obj, path) {
             try {
-                cutdot(path.replace(/\[(\w+)\]/g, '.$1').replace(/^\./, ''))
-                    .forEach(step => step in obj || (root.Reflect && Reflect.has(obj, step)) ? obj = (obj.isObservable ? obj.get(step) : obj[step]) : obj = undef);
+                cutdot(path.replace(/\[(\w+)\]/g, '.$1').replace(/^\./, '')).map(step => {
+                    return step in obj || (root.Reflect && Reflect.has(obj, step)) ? obj = (obj.isObservable ? obj.get(step) : obj[step]) : obj = undef
+                });
                 return obj;
             } catch (e) {}
         },
@@ -1776,7 +1998,7 @@
          * @method setDeep
          * @memberof Craft
          * @param {Object} obj - the object to set values on
-         * @param {string} path - string to reference value by simple dot notation
+         * @param {String} path - string to reference value by simple dot notation
          * @param {*} value - value to set
          * @param {boolean} robj - should the function return the object
          */
@@ -1801,8 +2023,8 @@
          * @method forEachDeep
          * @memberof Craft
          * @param {Object} obj - the object to loop through
-         * @param {function} func - function to handle each iteration
-         * @param {string=} path - string to reference value by simple dot notation
+         * @param {Function} func - function to handle each iteration
+         * @param {String=} path - string to reference value by simple dot notation
          * @example Craft.forEachDeep({ a : 1 , b : { c : 2}}, (value , key , object, currentPath) => { console.log(key) })
          */
         forEachDeep(object, func, path) {
@@ -1820,7 +2042,7 @@
         },
         /**
          * Converts any text to an inline URL code (good for images , svg , scripts or css)
-         * @param {string} - content to convert to an inline URL
+         * @param {String} - content to convert to an inline URL
          **/
         URLfrom: (text, type) => URL.createObjectURL(new Blob([text], type)),
         checkStatus(response) {
@@ -1872,10 +2094,12 @@
             return isObj(val) ? Object.create(val) : toArr(val);
         },
         /**
-         * Craft.omitFrom will omit values from any arraylike object or string
-         * @param (arraylike|string) Arr - arraylike object from which values will be omitted
-         * @param (...*) values - values to omit from the arraylike object
-         * @return (array|string)
+         * @method omitFrom
+         * @memberof Craft
+         * @summary omits values from any arraylike object or string
+         * @param {arraylike|String} Arr - arraylike object from which values will be omitted
+         * @param {...*} values - values to omit from the arraylike object
+         * @return {Array|String}
          */
         omitFrom(Arr) {
             let args = toArr(arguments).slice(1);
@@ -1891,9 +2115,9 @@
         /**
          * Craft.has checks whether or not strings or arrays contains
          * certain values
-         * @param (string|array) str - collection to check
-         * @param (string|array) values - values to check for in the collection
-         * @param (=string) or - some or every
+         * @param {String|Array} str - collection to check
+         * @param {String|Array} values - values to check for in the collection
+         * @param {String} or - some or every
          */
         has,
         /**
@@ -1914,8 +2138,8 @@
         },
         browser: {
             /**
-             * Craft.browser.is - checks which browser you're running
-             * @param (string) browser - string containing a browser name like 'chrome','firefox'...
+             * @summary Craft.browser.is - checks which browser you're running
+             * @param {String) browser - string containing a browser name like 'chrome','firefox'...
              * @returns (boolean) - returns whether or not this is the browser you checked for
              */
             is: browser => Br.toLowerCase().includes(browser.toLowerCase()),
@@ -2009,8 +2233,8 @@
             }
         },
         /**
-         * Handles WebSockets in a contained manner with send and recieve methods
-         * @param {string} address - the WebSocket address example "ws://localhost:3000/" but the ws:// or wss:// is optional
+         * @summary Handles WebSockets in a contained manner with send and recieve methods
+         * @param {String} address - the WebSocket address example "ws://localhost:3000/" but the ws:// or wss:// is optional
          * @param {Array=} protocols - the protocols to pass to the WebSocket Connection
          */
         Socket(address, protocols) {
@@ -2182,15 +2406,20 @@
             return url;
         },
         /**
-         * Craft.addCSS takes in any string of valid css code and executes it
-         * @param (string) css - css code to execute
+         * @method addCSS
+         * @memberof Craft
+         * @summary takes in any string of valid css code and executes it
+         * @param {String} css - css code to execute
          */
         addCSS(css, noimport) {
             query('style[crafterstyles]', head).textContent += noimport ? css : `@import url("${Craft.URLfrom(css, {type: 'text/css'})}");\n`;
         },
         /**
-         * Craft.importCSS takes in a source then attempts to fetch and execute it
-         * @param (src) css - css code to execute
+         * @method importCSS
+         * @memberof Craft
+         * @summary imports css and executes it
+         * @param {String} src - source to fetch from
+         * @param {Booleans} gofetch - should fetch instead of @import statement
          */
         importCSS(src, gofetch) {
             if (gofetch) fetch(Craft.fixURL(src), {
@@ -2201,9 +2430,24 @@
             });
             else Craft.addCSS(`@import url("${Craft.fixURL(src)}");\n`, true);
         },
+        /**
+         * @method importFont
+         * @memberof Craft
+         * @summary imports fonts and loads them
+         * @param {String} name - name of font as used in css
+         * @param {String} src - source to fetch from
+         */
         importFont(name, src) {
-            Craft.addCSS(`@font-face {font-family:${name};src:url("${Craft.fixURL(src)}");}`, true);
+            Craft.addCSS(`@font-face {font-family:${name};src:url("${src.slice(0,2) === './' ? src : Craft.fixURL(src)}");}`, true);
         },
+        /**
+         * @method loadScript
+         * @memberof Craft
+         * @summary takes in a source then attempts to fetch and execute it
+         * @param {String} src - source to fetch from
+         * @param {Boolean} [funcexec] - execute code from inside a new Function() object
+         * @param {Object} [fetchAttr] - fetch request options
+         */
         loadScript(src, funcexec, fetchattr) {
             let fetchAttr = {
                 mode: 'cors'
@@ -2225,6 +2469,14 @@
                 });
             });
         },
+        /**
+         * @method loadScripts
+         * @memberof Craft
+         * @summary fetches and executes multiple scripts and returns a promise when they are loaded
+         * @param {Array} urls - array of string urls (sources) to fetch from
+         * @param {Boolean} [funcexec] - execute code from inside a new Function() object
+         * @param {Object} [fetchAttr] - fetch request options
+         */
         loadScripts(urls, funcexec, fetchattr) {
             return promise((pass, fail) => {
                 let len = 0;
@@ -2306,7 +2558,7 @@
         },
         /**
          * converts Objects or URL variable strings to a FormData object
-         * @param {object|string} val - values to convert
+         * @param {object|String} val - values to convert
          */
         toFormData(val) {
             let formData = new FormData();
@@ -2323,7 +2575,7 @@
         /**
          * handles scrolling events
          * @param {Node} element - target of listener
-         * @param {function} func - callback to handle the event
+         * @param {Function} func - callback to handle the event
          * @param {boolean=} preventDefault - event.preventDefault() or not
          */
         onScroll(element, func, preventDefault) {
@@ -2381,11 +2633,6 @@
         },
         getPath(path, full) {
             try {
-                if (has(path, `'"`, true)) return degloveStr(path);
-                else if (path == 'true') return true;
-                else if (path == 'false') return false;
-                else if (is.Num(path)) return Number(path);
-
                 let cutbind = cutdot(path),
                     prop = last(cutbind),
                     objaccessor = cutbind[0],
@@ -2407,8 +2654,8 @@
         },
         /**
          * defines custom attributes/directives
-         * @param {string} name - the name of your custom attribute
-         * @param {function} handle - a function to handle how your custom attribute behaves
+         * @param {String} name - the name of your custom attribute
+         * @param {Function} handle - a function to handle how your custom attribute behaves
          * @example Craft.directive('turngreen', element => element.css({ background : 'green'}));
          **/
         directive(name, handle) {
@@ -2422,7 +2669,7 @@
                             if (!el.directives.has(name)) {
                                 el.directives.add(name);
                                 el.observeAttrs();
-                                let directiveChangeDetetor = el.attrX.on(`attr:${name}`, (name, val, oldval, hasAttr) => {
+                                let directiveChangeDetetor = el.state.on(`attr:${name}`, (name, val, oldval, hasAttr) => {
                                     if (hasAttr || !def(oldval)) {
                                         if (isFunc(handle.update)) handle.update.call(el, el, val, oldval, hasAttr);
                                     } else if (isFunc(handle.unbind)) {
@@ -2441,7 +2688,7 @@
          * converts camel case strings to dashed strings
          * usefull for css properties and such
          * @example Craft.camelDash('MyCamelCaseName') // -> my-camel-case-name
-         * @param (string) val - string to convert
+         * @param {String) val - string to convert
          */
         camelDash(val) {
             return val.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
@@ -2463,10 +2710,12 @@
             return Math.floor(Math.random() * (max - min)) + min;
         },
         /**
-         * method for generating random alphanumeric strings
-         * @param (=int) max
-         * @param (=int) min
-         * @return (string)
+         * @method randomStr
+         * @memberof Craft
+         * @summary Generates random alphanumeric strings. default length of 6 characters
+         * @param {int} max - max length of string
+         * @param {int} min - min length of string
+         * @return {String}
          */
         randomStr(max, min) {
             let text = '';
@@ -2485,7 +2734,7 @@
         /**
          * method for creating custom elements configuring their lifecycle's and inheritance
          * the config Object has 7 distinct options ( created , inserted , destroyed , attr, css, set_X and get_X )
-         * @param {string} tag - a hyphenated custom HTML tagname for the new element -> "custom-element"
+         * @param {String} tag - a hyphenated custom HTML tagname for the new element -> "custom-element"
          * @param {object} config - Object containing all the element's lifecycle methods / extends and attached methods or properties
          */
         newComponent(tag, config) {
@@ -2558,7 +2807,7 @@
         disconectInputSync(input) {
             if (isStr(input)) input = query(input);
             if (is.Node(input) && def(input[sI])) {
-                input[sI].off;
+                input[sI].off();
                 delete input[sI];
             }
         },
@@ -2668,23 +2917,18 @@
                 if (element.linkhandle) element.linkhandle.off();
                 if (isFunc(fn)) element.linkhandle = Craft.router.handle(link, fn);
             });
-            element.linkevt = element.Click(e => {
-                (element.hasAttr('newtab') ? open : Craft.router.open)(link);
-            });
         },
         update(element, link, oldlink) {
             if (link != oldlink) {
                 if (isObj(element.linkhandle)) element.linkhandle.off(() => {
                     if (isFunc(element.onunlink)) element.onunlink(link);
                 });
-                if (def(element.linkevt)) element.linkevt.off;
             }
         },
         unbind(element, link) {
             if (isObj(element.linkhandle)) element.linkhandle.off(() => {
                 if (isFunc(element.onunlink)) element.onunlink(link);
             });
-            if (def(element.linkevt)) element.linkevt.off;
         }
     });
 
@@ -2709,7 +2953,7 @@
                 } else if (handle.update) handle.update.call(el, el, val, hasAttr);
             } else if (!hasAttr && handle.unbind) handle.unbind.call(el, el, val, oldval);
         }
-        if (el.attrX) el.attrX.emit('attr', name, val, oldval, hasAttr);
+        if (el.state) el.state.emit('attr', name, val, oldval, hasAttr);
     }
 
     new MutationObserver(muts => {
@@ -2745,6 +2989,14 @@
             if (Locs(l => l == handle.link)) handle.func(location.hash);
         });
     });
+
+    on('click', (e, target) => {
+        if (target.attributes) {
+            forEach(target.attributes, attr => {
+                if (attr.name == 'link')(target.hasAttr('newtab') ? open : Craft.router.open)(attr.value);
+            });
+        }
+    })
 
 
     if (typeof define === 'function' && define.amd) define(['Craft', 'craft'], Craft);
