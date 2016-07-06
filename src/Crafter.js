@@ -1118,12 +1118,9 @@
          * @returns {DocumentFragment}
          */
         frag(inner) {
-            let dfrag;
+            let dfrag = doc.createDocumentFragment();
             if (isStr(inner)) dfrag = dffstr(inner);
-            if (is.Node(inner)) {
-                dfrag = doc.createDocumentFragment();
-                dfrag.appendChild(inner);
-            }
+            if (is.Node(inner)) dfrag.appendChild(inner);
             return dfrag;
         },
         /**
