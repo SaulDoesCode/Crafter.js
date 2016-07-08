@@ -43,7 +43,7 @@
     }
 
     // tests arguments with Array.prototype.every;
-    const ta = test => (...args) => args.length == 1 ? test(args[0]) : args.length && args.every(test);
+    const ta = test => (...args) => args.length >= 1 && args.every(test);
 
     /**
      *  get the last item in an array or arraylike collection
@@ -89,7 +89,7 @@
         isArr = Array.isArray,
         ready = () => Ready || doc.readyState == 'complete',
         promise = func => new Promise(func),
-        Locs = test => [location.hash, location.href, location.pathname].some(test),
+        noop = () => {},
         head = doc.head,
         RegExps = {
             email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
@@ -131,7 +131,7 @@
      * @param {Boolean} or - some or every, some by default
      */
     function has(host, value, or) {
-        if (is.Arraylike(host)) return toArr(host)[(!or ? 'every' : 'some')](host.includes.bind(host));
+        if (is.Arraylike(host)) return slice(host)[(!or ? 'every' : 'some')](host.includes.bind(host));
         if (isObj(host)) return Object.prototype.hasOwnProperty.call(host, value);
         if (is.Set(host) || is.Map(host)) return host.has(value);
     }
@@ -181,7 +181,7 @@
      * @for Craft
      * @param {Array|Arraylike} arr - array to join with dots
      */
-    const joindot = arr => toArr(arr).join('.');
+    const joindot = arr => slice(arr).join('.');
 
 
     /**
@@ -280,7 +280,7 @@
          * @for is
          * @param {...*} args - value/values to test
          */
-        NodeList: ta(nl => nl instanceof NodeList || is.Arraylike(nl) ? ta(n => n instanceof Node).apply(null, nl) : false),
+        NodeList: ta(nl => nl instanceof NodeList || is.Arraylike(nl) && !is.empty(nl) ? Array.prototype.every.call(nl,n => n instanceof Node) : false),
         /**
          * Determine if a value is a Number
          * @method Num
@@ -694,7 +694,14 @@
                     if (iterable.hasOwnProperty(i)) func(iterable[i], i, iterable);
         }
     }
-
+    /**
+     * Checks an array's length if the array contains only a single item it is returned.
+     * @method deglove
+     * @for Craft
+     * @param {array|arraylike) arr - collection to deglove
+     * @return (array|*)
+     */
+    const deglove = arr => is.Arraylike(arr) && arr.length == 1 ? arr[0] : arr;
     /**
      * Method to merge the properties of multiple objects , it can handle getters or setters without breaking them
      * @method concatObjects
@@ -708,18 +715,6 @@
             for (let key in obj) defineprop(host, key, getpropdescriptor(obj, key));
         });
         return host;
-    }
-
-    /*
-     * Converts any Query/QueryAll to an Array of Nodes even if there is only one Node , this is error proof when no arguments are present it returns an empty array.
-     * method NodeOrQuerytoArr
-     * param {Node|NodeList|Array|String} val - pass either a CSS Selector string , Node/NodeList or Array of Nodes
-     * param {Node|NodeList|Array|String} within - pass either a CSS Selector string , Node/NodeList or Array of Nodes to search for val in
-     * return {Array}
-     */
-    function NodeOrQuerytoArr(val, within) {
-        if (isStr(val)) val = queryAll(val, within);
-        return is.Node(val) ? [val] : is.NodeList(val) ? toArr(val) : [];
     }
 
     function listener() {
@@ -887,6 +882,65 @@
         return obj;
     }
 
+
+    /**
+     * Easy way to get a DOM Node or Node within another DOM Node using CSS selectors.
+     * @method query
+     * @for Craft
+     * @param {String} selector - CSS selector to query the DOM Node with
+     * @param {Node|String=} element - Optional Node or CSS selector to search within insead of document
+     */
+    function query(selector, element) {
+        if (isStr(element)) element = doc.querySelector(element);
+        return is.Node(element) ? element.querySelector(selector) : doc.querySelector(selector);
+    }
+
+    /**
+     * Easy way to get a DOM NodeList or NodeList within another DOM Node using CSS selectors
+     * @method queryAll
+     * @for Craft
+     * @param {String} selector - CSS selector to query the DOM Nodes with
+     * @param {Node|NodeList|String=} element - Optional Node or CSS selector to search within insead of document
+     * @return {Array} array containing Nodes and/or Elements
+     */
+    function queryAll(selector, element) {
+        if (isStr(element)) element = queryAll(element);
+        let list;
+        if (is.Arraylike(element) && element.length > 1) {
+            list = [];
+            map(element, el => {
+                if (isStr(el)) el = query(el);
+                if (is.Node(el)) {
+                    el = queryAll(selector, el);
+                    if (is.NodeList(el)) list.concat(el);
+                }
+            });
+        } else {
+          list = (is.Node(element) ? element : is.NodeList(element) ? element[0] : doc);
+          if(list) {
+            list = list.querySelectorAll(selector);
+            if(list != null) return slice(list);
+          }
+        }
+        return null;
+    }
+
+    /**
+     * Easy way to loop through Nodes in the DOM using a CSS Selector or a NodeList
+     * @method queryEach
+     * @for Craft
+     * @param {String|NodeList|Node} selector - CSS selector to query the DOM Nodes with or NodeList to iterate through
+     * @param {Node|String} [element] - Optional Node or CSS selector to search within insead of document
+     * @param {Function} func - function called on each iteration -> "function( Element , index ) {...}"
+     * @param {Boolean} [returnList] - should queryEach also return the list of nodes
+     */
+    function queryEach(selector, element, func, returnList) {
+        if (isFunc(element)) func = element;
+        const list = queryAll(selector, element);
+        if(list) list.forEach(func);
+        if (returnList) return list;
+    }
+
     /**
      * Event Handler
      * @class EventHandler
@@ -899,7 +953,7 @@
     const EventHandler = (EventType, Target, func, Within) => new function () {
         const evthandler = this;
         evthandler.state = false;
-        Target = (Target !== root && Target !== doc) ? NodeOrQuerytoArr(Target, Within) : isArr(Target) ? Craft.flatten(Target) : [Target];
+        Target = (Target !== root && Target !== doc) && isStr(Target) ? queryAll(Target, Within) : isArr(Target) ? Craft.flatten(Target) : [Target];
         if (isStr(EventType) && EventType.includes(',')) EventType = EventType.split(',');
         if (!isArr(EventType)) EventType = [EventType];
 
@@ -972,57 +1026,6 @@
             return evthandler.on();
         };
     };
-
-    /**
-     * Easy way to get a DOM Node or Node within another DOM Node using CSS selectors.
-     * @method query
-     * @for Craft
-     * @param {String} selector - CSS selector to query the DOM Node with
-     * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
-     */
-    function query(selector, element) {
-        if (isStr(element)) element = doc.querySelector(element);
-        return is.Node(element) ? element.querySelector(selector) : doc.querySelector(selector);
-    }
-
-    /**
-     * Easy way to get a DOM NodeList or NodeList within another DOM Node using CSS selectors
-     * @method queryAll
-     * @for Craft
-     * @param {String} selector - CSS selector to query the DOM Nodes with
-     * @param {Node|NodeList|string=} element - Optional Node or CSS selector to search within insead of document
-     * @return {Array} array containing Nodes and/or Elements
-     */
-    function queryAll(selector, element) {
-        if (isStr(element)) element = queryAll(element);
-        let list;
-        if (Craft.len(element) !== 1 && (isArr(element) || is.NodeList(element))) {
-            list = [];
-            map(element, el => {
-                if (isStr(el)) el = query(el);
-                if (is.Node(el)) {
-                    el = queryAll(selector, el);
-                    if (is.NodeList(el)) list.concat(toArr(el));
-                }
-            });
-        } else list = is.NodeList(element) ? element[0].querySelectorAll(selector) : is.Node(element) ? element.querySelectorAll(selector) : doc.querySelectorAll(selector);
-        return is.Null(list) ? list : isArr(list) ? list : toArr(list);
-    }
-    /**
-     * Easy way to loop through Nodes in the DOM using a CSS Selector or a NodeList
-     * @method queryEach
-     * @for Craft
-     * @param {String|NodeList|Node} selector - CSS selector to query the DOM Nodes with or NodeList to iterate through
-     * @param {Node|String} [element] - Optional Node or CSS selector to search within insead of document
-     * @param {Function} func - function called on each iteration -> "function( Element , index ) {...}"
-     * @param {Boolean} [returnList] - should queryEach also return the list of nodes
-     */
-    function queryEach(selector, element, func, returnList) {
-        if (isFunc(element)) func = element;
-        const list = NodeOrQuerytoArr(selector, element);
-        list.forEach(func);
-        if (returnList) return list;
-    }
 
     function EventTypes(Target, within, listen) {
         const etype = type => fn => EventHandler(type, Target, fn, within)[listen || 'on']();
@@ -1202,7 +1205,7 @@
     });
 
     function domNodeList(elements) {
-        Craft.omit(Object.getOwnPropertyNames(Array.prototype), 'length').map(method => {
+        if(!isArr(elements)) removeFrom(Object.getOwnPropertyNames(Array.prototype), 'length').map(method => {
             elements[method] = Array.prototype[method];
         });
 
@@ -1347,7 +1350,6 @@
             if (is.int(i) && def(elements[i])) return dom(elements[i]);
             else if (elements.includes(i)) return dom(i);
         };
-
         return elements;
     }
 
@@ -1815,13 +1817,13 @@
         element.queryAll = selector => queryAll(selector, element);
 
         element.next = (reset, dm) => {
-            let sb = toArr(element.parentNode.children),
+            let sb = slice(element.parentNode.children),
                 nextnode = sb.indexOf(element) + 1;
             if (!sb[nextnode]) return reset ? (dm ? dom(sb[0]) : sb[0]) : null;
             return dm ? dom(sb[nextnode]) : sb[nextnode];
         };
         element.previous = (reset, dm) => {
-            let sb = toArr(element.parentNode.children),
+            let sb = slice(element.parentNode.children),
                 nextnode = sb.indexOf(element) - 1;
             if (!sb[nextnode]) return reset ? (dm ? dom(sb[sb.length - 1]) : sb[sb.length - 1]) : null;
             return dm ? dom(sb[nextnode]) : sb[nextnode];
@@ -1863,27 +1865,23 @@
      * returns many useful methods for interacting with and manipulating the DOM or creating elements
      * @method dom
      * @for Craft
-     * @param {Node|NodeList|string=} element - optional Node, NodeList or CSS Selector that will be affected by the methods returned
-     * @param {Node|string=} within - optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
+     * @param {Node|NodeList|String=} element - optional Node, NodeList or CSS Selector that will be affected by the methods returned
+     * @param {Node|String=} within - optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
      * @param {Boolean=} one - even if there are more than one elements matching a selector only return the first one
      */
     function dom(element, within, one) {
-        if (within == true) {
-            one = within;
-            within = null;
+        if(isStr(element)) {
+          element = !one ? queryAll(element,within) : query(element, within);
+          if(is.NodeList(element)) {
+            if(element.length > 1) return domNodeList(element);
+            else if(element.length == 1) element = element[0];
+          }
         }
-        if (!one) {
-            if (isStr(element)) element = queryAll(element, within);
-            if (is.NodeList(element)) {
-                element = toArr(element).filter(isEl);
-                if (element.length != 1) return domNodeList(element);
-                else element = element[0];
-            }
-        } else if (isStr(element)) element = query(element, within);
-        if (is.Node(element)) return !element['_DOMM'] ? domManip(element) : element;
+        if(is.Node(element)) return element['_DOMM'] ? element : domManip(element);
+        if(is.NodeList(element)) return domNodeList(element);
         return Dom;
     }
-    for (let key in Dom) defineprop(dom, key, getpropdescriptor(Dom, key));
+    dom = concatObjects(dom,Dom);
     if (root.Proxy) dom = new Proxy(dom, {
         get(obj, key) {
             if (!obj.hasOwnProperty(key)) {
@@ -1932,14 +1930,7 @@
                 arrb
             };
         },
-        /**
-         * Checks an array's length if the array contains only a single item it is returned.
-         * @method deglove
-         * @for Craft
-         * @param {array|arraylike) arr - collection to deglove
-         * @return (array|*)
-         */
-        deglove: arr => is.Arraylike(arr) && arr.length == 1 ? arr[0] : arr,
+        deglove,
         last,
         cutdot,
 
@@ -2484,7 +2475,7 @@
                 });
             });
         },
-        hasCaps: str => toArr(str).some(is.Uppercase),
+        hasCaps: str => slice(str).some(is.Uppercase),
         hasNums: str => /\d/g.test(str),
         len(val) {
             try {
@@ -2768,7 +2759,7 @@
                         } else if (key.includes('get_')) {
                             let sgKey = key.split('_')[1];
                             dealtWith.push(key, 'set_' + sgKey);
-                            el.newSetGet(sgKey, (isFunc(config['set_' + sgKey]) ? config['set_' + sgKey] : x => {}), config[key]);
+                            el.newSetGet(sgKey, (isFunc(config['set_' + sgKey]) ? config['set_' + sgKey] : noop), config[key]);
                         }
                     }
                 }
@@ -2894,6 +2885,7 @@
     Craft.directive('link', {
         bind(element, link) {
             if (isFunc(element.onlink)) element.state.linkhandle = Craft.router.handle(link, element.onlink.bind(element));
+
             function makeLinkHandler(fn) {
                 if (isFunc(fn)) {
                     if (element.state.linkhandle) element.state.linkhandle.off();
@@ -2967,7 +2959,7 @@
 
     on('hashchange', () => {
         const hash = location.hash;
-        Craft.notifier.emit(hash,hash);
+        Craft.notifier.emit(hash, hash);
     });
 
     on('click', (e, target) => {
