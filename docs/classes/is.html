@@ -1,0 +1,3976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>is</title>
+    <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
+    <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
+    <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
+    <link rel="icon" href="../assets/favicon.ico">
+    <script src="http://yui.yahooapis.com/combo?3.9.1/build/yui/yui-min.js"></script>
+</head>
+<body class="yui3-skin-sam">
+
+<div id="doc">
+    <div id="hd" class="yui3-g header">
+        <div class="yui3-u-3-4">
+                <h1><img src="../assets/css/logo.png" title="" width="117" height="52"></h1>
+        </div>
+        <div class="yui3-u-1-4 version">
+            <em>API Docs for: </em>
+        </div>
+    </div>
+    <div id="bd" class="yui3-g">
+
+        <div class="yui3-u-1-4">
+            <div id="docs-sidebar" class="sidebar apidocs">
+                <div id="api-list">
+                    <h2 class="off-left">APIs</h2>
+                    <div id="api-tabview" class="tabview">
+                        <ul class="tabs">
+                            <li><a href="#api-classes">Classes</a></li>
+                            <li><a href="#api-modules">Modules</a></li>
+                        </ul>
+                
+                        <div id="api-tabview-filter">
+                            <input type="search" id="api-filter" placeholder="Type to filter APIs">
+                        </div>
+                
+                        <div id="api-tabview-panel">
+                            <ul id="api-classes" class="apis classes">
+                                <li><a href="../classes/Cookies.html">Cookies</a></li>
+                                <li><a href="../classes/Craft.html">Craft</a></li>
+                                <li><a href="../classes/dom.html">dom</a></li>
+                                <li><a href="../classes/EventHandler.html">EventHandler</a></li>
+                                <li><a href="../classes/is.html">is</a></li>
+                                <li><a href="../classes/router.html">router</a></li>
+                                <li><a href="../classes/Socket.html">Socket</a></li>
+                            </ul>
+                
+                
+                            <ul id="api-modules" class="apis modules">
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="yui3-u-3-4">
+                <div id="api-options">
+                    Show:
+                    <label for="api-show-inherited">
+                        <input type="checkbox" id="api-show-inherited" checked>
+                        Inherited
+                    </label>
+            
+                    <label for="api-show-protected">
+                        <input type="checkbox" id="api-show-protected">
+                        Protected
+                    </label>
+            
+                    <label for="api-show-private">
+                        <input type="checkbox" id="api-show-private">
+                        Private
+                    </label>
+                    <label for="api-show-deprecated">
+                        <input type="checkbox" id="api-show-deprecated">
+                        Deprecated
+                    </label>
+            
+                </div>
+            
+            <div class="apidocs">
+                <div id="docs-main">
+                    <div class="content">
+<h1>is Class</h1>
+<div class="box meta">
+
+
+        <div class="foundat">
+            Defined in: <a href="../files/src_Crafter.js.html#l187"><code>src&#x2F;Crafter.js:187</code></a>
+        </div>
+
+
+</div>
+
+
+<div class="box intro">
+    <p>is - Type Testing / Assertion</p>
+
+</div>
+
+
+<div id="classdocs" class="tabview">
+    <ul class="api-class-tabs">
+        <li class="api-class-tab index"><a href="#index">Index</a></li>
+
+            <li class="api-class-tab methods"><a href="#methods">Methods</a></li>
+    </ul>
+
+    <div>
+        <div id="index" class="api-class-tabpanel index">
+            <h2 class="off-left">Item Index</h2>
+
+                <div class="index-section methods">
+                    <h3>Methods</h3>
+
+                    <ul class="index-list methods">
+                            <li class="index-item method">
+                                <a href="#method_Alphanumeric">Alphanumeric</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_Args">Args</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_Arr">Arr</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_Array">Array</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_Arraylike">Arraylike</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_between">between</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_Blob">Blob</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_Bool">Bool</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_bt">bt</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_bte">bte</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_char">char</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_Date">Date</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_dateString">dateString</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_Def">Def</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_Element">Element</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_email">email</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_empty">empty</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_eq">eq</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_even">even</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_False">False</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_File">File</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_FormData">FormData</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_Func">Func</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_future">future</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_hexadecimal">hexadecimal</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_HexColor">HexColor</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_Input">Input</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_int">int</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_Json">Json</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_Lowercase">Lowercase</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_lt">lt</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_lte">lte</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_Map">Map</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_Native">Native</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_negative">negative</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_neither">neither</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_Node">Node</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_NodeList">NodeList</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_Null">Null</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_Num">Num</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_Obj">Obj</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_Object">Object</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_odd">odd</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_or">or</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_past">past</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_positive
+checks if a number is positive">positive
+checks if a number is positive</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_RegExp">RegExp</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_Set">Set</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_space">space</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_Str">Str</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_Str">Str</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_Symbol">Symbol</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_Tag">Tag</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_time">time</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_today">today</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_tomorrow">tomorrow</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_True">True</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_Undef">Undef</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_Uppercase">Uppercase</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_URL">URL</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_yesterday">yesterday</a>
+
+                            </li>
+                    </ul>
+                </div>
+
+
+
+        </div>
+
+            <div id="methods" class="api-class-tabpanel">
+                <h2 class="off-left">Methods</h2>
+
+<div id="method_Alphanumeric" class="method item">
+    <h3 class="name"><code>Alphanumeric</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>str</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l437"><code>src&#x2F;Crafter.js:437</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determine if a String contains only characters and numbers (alphanumeric)</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">str</code>
+                        <span class="type">String</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_Args" class="method item">
+    <h3 class="name"><code>Args</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>val</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l395"><code>src&#x2F;Crafter.js:395</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determine if a value is of type Arguments</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">val</code>
+                        <span class="type"></span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value/values to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_Arr" class="method item">
+    <h3 class="name"><code>Arr</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>args</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l213"><code>src&#x2F;Crafter.js:213</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Test if something is an Array</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">args</code>
+                        <span class="type">...</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value/values to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_Array" class="method item">
+    <h3 class="name"><code>Array</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>val</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l220"><code>src&#x2F;Crafter.js:220</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Array.isArray alias for convenience and performance when only one argument is present</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">val</code>
+                        <span class="type"></span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_Arraylike" class="method item">
+    <h3 class="name"><code>Arraylike</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>args</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l227"><code>src&#x2F;Crafter.js:227</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Test if a value or multiple values are Array-Like</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">args</code>
+                        <span class="type">...</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value/values to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_between" class="method item">
+    <h3 class="name"><code>between</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>val</code>
+                </li>
+                <li class="arg">
+                        <code>max</code>
+                </li>
+                <li class="arg">
+                        <code>min</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type">Boolean</span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l544"><code>src&#x2F;Crafter.js:544</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determines whether a Number is between a maximum and a minimum</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">val</code>
+                        <span class="type">Number</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>number value to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">max</code>
+                        <span class="type">Number</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>maximum to compare the value with</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">min</code>
+                        <span class="type">Number</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>minimum to compare the value with</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type">Boolean</span>:
+                    <p>wether or not the value is between the max and min</p>
+
+            </div>
+        </div>
+
+
+</div>
+<div id="method_Blob" class="method item">
+    <h3 class="name"><code>Blob</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>args</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l367"><code>src&#x2F;Crafter.js:367</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determine if a value is of Blob type</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">args</code>
+                        <span class="type">...</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value/values to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_Bool" class="method item">
+    <h3 class="name"><code>Bool</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>args</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l192"><code>src&#x2F;Crafter.js:192</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Test if something is a Boolean type</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">args</code>
+                        <span class="type">...</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value/values to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_bt" class="method item">
+    <h3 class="name"><code>bt</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>val</code>
+                </li>
+                <li class="arg">
+                        <code>other</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l631"><code>src&#x2F;Crafter.js:631</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determines if a number is BIGGER than another</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">val</code>
+                        <span class="type">Number</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">other</code>
+                        <span class="type">Number</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>num to test with value</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_bte" class="method item">
+    <h3 class="name"><code>bte</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>val</code>
+                </li>
+                <li class="arg">
+                        <code>other</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l639"><code>src&#x2F;Crafter.js:639</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determines if a number is BIGGER than or equal to another</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">val</code>
+                        <span class="type">Number</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">other</code>
+                        <span class="type">Number</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>num to test with value</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_char" class="method item">
+    <h3 class="name"><code>char</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>values</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l409"><code>src&#x2F;Crafter.js:409</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>tests if a value is a single character</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">values</code>
+                        <span class="type">...String</span>
+
+
+                    <div class="param-description">
+                        <p>to test</p>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_Date" class="method item">
+    <h3 class="name"><code>Date</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>args</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l381"><code>src&#x2F;Crafter.js:381</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determine if a value is a Date type</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">args</code>
+                        <span class="type">...</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value/values to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_dateString" class="method item">
+    <h3 class="name"><code>dateString</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>dateString</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l537"><code>src&#x2F;Crafter.js:537</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determines whether a String is a dateString</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">dateString</code>
+                        <span class="type">String</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_Def" class="method item">
+    <h3 class="name"><code>Def</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>args</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l248"><code>src&#x2F;Crafter.js:248</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determine whether a value is in fact defined</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">args</code>
+                        <span class="type">...</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value/values to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_Element" class="method item">
+    <h3 class="name"><code>Element</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>args</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l318"><code>src&#x2F;Crafter.js:318</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determine if a value is a HTMLElement</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">args</code>
+                        <span class="type">...</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value/values to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_email" class="method item">
+    <h3 class="name"><code>email</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>email</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l444"><code>src&#x2F;Crafter.js:444</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determines whether a String is a valid email</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">email</code>
+                        <span class="type">String</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_empty" class="method item">
+    <h3 class="name"><code>empty</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>val</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l647"><code>src&#x2F;Crafter.js:647</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determines if a given collection or string is empty</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">val</code>
+                        <span class="type">Object | Array | String</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value to test if empty</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_eq" class="method item">
+    <h3 class="name"><code>eq</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>a</code>
+                </li>
+                <li class="arg">
+                        <code>b</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l599"><code>src&#x2F;Crafter.js:599</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determines if two variables are equal</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">a</code>
+                        <span class="type">Object</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>first value to compare</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">b</code>
+                        <span class="type">Object</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>second value to compare</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_even" class="method item">
+    <h3 class="name"><code>even</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>val</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l561"><code>src&#x2F;Crafter.js:561</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>checks if a number is an even number</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">val</code>
+                        <span class="type"></span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_False" class="method item">
+    <h3 class="name"><code>False</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>args</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l360"><code>src&#x2F;Crafter.js:360</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determine if a variable/s are false</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">args</code>
+                        <span class="type">...</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value/values to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_File" class="method item">
+    <h3 class="name"><code>File</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>args</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l325"><code>src&#x2F;Crafter.js:325</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determine if a value is a File Object</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">args</code>
+                        <span class="type">...</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value/values to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_FormData" class="method item">
+    <h3 class="name"><code>FormData</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>args</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l332"><code>src&#x2F;Crafter.js:332</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determine if a value is of a FormData type</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">args</code>
+                        <span class="type">...</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value/values to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_Func" class="method item">
+    <h3 class="name"><code>Func</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>args</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l346"><code>src&#x2F;Crafter.js:346</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determine if a value is a function</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">args</code>
+                        <span class="type">...</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value/values to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_future" class="method item">
+    <h3 class="name"><code>future</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>obj</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l523"><code>src&#x2F;Crafter.js:523</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determines if a date is in the future</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">obj</code>
+                        <span class="type">String | Date</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>Date to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_hexadecimal" class="method item">
+    <h3 class="name"><code>hexadecimal</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>hexadecimal</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l471"><code>src&#x2F;Crafter.js:471</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determines whether a String is hexadecimal</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">hexadecimal</code>
+                        <span class="type">String</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_HexColor" class="method item">
+    <h3 class="name"><code>HexColor</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>HexColor</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l464"><code>src&#x2F;Crafter.js:464</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determines whether a String is a HEX-COLOR (#fff123)</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">HexColor</code>
+                        <span class="type">String</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_Input" class="method item">
+    <h3 class="name"><code>Input</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>-</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l669"><code>src&#x2F;Crafter.js:669</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Tests where a dom element is an input of some sort</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">-</code>
+                        <span class="type">Element | Node</span>
+
+
+                    <div class="param-description">
+                        <p>element to test</p>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_int" class="method item">
+    <h3 class="name"><code>int</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>val</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l554"><code>src&#x2F;Crafter.js:554</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>checks if a number is an integer</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">val</code>
+                        <span class="type"></span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_Json" class="method item">
+    <h3 class="name"><code>Json</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>args</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l305"><code>src&#x2F;Crafter.js:305</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determine if a sring is JSON</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">args</code>
+                        <span class="type">...</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value/values to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_Lowercase" class="method item">
+    <h3 class="name"><code>Lowercase</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>char</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l430"><code>src&#x2F;Crafter.js:430</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determine if a String is LOWERCASE</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">char</code>
+                        <span class="type">String</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_lt" class="method item">
+    <h3 class="name"><code>lt</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>val</code>
+                </li>
+                <li class="arg">
+                        <code>other</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l615"><code>src&#x2F;Crafter.js:615</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determines if a number is LOWER than another</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">val</code>
+                        <span class="type">Number</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">other</code>
+                        <span class="type">Number</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>num to test with value</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_lte" class="method item">
+    <h3 class="name"><code>lte</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>val</code>
+                </li>
+                <li class="arg">
+                        <code>other</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l623"><code>src&#x2F;Crafter.js:623</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determines if a number is LOWER than or equal to another</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">val</code>
+                        <span class="type">Number</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">other</code>
+                        <span class="type">Number</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>num to test with value</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_Map" class="method item">
+    <h3 class="name"><code>Map</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>args</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l339"><code>src&#x2F;Crafter.js:339</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determine if a value is a Map</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">args</code>
+                        <span class="type">...</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value/values to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_Native" class="method item">
+    <h3 class="name"><code>Native</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>val</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l659"><code>src&#x2F;Crafter.js:659</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Tests if something is a Native JavaScript feature</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">val</code>
+                        <span class="type"></span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_negative" class="method item">
+    <h3 class="name"><code>negative</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>val</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l582"><code>src&#x2F;Crafter.js:582</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>checks if a number is positive</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">val</code>
+                        <span class="type"></span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_neither" class="method item">
+    <h3 class="name"><code>neither</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>value</code>
+                </li>
+                <li class="arg">
+                        <code>arguments</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l589"><code>src&#x2F;Crafter.js:589</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>tests that all parameters following the first are not the same as the first</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">value</code>
+                        <span class="type"></span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>inital value to compare all other params with</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">arguments</code>
+                        <span class="type">...</span>
+
+
+                    <div class="param-description">
+                        <p>to compare with value</p>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_Node" class="method item">
+    <h3 class="name"><code>Node</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>args</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l262"><code>src&#x2F;Crafter.js:262</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determine whether a value is a DOM Node</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">args</code>
+                        <span class="type">...</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value/values to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_NodeList" class="method item">
+    <h3 class="name"><code>NodeList</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>args</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l277"><code>src&#x2F;Crafter.js:277</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determine whether a value is a DOM NodeList or Collection of Nodes</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">args</code>
+                        <span class="type">...</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value/values to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_Null" class="method item">
+    <h3 class="name"><code>Null</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>args</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l255"><code>src&#x2F;Crafter.js:255</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determine whether a value is null</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">args</code>
+                        <span class="type">...</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value/values to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_Num" class="method item">
+    <h3 class="name"><code>Num</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>args</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l284"><code>src&#x2F;Crafter.js:284</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determine if a value is a Number</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">args</code>
+                        <span class="type">...</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value/values to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_Obj" class="method item">
+    <h3 class="name"><code>Obj</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>args</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l298"><code>src&#x2F;Crafter.js:298</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determine if a value is an Object</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">args</code>
+                        <span class="type">...</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value/values to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_Object" class="method item">
+    <h3 class="name"><code>Object</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>args</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l291"><code>src&#x2F;Crafter.js:291</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determine if a value is an Object</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">args</code>
+                        <span class="type">...</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value/values to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_odd" class="method item">
+    <h3 class="name"><code>odd</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>val</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l568"><code>src&#x2F;Crafter.js:568</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>checks if a number is an odd number</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">val</code>
+                        <span class="type"></span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_or" class="method item">
+    <h3 class="name"><code>or</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>a</code>
+                </li>
+                <li class="arg">
+                        <code>b</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l607"><code>src&#x2F;Crafter.js:607</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Returns the a || b</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">a</code>
+                        <span class="type">Object</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>first value to compare</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">b</code>
+                        <span class="type">Object</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>second value to compare</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_past" class="method item">
+    <h3 class="name"><code>past</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>obj</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l511"><code>src&#x2F;Crafter.js:511</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determines if a date is in the past</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">obj</code>
+                        <span class="type">String | Date</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>Date to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_positive
+checks if a number is positive" class="method item">
+    <h3 class="name"><code>positive
+checks if a number is positive</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>val</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l575"><code>src&#x2F;Crafter.js:575</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">val</code>
+                        <span class="type"></span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_RegExp" class="method item">
+    <h3 class="name"><code>RegExp</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>args</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l374"><code>src&#x2F;Crafter.js:374</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determine if a value is a Regular Expression</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">args</code>
+                        <span class="type">...</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value/values to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_Set" class="method item">
+    <h3 class="name"><code>Set</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>args</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l388"><code>src&#x2F;Crafter.js:388</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determine if a value is a Set.</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">args</code>
+                        <span class="type">...</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value/values to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_space" class="method item">
+    <h3 class="name"><code>space</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>values</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l416"><code>src&#x2F;Crafter.js:416</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>tests if a value is a space character</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">values</code>
+                        <span class="type">...String</span>
+
+
+                    <div class="param-description">
+                        <p>to test</p>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_Str" class="method item">
+    <h3 class="name"><code>Str</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>val</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l199"><code>src&#x2F;Crafter.js:199</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Test if something is a String</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">val</code>
+                        <span class="type"></span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_Str" class="method item">
+    <h3 class="name"><code>Str</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>args</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l206"><code>src&#x2F;Crafter.js:206</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Test if values are strings</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">args</code>
+                        <span class="type">...</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value/values to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_Symbol" class="method item">
+    <h3 class="name"><code>Symbol</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>args</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l402"><code>src&#x2F;Crafter.js:402</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determine if a value is a Symbol</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">args</code>
+                        <span class="type">...</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value/values to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_Tag" class="method item">
+    <h3 class="name"><code>Tag</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>element</code>
+                </li>
+                <li class="arg">
+                        <code>tag</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l269"><code>src&#x2F;Crafter.js:269</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Test an element's tagname</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">element</code>
+                        <span class="type">Node</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>node to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">tag</code>
+                        <span class="type">String</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>tag to test node for</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_time" class="method item">
+    <h3 class="name"><code>time</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>time</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l530"><code>src&#x2F;Crafter.js:530</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determines whether a String is a timeString</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">time</code>
+                        <span class="type">String</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_today" class="method item">
+    <h3 class="name"><code>today</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>obj</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l478"><code>src&#x2F;Crafter.js:478</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>checks wether a date is today</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">obj</code>
+                        <span class="type">Date</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>Date to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_tomorrow" class="method item">
+    <h3 class="name"><code>tomorrow</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>obj</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l498"><code>src&#x2F;Crafter.js:498</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>checks wether a date is tommorow</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">obj</code>
+                        <span class="type">Date</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>Date to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_True" class="method item">
+    <h3 class="name"><code>True</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>args</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l353"><code>src&#x2F;Crafter.js:353</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determine if a variable/s are true</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">args</code>
+                        <span class="type">...</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value/values to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_Undef" class="method item">
+    <h3 class="name"><code>Undef</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>args</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l239"><code>src&#x2F;Crafter.js:239</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determine whether a value is undefined</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">args</code>
+                        <span class="type">...</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value/values to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_Uppercase" class="method item">
+    <h3 class="name"><code>Uppercase</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>char</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l423"><code>src&#x2F;Crafter.js:423</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determine if a String is UPPERCASE</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">char</code>
+                        <span class="type">String</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_URL" class="method item">
+    <h3 class="name"><code>URL</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>url</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l451"><code>src&#x2F;Crafter.js:451</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Determines whether a String is a URL</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">url</code>
+                        <span class="type">String</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_yesterday" class="method item">
+    <h3 class="name"><code>yesterday</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>obj</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l485"><code>src&#x2F;Crafter.js:485</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>checks wether a date is yesterday</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">obj</code>
+                        <span class="type">Date</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>Date to test</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+            </div>
+
+
+
+    </div>
+</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../assets/vendor/prettify/prettify-min.js"></script>
+<script>prettyPrint();</script>
+<script src="../assets/js/yui-prettify.js"></script>
+<script src="../assets/../api.js"></script>
+<script src="../assets/js/api-filter.js"></script>
+<script src="../assets/js/api-list.js"></script>
+<script src="../assets/js/api-search.js"></script>
+<script src="../assets/js/apidocs.js"></script>
+</body>
+</html>

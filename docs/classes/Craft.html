@@ -1,0 +1,4279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Craft</title>
+    <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
+    <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
+    <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
+    <link rel="icon" href="../assets/favicon.ico">
+    <script src="http://yui.yahooapis.com/combo?3.9.1/build/yui/yui-min.js"></script>
+</head>
+<body class="yui3-skin-sam">
+
+<div id="doc">
+    <div id="hd" class="yui3-g header">
+        <div class="yui3-u-3-4">
+                <h1><img src="../assets/css/logo.png" title="" width="117" height="52"></h1>
+        </div>
+        <div class="yui3-u-1-4 version">
+            <em>API Docs for: </em>
+        </div>
+    </div>
+    <div id="bd" class="yui3-g">
+
+        <div class="yui3-u-1-4">
+            <div id="docs-sidebar" class="sidebar apidocs">
+                <div id="api-list">
+                    <h2 class="off-left">APIs</h2>
+                    <div id="api-tabview" class="tabview">
+                        <ul class="tabs">
+                            <li><a href="#api-classes">Classes</a></li>
+                            <li><a href="#api-modules">Modules</a></li>
+                        </ul>
+                
+                        <div id="api-tabview-filter">
+                            <input type="search" id="api-filter" placeholder="Type to filter APIs">
+                        </div>
+                
+                        <div id="api-tabview-panel">
+                            <ul id="api-classes" class="apis classes">
+                                <li><a href="../classes/Cookies.html">Cookies</a></li>
+                                <li><a href="../classes/Craft.html">Craft</a></li>
+                                <li><a href="../classes/dom.html">dom</a></li>
+                                <li><a href="../classes/EventHandler.html">EventHandler</a></li>
+                                <li><a href="../classes/is.html">is</a></li>
+                                <li><a href="../classes/router.html">router</a></li>
+                                <li><a href="../classes/Socket.html">Socket</a></li>
+                            </ul>
+                
+                
+                            <ul id="api-modules" class="apis modules">
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="yui3-u-3-4">
+                <div id="api-options">
+                    Show:
+                    <label for="api-show-inherited">
+                        <input type="checkbox" id="api-show-inherited" checked>
+                        Inherited
+                    </label>
+            
+                    <label for="api-show-protected">
+                        <input type="checkbox" id="api-show-protected">
+                        Protected
+                    </label>
+            
+                    <label for="api-show-private">
+                        <input type="checkbox" id="api-show-private">
+                        Private
+                    </label>
+                    <label for="api-show-deprecated">
+                        <input type="checkbox" id="api-show-deprecated">
+                        Deprecated
+                    </label>
+            
+                </div>
+            
+            <div class="apidocs">
+                <div id="docs-main">
+                    <div class="content">
+<h1>Craft Class</h1>
+<div class="box meta">
+
+
+        <div class="foundat">
+            Defined in: <a href="../files/src_Crafter.js.html#l1899"><code>src&#x2F;Crafter.js:1899</code></a>
+        </div>
+
+
+</div>
+
+
+<div class="box intro">
+    <p>Craft is Crafter.js's Core containing most functionality.</p>
+
+</div>
+
+
+<div id="classdocs" class="tabview">
+    <ul class="api-class-tabs">
+        <li class="api-class-tab index"><a href="#index">Index</a></li>
+
+            <li class="api-class-tab methods"><a href="#methods">Methods</a></li>
+            <li class="api-class-tab properties"><a href="#properties">Properties</a></li>
+    </ul>
+
+    <div>
+        <div id="index" class="api-class-tabpanel index">
+            <h2 class="off-left">Item Index</h2>
+
+                <div class="index-section methods">
+                    <h3>Methods</h3>
+
+                    <ul class="index-list methods">
+                            <li class="index-item method">
+                                <a href="#method_addCSS">addCSS</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_array">array</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_arrDiff">arrDiff</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_camelDash">camelDash</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_clone">clone</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_concatObjects">concatObjects</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_curry">curry</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_cutdot">cutdot</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_deglove">deglove</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_dffstr">dffstr</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_directive">directive</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_dom">dom</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_eventsys">eventsys</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_flatten">flatten</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_forEach">forEach</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_forEachDeep">forEachDeep</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_formatBytes">formatBytes</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_GenUID">GenUID</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_getAllKeys">getAllKeys</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_getDeep">getDeep</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_has">has</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_importCSS">importCSS</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_importFont">importFont</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_isBrowser">isBrowser</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_joindot">joindot</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_last">last</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_last">last</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_loadScript">loadScript</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_loadScripts">loadScripts</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_map">map</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_model">model</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_newComponent">newComponent</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_observable">observable</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_omit">omit</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_omitFrom">omitFrom</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_on">on</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_once">once</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_onScroll">onScroll</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_query">query</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_queryAll">queryAll</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_queryEach">queryEach</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_randomStr">randomStr</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_sameArray">sameArray</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_setDeep">setDeep</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_slice">slice</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_tco">tco</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_toArr">toArr</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_toFormData">toFormData</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_toInt">toInt</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_unique">unique</a>
+
+                            </li>
+                            <li class="index-item method">
+                                <a href="#method_URLfrom">URLfrom</a>
+
+                            </li>
+                    </ul>
+                </div>
+
+                <div class="index-section properties">
+                    <h3>Properties</h3>
+
+                    <ul class="index-list properties">
+                            <li class="index-item property">
+                                <a href="#property_browser">browser</a>
+
+                            </li>
+                            <li class="index-item property">
+                                <a href="#property_notifier">notifier</a>
+
+                            </li>
+                            <li class="index-item property">
+                                <a href="#property_WhenReady">WhenReady</a>
+
+                            </li>
+                    </ul>
+                </div>
+
+
+        </div>
+
+            <div id="methods" class="api-class-tabpanel">
+                <h2 class="off-left">Methods</h2>
+
+<div id="method_addCSS" class="method item">
+    <h3 class="name"><code>addCSS</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>css</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l2405"><code>src&#x2F;Crafter.js:2405</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>takes in any string of valid css code and executes it</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">css</code>
+                        <span class="type">String</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>css code to execute</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_array" class="method item">
+    <h3 class="name"><code>array</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>len</code>
+                </li>
+                <li class="arg">
+                        <code>val</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type">Array</span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l1985"><code>src&#x2F;Crafter.js:1985</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Generates arrays of a set length , with values or values generated from functions</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">len</code>
+                        <span class="type">Number</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>the integer length of the array to be generated</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">val</code>
+                        <span class="type">...function | </span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value to set at each index , multiple value params after lenth will generate nested 2d arrays</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type">Array</span>:
+            </div>
+        </div>
+
+
+</div>
+<div id="method_arrDiff" class="method item">
+    <h3 class="name"><code>arrDiff</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>arr</code>
+                </li>
+                <li class="arg">
+                        <code>newArr</code>
+                </li>
+                <li class="arg">
+                        <code>func</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type">Object</span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l1911"><code>src&#x2F;Crafter.js:1911</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Returns an object or calls a function with all the differences between two arrays</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">arr</code>
+                        <span class="type">Array</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>array to be compared</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">newArr</code>
+                        <span class="type">Array</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>second array to be compared</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">func</code>
+                        <span class="type">Function=</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>optional function that recieves all the info as parameters</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type">Object</span>:
+            </div>
+        </div>
+
+
+</div>
+<div id="method_camelDash" class="method item">
+    <h3 class="name"><code>camelDash</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>{String)</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l2682"><code>src&#x2F;Crafter.js:2682</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>converts camel case strings to dashed strings usefull for css properties and such</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">{String)</code>
+                        <span class="type">Object</span>
+
+
+                    <div class="param-description">
+                        <p>val - string to convert</p>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+        <div class="example">
+            <h4>Example:</h4>
+
+            <div class="example-content">
+                <p>Craft.camelDash('MyCamelCaseName') // -&gt; my-camel-case-name</p>
+
+            </div>
+        </div>
+</div>
+<div id="method_clone" class="method item">
+    <h3 class="name"><code>clone</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>val</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type">Array | Object</span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l2125"><code>src&#x2F;Crafter.js:2125</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Simply clones/duplicates any object or array/arraylike object</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">val</code>
+                        <span class="type">Array | Object</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>array or object to be cloned</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type">Array | Object</span>:
+                    <p>cloned result</p>
+
+            </div>
+        </div>
+
+
+</div>
+<div id="method_concatObjects" class="method item">
+    <h3 class="name"><code>concatObjects</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>host</code>
+                </li>
+                <li class="arg">
+                        <code>objs</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type">Object</span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l698"><code>src&#x2F;Crafter.js:698</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Method to merge the properties of multiple objects , it can handle getters or setters without breaking them</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">host</code>
+                        <span class="type">Object</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>main object to merge with all subsequent objects</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">objs</code>
+                        <span class="type">...Object</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>other objects to be merged with host object</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type">Object</span>:
+                    <p>resulting object after merges</p>
+
+            </div>
+        </div>
+
+
+</div>
+<div id="method_curry" class="method item">
+    <h3 class="name"><code>curry</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>fn</code>
+                </li>
+                <li class="arg">
+                        <code>ctx</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type">Function | </span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l27"><code>src&#x2F;Crafter.js:27</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>curry takes a function as a parameter and returns another function until all the arguments of the initializer function has been provided.</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">fn</code>
+                        <span class="type">Function</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>function to curry</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">ctx</code>
+                        <span class="type">Class | Function | Object</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>context to bind the function to</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type">Function | </span>:
+            </div>
+        </div>
+
+
+</div>
+<div id="method_cutdot" class="method item">
+    <h3 class="name"><code>cutdot</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>str</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l171"><code>src&#x2F;Crafter.js:171</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Splits a string at dots &quot;.&quot;.</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">str</code>
+                        <span class="type">String</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>string to split at the dots</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_deglove" class="method item">
+    <h3 class="name"><code>deglove</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>{array|arraylike)</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type"></span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l1937"><code>src&#x2F;Crafter.js:1937</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Checks an array's length if the array contains only a single item it is returned.</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">{array|arraylike)</code>
+                        <span class="type">Object</span>
+
+
+                    <div class="param-description">
+                        <p>arr - collection to deglove</p>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                    <p>(array|*)</p>
+
+            </div>
+        </div>
+
+
+</div>
+<div id="method_dffstr" class="method item">
+    <h3 class="name"><code>dffstr</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>html</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l108"><code>src&#x2F;Crafter.js:108</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>creates a document fragment from a string (document, fragment, from, String} - dffstr</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">html</code>
+                        <span class="type">String</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>text to convert to html</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_directive" class="method item">
+    <h3 class="name"><code>directive</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>name</code>
+                </li>
+                <li class="arg">
+                        <code>handle</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l2649"><code>src&#x2F;Crafter.js:2649</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Defines custom attributes aka directives.</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">name</code>
+                        <span class="type">String</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>the name of your custom attribute</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">handle</code>
+                        <span class="type">Function</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>a function to handle how your custom attribute behaves</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+        <div class="example">
+            <h4>Example:</h4>
+
+            <div class="example-content">
+                <p>Craft.directive('turngreen', element =&gt; element.css({ background : 'green'}));</p>
+
+            </div>
+        </div>
+</div>
+<div id="method_dom" class="method item">
+    <h3 class="name"><code>dom</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>element</code>
+                </li>
+                <li class="arg">
+                        <code>within</code>
+                </li>
+                <li class="arg">
+                        <code>one</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l1864"><code>src&#x2F;Crafter.js:1864</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>returns many useful methods for interacting with and manipulating the DOM or creating elements</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">element</code>
+                        <span class="type">Node | NodeList | String=</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>optional Node, NodeList or CSS Selector that will be affected by the methods returned</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">within</code>
+                        <span class="type">Node | String=</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">one</code>
+                        <span class="type">Boolean=</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>even if there are more than one elements matching a selector only return the first one</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_eventsys" class="method item">
+    <h3 class="name"><code>eventsys</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>obj</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l786"><code>src&#x2F;Crafter.js:786</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Adds an Event System to Arbitrary Objects and Classes.</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">obj</code>
+                        <span class="type">Object | Function | Class</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>object to convert</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_flatten" class="method item">
+    <h3 class="name"><code>flatten</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>arr</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type">Array</span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l2024"><code>src&#x2F;Crafter.js:2024</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Flattens any multidimentional array or arraylike object</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">arr</code>
+                        <span class="type">Array | Arraylike</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>multidimentional array(like) object to flatten</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type">Array</span>:
+            </div>
+        </div>
+
+
+</div>
+<div id="method_forEach" class="method item">
+    <h3 class="name"><code>forEach</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>iterable</code>
+                </li>
+                <li class="arg">
+                        <code>func</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l678"><code>src&#x2F;Crafter.js:678</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Easy way to loop through Collections, Objects and Numbers</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">iterable</code>
+                        <span class="type">Array | Object | NodeList | Number | Arguments</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>any collection that is either an Object or has a .length value</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">func</code>
+                        <span class="type">Function</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>function called on each iteration -&gt; &quot;function( value , indexOrKey ) {...}&quot;</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_forEachDeep" class="method item">
+    <h3 class="name"><code>forEachDeep</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>obj</code>
+                </li>
+                <li class="arg">
+                        <code>func</code>
+                </li>
+                <li class="arg">
+                        <code>path</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l2073"><code>src&#x2F;Crafter.js:2073</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>forEachDeep is used to loop through any multi layered object - (flattens and loops through all enumerable properties in a given object)</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">obj</code>
+                        <span class="type">Object</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>the object to loop through</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">func</code>
+                        <span class="type">Function</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>function to handle each iteration</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">path</code>
+                        <span class="type">String=</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>string to reference value by simple dot notation</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+        <div class="example">
+            <h4>Example:</h4>
+
+            <div class="example-content">
+                <p>Craft.forEachDeep({ a : 1 , b : { c : 2}}, (value , key , object, currentPath) =&gt; { console.log(key) })</p>
+
+            </div>
+        </div>
+</div>
+<div id="method_formatBytes" class="method item">
+    <h3 class="name"><code>formatBytes</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>bytes</code>
+                </li>
+                <li class="arg">
+                        <code class="optional">[decimals]</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type">String</span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l2692"><code>src&#x2F;Crafter.js:2692</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>formats a number into a measurement of data size (Bytes,KB,GB,TB...)</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">bytes</code>
+                        <span class="type">Nuber</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>number to convert</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name optional">[decimals]</code>
+                        <span class="type">Number</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>limit decimals to number</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type">String</span>:
+            </div>
+        </div>
+
+
+</div>
+<div id="method_GenUID" class="method item">
+    <h3 class="name"><code>GenUID</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>len</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type">String</span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l2732"><code>src&#x2F;Crafter.js:2732</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>similar to Craft.randomStr in that it generates a unique string , in this case a Unique ID with random alphanumeric strings separated by hyphens</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">len</code>
+                        <span class="type">Number=</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>optional length of uid sections</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type">String</span>:
+            </div>
+        </div>
+
+
+        <div class="example">
+            <h4>Example:</h4>
+
+            <div class="example-content">
+                <p>Craft.GenUID(); // -&gt; &quot;0ebf-c7d2-ef81-2667-08ef-4cde&quot;</p>
+
+            </div>
+        </div>
+</div>
+<div id="method_getAllKeys" class="method item">
+    <h3 class="name"><code>getAllKeys</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>obj</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type">Array</span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l2002"><code>src&#x2F;Crafter.js:2002</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Gets all the property keys in any object even the hiden ones</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">obj</code>
+                        <span class="type"></span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>object to list keys fromModel</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type">Array</span>:
+                    <ul>
+<li>array containing all the property keys</li>
+</ul>
+
+            </div>
+        </div>
+
+
+</div>
+<div id="method_getDeep" class="method item">
+    <h3 class="name"><code>getDeep</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>obj</code>
+                </li>
+                <li class="arg">
+                        <code>path</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l2032"><code>src&#x2F;Crafter.js:2032</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Gets a value from inside an object using a reference string</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">obj</code>
+                        <span class="type">Object</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>the object to extract values from</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">path</code>
+                        <span class="type">String</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>string to reference value by simple dot notation or array refference example Craft.getDeep({ a : { b : [1,2,3] }},&quot;a.b[2]&quot;) -&gt; 3</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+        <div class="example">
+            <h4>Example:</h4>
+
+            <div class="example-content">
+                <p>Craft.getDeep(myObj,'Company.employees[16].person.name') -&gt; Mr Smithers or Craft.getDeep(anObj,'Colony.Queen.brood') -&gt; [...ants]</p>
+
+            </div>
+        </div>
+</div>
+<div id="method_has" class="method item">
+    <h3 class="name"><code>has</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>host</code>
+                </li>
+                <li class="arg">
+                        <code>value</code>
+                </li>
+                <li class="arg">
+                        <code>or</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l125"><code>src&#x2F;Crafter.js:125</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Checks whether a collection or object contains a certain value.</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">host</code>
+                        <span class="type">Object | Arraylike | Set | Map</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>collection or object to search in</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">value</code>
+                        <span class="type"></span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>the value to look for</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">or</code>
+                        <span class="type">Boolean</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>some or every, some by default</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_importCSS" class="method item">
+    <h3 class="name"><code>importCSS</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>src</code>
+                </li>
+                <li class="arg">
+                        <code>gofetch</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l2414"><code>src&#x2F;Crafter.js:2414</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>imports css and executes it</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">src</code>
+                        <span class="type">String</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>source to fetch from</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">gofetch</code>
+                        <span class="type">Booleans</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>should fetch instead of @import statement</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_importFont" class="method item">
+    <h3 class="name"><code>importFont</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>name</code>
+                </li>
+                <li class="arg">
+                        <code>src</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l2430"><code>src&#x2F;Crafter.js:2430</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>imports fonts and loads them</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">name</code>
+                        <span class="type">String</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>name of font as used in css</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">src</code>
+                        <span class="type">String</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>source to fetch from</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_isBrowser" class="method item">
+    <h3 class="name"><code>isBrowser</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>browser</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type">Boolean</span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l2170"><code>src&#x2F;Crafter.js:2170</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>checks which browser you're running</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">browser</code>
+                        <span class="type">String</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>string containing a browser name like 'chrome','firefox'...</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type">Boolean</span>:
+                    <ul>
+<li>returns whether or not this is the browser you checked for</li>
+</ul>
+
+            </div>
+        </div>
+
+
+</div>
+<div id="method_joindot" class="method item">
+    <h3 class="name"><code>joindot</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>arr</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l178"><code>src&#x2F;Crafter.js:178</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>joins a string array with dots &quot;.&quot;</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">arr</code>
+                        <span class="type">Array | Arraylike</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>array to join with dots</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_last" class="method item">
+    <h3 class="name"><code>last</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>arr</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type"></span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l48"><code>src&#x2F;Crafter.js:48</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>get the last item in an array or arraylike collection</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">arr</code>
+                        <span class="type">Array | Arraylike</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>array or arraylike collection</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type"></span>:
+                    <p>last item in collection</p>
+
+            </div>
+        </div>
+
+
+</div>
+<div id="method_last" class="method item">
+    <h3 class="name"><code>last</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>arr</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type"></span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l56"><code>src&#x2F;Crafter.js:56</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>get the first item in an array or arraylike collection</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">arr</code>
+                        <span class="type">Array | Arraylike</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>array or arraylike collection</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type"></span>:
+                    <p>first item in collection</p>
+
+            </div>
+        </div>
+
+
+</div>
+<div id="method_loadScript" class="method item">
+    <h3 class="name"><code>loadScript</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>src</code>
+                </li>
+                <li class="arg">
+                        <code class="optional">[funcexec]</code>
+                </li>
+                <li class="arg">
+                        <code class="optional">[fetchAttr]</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l2440"><code>src&#x2F;Crafter.js:2440</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>takes in a source then attempts to fetch and execute it</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">src</code>
+                        <span class="type">String</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>source to fetch from</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name optional">[funcexec]</code>
+                        <span class="type">Boolean</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>execute code from inside a new Function() object</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name optional">[fetchAttr]</code>
+                        <span class="type">Object</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>fetch request options</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_loadScripts" class="method item">
+    <h3 class="name"><code>loadScripts</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>urls</code>
+                </li>
+                <li class="arg">
+                        <code class="optional">[funcexec]</code>
+                </li>
+                <li class="arg">
+                        <code class="optional">[fetchAttr]</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type">Promise</span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l2469"><code>src&#x2F;Crafter.js:2469</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>fetches and executes multiple scripts</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">urls</code>
+                        <span class="type">Array</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>array of string urls (sources) to fetch from</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name optional">[funcexec]</code>
+                        <span class="type">Boolean</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>execute code from inside a new Function() object</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name optional">[fetchAttr]</code>
+                        <span class="type">Object</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>fetch request options</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type">Promise</span>:
+            </div>
+        </div>
+
+
+</div>
+<div id="method_map" class="method item">
+    <h3 class="name"><code>map</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>collection</code>
+                </li>
+                <li class="arg">
+                        <code>func</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l139"><code>src&#x2F;Crafter.js:139</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>maps through arraylike and object values;</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">collection</code>
+                        <span class="type">Arraylike | Object</span>
+
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">func</code>
+                        <span class="type">Function</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>mapping function</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_model" class="method item">
+    <h3 class="name"><code>model</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>name</code>
+                </li>
+                <li class="arg">
+                        <code>modelclass</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type">Object</span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l2589"><code>src&#x2F;Crafter.js:2589</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Create's Crafter.js models</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">name</code>
+                        <span class="type">String</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>give a name to the model</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">modelclass</code>
+                        <span class="type">Class</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>Class with constructor to instantiate model</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type">Object</span>:
+            </div>
+        </div>
+
+
+</div>
+<div id="method_newComponent" class="method item">
+    <h3 class="name"><code>newComponent</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>tag</code>
+                </li>
+                <li class="arg">
+                        <code>config</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l2741"><code>src&#x2F;Crafter.js:2741</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>method for creating custom elements configuring their lifecycle's and inheritance
+the config Object has 7 distinct options ( created , inserted , destroyed , attr, css, set_X and get_X )</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">tag</code>
+                        <span class="type">String</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>a hyphenated custom HTML tagname for the new element -&gt; &quot;custom-element&quot;</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">config</code>
+                        <span class="type">Object</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>Object containing all the element's lifecycle methods / extends and attached methods or properties</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_observable" class="method item">
+    <h3 class="name"><code>observable</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>obj</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l815"><code>src&#x2F;Crafter.js:815</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Creates observables.</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">obj</code>
+                        <span class="type">Object | Function | Class</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>object to convert</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_omit" class="method item">
+    <h3 class="name"><code>omit</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>val</code>
+                </li>
+                <li class="arg">
+                        <code>args</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type">Object | Array</span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l2154"><code>src&#x2F;Crafter.js:2154</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Omits values from Objects, Strings and Arraylike objects</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">val</code>
+                        <span class="type">Object | Array</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>object from which things may be omitted</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">args</code>
+                        <span class="type">...</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>things to omit from Object or Array</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type">Object | Array</span>:
+            </div>
+        </div>
+
+
+</div>
+<div id="method_omitFrom" class="method item">
+    <h3 class="name"><code>omitFrom</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>Arr</code>
+                </li>
+                <li class="arg">
+                        <code>values</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type">Array | String</span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l2133"><code>src&#x2F;Crafter.js:2133</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>omits values from any arraylike object or string</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">Arr</code>
+                        <span class="type">Arraylike | String</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>arraylike object from which values will be omitted</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">values</code>
+                        <span class="type">...</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>values to omit from the arraylike object</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type">Array | String</span>:
+            </div>
+        </div>
+
+
+</div>
+<div id="method_on" class="method item">
+    <h3 class="name"><code>on</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>EventType</code>
+                </li>
+                <li class="arg">
+                        <code>Target</code>
+                </li>
+                <li class="arg">
+                        <code>Func</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type"></span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l1065"><code>src&#x2F;Crafter.js:1065</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Starts listening for an EventType on the Target/Targets</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">EventType</code>
+                        <span class="type">String</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>set the type of event to listen for example &quot;click&quot; or &quot;scroll&quot;</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">Target</code>
+                        <span class="type">Node | NodeList | Window | Document</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>the Event Listener's target , can be a NodeList to listen on multiple Nodes</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">Func</code>
+                        <span class="type">Function</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>Handler function that will be called when the event is triggered -&gt; &quot;function( event , event.srcElement ) {...}&quot;</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                    <p>off - when on is defined as a variable &quot;var x = on(...)&quot; it allows you to access all the EventHandler interfaces off,once,on</p>
+
+            </div>
+        </div>
+
+
+</div>
+<div id="method_once" class="method item">
+    <h3 class="name"><code>once</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>EventType</code>
+                </li>
+                <li class="arg">
+                        <code>Target</code>
+                </li>
+                <li class="arg">
+                        <code>Func</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type"></span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l1075"><code>src&#x2F;Crafter.js:1075</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Starts listening for an EventType on the Target/Targets ONCE after triggering the once event Listener will stop listening</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">EventType</code>
+                        <span class="type">String</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>set the type of event to listen for example &quot;click&quot; or &quot;scroll&quot;</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">Target</code>
+                        <span class="type">Node | NodeList | Window | Document</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>the Event Listener's target , can be a NodeList to listen on multiple Nodes</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">Func</code>
+                        <span class="type">Function</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>Handler function that will be called when the event is triggered -&gt; &quot;function( event , event.srcElement ) {...}&quot;</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                    <p>on,off,once - when once is defined as a variable &quot;var x = once(...)&quot; it allows you to access all the EventHandler interfaces off,once,on</p>
+
+            </div>
+        </div>
+
+
+</div>
+<div id="method_onScroll" class="method item">
+    <h3 class="name"><code>onScroll</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>element</code>
+                </li>
+                <li class="arg">
+                        <code>func</code>
+                </li>
+                <li class="arg">
+                        <code>preventDefault</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l2557"><code>src&#x2F;Crafter.js:2557</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>handles scrolling events</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">element</code>
+                        <span class="type">Node</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>target of listener</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">func</code>
+                        <span class="type">Function</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>callback to handle the event</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">preventDefault</code>
+                        <span class="type">Boolean=</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>event.preventDefault() or not</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_query" class="method item">
+    <h3 class="name"><code>query</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>selector</code>
+                </li>
+                <li class="arg">
+                        <code>element</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l978"><code>src&#x2F;Crafter.js:978</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Easy way to get a DOM Node or Node within another DOM Node using CSS selectors.</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">selector</code>
+                        <span class="type">String</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>CSS selector to query the DOM Node with</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">element</code>
+                        <span class="type">Node | String=</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>Optional Node or CSS selector to search within insead of document</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_queryAll" class="method item">
+    <h3 class="name"><code>queryAll</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>selector</code>
+                </li>
+                <li class="arg">
+                        <code>element</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type">Array</span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l990"><code>src&#x2F;Crafter.js:990</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Easy way to get a DOM NodeList or NodeList within another DOM Node using CSS selectors</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">selector</code>
+                        <span class="type">String</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>CSS selector to query the DOM Nodes with</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">element</code>
+                        <span class="type">Node | NodeList | String=</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>Optional Node or CSS selector to search within insead of document</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type">Array</span>:
+                    <p>array containing Nodes and/or Elements</p>
+
+            </div>
+        </div>
+
+
+</div>
+<div id="method_queryEach" class="method item">
+    <h3 class="name"><code>queryEach</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>selector</code>
+                </li>
+                <li class="arg">
+                        <code class="optional">[element]</code>
+                </li>
+                <li class="arg">
+                        <code>func</code>
+                </li>
+                <li class="arg">
+                        <code class="optional">[returnList]</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l1013"><code>src&#x2F;Crafter.js:1013</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Easy way to loop through Nodes in the DOM using a CSS Selector or a NodeList</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">selector</code>
+                        <span class="type">String | NodeList | Node</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>CSS selector to query the DOM Nodes with or NodeList to iterate through</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name optional">[element]</code>
+                        <span class="type">Node | String</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>Optional Node or CSS selector to search within insead of document</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">func</code>
+                        <span class="type">Function</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>function called on each iteration -&gt; &quot;function( Element , index ) {...}&quot;</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name optional">[returnList]</code>
+                        <span class="type">Boolean</span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>should queryEach also return the list of nodes</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_randomStr" class="method item">
+    <h3 class="name"><code>randomStr</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>max</code>
+                </li>
+                <li class="arg">
+                        <code>min</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type">String</span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l2716"><code>src&#x2F;Crafter.js:2716</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Generates random alphanumeric strings. default length of 6 characters</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">max</code>
+                        <span class="type">Int</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>max length of string</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">min</code>
+                        <span class="type">Int</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>min length of string</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type">String</span>:
+            </div>
+        </div>
+
+
+</div>
+<div id="method_sameArray" class="method item">
+    <h3 class="name"><code>sameArray</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>arr1</code>
+                </li>
+                <li class="arg">
+                        <code>arr2</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l1971"><code>src&#x2F;Crafter.js:1971</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Compares two arrays and determines if they are the same array</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">arr1</code>
+                        <span class="type">Array</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>array one</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">arr2</code>
+                        <span class="type">Array</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>array two</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_setDeep" class="method item">
+    <h3 class="name"><code>setDeep</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>obj</code>
+                </li>
+                <li class="arg">
+                        <code>path</code>
+                </li>
+                <li class="arg">
+                        <code>value</code>
+                </li>
+                <li class="arg">
+                        <code>robj</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l2048"><code>src&#x2F;Crafter.js:2048</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Craft.setDeep  is similar to getDeep it uses a string to reference to a value</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">obj</code>
+                        <span class="type">Object</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>the object to set values on</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">path</code>
+                        <span class="type">String</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>string to reference value by simple dot notation</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">value</code>
+                        <span class="type"></span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value to set</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">robj</code>
+                        <span class="type">Boolean</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>should the function return the object</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_slice" class="method item">
+    <h3 class="name"><code>slice</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>ctx</code>
+                </li>
+                <li class="arg">
+                        <code>i</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l19"><code>src&#x2F;Crafter.js:19</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Slices any arraylike object.</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">ctx</code>
+                        <span class="type">Arraylike</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>object to slice</li>
+</ul>
+
+                    </div>
+
+                </li>
+                <li class="param">
+                        <code class="param-name">i</code>
+                        <span class="type">Int | String</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>value to slice defaults to 0</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_tco" class="method item">
+    <h3 class="name"><code>tco</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>fn</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type">Function</span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l2519"><code>src&#x2F;Crafter.js:2519</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Tail Call Optimization for recursive functions</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">fn</code>
+                        <span class="type">Function</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>function that uses recursion inside</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type">Function</span>:
+            </div>
+        </div>
+
+
+</div>
+<div id="method_toArr" class="method item">
+    <h3 class="name"><code>toArr</code></h3>
+
+        <span class="paren">()</span>
+
+        <span class="returns-inline">
+            <span class="type">Array</span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l69"><code>src&#x2F;Crafter.js:69</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Convert Arraylike variables to Array synonym for Array.from</p>
+
+    </div>
+
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type">Array</span>:
+            </div>
+        </div>
+
+
+</div>
+<div id="method_toFormData" class="method item">
+    <h3 class="name"><code>toFormData</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>val</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l2539"><code>src&#x2F;Crafter.js:2539</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>converts Objects or URL variable strings to a FormData object</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">val</code>
+                        <span class="type">Object | String</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>values to convert</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+<div id="method_toInt" class="method item">
+    <h3 class="name"><code>toInt</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>num</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type">Number</span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l157"><code>src&#x2F;Crafter.js:157</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>converts a number or string value to an integer</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">num</code>
+                        <span class="type">Number | String</span>
+
+
+                    <div class="param-description">
+                        <ul>
+<li>number to convert</li>
+</ul>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type">Number</span>:
+                    <p>integer number</p>
+
+            </div>
+        </div>
+
+
+</div>
+<div id="method_unique" class="method item">
+    <h3 class="name"><code>unique</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>arr</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+        <span class="returns-inline">
+            <span class="type">Array</span>
+        </span>
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l2016"><code>src&#x2F;Crafter.js:2016</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>flattens, sorts and eliminates doubles from arraylike collections</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">arr</code>
+                        <span class="type">Array | Arraylike</span>
+
+
+                    <div class="param-description">
+                         
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                        <span class="type">Array</span>:
+            </div>
+        </div>
+
+
+</div>
+<div id="method_URLfrom" class="method item">
+    <h3 class="name"><code>URLfrom</code></h3>
+
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+                <li class="arg">
+                        <code>-</code>
+                </li>
+            </ul><span class="paren">)</span>
+        </div>
+
+
+
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l2095"><code>src&#x2F;Crafter.js:2095</code></a>
+        </p>
+
+
+
+    </div>
+
+    <div class="description">
+        <p>Converts any text to an inline URL code (good for images , svg , scripts or css)</p>
+
+    </div>
+
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+                <li class="param">
+                        <code class="param-name">-</code>
+                        <span class="type">String</span>
+
+
+                    <div class="param-description">
+                        <p>content to convert to an inline URL</p>
+
+                    </div>
+
+                </li>
+            </ul>
+        </div>
+
+
+
+</div>
+            </div>
+
+            <div id="properties" class="api-class-tabpanel">
+                <h2 class="off-left">Properties</h2>
+
+<div id="property_browser" class="property item">
+    <h3 class="name"><code>browser</code></h3>
+    <span class="type">String</span>
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l2178"><code>src&#x2F;Crafter.js:2178</code></a>
+        </p>
+
+
+    </div>
+
+    <div class="description">
+        <p>name of browser and version</p>
+
+    </div>
+
+
+
+</div>
+<div id="property_notifier" class="property item">
+    <h3 class="name"><code>notifier</code></h3>
+    <span class="type">Object</span>
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l1904"><code>src&#x2F;Crafter.js:1904</code></a>
+        </p>
+
+
+    </div>
+
+    <div class="description">
+        <p>general Crafter notification event system</p>
+
+    </div>
+
+
+
+</div>
+<div id="property_WhenReady" class="property item">
+    <h3 class="name"><code>WhenReady</code></h3>
+    <span class="type">Promise</span>
+
+
+
+
+
+    <div class="meta">
+                <p>
+                Defined in
+        <a href="../files/src_Crafter.js.html#l2570"><code>src&#x2F;Crafter.js:2570</code></a>
+        </p>
+
+
+    </div>
+
+    <div class="description">
+        <p>Promise that resolves when the DOM and WebComponents are all finished loading</p>
+
+    </div>
+
+
+
+</div>
+            </div>
+
+
+    </div>
+</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../assets/vendor/prettify/prettify-min.js"></script>
+<script>prettyPrint();</script>
+<script src="../assets/js/yui-prettify.js"></script>
+<script src="../assets/../api.js"></script>
+<script src="../assets/js/api-filter.js"></script>
+<script src="../assets/js/api-list.js"></script>
+<script src="../assets/js/api-search.js"></script>
+<script src="../assets/js/apidocs.js"></script>
+</body>
+</html>
