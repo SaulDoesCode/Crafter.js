@@ -13,8 +13,8 @@
     if (Br && (tem = ua.match(/version\/([\.\d]+)/i)) !== null) Br[2] = tem[1];
     Br = (Br ? [Br[1], Br[2]] : [navigator.appName, navigator.appVersion, '-?']).join(' ');
 
-    const newMap = () => new Map;
-    const newSet = () => new Set;
+    const newMap = () => new Map,
+        newSet = () => new Set;
 
     /**
      * Slices any arraylike object.
@@ -722,7 +722,6 @@
         return is.Node(val) ? [val] : is.NodeList(val) ? toArr(val) : [];
     }
 
-
     function listener() {
         const container = newMap(),
             actions = {
@@ -839,7 +838,7 @@
             if (key != 'get' && key != 'set') {
                 let val;
                 listeners.loop('Get', ln => {
-                    if (ln.prop === '*' || ln.prop === key) ln.fn(key, obj);
+                    if (ln.prop === '*' || ln.prop === key) val = ln(key, obj);
                 });
                 return val != undef ? val : obj[key];
             } else return obj[key];
@@ -847,7 +846,7 @@
         defineprop(obj, 'set', desc((key, value) => {
             let val;
             listeners.loop('Set', ln => {
-                if (ln.prop === '*' || ln.prop === key) ln.fn(key, value, obj, Object.hasOwnProperty(obj, key));
+                if (ln.prop === '*' || ln.prop === key) ln(key, value, obj, Object.hasOwnProperty(obj, key));
             });
             val = val != undef ? val : value;
             if (isObj(val) && !val.isObservable) val = observable(val);
@@ -861,7 +860,7 @@
                 if (key != 'get' && key != 'set') {
                     let val;
                     listeners.loop('Get', ln => {
-                        if (ln.prop === '*' || ln.prop === key) val = ln.fn(key, target);
+                        if (ln.prop === '*' || ln.prop === key) val = ln(key, target);
                     });
                     return val != undef ? val : Reflect.get(target, key);
                 } else return Reflect.get(target, key);
@@ -874,8 +873,7 @@
                             value = val;
                             onetime = false;
                         } else onetime = true;
-                        val = ln.multi ? ln.fn('set', key, value, target, !Reflect.has(target, key)) :
-                            ln.fn(key, value, target, !Reflect.has(target, key));
+                        val = ln(key, value, target, !Reflect.has(target, key));
                     }
                 });
                 val = val != undef ? val : value;
@@ -1750,7 +1748,7 @@
          */
         defineprop(element, 'Siblings', {
             get() {
-                return Craft.omit(element.parentNode.children, element).filter(isEl);
+                return removeFrom(element.parentNode.children, element).filter(isEl);
             }
         });
 
@@ -2139,14 +2137,12 @@
          * @return {Array|String}
          */
         omitFrom(Arr) {
-            let args = slice(arguments, 1);
+            const args = slice(arguments, 1);
             if (isStr(Arr))
                 args.map(a => {
                     while (Arr.includes(a)) Arr = Arr.replace(a, '');
                 });
-            else Arr = (is.Arraylike(Arr) ? toArr(Arr) : Arr).filter(e => {
-                if (!args.some(is.eq(e))) return e;
-            });
+            else args.map(a => Arr = removeFrom(Arr, a));
             return Arr;
         },
 
@@ -2161,8 +2157,8 @@
          */
         omit(val) {
             if (is.Arraylike(val)) val = Craft.omitFrom.apply(this, arguments);
-            let args = toArr(arguments).slice(1);
-            if (isObj(val) && !args.some(v => v == val)) forEach(val, (prop, key) => {
+            const args = slice(arguments, 1);
+            if (isObj(val) && !args.includes(val)) forEach(val, (prop, key) => {
                 if (args.some(v => v == prop || v == key)) delete val[key];
             });
             return val;
@@ -2191,7 +2187,8 @@
          */
         router: {
             handle(event, func) {
-                if(location.hash === event) func(event,location);
+                const hash = location.hash;
+                if (hash === event) func(event, hash);
                 return Craft.notifier.on(event, func);
             },
             open(link, newtab) {
@@ -2659,24 +2656,24 @@
             if (!Craft.Directives.has(name) && isObj(handle) && isFunc(handle.bind)) {
                 Craft.Directives.set(name, handle);
                 Craft.WhenReady.then(() => {
-                      queryEach(`[${name}]`, el => {
-                          el = dom(el);
-                          if (el.hasAttr(name)) {
-                              if (!is.Set(el.state.directives)) el.state.directives = newSet();
-                              if (!el.state.directives.has(name)) {
-                                  el.state.directives.add(name);
-                                  let directiveChangeDetetor = el.state.on(`attr:${name}`, (name, val, oldval, hasAttr) => {
-                                      if (hasAttr || !def(oldval)) {
-                                          if (isFunc(handle.update)) handle.update.call(el, el, val, oldval, hasAttr);
-                                      } else if (isFunc(handle.unbind)) {
-                                          handle.unbind.call(el, el, val, oldval);
-                                          directiveChangeDetetor.off();
-                                      }
-                                  });
-                                  handle.bind.call(el, el, el.getAttr(name));
-                              }
-                          }
-                      });
+                    queryEach(`[${name}]`, el => {
+                        el = dom(el);
+                        if (el.hasAttr(name)) {
+                            if (!is.Set(el.state.directives)) el.state.directives = newSet();
+                            if (!el.state.directives.has(name)) {
+                                el.state.directives.add(name);
+                                let directiveChangeDetetor = el.state.on(`attr:${name}`, (name, val, oldval, hasAttr) => {
+                                    if (hasAttr || !def(oldval)) {
+                                        if (isFunc(handle.update)) handle.update.call(el, el, val, oldval, hasAttr);
+                                    } else if (isFunc(handle.unbind)) {
+                                        handle.unbind.call(el, el, val, oldval);
+                                        directiveChangeDetetor.off();
+                                    }
+                                });
+                                handle.bind.call(el, el, el.getAttr(name));
+                            }
+                        }
+                    });
                 });
             }
         },
@@ -2896,7 +2893,7 @@
 
     Craft.directive('link', {
         bind(element, link) {
-            if (isFunc(element.onlink)) element.state.linkhandle = Craft.router.handle(link, element.onlink);
+            if (isFunc(element.onlink)) element.state.linkhandle = Craft.router.handle(link, element.onlink.bind(element));
             function makeLinkHandler(fn) {
                 if (isFunc(fn)) {
                     if (element.state.linkhandle) element.state.linkhandle.off();
@@ -2969,14 +2966,13 @@
     !ready() ? once('DOMContentLoaded', doc, init) : init();
 
     on('hashchange', () => {
-        Craft.notifier.emit(location.hash, location);
+        const hash = location.hash;
+        Craft.notifier.emit(hash,hash);
     });
 
     on('click', (e, target) => {
-        if (target.attributes) {
-            map(target.attributes, attr => {
-                if (attr.name == 'link')(target.hasAttr('newtab') ? open : Craft.router.open)(attr.value);
-            });
+        if (target.hasAttribute('link')) {
+            (target.hasAttr('newtab') ? root.open : Craft.router.open)(target.getAttr('link'));
         }
     });
 
