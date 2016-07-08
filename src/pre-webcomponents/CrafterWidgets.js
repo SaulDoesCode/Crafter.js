@@ -1,4 +1,4 @@
-Craft.exec(function () {
+(function (root) {
     "use strict";
     let {
         on,
@@ -373,4 +373,4 @@ Craft.exec(function () {
         }
     });
 
-});
+})(this);
