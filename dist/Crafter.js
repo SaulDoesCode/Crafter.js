@@ -2363,6 +2363,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      */
     router: {
       handle: function(event, func) {
+        if (location.hash === event) func(event, location);
         return Craft.notifier.on(event, func);
       },
       open: function(link, newtab) {
@@ -2491,7 +2492,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       spacebar: keyhandle(32)
     },
     after: function(n, func, ctx) {
-      !isFunc(func) && isFunc(n) ? func = n : console.error('after: no function');
+      !isFunc(func) && isFunc(n) ? func = n : console.error('Craft.after: no function');
       n = Number.isFinite(n = +n) ? n : 0;
       if (--n < 1) return function() {
         return func.apply(ctx || this, arguments);
