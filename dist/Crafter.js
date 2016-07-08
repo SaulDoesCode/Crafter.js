@@ -60,7 +60,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
           args[_key2] = arguments[_key2];
         }
-        return args.length == 1 ? test(args[0]) : args.length && args.every(test);
+        return args.length >= 1 && args.every(test);
       };
     },
     last = function(arr) {
@@ -107,9 +107,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     promise = function(func) {
       return new Promise(func);
     },
-    Locs = function(test) {
-      return [location.hash, location.href, location.pathname].some(test);
-    },
+    noop = function() {},
     head = doc.head,
     RegExps = {
       email: /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
@@ -167,7 +165,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
    * @param {Boolean} or - some or every, some by default
    */
   function has(host, value, or) {
-    if (is.Arraylike(host)) return toArr(host)[!or ? 'every' : 'some'](host.includes.bind(host));
+    if (is.Arraylike(host)) return slice(host)[!or ? 'every' : 'some'](host.includes.bind(host));
     if (isObj(host)) return Object.prototype.hasOwnProperty.call(host, value);
     if (is.Set(host) || is.Map(host)) return host.has(value);
   }
@@ -210,7 +208,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return str.split('.');
     },
     joindot = function(arr) {
-      return toArr(arr).join('.');
+      return slice(arr).join('.');
     },
     is = {
       /**
@@ -313,9 +311,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
        * @param {...*} args - value/values to test
        */
       NodeList: ta(function(nl) {
-        return nl instanceof NodeList || is.Arraylike(nl) ? ta(function(n) {
+        return nl instanceof NodeList || is.Arraylike(nl) && !is.empty(nl) ? Array.prototype.every.call(nl, function(n) {
           return n instanceof Node;
-        }).apply(null, nl) : false;
+        }) : false;
       }),
       /**
        * Determine if a value is a Number
@@ -821,6 +819,16 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     }
   }
   /**
+   * Checks an array's length if the array contains only a single item it is returned.
+   * @method deglove
+   * @for Craft
+   * @param {array|arraylike) arr - collection to deglove
+   * @return (array|*)
+   */
+  var deglove = function(arr) {
+    return is.Arraylike(arr) && arr.length == 1 ? arr[0] : arr;
+  };
+  /**
    * Method to merge the properties of multiple objects , it can handle getters or setters without breaking them
    * @method concatObjects
    * @for Craft
@@ -835,17 +843,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
     });
     return host;
-  }
-  /*
-   * Converts any Query/QueryAll to an Array of Nodes even if there is only one Node , this is error proof when no arguments are present it returns an empty array.
-   * method NodeOrQuerytoArr
-   * param {Node|NodeList|Array|String} val - pass either a CSS Selector string , Node/NodeList or Array of Nodes
-   * param {Node|NodeList|Array|String} within - pass either a CSS Selector string , Node/NodeList or Array of Nodes to search for val in
-   * return {Array}
-   */
-  function NodeOrQuerytoArr(val, within) {
-    if (isStr(val)) val = queryAll(val, within);
-    return is.Node(val) ? [val] : is.NodeList(val) ? toArr(val) : [];
   }
 
   function listener() {
@@ -977,7 +974,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       if (key != 'get' && key != 'set') {
         var _val = void 0;
         listeners.loop('Get', function(ln) {
-          if (ln.prop === '*' || ln.prop === key) ln.fn(key, obj);
+          if (ln.prop === '*' || ln.prop === key) _val = ln(key, obj);
         });
         return _val != undef ? _val : obj[key];
       } else return obj[key];
@@ -985,7 +982,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     defineprop(obj, 'set', desc(function(key, value) {
       var val = void 0;
       listeners.loop('Set', function(ln) {
-        if (ln.prop === '*' || ln.prop === key) ln.fn(key, value, obj, Object.hasOwnProperty(obj, key));
+        if (ln.prop === '*' || ln.prop === key) ln(key, value, obj, Object.hasOwnProperty(obj, key));
       });
       val = val != undef ? val : value;
       if (isObj(val) && !val.isObservable) val = observable(val);
@@ -1000,7 +997,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         if (key != 'get' && key != 'set') {
           var _val2 = void 0;
           listeners.loop('Get', function(ln) {
-            if (ln.prop === '*' || ln.prop === key) _val2 = ln.fn(key, target);
+            if (ln.prop === '*' || ln.prop === key) _val2 = ln(key, target);
           });
           return _val2 != undef ? _val2 : Reflect.get(target, key);
         } else return Reflect.get(target, key);
@@ -1014,7 +1011,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
               value = val;
               onetime = false;
             } else onetime = true;
-            val = ln.multi ? ln.fn('set', key, value, target, !Reflect.has(target, key)) : ln.fn(key, value, target, !Reflect.has(target, key));
+            val = ln(key, value, target, !Reflect.has(target, key));
           }
         });
         val = val != undef ? val : value;
@@ -1025,6 +1022,61 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     });
     console.warn('This JavaScript Environment does not support Proxy, observables need to use the .set and .get accessors to work');
     return obj;
+  }
+  /**
+   * Easy way to get a DOM Node or Node within another DOM Node using CSS selectors.
+   * @method query
+   * @for Craft
+   * @param {String} selector - CSS selector to query the DOM Node with
+   * @param {Node|String=} element - Optional Node or CSS selector to search within insead of document
+   */
+  function query(selector, element) {
+    if (isStr(element)) element = doc.querySelector(element);
+    return is.Node(element) ? element.querySelector(selector) : doc.querySelector(selector);
+  }
+  /**
+   * Easy way to get a DOM NodeList or NodeList within another DOM Node using CSS selectors
+   * @method queryAll
+   * @for Craft
+   * @param {String} selector - CSS selector to query the DOM Nodes with
+   * @param {Node|NodeList|String=} element - Optional Node or CSS selector to search within insead of document
+   * @return {Array} array containing Nodes and/or Elements
+   */
+  function queryAll(selector, element) {
+    if (isStr(element)) element = queryAll(element);
+    var list = void 0;
+    if (is.Arraylike(element) && element.length > 1) {
+      list = [];
+      map(element, function(el) {
+        if (isStr(el)) el = query(el);
+        if (is.Node(el)) {
+          el = queryAll(selector, el);
+          if (is.NodeList(el)) list.concat(el);
+        }
+      });
+    } else {
+      list = is.Node(element) ? element : is.NodeList(element) ? element[0] : doc;
+      if (list) {
+        list = list.querySelectorAll(selector);
+        if (list != null) return slice(list);
+      }
+    }
+    return null;
+  }
+  /**
+   * Easy way to loop through Nodes in the DOM using a CSS Selector or a NodeList
+   * @method queryEach
+   * @for Craft
+   * @param {String|NodeList|Node} selector - CSS selector to query the DOM Nodes with or NodeList to iterate through
+   * @param {Node|String} [element] - Optional Node or CSS selector to search within insead of document
+   * @param {Function} func - function called on each iteration -> "function( Element , index ) {...}"
+   * @param {Boolean} [returnList] - should queryEach also return the list of nodes
+   */
+  function queryEach(selector, element, func, returnList) {
+    if (isFunc(element)) func = element;
+    var list = queryAll(selector, element);
+    if (list) list.forEach(func);
+    if (returnList) return list;
   }
   /**
    * Event Handler
@@ -1039,7 +1091,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     return new function() {
       var evthandler = this;
       evthandler.state = false;
-      Target = Target !== root && Target !== doc ? NodeOrQuerytoArr(Target, Within) : isArr(Target) ? Craft.flatten(Target) : [Target];
+      Target = Target !== root && Target !== doc && isStr(Target) ? queryAll(Target, Within) : isArr(Target) ? Craft.flatten(Target) : [Target];
       if (isStr(EventType) && EventType.includes(',')) EventType = EventType.split(',');
       if (!isArr(EventType)) EventType = [EventType];
       var FuncWrapper = function(e) {
@@ -1110,55 +1162,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       };
     }();
   };
-  /**
-   * Easy way to get a DOM Node or Node within another DOM Node using CSS selectors.
-   * @method query
-   * @for Craft
-   * @param {String} selector - CSS selector to query the DOM Node with
-   * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
-   */
-  function query(selector, element) {
-    if (isStr(element)) element = doc.querySelector(element);
-    return is.Node(element) ? element.querySelector(selector) : doc.querySelector(selector);
-  }
-  /**
-   * Easy way to get a DOM NodeList or NodeList within another DOM Node using CSS selectors
-   * @method queryAll
-   * @for Craft
-   * @param {String} selector - CSS selector to query the DOM Nodes with
-   * @param {Node|NodeList|string=} element - Optional Node or CSS selector to search within insead of document
-   * @return {Array} array containing Nodes and/or Elements
-   */
-  function queryAll(selector, element) {
-    if (isStr(element)) element = queryAll(element);
-    var list = void 0;
-    if (Craft.len(element) !== 1 && (isArr(element) || is.NodeList(element))) {
-      list = [];
-      map(element, function(el) {
-        if (isStr(el)) el = query(el);
-        if (is.Node(el)) {
-          el = queryAll(selector, el);
-          if (is.NodeList(el)) list.concat(toArr(el));
-        }
-      });
-    } else list = is.NodeList(element) ? element[0].querySelectorAll(selector) : is.Node(element) ? element.querySelectorAll(selector) : doc.querySelectorAll(selector);
-    return is.Null(list) ? list : isArr(list) ? list : toArr(list);
-  }
-  /**
-   * Easy way to loop through Nodes in the DOM using a CSS Selector or a NodeList
-   * @method queryEach
-   * @for Craft
-   * @param {String|NodeList|Node} selector - CSS selector to query the DOM Nodes with or NodeList to iterate through
-   * @param {Node|String} [element] - Optional Node or CSS selector to search within insead of document
-   * @param {Function} func - function called on each iteration -> "function( Element , index ) {...}"
-   * @param {Boolean} [returnList] - should queryEach also return the list of nodes
-   */
-  function queryEach(selector, element, func, returnList) {
-    if (isFunc(element)) func = element;
-    var list = NodeOrQuerytoArr(selector, element);
-    list.forEach(func);
-    if (returnList) return list;
-  }
 
   function EventTypes(Target, within, listen) {
     var etype = function(type) {
@@ -1341,7 +1344,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   });
 
   function domNodeList(elements) {
-    Craft.omit(Object.getOwnPropertyNames(Array.prototype), 'length').map(function(method) {
+    if (!isArr(elements)) removeFrom(Object.getOwnPropertyNames(Array.prototype), 'length').map(function(method) {
       elements[method] = Array.prototype[method];
     });
     /**
@@ -1894,7 +1897,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      */
     defineprop(element, 'Siblings', {
       get: function() {
-        return Craft.omit(element.parentNode.children, element).filter(isEl);
+        return removeFrom(element.parentNode.children, element).filter(isEl);
       }
     });
     /**
@@ -1965,13 +1968,13 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return queryAll(selector, element);
     };
     element.next = function(reset, dm) {
-      var sb = toArr(element.parentNode.children),
+      var sb = slice(element.parentNode.children),
         nextnode = sb.indexOf(element) + 1;
       if (!sb[nextnode]) return reset ? dm ? dom(sb[0]) : sb[0] : null;
       return dm ? dom(sb[nextnode]) : sb[nextnode];
     };
     element.previous = function(reset, dm) {
-      var sb = toArr(element.parentNode.children),
+      var sb = slice(element.parentNode.children),
         nextnode = sb.indexOf(element) - 1;
       if (!sb[nextnode]) return reset ? dm ? dom(sb[sb.length - 1]) : sb[sb.length - 1] : null;
       return dm ? dom(sb[nextnode]) : sb[nextnode];
@@ -2015,29 +2018,23 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
    * returns many useful methods for interacting with and manipulating the DOM or creating elements
    * @method dom
    * @for Craft
-   * @param {Node|NodeList|string=} element - optional Node, NodeList or CSS Selector that will be affected by the methods returned
-   * @param {Node|string=} within - optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
+   * @param {Node|NodeList|String=} element - optional Node, NodeList or CSS Selector that will be affected by the methods returned
+   * @param {Node|String=} within - optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
    * @param {Boolean=} one - even if there are more than one elements matching a selector only return the first one
    */
   function dom(element, within, one) {
-    if (within == true) {
-      one = within;
-      within = null;
-    }
-    if (!one) {
-      if (isStr(element)) element = queryAll(element, within);
+    if (isStr(element)) {
+      element = !one ? queryAll(element, within) : query(element, within);
       if (is.NodeList(element)) {
-        element = toArr(element).filter(isEl);
-        if (element.length != 1) return domNodeList(element);
-        else element = element[0];
+        if (element.length > 1) return domNodeList(element);
+        else if (element.length == 1) element = element[0];
       }
-    } else if (isStr(element)) element = query(element, within);
-    if (is.Node(element)) return !element['_DOMM'] ? domManip(element) : element;
+    }
+    if (is.Node(element)) return element['_DOMM'] ? element : domManip(element);
+    if (is.NodeList(element)) return domNodeList(element);
     return Dom;
   }
-  for (var _key5 in Dom) {
-    defineprop(dom, _key5, getpropdescriptor(Dom, _key5));
-  }
+  dom = concatObjects(dom, Dom);
   if (root.Proxy) dom = new Proxy(dom, {
     get: function(obj, key) {
       if (!obj.hasOwnProperty(key)) {
@@ -2087,16 +2084,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         arrb: arrb
       };
     },
-    /**
-     * Checks an array's length if the array contains only a single item it is returned.
-     * @method deglove
-     * @for Craft
-     * @param {array|arraylike) arr - collection to deglove
-     * @return (array|*)
-     */
-    deglove: function(arr) {
-      return is.Arraylike(arr) && arr.length == 1 ? arr[0] : arr;
-    },
+    deglove: deglove,
     last: last,
     cutdot: cutdot,
     joindot: joindot,
@@ -2311,8 +2299,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           Arr = Arr.replace(a, '');
         }
       });
-      else Arr = (is.Arraylike(Arr) ? toArr(Arr) : Arr).filter(function(e) {
-        if (!args.some(is.eq(e))) return e;
+      else args.map(function(a) {
+        return Arr = removeFrom(Arr, a);
       });
       return Arr;
     },
@@ -2327,10 +2315,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      */
     omit: function(val) {
       if (is.Arraylike(val)) val = Craft.omitFrom.apply(this, arguments);
-      var args = toArr(arguments).slice(1);
-      if (isObj(val) && !args.some(function(v) {
-          return v == val;
-        })) forEach(val, function(prop, key) {
+      var args = slice(arguments, 1);
+      if (isObj(val) && !args.includes(val)) forEach(val, function(prop, key) {
         if (args.some(function(v) {
             return v == prop || v == key;
           })) delete val[key];
@@ -2363,7 +2349,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      */
     router: {
       handle: function(event, func) {
-        if (location.hash === event) func(event, location);
+        var hash = location.hash;
+        if (hash === event) func(event, hash);
         return Craft.notifier.on(event, func);
       },
       open: function(link, newtab) {
@@ -2677,7 +2664,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       });
     },
     hasCaps: function(str) {
-      return toArr(str).some(is.Uppercase);
+      return slice(str).some(is.Uppercase);
     },
     hasNums: function(str) {
       return (/\d/g.test(str));
@@ -2986,31 +2973,31 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       element.createdCallback = function() {
         var el = dom(this),
           dealtWith = [];
-        for (var _key6 in config) {
-          if (!dealtWith.includes(_key6)) {
-            if (_key6.includes('set_')) {
-              var sgKey = _key6.split('_')[1];
-              dealtWith.push(_key6, 'get_' + sgKey);
-              el.newSetGet(sgKey, config[_key6], config['get_' + sgKey]);
-            } else if (_key6.includes('get_')) {
-              var _sgKey = _key6.split('_')[1];
-              dealtWith.push(_key6, 'set_' + _sgKey);
-              el.newSetGet(_sgKey, isFunc(config['set_' + _sgKey]) ? config['set_' + _sgKey] : function(x) {}, config[_key6]);
+        for (var _key5 in config) {
+          if (!dealtWith.includes(_key5)) {
+            if (_key5.includes('set_')) {
+              var sgKey = _key5.split('_')[1];
+              dealtWith.push(_key5, 'get_' + sgKey);
+              el.newSetGet(sgKey, config[_key5], config['get_' + sgKey]);
+            } else if (_key5.includes('get_')) {
+              var _sgKey = _key5.split('_')[1];
+              dealtWith.push(_key5, 'set_' + _sgKey);
+              el.newSetGet(_sgKey, isFunc(config['set_' + _sgKey]) ? config['set_' + _sgKey] : noop, config[_key5]);
             }
           }
         }
         if (isFunc(config['attr'])) el.observeAttrs(config['attr']);
         if (isFunc(config['created'])) return config['created'].call(el);
       };
-      var _loop = function(_key7) {
-        if (_key7 == 'created' || _key7 == 'attr' || _key7.includes('set_') || _key7.includes('get_')) return 'continue';
-        if (isFunc(config[_key7]) && _key7 != 'attr') dm = function() { // Adds dom methods to element
-          return config[_key7].apply(dom(this), arguments);
+      var _loop = function(_key6) {
+        if (_key6 == 'created' || _key6 == 'attr' || _key6.includes('set_') || _key6.includes('get_')) return 'continue';
+        if (isFunc(config[_key6]) && _key6 != 'attr') dm = function() { // Adds dom methods to element
+          return config[_key6].apply(dom(this), arguments);
         };
-        _key7 == 'inserted' ? element.attachedCallback = dm : _key7 == 'destroyed' ? element.detachedCallback = dm : _key7.toLowerCase() == 'css' ? Craft.addCSS(config[_key7]) : isFunc(config[_key7]) ? element[_key7] = dm : defineprop(element, _key7, getpropdescriptor(config, _key7));
+        _key6 == 'inserted' ? element.attachedCallback = dm : _key6 == 'destroyed' ? element.detachedCallback = dm : _key6.toLowerCase() == 'css' ? Craft.addCSS(config[_key6]) : isFunc(config[_key6]) ? element[_key6] = dm : defineprop(element, _key6, getpropdescriptor(config, _key6));
       };
-      for (var _key7 in config) {
-        var _ret8 = _loop(_key7);
+      for (var _key6 in config) {
+        var _ret8 = _loop(_key6);
         if (_ret8 === 'continue') continue;
       }
       settings['prototype'] = element;
@@ -3116,7 +3103,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   on('focus', TabChange(true));
   Craft.directive('link', {
     bind: function(element, link) {
-      if (isFunc(element.onlink)) element.state.linkhandle = Craft.router.handle(link, element.onlink);
+      if (isFunc(element.onlink)) element.state.linkhandle = Craft.router.handle(link, element.onlink.bind(element));
 
       function makeLinkHandler(fn) {
         if (isFunc(fn)) {
@@ -3187,13 +3174,12 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     Craft.notifier.emit('ready');
   }!ready() ? once('DOMContentLoaded', doc, init) : init();
   on('hashchange', function() {
-    Craft.notifier.emit(location.hash, location);
+    var hash = location.hash;
+    Craft.notifier.emit(hash, hash);
   });
   on('click', function(e, target) {
-    if (target.attributes) {
-      map(target.attributes, function(attr) {
-        if (attr.name == 'link')(target.hasAttr('newtab') ? open : Craft.router.open)(attr.value);
-      });
+    if (target.hasAttribute('link')) {
+      (target.hasAttr('newtab') ? root.open : Craft.router.open)(target.getAttr('link'));
     }
   });
   if (typeof define === 'function' && define.amd) define(['Craft', 'craft'], Craft); // Node. Does not work with strict CommonJS, but
