@@ -1252,10 +1252,14 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       if (isObj(attributes)) Object.keys(attributes).forEach(function(key) {
         if (isFunc(attributes[key])) {
           if (eventoptions.some(is.eq(key))) {
-            var func = attributes[key];
-            key == 'DoubleClick' ? key = 'dblclick' : key = key.toLowerCase();
-            element[key + 'handle'] = on(key, element, func);
-            delete attributes[key];
+            (function() {
+              var func = attributes[key];
+              key == 'DoubleClick' ? key = 'dblclick' : key = key.toLowerCase();
+              element[key + 'handle'] = on(key, element, function() {
+                func.apply(element, arguments);
+              });
+              delete attributes[key];
+            })();
           } else if (key === 'created') {
             domLifecycle.once('created', attributes[key].bind(element));
             delete attributes[key];
@@ -2152,6 +2156,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     once: once,
     is: is,
     has: has,
+    curry: curry,
     concatObjects: concatObjects,
     UnHTML: function(html) {
       return html.replace(/<script[^>]*?>.*?<\/script>/gi, '').replace(/<style[^>]*?>.*?<\/style>/gi, '').replace(/<![\s\S]*?--[ \t\n\r]*>/gi, '');
@@ -2257,8 +2262,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           path = cutdot(path);
           var last = path.length - 1;
           path.map(function(step, i) {
-            if (obj[step] == undef) obj[step] = {};
-            last == i ? obj[step] = val : obj = obj[step];
+            if (obj[step] == undef) obj.isObservable ? obj.set(step, {}) : obj[step] = {};
+            last == i ? obj.isObservable ? obj.set(step, val) : obj[step] = val : obj = obj[step];
           });
         })();
       } catch (e) {
@@ -2459,7 +2464,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
       if (!address.includes('ws://') && !address.includes('wss://')) address = (location.protocol === 'http:' ? 'ws://' : 'wss://') + address;
       if (is.URL(address)) {
-        var _ret4 = function() {
+        var _ret5 = function() {
           var newSock = function() {
               return protocols ? new WebSocket(address, protocols) : new WebSocket(address);
             },
@@ -2517,7 +2522,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
             v: Options
           };
         }();
-        if ((typeof _ret4 === 'undefined' ? 'undefined' : _typeof(_ret4)) === "object") return _ret4.v;
+        if ((typeof _ret5 === 'undefined' ? 'undefined' : _typeof(_ret5)) === "object") return _ret5.v;
       }
     },
     keyhandles: {
@@ -2581,7 +2586,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         return result;
       };
     },
-    curry: curry,
     memoize: function(func, resolver) {
       if (!isFunc(func) || resolver && !isFunc(resolver)) throw new TypeError('no function');
       var cache = new WeakMap(),
@@ -3068,7 +3072,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     },
     every: function(time, fn, context, pauseondefocus) {
       if (isFunc(fn)) {
-        var _ret9 = function() {
+        var _ret10 = function() {
           var options = {
             interval: undef,
             on: function() {
@@ -3087,7 +3091,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
             v: options.on()
           };
         }();
-        if ((typeof _ret9 === 'undefined' ? 'undefined' : _typeof(_ret9)) === "object") return _ret9.v;
+        if ((typeof _ret10 === 'undefined' ? 'undefined' : _typeof(_ret10)) === "object") return _ret10.v;
       }
     }
   }; // takes in an affected element and scans it for custom attributes
