@@ -945,7 +945,8 @@
                         if (ln.prop === &#x27;*&#x27; || ln.prop === key) val = ln(key, target);
                     });
                     return val != undef ? val : Reflect.get(target, key);
-                } else return Reflect.get(target, key);
+                }
+                return Reflect.get(target, key);
             },
             set(target, key, value) {
                 let val, onetime = false;
@@ -1173,6 +1174,26 @@
 
     const eventoptions = &#x27;Click,Input,DoubleClick,Focus,Blur,Keydown,Mousemove,Mousedown,Mouseup,Mouseover,Mouseout&#x27;.split(&#x27;,&#x27;);
 
+    const domLifecycle = {
+        handles: newMap(),
+        events: eventsys(),
+        hasTag(tag) {
+            return domLifecycle.handles.has(tag.toLowerCase());
+        },
+        attached(element) {
+            const handle = domLifecycle.handles.get(element.tagName.toLowerCase());
+            if (handle.attached) handle.attached.call(element, element);
+        },
+        destroyed() {
+            const handle = domLifecycle.handles.get(element.tagName.toLowerCase());
+            if (handle.destroyed) handle.destroyed.call(element, element);
+        },
+        created() {
+            const handle = domLifecycle.handles.get(element.tagName.toLowerCase());
+            if (handle.created) handle.created.call(element, element);
+        }
+    }
+
     function craftElement(name, inner, attributes, extraAttr, stringForm) {
         let element = domManip(doc.createElement(name));
         if (isObj(inner)) {
@@ -1182,26 +1203,23 @@
         if (inner != undef) element.html(inner);
         if (isObj(attributes) || isStr(attributes)) {
             if (isObj(attributes)) Object.keys(attributes).forEach(key =&gt; {
-                if (eventoptions.some(is.eq(key)) &amp;&amp; isFunc(attributes[key])) {
-                    let func = attributes[key];
-                    key == &#x27;DoubleClick&#x27; ? key = &#x27;dblclick&#x27; : key = key.toLowerCase();
-                    element[key + &#x27;handle&#x27;] = on(key, element, func);
-                    delete attributes[key];
+                if (isFunc(attributes[key])) {
+                    if (eventoptions.some(is.eq(key))) {
+                        let func = attributes[key];
+                        key == &#x27;DoubleClick&#x27; ? key = &#x27;dblclick&#x27; : key = key.toLowerCase();
+                        element[key + &#x27;handle&#x27;] = on(key, element, func);
+                        delete attributes[key];
+                    } else if (key === &#x27;created&#x27;) {
+                        domLifecycle.once(&#x27;created&#x27;, attributes[key].bind(element));
+                        delete attributes[key];
+                    }
                 }
             });
             element.setAttr(attributes);
         }
         if (extraAttr != undef) is.Bool(extraAttr) ? stringForm = extraAttr : element.setAttr(extraAttr);
         if (stringForm) element = element.outerHTML;
-        /*
-          // start handling directives early on element lifecycle
-          if (element.attributes) map(element.attributes, attr =&gt; {
-              if (Craft.Directives.has(attr.name)) {
-                  manageAttr(element, attr, attr.textContent, &#x27;&#x27;, true);
-              }
-          });
-        */
-
+        if (is.Node(element) &amp;&amp; domLifecycle.hasTag(element.tagName)) domLifecycle.emit(&#x27;created&#x27;, element);
         return element;
     }
 
@@ -1545,7 +1563,32 @@
                 delete element.state.binder;
             }
         };
+
+
+        element.lifecycle = {
+            inserted(func) {
+                return domLifecycle.once(&#x27;attached&#x27;, el =&gt; {
+                    if (el === element) func.call(element, element);
+                })
+            },
+            created(func) {
+                return domLifecycle.once(&#x27;created&#x27;, el =&gt; {
+                    if (el === element) func.call(element, element);
+                });
+            },
+            destroyed(func) {
+                return domLifecycle.once(&#x27;destroyed&#x27;, el =&gt; {
+                    if (el === element) func.call(element, element);
+                });
+            },
+            attr(name, func) {
+                if(isFunc(name)) func = name;
+                return element.state.on(&#x27;attr&#x27; + (isStr(name) ? &#x27;:&#x27; + name : &#x27;&#x27;), func.bind(element));
+            }
+        };
+
         /**
+         *
          * replaces a Node with another node provided as a parameter/argument
          * @method replace
          * @for dom
@@ -1658,10 +1701,6 @@
         element.on = (eventType, func) =&gt; on(eventType, element, func);
 
         element.emit = element.state.emit;
-
-        element.newSetGet(&#x27;ondestroy&#x27;, fn =&gt; {
-            if (isFunc(fn)) element.state.on(&#x27;destroy&#x27;, fn);
-        });
 
         function evlt(type) {
             return (fn, ltype) =&gt; (ltype ? once : on)(type, element, fn);
@@ -1943,7 +1982,6 @@
             }
             return element;
         };
-        element.observeAttrs = func =&gt; element.state.on(&#x27;attr&#x27;, func.bind(element));
 
         return element;
     }
@@ -2657,7 +2695,7 @@
             });
         },
         /**
-         * Promise that resolves when the DOM and WebComponents are all finished loading
+         * Promise that resolves when the DOM and WebdomLifecycle are all finished loading
          * @property WhenReady
          * @type {Promise}
          * @for Craft
@@ -2840,45 +2878,40 @@
                     if (!key.includes(&#x27;__&#x27;)) config[key] = componentclass[key];
                 });
             }
-            let element = Object.create(HTMLElement.prototype),
-                settings = {},
-                dm;
-            element.createdCallback = function () {
-                let el = dom(this),
-                    dealtWith = [];
-                for (let key in config) {
-                    if (!dealtWith.includes(key)) {
-                        if (key.includes(&#x27;set_&#x27;)) {
-                            let sgKey = key.split(&#x27;_&#x27;)[1];
-                            dealtWith.push(key, &#x27;get_&#x27; + sgKey);
-                            el.newSetGet(sgKey, config[key], config[&#x27;get_&#x27; + sgKey]);
-                        } else if (key.includes(&#x27;get_&#x27;)) {
-                            let sgKey = key.split(&#x27;_&#x27;)[1];
-                            dealtWith.push(key, &#x27;set_&#x27; + sgKey);
-                            el.newSetGet(sgKey, (isFunc(config[&#x27;set_&#x27; + sgKey]) ? config[&#x27;set_&#x27; + sgKey] : noop), config[key]);
+            const settings = {
+                Instantiated: false,
+                created(el) {
+                    let dealtWith = [];
+                    for (let key in config) {
+                        if (!dealtWith.includes(key)) {
+                            if (key.includes(&#x27;set_&#x27;)) {
+                                let sgKey = key.split(&#x27;_&#x27;)[1];
+                                dealtWith.push(key, &#x27;get_&#x27; + sgKey);
+                                el.newSetGet(sgKey, config[key], config[&#x27;get_&#x27; + sgKey]);
+                            } else if (key.includes(&#x27;get_&#x27;)) {
+                                let sgKey = key.split(&#x27;_&#x27;)[1];
+                                dealtWith.push(key, &#x27;set_&#x27; + sgKey);
+                                el.newSetGet(sgKey, (isFunc(config[&#x27;set_&#x27; + sgKey]) ? config[&#x27;set_&#x27; + sgKey] : noop), config[key]);
+                            } else if ([&#x27;inserted&#x27;, &#x27;created&#x27;, &#x27;destroyed&#x27;, &#x27;attr&#x27;].every(is.eq(key))) {
+                                key.toLowerCase() == &#x27;css&#x27; ? Craft.addCSS(config[key]) : defineprop(el, key, getpropdescriptor(config, key));
+                            }
                         }
                     }
-                }
 
-                if (isFunc(config[&#x27;attr&#x27;])) el.observeAttrs(config[&#x27;attr&#x27;]);
-                if (isFunc(config[&#x27;created&#x27;])) return config[&#x27;created&#x27;].call(el);
+                    if (isFunc(config[&#x27;attr&#x27;])) el.lifecycle.attr(config[&#x27;attr&#x27;]);
+                    settings.Instantiated = true;
+                },
+                attached(el) {
+                    if (!el.__DOMM) el = dom(el);
+                    if (!settings.Instantiated) settings.created.call(el, el);
+                    if (isFunc(config[&#x27;inserted&#x27;])) config[&#x27;inserted&#x27;].call(el, el);
+                },
+                destroyed(el) {
+                    if (isFunc(config[&#x27;destroyed&#x27;])) config[&#x27;destroyed&#x27;].call(el, el);
+                }
             };
 
-            for (let key in config) {
-                if (key == &#x27;created&#x27; || key == &#x27;attr&#x27; || (key.includes(&#x27;set_&#x27;) || key.includes(&#x27;get_&#x27;))) continue;
-
-                if (isFunc(config[key]) &amp;&amp; key != &#x27;attr&#x27;) dm = function () { // Adds dom methods to element
-                    return config[key].apply(dom(this), arguments);
-                };
-                key == &#x27;inserted&#x27; ? element.attachedCallback = dm :
-                    key == &#x27;destroyed&#x27; ? element.detachedCallback = dm :
-                    key.toLowerCase() == &#x27;css&#x27; ? Craft.addCSS(config[key]) :
-                    isFunc(config[key]) ? element[key] = dm :
-                    defineprop(element, key, getpropdescriptor(config, key));
-            }
-
-            settings[&#x27;prototype&#x27;] = element;
-            doc.registerElement(tag, settings);
+            domLifecycle.handles.set(tag, settings);
         },
         SyncInput(input, obj, key, onset) {
             if (isStr(input)) input = query(input);
@@ -2950,12 +2983,19 @@
 
     new MutationObserver(muts =&gt; {
         muts.map(mut =&gt; {
-            map(mut.removedNodes, el =&gt; {
-                if (el.state) el.state.emit(&#x27;destroy&#x27;);
+            if(mut.removedNodes.length &gt; 0) map(mut.removedNodes, el =&gt; {
+                if (isEl(el)) {
+                    if (domLifecycle.hasTag(el.tagName)) domLifecycle.destroyed(el);
+                    domLifecycle.events.emit(&#x27;destroyed&#x27;, el);
+                }
             });
-            map(mut.addedNodes, el =&gt; {
+            if(mut.addedNodes.length &gt; 0) map(mut.addedNodes, el =&gt; {
+                if (isEl(el)) {
+                    if (domLifecycle.hasTag(el.tagName)) domLifecycle.attached(el);
+                    domLifecycle.events.emit(&#x27;attatched&#x27;, el);
+                }
                 if (el.attributes) map(el.attributes, attr =&gt; {
-                    if (Craft.Directives.has(attr.name)) manageAttr(el, attr.name, attr.textContent, &#x27;&#x27;, true);
+                    if (Craft.Directives.has(attr.name)) manageAttr(el, attr.name, attr.value, &#x27;&#x27;, true);
                 });
             });
             if (mut.type == &#x27;attributes&#x27; &amp;&amp; isEl(mut.target) &amp;&amp; mut.attributeName != &#x27;style&#x27;)

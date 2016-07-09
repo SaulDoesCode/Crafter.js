@@ -33,7 +33,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/Crafter.js",
-            "line": 1894,
+            "line": 1932,
             "description": "Craft is Crafter.js's Core containing most functionality."
         },
         "is": {
@@ -57,7 +57,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/Crafter.js",
-            "line": 943,
+            "line": 944,
             "description": "Event Handler",
             "params": [
                 {
@@ -89,7 +89,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/Crafter.js",
-            "line": 1120,
+            "line": 1138,
             "description": "Contains several methods for Element Creation"
         },
         "router": {
@@ -101,7 +101,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/Crafter.js",
-            "line": 2171,
+            "line": 2209,
             "description": "Crafter.js' router system",
             "type": "Object",
             "itemtype": "property"
@@ -115,7 +115,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/Crafter.js",
-            "line": 2194,
+            "line": 2232,
             "description": "Create, remove and manage cookies."
         },
         "Socket": {
@@ -127,7 +127,7 @@
             "plugin_for": [],
             "extension_for": [],
             "file": "src/Crafter.js",
-            "line": 2219,
+            "line": 2257,
             "description": "Handles WebSockets in a contained manner with send and recieve methods",
             "is_constructor": 1,
             "params": [
@@ -1407,7 +1407,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 885,
+            "line": 886,
             "description": "Easy way to get a DOM Node or Node within another DOM Node using CSS selectors.",
             "itemtype": "method",
             "name": "query",
@@ -1427,7 +1427,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 897,
+            "line": 898,
             "description": "Easy way to get a DOM NodeList or NodeList within another DOM Node using CSS selectors",
             "itemtype": "method",
             "name": "queryAll",
@@ -1451,7 +1451,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 927,
+            "line": 928,
             "description": "Easy way to loop through Nodes in the DOM using a CSS Selector or a NodeList",
             "itemtype": "method",
             "name": "queryEach",
@@ -1483,7 +1483,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 961,
+            "line": 962,
             "description": "Get or Set the Event type to listen for",
             "itemtype": "property",
             "name": "Type",
@@ -1496,7 +1496,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 981,
+            "line": 982,
             "description": "Activates the EventHandler to start listening for the EventType on the Target/Targets",
             "itemtype": "method",
             "name": "on",
@@ -1505,7 +1505,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 997,
+            "line": 998,
             "description": "De-activates / turns off the EventHandler to stop listening for the EventType on the Target/Targets can still optionally be re-activated with on again",
             "itemtype": "method",
             "name": "off",
@@ -1514,7 +1514,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1013,
+            "line": 1014,
             "description": "once the the Event has been triggered the EventHandler will stop listening for the EventType on the Target/Targets the Handler function will be called only once",
             "itemtype": "method",
             "name": "once",
@@ -1523,7 +1523,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1065,
+            "line": 1066,
             "description": "Starts listening for an EventType on the Target/Targets",
             "itemtype": "method",
             "name": "on",
@@ -1551,7 +1551,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1075,
+            "line": 1076,
             "description": "Starts listening for an EventType on the Target/Targets ONCE after triggering the once event Listener will stop listening",
             "itemtype": "method",
             "name": "once",
@@ -1579,7 +1579,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1125,
+            "line": 1143,
             "description": "craft elements on the fly using this nifty method",
             "itemtype": "method",
             "name": "element",
@@ -1608,7 +1608,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1135,
+            "line": 1153,
             "description": "Makes document fragments also allows attaching nodes or strings that get converted to html.",
             "itemtype": "method",
             "name": "frag",
@@ -1628,7 +1628,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1149,
+            "line": 1167,
             "description": "creates an img element with the options provided",
             "itemtype": "method",
             "name": "img",
@@ -1654,7 +1654,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1211,
+            "line": 1229,
             "description": "Listen for Events on the NodeList",
             "itemtype": "method",
             "name": "elements.on",
@@ -1677,7 +1677,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1220,
+            "line": 1238,
             "description": "add CSS style rules to NodeList",
             "itemtype": "method",
             "name": "elements.css",
@@ -1692,7 +1692,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1255,
+            "line": 1273,
             "description": "removes a specific Attribute from the this.element",
             "itemtype": "method",
             "name": "elements.stripAttr",
@@ -1707,7 +1707,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1269,
+            "line": 1287,
             "description": "checks if the element has a specific Attribute or Attributes",
             "itemtype": "method",
             "name": "hasAttr",
@@ -1727,7 +1727,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1281,
+            "line": 1299,
             "description": "Toggles an attribute on element , optionally add value when toggle is adding attribute.",
             "itemtype": "method",
             "name": "toggleAttr",
@@ -1752,7 +1752,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1295,
+            "line": 1313,
             "description": "Sets or adds an Attribute on elements of a NodeList",
             "itemtype": "method",
             "name": "setAttr",
@@ -1772,7 +1772,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1387,
+            "line": 1405,
             "description": "changes or returns the innerHTML value of a Node",
             "itemtype": "method",
             "name": "element.html",
@@ -1787,7 +1787,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1395,
+            "line": 1413,
             "description": "changes or returns the textContent value of a Node",
             "itemtype": "method",
             "name": "element.Text",
@@ -1802,7 +1802,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1403,
+            "line": 1421,
             "description": "element.bind is what drives data-binding in Crafter.js it binds to values in models and objects",
             "itemtype": "method",
             "name": "element.bind",
@@ -1820,7 +1820,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1460,
+            "line": 1502,
             "description": "replaces a Node with another node provided as a parameter/argument",
             "itemtype": "method",
             "name": "replace",
@@ -1835,7 +1835,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1470,
+            "line": 1513,
             "description": "clones an element it's children, optionally",
             "itemtype": "method",
             "name": "clone",
@@ -1850,7 +1850,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1478,
+            "line": 1521,
             "description": "imports a file and renders it on to the node",
             "itemtype": "method",
             "name": "importview",
@@ -1864,7 +1864,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1526,
+            "line": 1569,
             "description": "append the Element to another node using either a CSS selector or a Node",
             "itemtype": "method",
             "name": "element.appendTo",
@@ -1880,7 +1880,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1538,
+            "line": 1581,
             "description": "prepend the Element to another node using either a CSS selector or a Node",
             "itemtype": "method",
             "name": "element.prependTo",
@@ -1896,7 +1896,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1551,
+            "line": 1594,
             "description": "used to do things with your element without breaking scope",
             "itemtype": "method",
             "name": "element.modify",
@@ -1912,7 +1912,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1562,
+            "line": 1605,
             "description": "Listen for Events on the element or on all the elements in the NodeList",
             "itemtype": "method",
             "name": "element.on",
@@ -1935,7 +1935,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1611,
+            "line": 1650,
             "description": "add CSS style rules to the Element or NodeList",
             "itemtype": "method",
             "name": "element.css",
@@ -1953,7 +1953,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1619,
+            "line": 1658,
             "description": "check if the element has got a specific CSS class",
             "itemtype": "method",
             "name": "element.gotClass",
@@ -1968,7 +1968,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1629,
+            "line": 1668,
             "description": "Add a CSS class to the element",
             "itemtype": "method",
             "name": "element.addClass",
@@ -1983,7 +1983,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1641,
+            "line": 1680,
             "description": "removes a specific CSS class from the element",
             "itemtype": "method",
             "name": "element.stripClass",
@@ -1998,7 +1998,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1653,
+            "line": 1692,
             "description": "Toggle a CSS class to the element",
             "itemtype": "method",
             "name": "element.toggleClass",
@@ -2019,7 +2019,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1666,
+            "line": 1705,
             "description": "removes a specific Attribute from the element",
             "itemtype": "method",
             "name": "element.stripAttr",
@@ -2035,7 +2035,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1677,
+            "line": 1716,
             "description": "checks if the element has a specific Attribute or Attributes",
             "itemtype": "method",
             "name": "element.hasAttr",
@@ -2055,7 +2055,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1688,
+            "line": 1727,
             "description": "Sets or adds an Attribute on the element",
             "itemtype": "method",
             "name": "element.setAttr",
@@ -2076,7 +2076,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1707,
+            "line": 1746,
             "description": "Gets the value of an attribute , short alias for element.getAttribute",
             "itemtype": "method",
             "name": "element.getAttr",
@@ -2091,7 +2091,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1717,
+            "line": 1756,
             "description": "Toggles an attribute on element , optionally add value when toggle is adding attribute",
             "itemtype": "method",
             "name": "element.toggleAttr",
@@ -2116,7 +2116,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1733,
+            "line": 1772,
             "description": "Remove the element after a time in milliseconds",
             "itemtype": "method",
             "name": "element.removeAfter",
@@ -2131,7 +2131,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1744,
+            "line": 1783,
             "description": "gets all the sibling elements of the element",
             "itemtype": "property",
             "name": "element.Siblings - array of elements",
@@ -2140,7 +2140,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1756,
+            "line": 1795,
             "description": "gets all the element's dimentions (width,height,left,top,bottom,right)",
             "itemtype": "method",
             "name": "element.getRect",
@@ -2152,7 +2152,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1763,
+            "line": 1802,
             "description": "sets or gets the element's pixel width",
             "itemtype": "property",
             "name": "element.newSetGet",
@@ -2168,7 +2168,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1774,
+            "line": 1813,
             "description": "sets or gets the element's pixel height",
             "itemtype": "property",
             "name": "element.Height",
@@ -2184,7 +2184,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1784,
+            "line": 1823,
             "description": "move the element using either css transforms or plain css possitioning",
             "itemtype": "method",
             "name": "element.move",
@@ -2209,7 +2209,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1801,
+            "line": 1840,
             "description": "performs a query inside the element",
             "itemtype": "method",
             "name": "element.query",
@@ -2228,7 +2228,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1809,
+            "line": 1848,
             "description": "performs a queryAll inside the element",
             "itemtype": "method",
             "name": "element.queryAll",
@@ -2247,7 +2247,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1863,
+            "line": 1901,
             "description": "returns many useful methods for interacting with and manipulating the DOM or creating elements",
             "itemtype": "method",
             "name": "dom",
@@ -2272,7 +2272,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1899,
+            "line": 1937,
             "description": "general Crafter notification event system",
             "type": "{Object}",
             "itemtype": "property",
@@ -2281,7 +2281,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1906,
+            "line": 1944,
             "description": "Returns an object or calls a function with all the differences between two arrays",
             "itemtype": "method",
             "name": "arrDiff",
@@ -2310,7 +2310,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1958,
+            "line": 1996,
             "description": "Compares two arrays and determines if they are the same array",
             "itemtype": "method",
             "name": "sameArray",
@@ -2330,7 +2330,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1972,
+            "line": 2010,
             "description": "Generates arrays of a set length , with values or values generated from functions",
             "itemtype": "method",
             "name": "array",
@@ -2354,7 +2354,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 1989,
+            "line": 2027,
             "description": "Gets all the property keys in any object even the hiden ones",
             "itemtype": "method",
             "name": "getAllKeys",
@@ -2373,7 +2373,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 2003,
+            "line": 2041,
             "description": "flattens, sorts and eliminates doubles from arraylike collections",
             "itemtype": "method",
             "name": "unique",
@@ -2392,7 +2392,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 2011,
+            "line": 2049,
             "description": "Flattens any multidimentional array or arraylike object",
             "itemtype": "method",
             "name": "flatten",
@@ -2411,7 +2411,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 2019,
+            "line": 2057,
             "description": "Gets a value from inside an object using a reference string",
             "itemtype": "method",
             "name": "getDeep",
@@ -2434,7 +2434,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 2035,
+            "line": 2073,
             "description": "Craft.setDeep  is similar to getDeep it uses a string to reference to a value",
             "itemtype": "method",
             "name": "setDeep",
@@ -2464,7 +2464,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 2060,
+            "line": 2098,
             "description": "forEachDeep is used to loop through any multi layered object - (flattens and loops through all enumerable properties in a given object)",
             "itemtype": "method",
             "name": "forEachDeep",
@@ -2492,7 +2492,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 2082,
+            "line": 2120,
             "description": "Converts any text to an inline URL code (good for images , svg , scripts or css)",
             "itemtype": "method",
             "name": "URLfrom",
@@ -2513,7 +2513,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 2113,
+            "line": 2151,
             "description": "Simply clones/duplicates any object or array/arraylike object",
             "itemtype": "method",
             "name": "clone",
@@ -2532,7 +2532,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 2121,
+            "line": 2159,
             "description": "omits values from any arraylike object or string",
             "itemtype": "method",
             "name": "omitFrom",
@@ -2556,7 +2556,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 2140,
+            "line": 2178,
             "description": "Omits values from Objects, Strings and Arraylike objects",
             "itemtype": "method",
             "name": "omit",
@@ -2580,7 +2580,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 2156,
+            "line": 2194,
             "description": "checks which browser you're running",
             "itemtype": "method",
             "name": "isBrowser",
@@ -2599,7 +2599,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 2164,
+            "line": 2202,
             "description": "name of browser and version",
             "type": "{String}",
             "itemtype": "property",
@@ -2608,7 +2608,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 2393,
+            "line": 2431,
             "description": "takes in any string of valid css code and executes it",
             "itemtype": "method",
             "name": "addCSS",
@@ -2623,7 +2623,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 2402,
+            "line": 2440,
             "description": "imports css and executes it",
             "itemtype": "method",
             "name": "importCSS",
@@ -2643,7 +2643,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 2418,
+            "line": 2456,
             "description": "imports fonts and loads them",
             "itemtype": "method",
             "name": "importFont",
@@ -2663,7 +2663,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 2428,
+            "line": 2466,
             "description": "takes in a source then attempts to fetch and execute it",
             "itemtype": "method",
             "name": "loadScript",
@@ -2690,7 +2690,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 2457,
+            "line": 2495,
             "description": "fetches and executes multiple scripts",
             "itemtype": "method",
             "name": "loadScripts",
@@ -2721,7 +2721,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 2477,
+            "line": 2515,
             "description": "determines if string contains capital letters",
             "itemtype": "method",
             "name": "hasCaps",
@@ -2740,7 +2740,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 2485,
+            "line": 2523,
             "description": "determines if string contains numbers",
             "itemtype": "method",
             "name": "hasNums",
@@ -2759,7 +2759,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 2520,
+            "line": 2558,
             "description": "Tail Call Optimization for recursive functions",
             "itemtype": "method",
             "name": "tco",
@@ -2778,7 +2778,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 2540,
+            "line": 2578,
             "description": "converts Objects or URL variable strings to a FormData object",
             "itemtype": "method",
             "name": "toFormData",
@@ -2793,7 +2793,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 2558,
+            "line": 2596,
             "description": "handles scrolling events",
             "itemtype": "method",
             "name": "onScroll",
@@ -2818,8 +2818,8 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 2571,
-            "description": "Promise that resolves when the DOM and WebComponents are all finished loading",
+            "line": 2609,
+            "description": "Promise that resolves when the DOM and WebdomLifecycle are all finished loading",
             "itemtype": "property",
             "name": "WhenReady",
             "type": "{Promise}",
@@ -2831,7 +2831,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 2590,
+            "line": 2628,
             "description": "Create's Crafter.js models",
             "itemtype": "method",
             "name": "model",
@@ -2855,7 +2855,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 2646,
+            "line": 2684,
             "description": "Defines custom attributes aka directives.",
             "itemtype": "method",
             "name": "directive",
@@ -2878,7 +2878,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 2679,
+            "line": 2717,
             "description": "converts camel case strings to dashed strings usefull for css properties and such",
             "itemtype": "method",
             "name": "camelDash",
@@ -2895,7 +2895,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 2689,
+            "line": 2727,
             "description": "formats a number into a measurement of data size (Bytes,KB,GB,TB...)",
             "itemtype": "method",
             "name": "formatBytes",
@@ -2920,7 +2920,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 2713,
+            "line": 2751,
             "description": "Generates random alphanumeric strings. default length of 6 characters",
             "itemtype": "method",
             "name": "randomStr",
@@ -2944,7 +2944,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 2729,
+            "line": 2767,
             "description": "similar to Craft.randomStr in that it generates a unique string , in this case a Unique ID with random alphanumeric strings separated by hyphens",
             "itemtype": "method",
             "name": "GenUID",
@@ -2966,7 +2966,7 @@
         },
         {
             "file": "src/Crafter.js",
-            "line": 2738,
+            "line": 2776,
             "description": "method for creating custom elements configuring their lifecycle's and inheritance\nthe config Object has 7 distinct options ( created , inserted , destroyed , attr, css, set_X and get_X )",
             "itemtype": "method",
             "name": "newComponent",
