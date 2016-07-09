@@ -1,6 +1,6 @@
 (function (root) {
     "use strict";
-    let {
+    const {
         on,
         once,
         dom,
@@ -30,7 +30,7 @@
             });
         },
         unbind(element) {
-            if (element.ripplehandle) element.ripplehandle.off;
+            if (element.ripplehandle) element.ripplehandle.off();
         }
     });
 
@@ -41,14 +41,14 @@
                 par = dom(ripple.parentNode),
                 rect = par.getRect(),
                 diameter = Math.max(rect.width, rect.height);
-            if(ripple.hasAttr('color')) color = ripple.getAttr('color');
+            if (ripple.hasAttr('color')) color = ripple.getAttr('color');
             else if (par.hasAttr("color-accent")) color = par.getAttr("color-accent");
             ripple.css({
                 width: diameter + 'px',
                 height: diameter + 'px',
                 backgroundColor: color || '',
             }).move(parseInt(ripple.Rx) - rect.left - (diameter / 2), parseInt(ripple.Ry) - rect.top - (diameter / 2), !1, !0);
-            anime({
+            Craft.animation({
                 targets: ripple,
                 scale: [0, 2.5],
                 opacity: [.7, 0],
@@ -58,64 +58,17 @@
                     ripple.remove()
                 }
             });
-
         }
     });
-
-    Craft.notification = (msg, state, side, duration) => {
-        if (is.Num(state)) {
-            side = state;
-            duration = side;
-            state = '';
-        }
-
-        if (is.int(side)) {
-            if (is.String(side)) side = Number(side);
-            side = side == 1 ? 'top-left' :
-                side == 2 ? 'top-right' :
-                side == 3 ? 'bottom-left' :
-                side == 4 ? 'bottom-right' :
-                side == 5 ? 'bottom-middle' :
-                side == 6 ? 'top-middle' : 'top-left';
-        }
-
-        let host = query(`.notifications-${side}`);
-        if (host == null) {
-            dom(document.body).prepend(dom.div('', `class=notifications-${side}`));
-            host = query(`.notifications-${side}`);
-        }
-        dom.element('craft-notification', msg, {
-            duration,
-            side,
-            state
-        }).appendTo(host);
-    }
-
-    Craft.newComponent('craft-notification', {
-        inserted() {
-            let note = this;
-            if (note.hasAttr('duration') && parseInt(note.getAttr('duration'), 10) != 0) setTimeout(() => {
-                note.remove()
-            }, parseInt(note.getAttr('duration'), 10) || 3000);
-            if (note.hasAttr('message')) note.html(note.getAttr('message'));
-            note.append(dom.div('X', 'class=notification-close'));
-            note.clickEvent = on('.notification-close', note).Click(e => {
-                note.remove()
-            });
-        },
-        destroyed() {
-            this.clickEvent.off
-        }
-    })
 
     Craft.newComponent('check-box', {
         inserted() {
             let el = this;
-            el.check = el.Click(el.toggle.bind(el));
+            el.Click(el.toggle.bind(el));
             el.colorAccent = color => {
                 el.css({
                     borderColor: color
-                })
+                });
             }
         },
         set_value(val) {
@@ -128,34 +81,24 @@
         },
         toggle(val) {
             this.value = is.Bool(val) ? val : !this.value
-        },
-        destroyed() {
-            this.check.off
         }
     });
 
     Craft.newComponent('toggle-button', {
         inserted() {
             let el = this;
-            el.tclick = el.Click(el.toggle.bind(el));
+            el.Click(el.toggle.bind(el));
             el.toggleAttr('on', el.hasAttr('on')).append(dom.span('', 'class=toggle'));
-        },
-        set_ontoggle(func) {
-            if (is.Func(func)) this.togglefunc = func;
         },
         toggle(on) {
             let el = this;
-            el.toggleAttr('on', is.Bool(on) ? on : void 0);
-            if (is.Def(el.togglefunc)) el.togglefunc(el.on);
+            el.toggleAttr('on', is.Bool(on) ? on : undefined).state.emit('toggle',this.toggled);
         },
-        set_on(v) {
+        set_toggled(v) {
             this.toggle(v);
         },
-        get_on() {
-            return this.hasAttr('on')
-        },
-        destroyed() {
-            this.tclick.off
+        set_toggled() {
+            return this.hasAttr('on');
         }
     });
 
@@ -166,22 +109,20 @@
             el.html("");
             el.append(dom.label(el.getAttr('summary'), 'class=indicator')).append(dom.label(txt, 'class=text'));
             el.newSetGet('open', val => el.toggleAttr('open', val), () => el.hasAttr('open'));
-            el.onClick = on('.indicator', el).Click(e => {
+            on('.indicator', el).Click(e => {
                 el.toggle()
+            });
+            el.lifecycle.attr('open',(name,v,ov,hasAttr) => {
+              el.open = hasAttr;
             });
         },
         toggle(open) {
             this.open = is.Bool(open) ? open : !this.open;
-        },
-        attr(name, oldVal, newVal) {
-            if (name === 'open') this.open = this.hasAttr('open');
-        },
-        destroyed() {
-            this.onClick.off
+            this.state.emit('toggle',this.open);
         }
     });
 
-    let __InputAttributes = ["name", "pattern", "value", "max", "maxlength", "min", "minlength", "size", "autofocus", "autocomplete", "disabled", "form_id", "required"];
+    const __InputAttributes = ["name", "pattern", "value", "max", "maxlength", "min", "minlength", "size", "autofocus", "autocomplete", "disabled", "form_id", "required"];
 
     Craft.newComponent('material-input', {
         inserted() {
@@ -200,7 +141,7 @@
                 console.warn("<material-input> is only for text type inputs it will default to text if wrong type is chosen") :
                 input.setAttr("type", "text");
 
-            __InputAttributes.forEach(attr => {
+            __InputAttributes.map(attr => {
                 if (el.hasAttr(attr)) input.setAttr(attr, el.getAttr(attr));
             });
 
@@ -253,11 +194,11 @@
             element.prepend(dom.span('', 'radio'));
 
             element.CheckGroup = active => {
-                let Group = [];
+                const Group = [];
                 queryEach('radio-button', active.parentNode, rb => {
                     if (rb.hasAttr('checked')) Group.push(rb);
                 });
-                if (Group.length > 1) Group.forEach(rb => {
+                if (Group.length > 1) Group.map(rb => {
                     if (rb != active) rb.checked = false
                 });
             }
@@ -270,8 +211,7 @@
 
             element.Click(e => {
                 element.checked = !element.checked
-            })
-
+            });
         },
         attr(name, val, oldval, hasAttr) {
             let element = this;
@@ -283,18 +223,18 @@
     Craft.directive('tooltip', {
         bind(element, val) {
             queryEach(`.craft-tooltip`, el => {
-                if (el.owner == element) {
-                    el.EventListeners.forEach(ev => {
-                        ev.off
+                if (el._owner == element) {
+                    el.EventListeners.map(ev => {
+                        ev.off();
                     });
                     el.remove();
-                } else if (!is.Def(el.owner)) el.remove();
+                } else if (!is.Def(el._owner)) el.remove();
             });
             let show = !1,
                 tooltip = dom
                 .span(element.getAttr('tooltip') || '', `direction=${element.getAttr('tooltip-direction') || 'right'}&class=craft-tooltip`);
 
-            tooltip.owner = element;
+            tooltip._owner = element;
             tooltip.EventListeners = [];
 
             if (element.hasAttr('ripple')) tooltip.style.borderColor = element.getAttr('ripple');
@@ -302,7 +242,7 @@
 
             tooltip.mover = element.Mousemove(e => {
                 tooltip.move(e.clientX, e.clientY)
-            }).off;
+            }).off();
 
             function toggleTT() {
                 tooltip.style.display = show ? 'block' : 'none';
@@ -313,7 +253,7 @@
 
             tooltip.EventListeners.push(element.Mouseenter(ev => {
                 show = !0;
-                tooltip.mover.on;
+                tooltip.mover.on();
                 if (ev.target !== element || ev.target.parentNode !== element) element.hasAttr('tooltip-delay') ?
                     setTimeout(toggleTT, parseInt(element.getAttr('tooltip-delay'))) :
                     toggleTT();
@@ -321,15 +261,15 @@
             }));
             tooltip.EventListeners.push(element.Mouseleave(ev => {
                 show = !1;
-                tooltip.mover.off;
+                tooltip.mover.off();
                 toggleTT()
             }));
 
-            element.observeAttrs((name, val, oldval, hasAttr) => {
+            element.lifecycle.attr((name, val, oldval, hasAttr) => {
                 if (name === 'tooltip' && hasAttr) tooltip.html(val);
                 else if (name === 'tooltip' && !hasAttr) {
-                    if (is.Def(tooltip.EventListeners)) tooltip.EventListeners.forEach(ev => {
-                        ev.off;
+                    if (is.Def(tooltip.EventListeners)) tooltip.EventListeners.map(ev => {
+                        ev.off();
                     });
                     tooltip.remove()
                 } else if (name === 'tooltip-delay' && hasAttr) setTimeout(toggleTT, parseInt(element.getAttr('tooltip-delay')));
@@ -337,39 +277,6 @@
             });
 
             tooltip.appendTo(document.body);
-        }
-    });
-
-    Craft.directive('movable', {
-        bind(element) {
-            element.style.position = 'fixed';
-            element.mlisteners = [];
-            let rect = element.getRect(),
-                movehandle = query('[movehandle]', element),
-                cx = 0,
-                cy = 0,
-                move = on(window).Mousemove(e => {
-                    element.move(e.clientX - cx + rect.left, e.clientY - cy + rect.top)
-                }).off;
-
-            element.mlisteners.push(on(movehandle == null ? element : movehandle).Mousedown(e => {
-                if (e.button == 1 || e.buttons == 1) {
-                    rect = element.getRect();
-                    cx = e.clientX;
-                    cy = e.clientY;
-                    move.on
-                }
-            }));
-
-            element.mlisteners.push(on(document).Mouseup(e => {
-                move.off
-            }));
-        },
-        unbind(element) {
-          element.mlisteners.forEach(hndl => {
-            hndl.off;
-          });
-          delete element.mlisteners;
         }
     });
 

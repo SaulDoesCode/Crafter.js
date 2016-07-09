@@ -79,9 +79,6 @@
     border-width: 12px 12.5px 0 12.5px;
     border-color: hsl(0, 0%, 93%) transparent transparent transparent;
 }
-[movehandle] {
-    cursor: move;
-}
 ripple-effect {
     display: inline-block;
     position: absolute;
@@ -98,12 +95,12 @@ ripple-effect {
     z-index: 0;
     will-change: unset !important;
 }
-.hz-divider {
+.hz-divider, hz-divider {
     margin: 5px 0;
     border-top: 1px solid hsl(0, 0%, 50%);
     font-size: 0.9em;
 }
-.vert-divider {
+.vert-divider, vert-divider {
     margin: 5px 0;
     border-left: 1px solid hsl(0, 0%, 40%);
 }
@@ -143,84 +140,7 @@ toggle-button:hover {
 toggle-button[on]:hover {
     background: #adeeb7;
 }
-.notifications-top-left, .notifications-top-right, .notifications-top-middle, .notifications-bottom-left, .notifications-bottom-right, .notifications-bottom-middle {
-    position: fixed;
-    width: auto;
-    height: auto;
-    z-index: 50;
-}
-.notifications-top-left {
-    top: 0;
-    left: 0;
-}
-.notifications-top-right {
-    top: 0;
-    right: 0;
-}
-.notifications-top-middle {
-    top: 0;
-    left: 30%;
-    right: 30%;
-    width: 40%;
-}
-.notifications-bottom-left {
-    bottom: 0;
-    left: 0;
-}
-.notifications-bottom-right {
-    bottom: 0;
-    right: 0;
-}
-.notifications-bottom-middle {
-    bottom: 0;
-    left: 30%;
-    right: 30%;
-    width: 40%;
-}
-craft-notification {
-    position: relative;
-    display: block;
-    pointer-events: all;
-    -webkit-pointer-events: all;
-    -moz-pointer-events: all;
-    border-bottom-left-radius: 2px;
-    border-top-left-radius: 2px;
-    margin: 2mm;
-    padding-left: 1mm;
-    padding-right: 6mm;
-    height: 6mm;
-    line-height: 6mm;
-    width: auto;
-    font-size: 0.8em;
-    background: #fff;
-    color: rgb(40, 40, 40);
-    box-shadow: 0 2px 5px rgba(47, 47, 47, 0.17);
-    z-index: 100000;
-}
-craft-notification[state="bad"] {
-    border-left: 4px solid red;
-}
-craft-notification[state="good"] {
-    border-left: 4px solid green;
-}
-craft-notification[state="warning"] {
-    border-left: 4px solid rgb(223, 176, 7);
-}
-craft-notification > .notification-close {
-    position: absolute;
-    text-align: center;
-    right: 0;
-    top: 0;
-    height: 6mm;
-    line-height: 6mm;
-    font-size: 1.2em;
-    width: 6mm;
-    color: red;
-    text-shadow: 0 1px 2px rgba(52, 52, 52, 0.29);
-    cursor: not-allowed;
-    z-index: 5;
-}
-[class^=flatbutton], [class^=pushbutton] {
+[class^=flatbutton] {
     position: relative;
     display: inline-block;
     overflow: hidden;
@@ -307,37 +227,6 @@ button::-moz-focus-inner, input[type='button']::-moz-focus-inner, input[type='su
 }
 .flatbutton-warning:hover {
     background: #dfba1c;
-}
-code {
-    padding: .2rem .5rem;
-    margin: 0 .2rem;
-    font-size: 90%;
-    white-space: nowrap;
-    background: #F1F1F1;
-    border: 1px solid #E1E1E1;
-    border-radius: 4px;
-}
-pre > code {
-    display: block;
-    padding: 1rem 1.5rem;
-    white-space: pre;
-}
-ul {
-    list-style: circle inside;
-}
-ol {
-    list-style: decimal inside;
-}
-ol, ul {
-    padding-left: 0;
-    margin-top: 0;
-}
-ul ul, ul ol, ol ol, ol ul {
-    margin: 1.5rem 0 1.5rem 3rem;
-    font-size: 90%;
-}
-li {
-    margin-bottom: 1rem;
 }
 check-box, radio-button, radio-button > *, material-input, material-input > * {
     box-sizing: border-box;
@@ -604,24 +493,4 @@ material-input > span {
 }
 material-input > span:hover {
     color: red;
-}
-@media all and (max-width:480px) {
-    craft-notification {
-        position: relative;
-        text-align: center;
-        width: 95%;
-        font-size: 0.7em;
-        padding-left: 4mm;
-        margin: 1mm auto;
-    }
-    craft-notification > .notification-close {
-        font-size: 1em;
-    }
-    .notifications-top-left, .notifications-top-right, .notifications-top-middle, .notifications-bottom-left, .notifications-bottom-right, .notifications-bottom-middle {
-        position: relative;
-        width: 100%;
-        left: 0 !important;
-        height: auto;
-        z-index: 50;
-    }
 }

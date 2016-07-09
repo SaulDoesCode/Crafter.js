@@ -1439,33 +1439,46 @@
                 return element;
             }
 
-            let {
-                obj,
-                cutbind,
-                prop,
-                val
-            } = Craft.getPath(bind, true);
-
-            function bindval() {
-                let alt, path = joindot(Craft.omit(cutbind, cutbind[0]));
-                if (!def(val)) val = Craft.getDeep(obj, path);
-                def(val) ? element.html(val) : Craft.setDeep(obj, path, element.html());
-                if (obj.isObservable) element.state.binder = obj.on('$uberset:' + prop, element.html);
-                else alt = val => {
-                    queryEach(`[bind=${bind}]`, el => {
-                        if (val != undef) el.html(val);
-                    });
-                };
-                if (element.isInput) element.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : path, alt);
+            let steps = cutdot(bind);
+            if (!root[steps[0]]) {
+                Craft.modelInit(steps[0]).then(scope => {
+                    let tempscope = scope;
+                    steps = slice(steps,1);
+                    for (const step of steps) {
+                        if (step in tempscope) {
+                            let temp = tempscope.get(step);
+                            if (is.Def(temp) && temp.isObservable) {
+                                tempscope = temp;
+                                continue;
+                            }
+                            if (step === last(step)) {
+                                element.html(temp);
+                                element.state.binder = tempscope.on('$uberset:' + step, element.html);
+                                if (element.isInput) element.SyncInput(tempscope, step);
+                            }
+                        } else {
+                            scope.set(step, element.html());
+                            element.state.binder = scope.on('$uberset:' + step, element.html);
+                            if (element.isInput) element.SyncInput(scope, step);
+                        }
+                    }
+                });
+            } else if (isObj(root[steps[0]])) {
+                const obj = root[steps[0]];
+                const relativePath = joindot(slice(steps, 1));
+                let val = Craft.getDeep(obj, relativePath);
+                if (is.Def(val)) element.html(val);
+                else Craft.setDeep(obj, relativePath);
+                if (element.isInput) {
+                    const alt = value => {
+                        if (value != undef) queryEach(`[bind=${bind}]`, el => {
+                            el.html(value);
+                        });
+                    };
+                    element.SyncInput(obj, relativePath, alt);
+                }
             }
 
-            if (!obj) Craft.modelInit(cutbind[0], scope => {
-                if (scope) {
-                    obj = scope;
-                    bindval();
-                }
-            });
-            else bindval();
             return element;
         };
 
@@ -1494,7 +1507,7 @@
                 });
             },
             attr(name, func) {
-                if(isFunc(name)) func = name;
+                if (isFunc(name)) func = name;
                 return element.state.on('attr' + (isStr(name) ? ':' + name : ''), func.bind(element));
             }
         };
@@ -1971,6 +1984,7 @@
         last,
         first,
         removeFrom,
+        slice,
         cutdot,
         joindot,
         dffstr,
@@ -1987,6 +2001,8 @@
         on,
         once,
         is,
+        has,
+        concatObjects,
         UnHTML(html) {
             return html
                 .replace(/<script[^>]*?>.*?<\/script>/gi, '')
@@ -2131,7 +2147,6 @@
             error.response = response;
             throw error;
         },
-        concatObjects,
         completeAssign(host) {
             slice(arguments, 1).map(source => {
                 let descriptors = Object.keys(source).reduce((descriptors, key) => {
@@ -2147,7 +2162,6 @@
             });
             return target;
         },
-        isObservable: obj => obj.isObservable || false,
         /**
          * Simply clones/duplicates any object or array/arraylike object
          * @method clone
@@ -2173,8 +2187,6 @@
             else args.map(a => Arr = removeFrom(Arr, a));
             return Arr;
         },
-
-        has,
         /**
          * Omits values from Objects, Strings and Arraylike objects
          * @method omit
@@ -2191,6 +2203,7 @@
             });
             return val;
         },
+        dropDupes: arr => arr.filter((item, pos, context) => context.indexOf(item) === pos),
         /**
          * checks which browser you're running
          * @method isBrowser
@@ -2645,10 +2658,18 @@
             throw new Error('Crafter : Model already exists');
         },
         modelInit(name, func) {
-            Craft.Models[name] != undef ? func.call(Craft, Craft.Models[name]) :
-                Craft.Models.once(name, scope => {
-                    func.call(Craft, scope);
-                });
+            if (isFunc(func)) {
+                Craft.Models[name] != undef ? func.call(Craft, Craft.Models[name]) :
+                    Craft.Models.once(name, scope => {
+                        func.call(Craft, scope);
+                    });
+            }
+            return promise(pass => {
+                Craft.Models[name] != undef ? pass(Craft.Models[name]) :
+                    Craft.Models.once(name, scope => {
+                        pass(scope);
+                    });
+            });
         },
         M(key, val) {
             let cutkey = cutdot(key),
@@ -2895,13 +2916,13 @@
 
     new MutationObserver(muts => {
         muts.map(mut => {
-            if(mut.removedNodes.length > 0) map(mut.removedNodes, el => {
+            if (mut.removedNodes.length > 0) map(mut.removedNodes, el => {
                 if (isEl(el)) {
                     if (domLifecycle.hasTag(el.tagName)) domLifecycle.destroyed(el);
                     domLifecycle.events.emit('destroyed', el);
                 }
             });
-            if(mut.addedNodes.length > 0) map(mut.addedNodes, el => {
+            if (mut.addedNodes.length > 0) map(mut.addedNodes, el => {
                 if (isEl(el)) {
                     if (domLifecycle.hasTag(el.tagName)) domLifecycle.attached(el);
                     domLifecycle.events.emit('attatched', el);
@@ -3016,11 +3037,11 @@
         }
     });
 
-    if (typeof define === 'function' && define.amd) define(['Craft', 'craft'], Craft);
+
     // Node. Does not work with strict CommonJS, but
     // only CommonJS-like environments that support module.exports,
     // like Node.
-    else if (typeof module === 'object' && module.exports) module.exports = Craft;
+    if (typeof module === 'object' && module.exports) module.exports = Craft;
     // Browser globals (root is window)
     else root.Craft = Craft;
 

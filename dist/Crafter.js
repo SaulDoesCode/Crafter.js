@@ -2121,6 +2121,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     last: last,
     first: first,
     removeFrom: removeFrom,
+    slice: slice,
     cutdot: cutdot,
     joindot: joindot,
     dffstr: dffstr,
@@ -2358,6 +2359,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           })) delete val[key];
       });
       return val;
+    },
+    dropDupes: function(arr) {
+      return arr.filter(function(item, pos, context) {
+        return context.indexOf(item) === pos;
+      });
     },
     /**
      * checks which browser you're running
@@ -3225,10 +3231,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     if (target.hasAttribute('link')) {
       (target.hasAttribute('newtab') ? root.open : Craft.router.open)(target.getAttribute('link'));
     }
-  });
-  if (typeof define === 'function' && define.amd) define(['Craft', 'craft'], Craft); // Node. Does not work with strict CommonJS, but
+  }); // Node. Does not work with strict CommonJS, but
   // only CommonJS-like environments that support module.exports,
   // like Node.
-  else if ((typeof module === 'undefined' ? 'undefined' : _typeof(module)) === 'object' && module.exports) module.exports = Craft; // Browser globals (root is window)
+  if ((typeof module === 'undefined' ? 'undefined' : _typeof(module)) === 'object' && module.exports) module.exports = Craft; // Browser globals (root is window)
   else root.Craft = Craft; // console.log(performance.now() - perf, 'Crafter.js');
 })(document, self);
