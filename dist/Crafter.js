@@ -999,7 +999,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
             if (ln.prop === '*' || ln.prop === key) _val2 = ln(key, target);
           });
           return _val2 != undef ? _val2 : Reflect.get(target, key);
-        } else return Reflect.get(target, key);
+        }
+        return Reflect.get(target, key);
       },
       set: function(target, key, value) {
         var val = void 0,
@@ -1212,21 +1213,22 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   var on = EvtLT('on'),
     once = EvtLT('once'),
     eventoptions = 'Click,Input,DoubleClick,Focus,Blur,Keydown,Mousemove,Mousedown,Mouseup,Mouseover,Mouseout'.split(','),
-    customElements = {
+    domLifecycle = {
       handles: newMap(),
+      events: eventsys(),
       hasTag: function(tag) {
-        return customElements.handles.has(tag.toLowerCase());
+        return domLifecycle.handles.has(tag.toLowerCase());
       },
       attached: function(element) {
-        var handle = customElements.handles.get(element.tagName.toLowerCase());
+        var handle = domLifecycle.handles.get(element.tagName.toLowerCase());
         if (handle.attached) handle.attached.call(element, element);
       },
       destroyed: function() {
-        var handle = customElements.handles.get(element.tagName.toLowerCase());
+        var handle = domLifecycle.handles.get(element.tagName.toLowerCase());
         if (handle.destroyed) handle.destroyed.call(element, element);
       },
       created: function() {
-        var handle = customElements.handles.get(element.tagName.toLowerCase());
+        var handle = domLifecycle.handles.get(element.tagName.toLowerCase());
         if (handle.created) handle.created.call(element, element);
       }
     };
@@ -1248,18 +1250,23 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     if (inner != undef) element.html(inner);
     if (isObj(attributes) || isStr(attributes)) {
       if (isObj(attributes)) Object.keys(attributes).forEach(function(key) {
-        if (eventoptions.some(is.eq(key)) && isFunc(attributes[key])) {
-          var func = attributes[key];
-          key == 'DoubleClick' ? key = 'dblclick' : key = key.toLowerCase();
-          element[key + 'handle'] = on(key, element, func);
-          delete attributes[key];
+        if (isFunc(attributes[key])) {
+          if (eventoptions.some(is.eq(key))) {
+            var func = attributes[key];
+            key == 'DoubleClick' ? key = 'dblclick' : key = key.toLowerCase();
+            element[key + 'handle'] = on(key, element, func);
+            delete attributes[key];
+          } else if (key === 'created') {
+            domLifecycle.once('created', attributes[key].bind(element));
+            delete attributes[key];
+          }
         }
       });
       element.setAttr(attributes);
     }
     if (extraAttr != undef) is.Bool(extraAttr) ? stringForm = extraAttr : element.setAttr(extraAttr);
     if (stringForm) element = element.outerHTML;
-    if (is.Node(element) && customElements.hasTag(element.tagName)) customElements.emit('created', element);
+    if (is.Node(element) && domLifecycle.hasTag(element.tagName)) domLifecycle.emit('created', element);
     return element;
   }
   /**
@@ -1617,7 +1624,29 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         delete element.state.binder;
       }
     };
+    element.lifecycle = {
+      inserted: function(func) {
+        return domLifecycle.once('attached', function(el) {
+          if (el === element) func.call(element, element);
+        });
+      },
+      created: function(func) {
+        return domLifecycle.once('created', function(el) {
+          if (el === element) func.call(element, element);
+        });
+      },
+      destroyed: function(func) {
+        return domLifecycle.once('destroyed', function(el) {
+          if (el === element) func.call(element, element);
+        });
+      },
+      attr: function(name, func) {
+        if (isFunc(name)) func = name;
+        return element.state.on('attr' + (isStr(name) ? ':' + name : ''), func.bind(element));
+      }
+    };
     /**
+     *
      * replaces a Node with another node provided as a parameter/argument
      * @method replace
      * @for dom
@@ -1726,9 +1755,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return on(eventType, element, func);
     };
     element.emit = element.state.emit;
-    element.newSetGet('ondestroy', function(fn) {
-      if (isFunc(fn)) element.state.on('destroy', fn);
-    });
 
     function evlt(type) {
       return function(fn, ltype) {
@@ -2018,9 +2044,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         delete element[name];
       }
       return element;
-    };
-    element.observeAttrs = function(func) {
-      return element.state.on('attr', func.bind(element));
     };
     return element;
   }
@@ -2793,7 +2816,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       });
     },
     /**
-     * Promise that resolves when the DOM and WebComponents are all finished loading
+     * Promise that resolves when the DOM and WebdomLifecycle are all finished loading
      * @property WhenReady
      * @type {Promise}
      * @for Craft
@@ -3003,7 +3026,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
               }
             }
           }
-          if (isFunc(config['attr'])) el.observeAttrs(config['attr']);
+          if (isFunc(config['attr'])) el.lifecycle.attr(config['attr']);
           settings.Instantiated = true;
         },
         attached: function(el) {
@@ -3015,7 +3038,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           if (isFunc(config['destroyed'])) config['destroyed'].call(el, el);
         }
       };
-      customElements.handles.set(tag, settings);
+      domLifecycle.handles.set(tag, settings);
     },
     SyncInput: function(input, obj, key, onset) {
       if (isStr(input)) input = query(input);
@@ -3091,12 +3114,17 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   }
   new MutationObserver(function(muts) {
     muts.map(function(mut) {
-      map(mut.removedNodes, function(el) {
-        if (el.state) el.state.emit('destroy', el);
-        if (isEl(el) && customElements.hasTag(el.tagName)) customElements.destroyed(el);
+      if (mut.removedNodes.length > 0) map(mut.removedNodes, function(el) {
+        if (isEl(el)) {
+          if (domLifecycle.hasTag(el.tagName)) domLifecycle.destroyed(el);
+          domLifecycle.events.emit('destroyed', el);
+        }
       });
-      map(mut.addedNodes, function(el) {
-        if (isEl(el) && customElements.hasTag(el.tagName)) customElements.attached(el);
+      if (mut.addedNodes.length > 0) map(mut.addedNodes, function(el) {
+        if (isEl(el)) {
+          if (domLifecycle.hasTag(el.tagName)) domLifecycle.attached(el);
+          domLifecycle.events.emit('attatched', el);
+        }
         if (el.attributes) map(el.attributes, function(attr) {
           if (Craft.Directives.has(attr.name)) manageAttr(el, attr.name, attr.value, '', true);
         });
