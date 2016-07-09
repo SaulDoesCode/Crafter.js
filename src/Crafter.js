@@ -1443,13 +1443,13 @@
             if (!root[steps[0]]) {
                 Craft.modelInit(steps[0]).then(scope => {
                     let tempscope = scope;
-                    steps = slice(steps,1);
-                    for (const step of steps) {
+                    steps = slice(steps, 1);
+                    steps.map(step => {
                         if (step in tempscope) {
                             let temp = tempscope.get(step);
                             if (is.Def(temp) && temp.isObservable) {
                                 tempscope = temp;
-                                continue;
+                                return;
                             }
                             if (step === last(step)) {
                                 element.html(temp);
@@ -1461,7 +1461,7 @@
                             element.state.binder = scope.on('$uberset:' + step, element.html);
                             if (element.isInput) element.SyncInput(scope, step);
                         }
-                    }
+                    });
                 });
             } else if (isObj(root[steps[0]])) {
                 const obj = root[steps[0]];
@@ -2087,28 +2087,23 @@
             } catch (e) {}
         },
         /**
-         * Craft.setDeep  is similar to getDeep it uses a string to reference to a value
+         * Craft.setDeep  is similar to getDeep it uses a path string to set a value
          * @method setDeep
          * @for Craft
          * @param {Object} obj - the object to set values on
          * @param {String} path - string to reference value by simple dot notation
          * @param {*} value - value to set
-         * @param {Boolean} robj - should the function return the object
          */
-        setDeep(obj, path, val, robj) {
+        setDeep(obj, path, val) {
             try {
-                if (!path.includes('.')) obj.isObservable ? obj.set(path, val) : obj[path] = val;
-                else {
-                    path = cutdot(path);
-                    for (let i = 0, temp = obj, plen = path.length - 1; i < plen; i++) {
-                        if (path[i] in temp) temp = temp[path[i]];
-                        else if (i != plen) temp = (temp.isObservable ? temp.set(path[i], {}) : temp[path[i]] = {});
-                        else temp.isObservable ? temp.set(path[plen], val) : temp[path[plen]] = val;
-                    }
-                }
-                if (robj) return obj;
+                path = cutdot(path);
+                const last = path.length - 1;
+                path.map((step,i) => {
+                    if (obj[step] == undef) obj[step] = {};
+                    last == i ? obj[step] = val : obj = obj[step];
+                });
             } catch (e) {
-                console.warn(`Craft.setDeep : ran into some trouble setting ${path}`);
+                console.warn(`Craft.setDeep : ran into some trouble setting ${path}`, e);
             }
         },
         /**
@@ -2671,35 +2666,12 @@
                     });
             });
         },
-        M(key, val) {
-            let cutkey = cutdot(key),
-                IsValDefined = def(val),
-                modelname = cutkey[0],
-                type = (IsValDefined ? 'set' : 'get') + 'Deep';
+        M(path, val) {
+            path = cutdot(path);
+            const modelname = path[0];
             if (def(Craft.Models[modelname])) {
                 const model = Craft.Models[modelname];
-                return cutkey.length == 1 && !IsValDefined ? model : Craft[type](model, joindot(Craft.omit(cutkey, modelname)), val);
-            }
-        },
-        getPath(path, full) {
-            try {
-                let cutbind = cutdot(path),
-                    prop = last(cutbind),
-                    objaccessor = cutbind[0],
-                    obj = def(Craft.Models[objaccessor]) ? Craft.Models[objaccessor] : Craft.getDeep(root, joindot(Craft.omit(cutbind, prop))),
-                    val = Craft.getDeep(obj, cutbind.length > 1 ? joindot(Craft.omit(cutbind, objaccessor)) : prop);
-                if (full) return {
-                    cutbind,
-                    objaccessor,
-                    path,
-                    prop,
-                    obj,
-                    val
-                };
-                if (def(val)) return val;
-                if (objaccessor === prop && def(obj)) return obj;
-            } catch (e) {
-                return {};
+                return path.length == 1 ? model : Craft[(def(val) ? 'set' : 'get') + 'Deep'](model, joindot(path.slice(1)), val);
             }
         },
         /**
@@ -2843,7 +2815,6 @@
                     if (isFunc(config['destroyed'])) config['destroyed'].call(el, el);
                 }
             };
-
             domLifecycle.handles.set(tag, settings);
         },
         SyncInput(input, obj, key, onset) {
@@ -2941,7 +2912,6 @@
         subtree: true
     });
 
-
     head.appendChild(dom.style('', 'crafterstyles'));
     let TabChange = ta => () => {
         Craft.tabActive = ta;
@@ -2950,6 +2920,12 @@
 
     on('blur', TabChange(false));
     on('focus', TabChange(true));
+
+    on('click', (e, target) => {
+        if (target.hasAttribute('link')) {
+            (target.hasAttribute('newtab') ? root.open : Craft.router.open)(target.getAttribute('link'));
+        }
+    });
 
     Craft.directive('link', {
         bind(element, link) {
@@ -3029,12 +3005,6 @@
     on('hashchange', () => {
         const hash = location.hash;
         Craft.notifier.emit(hash, hash);
-    });
-
-    on('click', (e, target) => {
-        if (target.hasAttribute('link')) {
-            (target.hasAttribute('newtab') ? root.open : Craft.router.open)(target.getAttribute('link'));
-        }
     });
 
 

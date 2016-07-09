@@ -1590,32 +1590,45 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         });
         return element;
       }
-      var _Craft$getPath = Craft.getPath(bind, true),
-        obj = _Craft$getPath.obj,
-        cutbind = _Craft$getPath.cutbind,
-        prop = _Craft$getPath.prop,
-        val = _Craft$getPath.val;
-
-      function bindval() {
-        var alt = void 0,
-          path = joindot(Craft.omit(cutbind, cutbind[0]));
-        if (!def(val)) val = Craft.getDeep(obj, path);
-        def(val) ? element.html(val) : Craft.setDeep(obj, path, element.html());
-        if (obj.isObservable) element.state.binder = obj.on('$uberset:' + prop, element.html);
-        else alt = function(val) {
-          queryEach('[bind=' + bind + ']', function(el) {
-            if (val != undef) el.html(val);
+      var steps = cutdot(bind);
+      if (!root[steps[0]]) {
+        Craft.modelInit(steps[0]).then(function(scope) {
+          var tempscope = scope;
+          steps = slice(steps, 1);
+          steps.map(function(step) {
+            if (step in tempscope) {
+              var temp = tempscope.get(step);
+              if (is.Def(temp) && temp.isObservable) {
+                tempscope = temp;
+                return;
+              }
+              if (step === last(step)) {
+                element.html(temp);
+                element.state.binder = tempscope.on('$uberset:' + step, element.html);
+                if (element.isInput) element.SyncInput(tempscope, step);
+              }
+            } else {
+              scope.set(step, element.html());
+              element.state.binder = scope.on('$uberset:' + step, element.html);
+              if (element.isInput) element.SyncInput(scope, step);
+            }
           });
-        };
-        if (element.isInput) element.SyncInput(obj, cutbind.length == 1 ? cutbind[0] : path, alt);
-      }
-      if (!obj) Craft.modelInit(cutbind[0], function(scope) {
-        if (scope) {
-          obj = scope;
-          bindval();
+        });
+      } else if (isObj(root[steps[0]])) {
+        var obj = root[steps[0]],
+          relativePath = joindot(slice(steps, 1)),
+          _val3 = Craft.getDeep(obj, relativePath);
+        if (is.Def(_val3)) element.html(_val3);
+        else Craft.setDeep(obj, relativePath);
+        if (element.isInput) {
+          var alt = function(value) {
+            if (value != undef) queryEach('[bind=' + bind + ']', function(el) {
+              el.html(value);
+            });
+          };
+          element.SyncInput(obj, relativePath, alt);
         }
-      });
-      else bindval();
+      }
       return element;
     };
     element.unbind = function(bind) {
@@ -2138,6 +2151,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     on: on,
     once: once,
     is: is,
+    has: has,
+    concatObjects: concatObjects,
     UnHTML: function(html) {
       return html.replace(/<script[^>]*?>.*?<\/script>/gi, '').replace(/<style[^>]*?>.*?<\/style>/gi, '').replace(/<![\s\S]*?--[ \t\n\r]*>/gi, '');
     },
@@ -2229,28 +2244,25 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       } catch (e) {}
     },
     /**
-     * Craft.setDeep  is similar to getDeep it uses a string to reference to a value
+     * Craft.setDeep  is similar to getDeep it uses a path string to set a value
      * @method setDeep
      * @for Craft
      * @param {Object} obj - the object to set values on
      * @param {String} path - string to reference value by simple dot notation
      * @param {*} value - value to set
-     * @param {Boolean} robj - should the function return the object
      */
-    setDeep: function(obj, path, val, robj) {
+    setDeep: function(obj, path, val) {
       try {
-        if (!path.includes('.')) obj.isObservable ? obj.set(path, val) : obj[path] = val;
-        else {
+        (function() {
           path = cutdot(path);
-          for (var i = 0, temp = obj, plen = path.length - 1; i < plen; i++) {
-            if (path[i] in temp) temp = temp[path[i]];
-            else if (i != plen) temp = temp.isObservable ? temp.set(path[i], {}) : temp[path[i]] = {};
-            else temp.isObservable ? temp.set(path[plen], val) : temp[path[plen]] = val;
-          }
-        }
-        if (robj) return obj;
+          var last = path.length - 1;
+          path.map(function(step, i) {
+            if (obj[step] == undef) obj[step] = {};
+            last == i ? obj[step] = val : obj = obj[step];
+          });
+        })();
       } catch (e) {
-        console.warn('Craft.setDeep : ran into some trouble setting ' + path);
+        console.warn('Craft.setDeep : ran into some trouble setting ' + path, e);
       }
     },
     /**
@@ -2293,7 +2305,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       error.response = response;
       throw error;
     },
-    concatObjects: concatObjects,
     completeAssign: function(host) {
       slice(arguments, 1).map(function(source) {
         var descriptors = Object.keys(source).reduce(function(descriptors, key) {
@@ -2307,9 +2318,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         Object.defineProperties(target, descriptors);
       });
       return target;
-    },
-    isObservable: function(obj) {
-      return obj.isObservable || false;
     },
     /**
      * Simply clones/duplicates any object or array/arraylike object
@@ -2341,7 +2349,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       });
       return Arr;
     },
-    has: has,
     /**
      * Omits values from Objects, Strings and Arraylike objects
      * @method omit
@@ -2452,7 +2459,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       }
       if (!address.includes('ws://') && !address.includes('wss://')) address = (location.protocol === 'http:' ? 'ws://' : 'wss://') + address;
       if (is.URL(address)) {
-        var _ret3 = function() {
+        var _ret4 = function() {
           var newSock = function() {
               return protocols ? new WebSocket(address, protocols) : new WebSocket(address);
             },
@@ -2510,7 +2517,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
             v: Options
           };
         }();
-        if ((typeof _ret3 === 'undefined' ? 'undefined' : _typeof(_ret3)) === "object") return _ret3.v;
+        if ((typeof _ret4 === 'undefined' ? 'undefined' : _typeof(_ret4)) === "object") return _ret4.v;
       }
     },
     keyhandles: {
@@ -2860,39 +2867,23 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       throw new Error('Crafter : Model already exists');
     },
     modelInit: function(name, func) {
-      Craft.Models[name] != undef ? func.call(Craft, Craft.Models[name]) : Craft.Models.once(name, function(scope) {
-        func.call(Craft, scope);
+      if (isFunc(func)) {
+        Craft.Models[name] != undef ? func.call(Craft, Craft.Models[name]) : Craft.Models.once(name, function(scope) {
+          func.call(Craft, scope);
+        });
+      }
+      return promise(function(pass) {
+        Craft.Models[name] != undef ? pass(Craft.Models[name]) : Craft.Models.once(name, function(scope) {
+          pass(scope);
+        });
       });
     },
-    M: function(key, val) {
-      var cutkey = cutdot(key),
-        IsValDefined = def(val),
-        modelname = cutkey[0],
-        type = (IsValDefined ? 'set' : 'get') + 'Deep';
+    M: function(path, val) {
+      path = cutdot(path);
+      var modelname = path[0];
       if (def(Craft.Models[modelname])) {
         var model = Craft.Models[modelname];
-        return cutkey.length == 1 && !IsValDefined ? model : Craft[type](model, joindot(Craft.omit(cutkey, modelname)), val);
-      }
-    },
-    getPath: function(path, full) {
-      try {
-        var cutbind = cutdot(path),
-          prop = last(cutbind),
-          objaccessor = cutbind[0],
-          obj = def(Craft.Models[objaccessor]) ? Craft.Models[objaccessor] : Craft.getDeep(root, joindot(Craft.omit(cutbind, prop))),
-          _val3 = Craft.getDeep(obj, cutbind.length > 1 ? joindot(Craft.omit(cutbind, objaccessor)) : prop);
-        if (full) return {
-          cutbind: cutbind,
-          objaccessor: objaccessor,
-          path: path,
-          prop: prop,
-          obj: obj,
-          val: _val3
-        };
-        if (def(_val3)) return _val3;
-        if (objaccessor === prop && def(obj)) return obj;
-      } catch (e) {
-        return {};
+        return path.length == 1 ? model : Craft[(def(val) ? 'set' : 'get') + 'Deep'](model, joindot(path.slice(1)), val);
       }
     },
     /**
@@ -3077,7 +3068,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     },
     every: function(time, fn, context, pauseondefocus) {
       if (isFunc(fn)) {
-        var _ret8 = function() {
+        var _ret9 = function() {
           var options = {
             interval: undef,
             on: function() {
@@ -3096,7 +3087,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
             v: options.on()
           };
         }();
-        if ((typeof _ret8 === 'undefined' ? 'undefined' : _typeof(_ret8)) === "object") return _ret8.v;
+        if ((typeof _ret9 === 'undefined' ? 'undefined' : _typeof(_ret9)) === "object") return _ret9.v;
       }
     }
   }; // takes in an affected element and scans it for custom attributes
@@ -3151,6 +3142,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   };
   on('blur', TabChange(false));
   on('focus', TabChange(true));
+  on('click', function(e, target) {
+    if (target.hasAttribute('link')) {
+      (target.hasAttribute('newtab') ? root.open : Craft.router.open)(target.getAttribute('link'));
+    }
+  });
   Craft.directive('link', {
     bind: function(element, link) {
       if (isFunc(element.onlink)) element.state.linkhandle = Craft.router.handle(link, element.onlink.bind(element));
@@ -3226,11 +3222,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   on('hashchange', function() {
     var hash = location.hash;
     Craft.notifier.emit(hash, hash);
-  });
-  on('click', function(e, target) {
-    if (target.hasAttribute('link')) {
-      (target.hasAttribute('newtab') ? root.open : Craft.router.open)(target.getAttribute('link'));
-    }
   }); // Node. Does not work with strict CommonJS, but
   // only CommonJS-like environments that support module.exports,
   // like Node.
