@@ -1117,9 +1117,11 @@
             if (isObj(attributes)) Object.keys(attributes).forEach(key => {
                 if (isFunc(attributes[key])) {
                     if (eventoptions.some(is.eq(key))) {
-                        let func = attributes[key];
+                        const func = attributes[key];
                         key == 'DoubleClick' ? key = 'dblclick' : key = key.toLowerCase();
-                        element[key + 'handle'] = on(key, element, func);
+                        element[key + 'handle'] = on(key, element, function() {
+                          func.apply(element,arguments);
+                        });
                         delete attributes[key];
                     } else if (key === 'created') {
                         domLifecycle.once('created', attributes[key].bind(element));
@@ -2002,6 +2004,7 @@
         once,
         is,
         has,
+        curry,
         concatObjects,
         UnHTML(html) {
             return html
@@ -2099,8 +2102,8 @@
                 path = cutdot(path);
                 const last = path.length - 1;
                 path.map((step,i) => {
-                    if (obj[step] == undef) obj[step] = {};
-                    last == i ? obj[step] = val : obj = obj[step];
+                    if (obj[step] == undef) obj.isObservable ? obj.set(step,{}) : obj[step] = {};
+                    last == i ? obj.isObservable ? obj.set(step,val) : obj[step] = val : obj = obj[step];
                 });
             } catch (e) {
                 console.warn(`Craft.setDeep : ran into some trouble setting ${path}`, e);
@@ -2391,7 +2394,6 @@
                 return result;
             };
         },
-        curry,
         memoize(func, resolver) {
             if (!isFunc(func) || (resolver && !isFunc(resolver))) throw new TypeError('no function');
             let cache = new WeakMap,
