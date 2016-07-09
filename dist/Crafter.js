@@ -132,7 +132,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
    */
   /**
    *  get the first item in an array or arraylike collection
-   *  @method last
+   *  @method first
    *  @for Craft
    *  @param {Array|Arraylike} arr - array or arraylike collection
    *  @return {*} first item in collection
@@ -915,37 +915,36 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     if (!obj) obj = {};
     var listeners = listener(),
       stop = false;
-    return concatObjects(obj, {
-      on: function(type, func) {
-        return listeners.makeHandle(type, func).on();
-      },
-      once: function(type, func) {
-        return listeners.makeHandle(type, func).once();
-      },
-      off: function(type, func) {
-        return listeners.makeHandle(type, func).off();
-      },
-      emit: function(type) {
-        var _arguments = arguments;
-        if (!stop && isStr(type)) {
-          (function() {
-            var args = slice(_arguments, 1);
-            listeners.loop(type, function(handle) {
-              handle.apply(obj, args);
-            });
-          })();
-        } else throw new TypeError('eventsys : you cannot emit that! ' + type);
-      },
-      stopall: function(state) {
-        return stop = isBool(state) ? state : true;
-      },
-      defineHandle: function(name, type) {
-        if (!type) type = name;
-        obj[name] = function(fn, useOnce) {
-          return obj[useOnce ? 'once' : 'on'](type, fn);
-        };
-      }
-    });
+    obj.on = function(type, func) {
+      return listeners.makeHandle(type, func).on();
+    };
+    obj.once = function(type, func) {
+      return listeners.makeHandle(type, func).once();
+    };
+    obj.off = function(type, func) {
+      return listeners.makeHandle(type, func).off();
+    };
+    obj.emit = function(type) {
+      var _arguments = arguments;
+      if (!stop && isStr(type)) {
+        (function() {
+          var args = slice(_arguments, 1);
+          listeners.loop(type, function(handle) {
+            handle.apply(obj, args);
+          });
+        })();
+      } else throw new TypeError('eventsys : you cannot emit that! ' + type);
+    };
+    obj.stopall = function(state) {
+      return stop = isBool(state) ? state : true;
+    };
+    obj.defineHandle = function(name, type) {
+      if (!type) type = name;
+      obj[name] = function(fn, useOnce) {
+        return obj[useOnce ? 'once' : 'on'](type, fn);
+      };
+    };
+    return obj;
   }
   /**
    * Creates observables.
@@ -953,9 +952,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
    * @for Craft
    * @param {Object|Function|Class} obj - object to convert
    */
-  function observable(obj, noEventSys) {
+  function observable(obj) {
     if (!obj) obj = {};
-    if (!noEventSys) obj = eventsys(obj);
+    obj = eventsys(obj);
     var listeners = listener();
     defineprop(obj, 'isObservable', desc(true));
     ['$get', '$set'].map(function(prop) {
@@ -979,16 +978,16 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         return _val != undef ? _val : obj[key];
       } else return obj[key];
     }));
-    defineprop(obj, 'set', desc(function(key, value) {
+    defineprop(obj, 'set', desc(curry(function(key, value) {
       var val = void 0;
       listeners.loop('Set', function(ln) {
         if (ln.prop === '*' || ln.prop === key) ln(key, value, obj, Object.hasOwnProperty(obj, key));
       });
       val = val != undef ? val : value;
       if (isObj(val) && !val.isObservable) val = observable(val);
-      obj.emit('$uberset:' + key, val);
       obj[key] = val;
-    }));
+      obj.emit('$uberset:' + key, val);
+    })));
     for (var _key4 in obj) {
       if (isObj(obj[_key4]) && !obj[_key4].isObservable) obj[_key4] = observable(obj[_key4]);
     }
@@ -1212,7 +1211,25 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
    */
   var on = EvtLT('on'),
     once = EvtLT('once'),
-    eventoptions = 'Click,Input,DoubleClick,Focus,Blur,Keydown,Mousemove,Mousedown,Mouseup,Mouseover,Mouseout'.split(',');
+    eventoptions = 'Click,Input,DoubleClick,Focus,Blur,Keydown,Mousemove,Mousedown,Mouseup,Mouseover,Mouseout'.split(','),
+    customElements = {
+      handles: newMap(),
+      hasTag: function(tag) {
+        return customElements.handles.has(tag.toLowerCase());
+      },
+      attached: function(element) {
+        var handle = customElements.handles.get(element.tagName.toLowerCase());
+        if (handle.attached) handle.attached.call(element, element);
+      },
+      destroyed: function() {
+        var handle = customElements.handles.get(element.tagName.toLowerCase());
+        if (handle.destroyed) handle.destroyed.call(element, element);
+      },
+      created: function() {
+        var handle = customElements.handles.get(element.tagName.toLowerCase());
+        if (handle.created) handle.created.call(element, element);
+      }
+    };
   /**
    * Starts listening for an EventType on the Target/Targets ONCE after triggering the once event Listener will stop listening
    * @method once
@@ -1242,14 +1259,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     }
     if (extraAttr != undef) is.Bool(extraAttr) ? stringForm = extraAttr : element.setAttr(extraAttr);
     if (stringForm) element = element.outerHTML;
-    /*
-             // start handling directives early on element lifecycle
-             if (element.attributes) map(element.attributes, attr => {
-                 if (Craft.Directives.has(attr.name)) {
-                     manageAttr(element, attr, attr.textContent, '', true);
-                 }
-             });
-           */
+    if (is.Node(element) && customElements.hasTag(element.tagName)) customElements.emit('created', element);
     return element;
   }
   /**
@@ -1604,7 +1614,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     element.unbind = function(bind) {
       if (element.state.binder) {
         element.state.binder.off();
-        element.state.binder = undef;
+        delete element.state.binder;
       }
     };
     /**
@@ -1742,18 +1752,18 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       return Craft.onScroll(element, func, pd);
     };
     /* let keypress = code => (fn, type) => evlt('keydown')(element, e => {
-               if (e.which == code || e.keyCode == code) fn(e, element)
-           }, type);
-           element.Enter = keypress(13);
-           element.Escape = keypress(27);
-           element.Delete = keypress(46);
-           element.Space = keypress(32);
-           element.UpArrow = keypress(38);
-           element.DownArrow = keypress(40);
-           element.LeftArrow = keypress(37);
-           element.RightArrow = keypress(39);
+                if (e.which == code || e.keyCode == code) fn(e, element)
+            }, type);
+            element.Enter = keypress(13);
+            element.Escape = keypress(27);
+            element.Delete = keypress(46);
+            element.Space = keypress(32);
+            element.UpArrow = keypress(38);
+            element.DownArrow = keypress(40);
+            element.LeftArrow = keypress(37);
+            element.RightArrow = keypress(39);
 
-           */
+            */
     /**
      * add CSS style rules to the Element or NodeList
      * @method element.css
@@ -2086,13 +2096,15 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     },
     deglove: deglove,
     last: last,
+    first: first,
+    removeFrom: removeFrom,
     cutdot: cutdot,
     joindot: joindot,
     dffstr: dffstr,
     toArr: toArr,
     toInt: toInt,
-    promise: promise,
-    eventsys: eventsys, // dom methods and stuff
+    observable: observable,
+    eventsys: eventsys,
     dom: dom,
     query: query,
     queryAll: queryAll,
@@ -2144,7 +2156,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * Gets all the property keys in any object even the hiden ones
      * @method getAllKeys
      * @for Craft
-     * @param {*} obj - object to list keys fromModel
+     * @param {*} obj - object to list keys
      * @return {Array} - array containing all the property keys
      */
     getAllKeys: function(obj) {
@@ -2187,7 +2199,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     getDeep: function(obj, path) {
       try {
         cutdot(path.replace(/\[(\w+)\]/g, '.$1').replace(/^\./, '')).map(function(step) {
-          return step in obj || root.Reflect && Reflect.has(obj, step) ? obj = obj.isObservable ? obj.get(step) : obj[step] : obj = undef;
+          step in obj ? obj = obj.isObservable ? obj.get(step) : obj[step] : obj = undef;
         });
         return obj;
       } catch (e) {}
@@ -2245,7 +2257,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * Converts any text to an inline URL code (good for images , svg , scripts or css)
      * @method URLfrom
      * @for Craft
-     * @param {String} - content to convert to an inline URL
+     * @param {String} text - content to convert to an inline URL
+     * @param {Object} [type] - additional info to create blob url with
      **/
     URLfrom: function(text, type) {
       return URL.createObjectURL(new Blob([text], type));
@@ -2663,9 +2676,23 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         });
       });
     },
+    /**
+     * determines if string contains capital letters
+     * @method hasCaps
+     * @for Craft
+     * @param {String} str
+     * @return {Boolean}
+     */
     hasCaps: function(str) {
       return slice(str).some(is.Uppercase);
     },
+    /**
+     * determines if string contains numbers
+     * @method hasNums
+     * @for Craft
+     * @param {String} str
+     * @return {Boolean}
+     */
     hasNums: function(str) {
       return (/\d/g.test(str));
     },
@@ -2709,7 +2736,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       day: 86400000,
       year: 365 * 86400000
     },
-    observable: observable,
     Directives: newMap(),
     Models: observable(),
     /**
@@ -2793,23 +2819,14 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {Class} modelclass - Class with constructor to instantiate model
      * @return {Object}
      */
-    model: function(name, modelclass) {
-      if (isStr(name) && !def(Craft.Models[name])) {
-        if (isFunc(modelclass)) {
-          var _ret5 = function() {
-            var scope = Object.create(Craft.observable(modelclass.prototype)),
-              model = new scope.constructor();
-            Craft.Models.set(name, model);
-            Craft.Models.emit(name, scope);
-            if (model.init) Craft.WhenReady.then(function() {
-              model.init();
-            });
-            return {
-              v: model
-            };
-          }();
-          if ((typeof _ret5 === 'undefined' ? 'undefined' : _typeof(_ret5)) === "object") return _ret5.v;
-        }
+    model: function(name, model) {
+      if (isStr(name) && isObj(model) && isFunc(model.init) && !def(Craft.Models[name])) {
+        model = observable(model);
+        model.init.call(model, model);
+        Craft.Models.set(name, model);
+        Craft.Models.emit(name, model);
+        if (model.load) Craft.WhenReady.then(model.load.bind(model));
+        return model;
       }
       throw new Error('Crafter : Model already exists');
     },
@@ -2818,14 +2835,14 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         func.call(Craft, scope);
       });
     },
-    fromModel: function(key, val) {
+    M: function(key, val) {
       var cutkey = cutdot(key),
         IsValDefined = def(val),
-        ck = cutkey[0],
+        modelname = cutkey[0],
         type = (IsValDefined ? 'set' : 'get') + 'Deep';
-      if (def(Craft.Models[ck])) {
-        var model = Craft.Models[ck];
-        return cutkey.length == 1 && !IsValDefined ? Craft.Models[ck] : Craft[type](Craft.Models[ck], joindot(Craft.omit(cutkey, ck)), val);
+      if (def(Craft.Models[modelname])) {
+        var model = Craft.Models[modelname];
+        return cutkey.length == 1 && !IsValDefined ? model : Craft[type](model, joindot(Craft.omit(cutkey, modelname)), val);
       }
     },
     getPath: function(path, full) {
@@ -2967,41 +2984,38 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           });
         })();
       }
-      var element = Object.create(HTMLElement.prototype),
-        settings = {},
-        dm = void 0;
-      element.createdCallback = function() {
-        var el = dom(this),
-          dealtWith = [];
-        for (var _key5 in config) {
-          if (!dealtWith.includes(_key5)) {
-            if (_key5.includes('set_')) {
-              var sgKey = _key5.split('_')[1];
-              dealtWith.push(_key5, 'get_' + sgKey);
-              el.newSetGet(sgKey, config[_key5], config['get_' + sgKey]);
-            } else if (_key5.includes('get_')) {
-              var _sgKey = _key5.split('_')[1];
-              dealtWith.push(_key5, 'set_' + _sgKey);
-              el.newSetGet(_sgKey, isFunc(config['set_' + _sgKey]) ? config['set_' + _sgKey] : noop, config[_key5]);
+      var settings = {
+        Instantiated: false,
+        created: function(el) {
+          var dealtWith = [];
+          for (var _key5 in config) {
+            if (!dealtWith.includes(_key5)) {
+              if (_key5.includes('set_')) {
+                var sgKey = _key5.split('_')[1];
+                dealtWith.push(_key5, 'get_' + sgKey);
+                el.newSetGet(sgKey, config[_key5], config['get_' + sgKey]);
+              } else if (_key5.includes('get_')) {
+                var _sgKey = _key5.split('_')[1];
+                dealtWith.push(_key5, 'set_' + _sgKey);
+                el.newSetGet(_sgKey, isFunc(config['set_' + _sgKey]) ? config['set_' + _sgKey] : noop, config[_key5]);
+              } else if (['inserted', 'created', 'destroyed', 'attr'].every(is.eq(_key5))) {
+                _key5.toLowerCase() == 'css' ? Craft.addCSS(config[_key5]) : defineprop(el, _key5, getpropdescriptor(config, _key5));
+              }
             }
           }
+          if (isFunc(config['attr'])) el.observeAttrs(config['attr']);
+          settings.Instantiated = true;
+        },
+        attached: function(el) {
+          if (!el.__DOMM) el = dom(el);
+          if (!settings.Instantiated) settings.created.call(el, el);
+          if (isFunc(config['inserted'])) config['inserted'].call(el, el);
+        },
+        destroyed: function(el) {
+          if (isFunc(config['destroyed'])) config['destroyed'].call(el, el);
         }
-        if (isFunc(config['attr'])) el.observeAttrs(config['attr']);
-        if (isFunc(config['created'])) return config['created'].call(el);
       };
-      var _loop = function(_key6) {
-        if (_key6 == 'created' || _key6 == 'attr' || _key6.includes('set_') || _key6.includes('get_')) return 'continue';
-        if (isFunc(config[_key6]) && _key6 != 'attr') dm = function() { // Adds dom methods to element
-          return config[_key6].apply(dom(this), arguments);
-        };
-        _key6 == 'inserted' ? element.attachedCallback = dm : _key6 == 'destroyed' ? element.detachedCallback = dm : _key6.toLowerCase() == 'css' ? Craft.addCSS(config[_key6]) : isFunc(config[_key6]) ? element[_key6] = dm : defineprop(element, _key6, getpropdescriptor(config, _key6));
-      };
-      for (var _key6 in config) {
-        var _ret8 = _loop(_key6);
-        if (_ret8 === 'continue') continue;
-      }
-      settings['prototype'] = element;
-      doc.registerElement(tag, settings);
+      customElements.handles.set(tag, settings);
     },
     SyncInput: function(input, obj, key, onset) {
       if (isStr(input)) input = query(input);
@@ -3034,7 +3048,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     },
     every: function(time, fn, context, pauseondefocus) {
       if (isFunc(fn)) {
-        var _ret10 = function() {
+        var _ret8 = function() {
           var options = {
             interval: undef,
             on: function() {
@@ -3053,7 +3067,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
             v: options.on()
           };
         }();
-        if ((typeof _ret10 === 'undefined' ? 'undefined' : _typeof(_ret10)) === "object") return _ret10.v;
+        if ((typeof _ret8 === 'undefined' ? 'undefined' : _typeof(_ret8)) === "object") return _ret8.v;
       }
     }
   }; // takes in an affected element and scans it for custom attributes
@@ -3078,11 +3092,13 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   new MutationObserver(function(muts) {
     muts.map(function(mut) {
       map(mut.removedNodes, function(el) {
-        if (el.state) el.state.emit('destroy');
+        if (el.state) el.state.emit('destroy', el);
+        if (isEl(el) && customElements.hasTag(el.tagName)) customElements.destroyed(el);
       });
       map(mut.addedNodes, function(el) {
+        if (isEl(el) && customElements.hasTag(el.tagName)) customElements.attached(el);
         if (el.attributes) map(el.attributes, function(attr) {
-          if (Craft.Directives.has(attr.name)) manageAttr(el, attr.name, attr.textContent, '', true);
+          if (Craft.Directives.has(attr.name)) manageAttr(el, attr.name, attr.value, '', true);
         });
       });
       if (mut.type == 'attributes' && isEl(mut.target) && mut.attributeName != 'style') manageAttr(mut.target, mut.attributeName, mut.target.getAttribute(mut.attributeName), mut.oldValue, mut.target.hasAttribute(mut.attributeName));
@@ -3131,7 +3147,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       element.bind(bind);
     },
     update: function(element, bind, oldbind) {
-      if (bind != bind) {
+      if (bind != oldbind) {
         element.unbind(oldbind);
         element.bind(bind);
       }
@@ -3142,7 +3158,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   });
   Craft.directive('bind-for', {
     bind: function(element, bind) {
-      var data = Craft.fromModel(bind);
+      var data = Craft.M(bind);
       if (def(data) && data.forEach) {
         (function() {
           var domfrag = dom.frag();
@@ -3179,7 +3195,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   });
   on('click', function(e, target) {
     if (target.hasAttribute('link')) {
-      (target.hasAttr('newtab') ? root.open : Craft.router.open)(target.getAttr('link'));
+      (target.hasAttribute('newtab') ? root.open : Craft.router.open)(target.getAttribute('link'));
     }
   });
   if (typeof define === 'function' && define.amd) define(['Craft', 'craft'], Craft); // Node. Does not work with strict CommonJS, but

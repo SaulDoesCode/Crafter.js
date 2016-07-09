@@ -101,8 +101,8 @@
     if (Br &amp;&amp; (tem = ua.match(/version\/([\.\d]+)/i)) !== null) Br[2] = tem[1];
     Br = (Br ? [Br[1], Br[2]] : [navigator.appName, navigator.appVersion, &#x27;-?&#x27;]).join(&#x27; &#x27;);
 
-    const newMap = () =&gt; new Map;
-    const newSet = () =&gt; new Set;
+    const newMap = () =&gt; new Map,
+        newSet = () =&gt; new Set;
 
     /**
      * Slices any arraylike object.
@@ -131,7 +131,7 @@
     }
 
     // tests arguments with Array.prototype.every;
-    const ta = test =&gt; (...args) =&gt; args.length == 1 ? test(args[0]) : args.length &amp;&amp; args.every(test);
+    const ta = test =&gt; (...args) =&gt; args.length &gt;= 1 &amp;&amp; args.every(test);
 
     /**
      *  get the last item in an array or arraylike collection
@@ -143,7 +143,7 @@
     const last = arr =&gt; arr[arr.length - 1];
     /**
      *  get the first item in an array or arraylike collection
-     *  @method last
+     *  @method first
      *  @for Craft
      *  @param {Array|Arraylike} arr - array or arraylike collection
      *  @return {*} first item in collection
@@ -177,7 +177,7 @@
         isArr = Array.isArray,
         ready = () =&gt; Ready || doc.readyState == &#x27;complete&#x27;,
         promise = func =&gt; new Promise(func),
-        Locs = test =&gt; [location.hash, location.href, location.pathname].some(test),
+        noop = () =&gt; {},
         head = doc.head,
         RegExps = {
             email: /^((([a-z]|\d|[!#\$%&amp;&#x27;\*\+\-\/=\?\^_&#x60;{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&amp;&#x27;\*\+\-\/=\?\^_&#x60;{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))$/i,
@@ -219,7 +219,7 @@
      * @param {Boolean} or - some or every, some by default
      */
     function has(host, value, or) {
-        if (is.Arraylike(host)) return toArr(host)[(!or ? &#x27;every&#x27; : &#x27;some&#x27;)](host.includes.bind(host));
+        if (is.Arraylike(host)) return slice(host)[(!or ? &#x27;every&#x27; : &#x27;some&#x27;)](host.includes.bind(host));
         if (isObj(host)) return Object.prototype.hasOwnProperty.call(host, value);
         if (is.Set(host) || is.Map(host)) return host.has(value);
     }
@@ -269,7 +269,7 @@
      * @for Craft
      * @param {Array|Arraylike} arr - array to join with dots
      */
-    const joindot = arr =&gt; toArr(arr).join(&#x27;.&#x27;);
+    const joindot = arr =&gt; slice(arr).join(&#x27;.&#x27;);
 
 
     /**
@@ -368,7 +368,7 @@
          * @for is
          * @param {...*} args - value/values to test
          */
-        NodeList: ta(nl =&gt; nl instanceof NodeList || is.Arraylike(nl) ? ta(n =&gt; n instanceof Node).apply(null, nl) : false),
+        NodeList: ta(nl =&gt; nl instanceof NodeList || is.Arraylike(nl) &amp;&amp; !is.empty(nl) ? Array.prototype.every.call(nl, n =&gt; n instanceof Node) : false),
         /**
          * Determine if a value is a Number
          * @method Num
@@ -782,7 +782,14 @@
                     if (iterable.hasOwnProperty(i)) func(iterable[i], i, iterable);
         }
     }
-
+    /**
+     * Checks an array&#x27;s length if the array contains only a single item it is returned.
+     * @method deglove
+     * @for Craft
+     * @param {array|arraylike) arr - collection to deglove
+     * @return (array|*)
+     */
+    const deglove = arr =&gt; is.Arraylike(arr) &amp;&amp; arr.length == 1 ? arr[0] : arr;
     /**
      * Method to merge the properties of multiple objects , it can handle getters or setters without breaking them
      * @method concatObjects
@@ -797,19 +804,6 @@
         });
         return host;
     }
-
-    /*
-     * Converts any Query/QueryAll to an Array of Nodes even if there is only one Node , this is error proof when no arguments are present it returns an empty array.
-     * method NodeOrQuerytoArr
-     * param {Node|NodeList|Array|String} val - pass either a CSS Selector string , Node/NodeList or Array of Nodes
-     * param {Node|NodeList|Array|String} within - pass either a CSS Selector string , Node/NodeList or Array of Nodes to search for val in
-     * return {Array}
-     */
-    function NodeOrQuerytoArr(val, within) {
-        if (isStr(val)) val = queryAll(val, within);
-        return is.Node(val) ? [val] : is.NodeList(val) ? toArr(val) : [];
-    }
-
 
     function listener() {
         const container = newMap(),
@@ -881,24 +875,23 @@
         if (!obj) obj = {};
         const listeners = listener();
         let stop = false;
-        return concatObjects(obj, {
-            on: (type, func) =&gt; listeners.makeHandle(type, func).on(),
-            once: (type, func) =&gt; listeners.makeHandle(type, func).once(),
-            off: (type, func) =&gt; listeners.makeHandle(type, func).off(),
-            emit(type) {
-                if (!stop &amp;&amp; isStr(type)) {
-                    const args = slice(arguments, 1);
-                    listeners.loop(type, handle =&gt; {
-                        handle.apply(obj, args);
-                    });
-                } else throw new TypeError(&#x27;eventsys : you cannot emit that! &#x27; + type);
-            },
-            stopall: state =&gt; stop = isBool(state) ? state : true,
-            defineHandle(name, type) {
-                if (!type) type = name;
-                obj[name] = (fn, useOnce) =&gt; obj[useOnce ? &#x27;once&#x27; : &#x27;on&#x27;](type, fn);
-            }
-        });
+        obj.on = (type, func) =&gt; listeners.makeHandle(type, func).on();
+        obj.once = (type, func) =&gt; listeners.makeHandle(type, func).once();
+        obj.off = (type, func) =&gt; listeners.makeHandle(type, func).off();
+        obj.emit = function (type) {
+            if (!stop &amp;&amp; isStr(type)) {
+                const args = slice(arguments, 1);
+                listeners.loop(type, handle =&gt; {
+                    handle.apply(obj, args);
+                });
+            } else throw new TypeError(&#x27;eventsys : you cannot emit that! &#x27; + type);
+        }
+        obj.stopall = state =&gt; stop = isBool(state) ? state : true;
+        obj.defineHandle = (name, type) =&gt; {
+            if (!type) type = name;
+            obj[name] = (fn, useOnce) =&gt; obj[useOnce ? &#x27;once&#x27; : &#x27;on&#x27;](type, fn);
+        }
+        return obj;
     }
     /**
      * Creates observables.
@@ -906,9 +899,9 @@
      * @for Craft
      * @param {Object|Function|Class} obj - object to convert
      */
-    function observable(obj, noEventSys) {
+    function observable(obj) {
         if (!obj) obj = {};
-        if (!noEventSys) obj = eventsys(obj);
+        obj = eventsys(obj);
         const listeners = listener();
         defineprop(obj, &#x27;isObservable&#x27;, desc(true));
         [&#x27;$get&#x27;, &#x27;$set&#x27;].map(prop =&gt; {
@@ -927,21 +920,21 @@
             if (key != &#x27;get&#x27; &amp;&amp; key != &#x27;set&#x27;) {
                 let val;
                 listeners.loop(&#x27;Get&#x27;, ln =&gt; {
-                    if (ln.prop === &#x27;*&#x27; || ln.prop === key) ln.fn(key, obj);
+                    if (ln.prop === &#x27;*&#x27; || ln.prop === key) val = ln(key, obj);
                 });
                 return val != undef ? val : obj[key];
             } else return obj[key];
         }));
-        defineprop(obj, &#x27;set&#x27;, desc((key, value) =&gt; {
+        defineprop(obj, &#x27;set&#x27;, desc(curry((key, value) =&gt; {
             let val;
             listeners.loop(&#x27;Set&#x27;, ln =&gt; {
-                if (ln.prop === &#x27;*&#x27; || ln.prop === key) ln.fn(key, value, obj, Object.hasOwnProperty(obj, key));
+                if (ln.prop === &#x27;*&#x27; || ln.prop === key) ln(key, value, obj, Object.hasOwnProperty(obj, key));
             });
             val = val != undef ? val : value;
             if (isObj(val) &amp;&amp; !val.isObservable) val = observable(val);
-            obj.emit(&#x27;$uberset:&#x27; + key, val);
             obj[key] = val;
-        }));
+            obj.emit(&#x27;$uberset:&#x27; + key, val);
+        })));
         for (let key in obj)
             if (isObj(obj[key]) &amp;&amp; !obj[key].isObservable) obj[key] = observable(obj[key]);
         if (typeof Proxy != &#x27;undefined&#x27;) return new Proxy(obj, {
@@ -949,7 +942,7 @@
                 if (key != &#x27;get&#x27; &amp;&amp; key != &#x27;set&#x27;) {
                     let val;
                     listeners.loop(&#x27;Get&#x27;, ln =&gt; {
-                        if (ln.prop === &#x27;*&#x27; || ln.prop === key) val = ln.fn(key, target);
+                        if (ln.prop === &#x27;*&#x27; || ln.prop === key) val = ln(key, target);
                     });
                     return val != undef ? val : Reflect.get(target, key);
                 } else return Reflect.get(target, key);
@@ -962,8 +955,7 @@
                             value = val;
                             onetime = false;
                         } else onetime = true;
-                        val = ln.multi ? ln.fn(&#x27;set&#x27;, key, value, target, !Reflect.has(target, key)) :
-                            ln.fn(key, value, target, !Reflect.has(target, key));
+                        val = ln(key, value, target, !Reflect.has(target, key));
                     }
                 });
                 val = val != undef ? val : value;
@@ -975,6 +967,65 @@
 
         console.warn(&#x27;This JavaScript Environment does not support Proxy, observables need to use the .set and .get accessors to work&#x27;);
         return obj;
+    }
+
+
+    /**
+     * Easy way to get a DOM Node or Node within another DOM Node using CSS selectors.
+     * @method query
+     * @for Craft
+     * @param {String} selector - CSS selector to query the DOM Node with
+     * @param {Node|String=} element - Optional Node or CSS selector to search within insead of document
+     */
+    function query(selector, element) {
+        if (isStr(element)) element = doc.querySelector(element);
+        return is.Node(element) ? element.querySelector(selector) : doc.querySelector(selector);
+    }
+
+    /**
+     * Easy way to get a DOM NodeList or NodeList within another DOM Node using CSS selectors
+     * @method queryAll
+     * @for Craft
+     * @param {String} selector - CSS selector to query the DOM Nodes with
+     * @param {Node|NodeList|String=} element - Optional Node or CSS selector to search within insead of document
+     * @return {Array} array containing Nodes and/or Elements
+     */
+    function queryAll(selector, element) {
+        if (isStr(element)) element = queryAll(element);
+        let list;
+        if (is.Arraylike(element) &amp;&amp; element.length &gt; 1) {
+            list = [];
+            map(element, el =&gt; {
+                if (isStr(el)) el = query(el);
+                if (is.Node(el)) {
+                    el = queryAll(selector, el);
+                    if (is.NodeList(el)) list.concat(el);
+                }
+            });
+        } else {
+            list = (is.Node(element) ? element : is.NodeList(element) ? element[0] : doc);
+            if (list) {
+                list = list.querySelectorAll(selector);
+                if (list != null) return slice(list);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Easy way to loop through Nodes in the DOM using a CSS Selector or a NodeList
+     * @method queryEach
+     * @for Craft
+     * @param {String|NodeList|Node} selector - CSS selector to query the DOM Nodes with or NodeList to iterate through
+     * @param {Node|String} [element] - Optional Node or CSS selector to search within insead of document
+     * @param {Function} func - function called on each iteration -&gt; &quot;function( Element , index ) {...}&quot;
+     * @param {Boolean} [returnList] - should queryEach also return the list of nodes
+     */
+    function queryEach(selector, element, func, returnList) {
+        if (isFunc(element)) func = element;
+        const list = queryAll(selector, element);
+        if (list) list.forEach(func);
+        if (returnList) return list;
     }
 
     /**
@@ -989,7 +1040,7 @@
     const EventHandler = (EventType, Target, func, Within) =&gt; new function () {
         const evthandler = this;
         evthandler.state = false;
-        Target = (Target !== root &amp;&amp; Target !== doc) ? NodeOrQuerytoArr(Target, Within) : isArr(Target) ? Craft.flatten(Target) : [Target];
+        Target = (Target !== root &amp;&amp; Target !== doc) &amp;&amp; isStr(Target) ? queryAll(Target, Within) : isArr(Target) ? Craft.flatten(Target) : [Target];
         if (isStr(EventType) &amp;&amp; EventType.includes(&#x27;,&#x27;)) EventType = EventType.split(&#x27;,&#x27;);
         if (!isArr(EventType)) EventType = [EventType];
 
@@ -1062,57 +1113,6 @@
             return evthandler.on();
         };
     };
-
-    /**
-     * Easy way to get a DOM Node or Node within another DOM Node using CSS selectors.
-     * @method query
-     * @for Craft
-     * @param {String} selector - CSS selector to query the DOM Node with
-     * @param {Node|string=} element - Optional Node or CSS selector to search within insead of document
-     */
-    function query(selector, element) {
-        if (isStr(element)) element = doc.querySelector(element);
-        return is.Node(element) ? element.querySelector(selector) : doc.querySelector(selector);
-    }
-
-    /**
-     * Easy way to get a DOM NodeList or NodeList within another DOM Node using CSS selectors
-     * @method queryAll
-     * @for Craft
-     * @param {String} selector - CSS selector to query the DOM Nodes with
-     * @param {Node|NodeList|string=} element - Optional Node or CSS selector to search within insead of document
-     * @return {Array} array containing Nodes and/or Elements
-     */
-    function queryAll(selector, element) {
-        if (isStr(element)) element = queryAll(element);
-        let list;
-        if (Craft.len(element) !== 1 &amp;&amp; (isArr(element) || is.NodeList(element))) {
-            list = [];
-            map(element, el =&gt; {
-                if (isStr(el)) el = query(el);
-                if (is.Node(el)) {
-                    el = queryAll(selector, el);
-                    if (is.NodeList(el)) list.concat(toArr(el));
-                }
-            });
-        } else list = is.NodeList(element) ? element[0].querySelectorAll(selector) : is.Node(element) ? element.querySelectorAll(selector) : doc.querySelectorAll(selector);
-        return is.Null(list) ? list : isArr(list) ? list : toArr(list);
-    }
-    /**
-     * Easy way to loop through Nodes in the DOM using a CSS Selector or a NodeList
-     * @method queryEach
-     * @for Craft
-     * @param {String|NodeList|Node} selector - CSS selector to query the DOM Nodes with or NodeList to iterate through
-     * @param {Node|String} [element] - Optional Node or CSS selector to search within insead of document
-     * @param {Function} func - function called on each iteration -&gt; &quot;function( Element , index ) {...}&quot;
-     * @param {Boolean} [returnList] - should queryEach also return the list of nodes
-     */
-    function queryEach(selector, element, func, returnList) {
-        if (isFunc(element)) func = element;
-        const list = NodeOrQuerytoArr(selector, element);
-        list.forEach(func);
-        if (returnList) return list;
-    }
 
     function EventTypes(Target, within, listen) {
         const etype = type =&gt; fn =&gt; EventHandler(type, Target, fn, within)[listen || &#x27;on&#x27;]();
@@ -1292,7 +1292,7 @@
     });
 
     function domNodeList(elements) {
-        Craft.omit(Object.getOwnPropertyNames(Array.prototype), &#x27;length&#x27;).map(method =&gt; {
+        if (!isArr(elements)) removeFrom(Object.getOwnPropertyNames(Array.prototype), &#x27;length&#x27;).map(method =&gt; {
             elements[method] = Array.prototype[method];
         });
 
@@ -1437,7 +1437,6 @@
             if (is.int(i) &amp;&amp; def(elements[i])) return dom(elements[i]);
             else if (elements.includes(i)) return dom(i);
         };
-
         return elements;
     }
 
@@ -1543,7 +1542,7 @@
         element.unbind = bind =&gt; {
             if (element.state.binder) {
                 element.state.binder.off();
-                element.state.binder = undef;
+                delete element.state.binder;
             }
         };
         /**
@@ -1838,7 +1837,7 @@
          */
         defineprop(element, &#x27;Siblings&#x27;, {
             get() {
-                return Craft.omit(element.parentNode.children, element).filter(isEl);
+                return removeFrom(element.parentNode.children, element).filter(isEl);
             }
         });
 
@@ -1905,13 +1904,13 @@
         element.queryAll = selector =&gt; queryAll(selector, element);
 
         element.next = (reset, dm) =&gt; {
-            let sb = toArr(element.parentNode.children),
+            let sb = slice(element.parentNode.children),
                 nextnode = sb.indexOf(element) + 1;
             if (!sb[nextnode]) return reset ? (dm ? dom(sb[0]) : sb[0]) : null;
             return dm ? dom(sb[nextnode]) : sb[nextnode];
         };
         element.previous = (reset, dm) =&gt; {
-            let sb = toArr(element.parentNode.children),
+            let sb = slice(element.parentNode.children),
                 nextnode = sb.indexOf(element) - 1;
             if (!sb[nextnode]) return reset ? (dm ? dom(sb[sb.length - 1]) : sb[sb.length - 1]) : null;
             return dm ? dom(sb[nextnode]) : sb[nextnode];
@@ -1953,27 +1952,23 @@
      * returns many useful methods for interacting with and manipulating the DOM or creating elements
      * @method dom
      * @for Craft
-     * @param {Node|NodeList|string=} element - optional Node, NodeList or CSS Selector that will be affected by the methods returned
-     * @param {Node|string=} within - optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
+     * @param {Node|NodeList|String=} element - optional Node, NodeList or CSS Selector that will be affected by the methods returned
+     * @param {Node|String=} within - optional Node, NodeList or CSS Selector to search in for the element similar to query(element,within)
      * @param {Boolean=} one - even if there are more than one elements matching a selector only return the first one
      */
     function dom(element, within, one) {
-        if (within == true) {
-            one = within;
-            within = null;
-        }
-        if (!one) {
-            if (isStr(element)) element = queryAll(element, within);
+        if (isStr(element)) {
+            element = !one ? queryAll(element, within) : query(element, within);
             if (is.NodeList(element)) {
-                element = toArr(element).filter(isEl);
-                if (element.length != 1) return domNodeList(element);
-                else element = element[0];
+                if (element.length &gt; 1) return domNodeList(element);
+                else if (element.length == 1) element = element[0];
             }
-        } else if (isStr(element)) element = query(element, within);
-        if (is.Node(element)) return !element[&#x27;_DOMM&#x27;] ? domManip(element) : element;
+        }
+        if (is.Node(element)) return element[&#x27;_DOMM&#x27;] ? element : domManip(element);
+        if (is.NodeList(element)) return domNodeList(element);
         return Dom;
     }
-    for (let key in Dom) defineprop(dom, key, getpropdescriptor(Dom, key));
+    dom = concatObjects(dom, Dom);
     if (root.Proxy) dom = new Proxy(dom, {
         get(obj, key) {
             if (!obj.hasOwnProperty(key)) {
@@ -2022,25 +2017,17 @@
                 arrb
             };
         },
-        /**
-         * Checks an array&#x27;s length if the array contains only a single item it is returned.
-         * @method deglove
-         * @for Craft
-         * @param {array|arraylike) arr - collection to deglove
-         * @return (array|*)
-         */
-        deglove: arr =&gt; is.Arraylike(arr) &amp;&amp; arr.length == 1 ? arr[0] : arr,
+        deglove,
         last,
+        first,
+        removeFrom,
         cutdot,
-
         joindot,
         dffstr,
-
         toArr,
         toInt,
-        promise,
+        observable,
         eventsys,
-        // dom methods and stuff
         dom,
         query,
         queryAll,
@@ -2091,7 +2078,7 @@
          * Gets all the property keys in any object even the hiden ones
          * @method getAllKeys
          * @for Craft
-         * @param {*} obj - object to list keys fromModel
+         * @param {*} obj - object to list keys
          * @return {Array} - array containing all the property keys
          */
         getAllKeys(obj) {
@@ -2128,7 +2115,7 @@
         getDeep(obj, path) {
             try {
                 cutdot(path.replace(/\[(\w+)\]/g, &#x27;.$1&#x27;).replace(/^\./, &#x27;&#x27;)).map(step =&gt; {
-                    return step in obj || (root.Reflect &amp;&amp; Reflect.has(obj, step)) ? obj = (obj.isObservable ? obj.get(step) : obj[step]) : obj = undef;
+                    step in obj ? obj = (obj.isObservable ? obj.get(step) : obj[step]) : obj = undef;
                 });
                 return obj;
             } catch (e) {}
@@ -2184,7 +2171,8 @@
          * Converts any text to an inline URL code (good for images , svg , scripts or css)
          * @method URLfrom
          * @for Craft
-         * @param {String} - content to convert to an inline URL
+         * @param {String} text - content to convert to an inline URL
+         * @param {Object} [type] - additional info to create blob url with
          **/
         URLfrom: (text, type) =&gt; URL.createObjectURL(new Blob([text], type)),
         checkStatus(response) {
@@ -2227,14 +2215,12 @@
          * @return {Array|String}
          */
         omitFrom(Arr) {
-            let args = slice(arguments, 1);
+            const args = slice(arguments, 1);
             if (isStr(Arr))
                 args.map(a =&gt; {
                     while (Arr.includes(a)) Arr = Arr.replace(a, &#x27;&#x27;);
                 });
-            else Arr = (is.Arraylike(Arr) ? toArr(Arr) : Arr).filter(e =&gt; {
-                if (!args.some(is.eq(e))) return e;
-            });
+            else args.map(a =&gt; Arr = removeFrom(Arr, a));
             return Arr;
         },
 
@@ -2249,8 +2235,8 @@
          */
         omit(val) {
             if (is.Arraylike(val)) val = Craft.omitFrom.apply(this, arguments);
-            let args = toArr(arguments).slice(1);
-            if (isObj(val) &amp;&amp; !args.some(v =&gt; v == val)) forEach(val, (prop, key) =&gt; {
+            const args = slice(arguments, 1);
+            if (isObj(val) &amp;&amp; !args.includes(val)) forEach(val, (prop, key) =&gt; {
                 if (args.some(v =&gt; v == prop || v == key)) delete val[key];
             });
             return val;
@@ -2279,6 +2265,8 @@
          */
         router: {
             handle(event, func) {
+                const hash = location.hash;
+                if (hash === event) func(event, hash);
                 return Craft.notifier.on(event, func);
             },
             open(link, newtab) {
@@ -2394,7 +2382,7 @@
             spacebar: keyhandle(32)
         },
         after(n, func, ctx) {
-            !isFunc(func) &amp;&amp; isFunc(n) ? func = n : console.error(&#x27;after: no function&#x27;);
+            !isFunc(func) &amp;&amp; isFunc(n) ? func = n : console.error(&#x27;Craft.after: no function&#x27;);
             n = Number.isFinite(n = +n) ? n : 0;
             if (--n &lt; 1) return function () {
                 return func.apply(ctx || this, arguments);
@@ -2574,7 +2562,21 @@
                 });
             });
         },
-        hasCaps: str =&gt; toArr(str).some(is.Uppercase),
+        /**
+         * determines if string contains capital letters
+         * @method hasCaps
+         * @for Craft
+         * @param {String} str
+         * @return {Boolean}
+         */
+        hasCaps: str =&gt; slice(str).some(is.Uppercase),
+        /**
+         * determines if string contains numbers
+         * @method hasNums
+         * @for Craft
+         * @param {String} str
+         * @return {Boolean}
+         */
         hasNums: str =&gt; /\d/g.test(str),
         len(val) {
             try {
@@ -2601,7 +2603,6 @@
             day: 86400000,
             year: 365 * 86400000
         },
-        observable,
         Directives: newMap(),
         Models: observable(),
         /**
@@ -2682,18 +2683,14 @@
          * @param {Class} modelclass - Class with constructor to instantiate model
          * @return {Object}
          */
-        model(name, modelclass) {
-            if (isStr(name) &amp;&amp; !def(Craft.Models[name])) {
-                if (isFunc(modelclass)) {
-                    const scope = Object.create(Craft.observable(modelclass.prototype)),
-                        model = new scope.constructor();
-                    Craft.Models.set(name, model);
-                    Craft.Models.emit(name, scope);
-                    if (model.init) Craft.WhenReady.then(() =&gt; {
-                        model.init();
-                    });
-                    return model;
-                }
+        model(name, model) {
+            if (isStr(name) &amp;&amp; isObj(model) &amp;&amp; isFunc(model.init) &amp;&amp; !def(Craft.Models[name])) {
+                model = observable(model);
+                model.init.call(model, model);
+                Craft.Models.set(name, model);
+                Craft.Models.emit(name, model);
+                if (model.load) Craft.WhenReady.then(model.load.bind(model));
+                return model;
             }
             throw new Error(&#x27;Crafter : Model already exists&#x27;);
         },
@@ -2703,14 +2700,14 @@
                     func.call(Craft, scope);
                 });
         },
-        fromModel(key, val) {
+        M(key, val) {
             let cutkey = cutdot(key),
                 IsValDefined = def(val),
-                ck = cutkey[0],
+                modelname = cutkey[0],
                 type = (IsValDefined ? &#x27;set&#x27; : &#x27;get&#x27;) + &#x27;Deep&#x27;;
-            if (def(Craft.Models[ck])) {
-                const model = Craft.Models[ck];
-                return cutkey.length == 1 &amp;&amp; !IsValDefined ? Craft.Models[ck] : Craft[type](Craft.Models[ck], joindot(Craft.omit(cutkey, ck)), val);
+            if (def(Craft.Models[modelname])) {
+                const model = Craft.Models[modelname];
+                return cutkey.length == 1 &amp;&amp; !IsValDefined ? model : Craft[type](model, joindot(Craft.omit(cutkey, modelname)), val);
             }
         },
         getPath(path, full) {
@@ -2746,24 +2743,24 @@
             if (!Craft.Directives.has(name) &amp;&amp; isObj(handle) &amp;&amp; isFunc(handle.bind)) {
                 Craft.Directives.set(name, handle);
                 Craft.WhenReady.then(() =&gt; {
-                      queryEach(&#x60;[${name}]&#x60;, el =&gt; {
-                          el = dom(el);
-                          if (el.hasAttr(name)) {
-                              if (!is.Set(el.state.directives)) el.state.directives = newSet();
-                              if (!el.state.directives.has(name)) {
-                                  el.state.directives.add(name);
-                                  let directiveChangeDetetor = el.state.on(&#x60;attr:${name}&#x60;, (name, val, oldval, hasAttr) =&gt; {
-                                      if (hasAttr || !def(oldval)) {
-                                          if (isFunc(handle.update)) handle.update.call(el, el, val, oldval, hasAttr);
-                                      } else if (isFunc(handle.unbind)) {
-                                          handle.unbind.call(el, el, val, oldval);
-                                          directiveChangeDetetor.off();
-                                      }
-                                  });
-                                  handle.bind.call(el, el, el.getAttr(name));
-                              }
-                          }
-                      });
+                    queryEach(&#x60;[${name}]&#x60;, el =&gt; {
+                        el = dom(el);
+                        if (el.hasAttr(name)) {
+                            if (!is.Set(el.state.directives)) el.state.directives = newSet();
+                            if (!el.state.directives.has(name)) {
+                                el.state.directives.add(name);
+                                let directiveChangeDetetor = el.state.on(&#x60;attr:${name}&#x60;, (name, val, oldval, hasAttr) =&gt; {
+                                    if (hasAttr || !def(oldval)) {
+                                        if (isFunc(handle.update)) handle.update.call(el, el, val, oldval, hasAttr);
+                                    } else if (isFunc(handle.unbind)) {
+                                        handle.unbind.call(el, el, val, oldval);
+                                        directiveChangeDetetor.off();
+                                    }
+                                });
+                                handle.bind.call(el, el, el.getAttr(name));
+                            }
+                        }
+                    });
                 });
             }
         },
@@ -2858,7 +2855,7 @@
                         } else if (key.includes(&#x27;get_&#x27;)) {
                             let sgKey = key.split(&#x27;_&#x27;)[1];
                             dealtWith.push(key, &#x27;set_&#x27; + sgKey);
-                            el.newSetGet(sgKey, (isFunc(config[&#x27;set_&#x27; + sgKey]) ? config[&#x27;set_&#x27; + sgKey] : x =&gt; {}), config[key]);
+                            el.newSetGet(sgKey, (isFunc(config[&#x27;set_&#x27; + sgKey]) ? config[&#x27;set_&#x27; + sgKey] : noop), config[key]);
                         }
                     }
                 }
@@ -2931,7 +2928,6 @@
         }
     };
 
-
     // takes in an affected element and scans it for custom attributes
     // then handles the custom attribute if it was registered with Craft.directive
     function manageAttr(el, name, val, oldval, hasAttr) {
@@ -2984,7 +2980,8 @@
 
     Craft.directive(&#x27;link&#x27;, {
         bind(element, link) {
-            if (isFunc(element.onlink)) element.state.linkhandle = Craft.router.handle(link, element.onlink);
+            if (isFunc(element.onlink)) element.state.linkhandle = Craft.router.handle(link, element.onlink.bind(element));
+
             function makeLinkHandler(fn) {
                 if (isFunc(fn)) {
                     if (element.state.linkhandle) element.state.linkhandle.off();
@@ -3010,7 +3007,7 @@
             element.bind(bind);
         },
         update(element, bind, oldbind) {
-            if (bind != bind) {
+            if (bind != oldbind) {
                 element.unbind(oldbind);
                 element.bind(bind);
             }
@@ -3022,7 +3019,7 @@
 
     Craft.directive(&#x27;bind-for&#x27;, {
         bind(element, bind) {
-            let data = Craft.fromModel(bind);
+            let data = Craft.M(bind);
             if (def(data) &amp;&amp; data.forEach) {
                 let domfrag = dom.frag();
                 element = element.stripAttr(&#x27;bind-for&#x27;);
@@ -3057,14 +3054,13 @@
     !ready() ? once(&#x27;DOMContentLoaded&#x27;, doc, init) : init();
 
     on(&#x27;hashchange&#x27;, () =&gt; {
-        Craft.notifier.emit(location.hash, location);
+        const hash = location.hash;
+        Craft.notifier.emit(hash, hash);
     });
 
     on(&#x27;click&#x27;, (e, target) =&gt; {
-        if (target.attributes) {
-            map(target.attributes, attr =&gt; {
-                if (attr.name == &#x27;link&#x27;)(target.hasAttr(&#x27;newtab&#x27;) ? open : Craft.router.open)(attr.value);
-            });
+        if (target.hasAttribute(&#x27;link&#x27;)) {
+            (target.hasAttribute(&#x27;newtab&#x27;) ? root.open : Craft.router.open)(target.getAttribute(&#x27;link&#x27;));
         }
     });
 

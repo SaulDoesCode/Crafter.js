@@ -99,48 +99,50 @@ Crafter.js allows the creation of scoped models to manipulate your app, models e
 ```javascript
   const {dom} = Craft;
   // Create models using Craft.model
-  // Craft.model( name , class )
-  Craft.model('MyModel', class {
-    constructor() {
-      const scope = this;
-      scope.headline = 'New Headline , this Just in...';
-      scope.articles = ['article1...','article2...','article3...','article4...','article5...'];
+  // Craft.model( name , object )
+  Craft.model('MyModel', {
+      init(scope) {
+
+        scope.headline = 'New Headline , this Just in...';
+        scope.articles = ['article1...','article2...','article3...','article4...','article5...'];
 
 
-      // you can listen for changes on model scope variables
-      scope.$set('newinfo',(key,value,object,isValueNew) => {
-        if(isValueNew) console.log('new info recieved!')
-      });
+        // you can listen for changes on model scope variables
+        scope.$set('newinfo',(key,value,object,isValueNew) => {
+          if(isValueNew) console.log('new info recieved!')
+        });
 
-      // if your browser does not support Proxy and Reflect
-      // you'd have to use ember observable style accessors
-      // .get(key) and .set(key,val)
-      scope.set('newinfo','I will change when there is new info');
-    }
-    init() {
-      const scope = this;
-      // do any dom manips or post DOM load code here
+        // if your browser does not support Proxy and Reflect
+        // you'd have to use ember observable style accessors
+        // .get(key) and .set(key,val)
+        scope.set('newinfo','I will change when there is new info');
 
-      // create article element with class news-article,
-      // bind it then append it to a <div class="news">...</div>
-      dom.article('class=news-article').bind('MyModel.articles[2]').appendTo('div.news');
-    }
+        console.log(this === scope);
+      },
+      load() {
+        const scope = this;
+        // do any dom manips or post DOM load code here
+
+        // create article element with class news-article,
+        // bind it then append it to a <div class="news">...</div>
+        dom.article('class=news-article').bind('MyModel.articles[2]').appendTo('div.news');
+      }
   });
 
-  // You can assign to variables from the model scope via Craft.fromModel
-  Craft.fromModel('MyModel.newinfo','a new piece of info!');
+  // You can assign to variables from the model scope via Craft.M
+  Craft.M('MyModel.newinfo','a new piece of info!');
   // this is also possible
   // however if proxy and reflect is not available in your browser
-  Craft.fromModel('MyModel').newinfo = 'a new piece of info!';
+  Craft.M('MyModel').newinfo = 'a new piece of info!';
   // then you'd have to use the .set(key,val) method
-  Craft.fromModel('MyModel').set('newinfo','a new piece of info!');
+  Craft.M('MyModel').set('newinfo','a new piece of info!');
 
-  // Easily access variables from a model's scope using Craft.fromModel
-  Craft.fromModel('MyModel.headline'); // -> 'New Headline , this Just in...'
-  Craft.fromModel('MyModel.articles[3]'); // -> 'article4...'
-  // you may also use Craft.fromModel to set values
-  Craft.fromModel('MyModel.headline','New Headline');
-  Craft.fromModel('MyModel.articles[3]','new article');
+  // Easily access variables from a model's scope using Craft.M
+  Craft.M('MyModel.headline'); // -> 'New Headline , this Just in...'
+  Craft.M('MyModel.articles[3]'); // -> 'article4...'
+  // you may also use Craft.M to set values
+  Craft.M('MyModel.headline','New Headline');
+  Craft.M('MyModel.articles[3]','new article');
 ```
 
 You can easily bind scope variables to the dom using the bind="ModelName.xyz" attribute and all your changes will reflect in the dom

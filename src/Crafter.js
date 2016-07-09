@@ -55,7 +55,7 @@
     const last = arr => arr[arr.length - 1];
     /**
      *  get the first item in an array or arraylike collection
-     *  @method last
+     *  @method first
      *  @for Craft
      *  @param {Array|Arraylike} arr - array or arraylike collection
      *  @return {*} first item in collection
@@ -280,7 +280,7 @@
          * @for is
          * @param {...*} args - value/values to test
          */
-        NodeList: ta(nl => nl instanceof NodeList || is.Arraylike(nl) && !is.empty(nl) ? Array.prototype.every.call(nl,n => n instanceof Node) : false),
+        NodeList: ta(nl => nl instanceof NodeList || is.Arraylike(nl) && !is.empty(nl) ? Array.prototype.every.call(nl, n => n instanceof Node) : false),
         /**
          * Determine if a value is a Number
          * @method Num
@@ -787,24 +787,23 @@
         if (!obj) obj = {};
         const listeners = listener();
         let stop = false;
-        return concatObjects(obj, {
-            on: (type, func) => listeners.makeHandle(type, func).on(),
-            once: (type, func) => listeners.makeHandle(type, func).once(),
-            off: (type, func) => listeners.makeHandle(type, func).off(),
-            emit(type) {
-                if (!stop && isStr(type)) {
-                    const args = slice(arguments, 1);
-                    listeners.loop(type, handle => {
-                        handle.apply(obj, args);
-                    });
-                } else throw new TypeError('eventsys : you cannot emit that! ' + type);
-            },
-            stopall: state => stop = isBool(state) ? state : true,
-            defineHandle(name, type) {
-                if (!type) type = name;
-                obj[name] = (fn, useOnce) => obj[useOnce ? 'once' : 'on'](type, fn);
-            }
-        });
+        obj.on = (type, func) => listeners.makeHandle(type, func).on();
+        obj.once = (type, func) => listeners.makeHandle(type, func).once();
+        obj.off = (type, func) => listeners.makeHandle(type, func).off();
+        obj.emit = function (type) {
+            if (!stop && isStr(type)) {
+                const args = slice(arguments, 1);
+                listeners.loop(type, handle => {
+                    handle.apply(obj, args);
+                });
+            } else throw new TypeError('eventsys : you cannot emit that! ' + type);
+        }
+        obj.stopall = state => stop = isBool(state) ? state : true;
+        obj.defineHandle = (name, type) => {
+            if (!type) type = name;
+            obj[name] = (fn, useOnce) => obj[useOnce ? 'once' : 'on'](type, fn);
+        }
+        return obj;
     }
     /**
      * Creates observables.
@@ -812,9 +811,9 @@
      * @for Craft
      * @param {Object|Function|Class} obj - object to convert
      */
-    function observable(obj, noEventSys) {
+    function observable(obj) {
         if (!obj) obj = {};
-        if (!noEventSys) obj = eventsys(obj);
+        obj = eventsys(obj);
         const listeners = listener();
         defineprop(obj, 'isObservable', desc(true));
         ['$get', '$set'].map(prop => {
@@ -838,16 +837,16 @@
                 return val != undef ? val : obj[key];
             } else return obj[key];
         }));
-        defineprop(obj, 'set', desc((key, value) => {
+        defineprop(obj, 'set', desc(curry((key, value) => {
             let val;
             listeners.loop('Set', ln => {
                 if (ln.prop === '*' || ln.prop === key) ln(key, value, obj, Object.hasOwnProperty(obj, key));
             });
             val = val != undef ? val : value;
             if (isObj(val) && !val.isObservable) val = observable(val);
-            obj.emit('$uberset:' + key, val);
             obj[key] = val;
-        }));
+            obj.emit('$uberset:' + key, val);
+        })));
         for (let key in obj)
             if (isObj(obj[key]) && !obj[key].isObservable) obj[key] = observable(obj[key]);
         if (typeof Proxy != 'undefined') return new Proxy(obj, {
@@ -858,7 +857,8 @@
                         if (ln.prop === '*' || ln.prop === key) val = ln(key, target);
                     });
                     return val != undef ? val : Reflect.get(target, key);
-                } else return Reflect.get(target, key);
+                }
+                return Reflect.get(target, key);
             },
             set(target, key, value) {
                 let val, onetime = false;
@@ -916,11 +916,11 @@
                 }
             });
         } else {
-          list = (is.Node(element) ? element : is.NodeList(element) ? element[0] : doc);
-          if(list) {
-            list = list.querySelectorAll(selector);
-            if(list != null) return slice(list);
-          }
+            list = (is.Node(element) ? element : is.NodeList(element) ? element[0] : doc);
+            if (list) {
+                list = list.querySelectorAll(selector);
+                if (list != null) return slice(list);
+            }
         }
         return null;
     }
@@ -937,7 +937,7 @@
     function queryEach(selector, element, func, returnList) {
         if (isFunc(element)) func = element;
         const list = queryAll(selector, element);
-        if(list) list.forEach(func);
+        if (list) list.forEach(func);
         if (returnList) return list;
     }
 
@@ -1086,6 +1086,26 @@
 
     const eventoptions = 'Click,Input,DoubleClick,Focus,Blur,Keydown,Mousemove,Mousedown,Mouseup,Mouseover,Mouseout'.split(',');
 
+    const domLifecycle = {
+        handles: newMap(),
+        events: eventsys(),
+        hasTag(tag) {
+            return domLifecycle.handles.has(tag.toLowerCase());
+        },
+        attached(element) {
+            const handle = domLifecycle.handles.get(element.tagName.toLowerCase());
+            if (handle.attached) handle.attached.call(element, element);
+        },
+        destroyed() {
+            const handle = domLifecycle.handles.get(element.tagName.toLowerCase());
+            if (handle.destroyed) handle.destroyed.call(element, element);
+        },
+        created() {
+            const handle = domLifecycle.handles.get(element.tagName.toLowerCase());
+            if (handle.created) handle.created.call(element, element);
+        }
+    }
+
     function craftElement(name, inner, attributes, extraAttr, stringForm) {
         let element = domManip(doc.createElement(name));
         if (isObj(inner)) {
@@ -1095,26 +1115,23 @@
         if (inner != undef) element.html(inner);
         if (isObj(attributes) || isStr(attributes)) {
             if (isObj(attributes)) Object.keys(attributes).forEach(key => {
-                if (eventoptions.some(is.eq(key)) && isFunc(attributes[key])) {
-                    let func = attributes[key];
-                    key == 'DoubleClick' ? key = 'dblclick' : key = key.toLowerCase();
-                    element[key + 'handle'] = on(key, element, func);
-                    delete attributes[key];
+                if (isFunc(attributes[key])) {
+                    if (eventoptions.some(is.eq(key))) {
+                        let func = attributes[key];
+                        key == 'DoubleClick' ? key = 'dblclick' : key = key.toLowerCase();
+                        element[key + 'handle'] = on(key, element, func);
+                        delete attributes[key];
+                    } else if (key === 'created') {
+                        domLifecycle.once('created', attributes[key].bind(element));
+                        delete attributes[key];
+                    }
                 }
             });
             element.setAttr(attributes);
         }
         if (extraAttr != undef) is.Bool(extraAttr) ? stringForm = extraAttr : element.setAttr(extraAttr);
         if (stringForm) element = element.outerHTML;
-        /*
-          // start handling directives early on element lifecycle
-          if (element.attributes) map(element.attributes, attr => {
-              if (Craft.Directives.has(attr.name)) {
-                  manageAttr(element, attr, attr.textContent, '', true);
-              }
-          });
-        */
-
+        if (is.Node(element) && domLifecycle.hasTag(element.tagName)) domLifecycle.emit('created', element);
         return element;
     }
 
@@ -1205,7 +1222,7 @@
     });
 
     function domNodeList(elements) {
-        if(!isArr(elements)) removeFrom(Object.getOwnPropertyNames(Array.prototype), 'length').map(method => {
+        if (!isArr(elements)) removeFrom(Object.getOwnPropertyNames(Array.prototype), 'length').map(method => {
             elements[method] = Array.prototype[method];
         });
 
@@ -1455,10 +1472,35 @@
         element.unbind = bind => {
             if (element.state.binder) {
                 element.state.binder.off();
-                element.state.binder = undef;
+                delete element.state.binder;
             }
         };
+
+
+        element.lifecycle = {
+            inserted(func) {
+                return domLifecycle.once('attached', el => {
+                    if (el === element) func.call(element, element);
+                })
+            },
+            created(func) {
+                return domLifecycle.once('created', el => {
+                    if (el === element) func.call(element, element);
+                });
+            },
+            destroyed(func) {
+                return domLifecycle.once('destroyed', el => {
+                    if (el === element) func.call(element, element);
+                });
+            },
+            attr(name, func) {
+                if(isFunc(name)) func = name;
+                return element.state.on('attr' + (isStr(name) ? ':' + name : ''), func.bind(element));
+            }
+        };
+
         /**
+         *
          * replaces a Node with another node provided as a parameter/argument
          * @method replace
          * @for dom
@@ -1571,10 +1613,6 @@
         element.on = (eventType, func) => on(eventType, element, func);
 
         element.emit = element.state.emit;
-
-        element.newSetGet('ondestroy', fn => {
-            if (isFunc(fn)) element.state.on('destroy', fn);
-        });
 
         function evlt(type) {
             return (fn, ltype) => (ltype ? once : on)(type, element, fn);
@@ -1856,7 +1894,6 @@
             }
             return element;
         };
-        element.observeAttrs = func => element.state.on('attr', func.bind(element));
 
         return element;
     }
@@ -1870,18 +1907,18 @@
      * @param {Boolean=} one - even if there are more than one elements matching a selector only return the first one
      */
     function dom(element, within, one) {
-        if(isStr(element)) {
-          element = !one ? queryAll(element,within) : query(element, within);
-          if(is.NodeList(element)) {
-            if(element.length > 1) return domNodeList(element);
-            else if(element.length == 1) element = element[0];
-          }
+        if (isStr(element)) {
+            element = !one ? queryAll(element, within) : query(element, within);
+            if (is.NodeList(element)) {
+                if (element.length > 1) return domNodeList(element);
+                else if (element.length == 1) element = element[0];
+            }
         }
-        if(is.Node(element)) return element['_DOMM'] ? element : domManip(element);
-        if(is.NodeList(element)) return domNodeList(element);
+        if (is.Node(element)) return element['_DOMM'] ? element : domManip(element);
+        if (is.NodeList(element)) return domNodeList(element);
         return Dom;
     }
-    dom = concatObjects(dom,Dom);
+    dom = concatObjects(dom, Dom);
     if (root.Proxy) dom = new Proxy(dom, {
         get(obj, key) {
             if (!obj.hasOwnProperty(key)) {
@@ -1932,16 +1969,15 @@
         },
         deglove,
         last,
+        first,
+        removeFrom,
         cutdot,
-
         joindot,
         dffstr,
-
         toArr,
         toInt,
-        promise,
+        observable,
         eventsys,
-        // dom methods and stuff
         dom,
         query,
         queryAll,
@@ -1992,7 +2028,7 @@
          * Gets all the property keys in any object even the hiden ones
          * @method getAllKeys
          * @for Craft
-         * @param {*} obj - object to list keys fromModel
+         * @param {*} obj - object to list keys
          * @return {Array} - array containing all the property keys
          */
         getAllKeys(obj) {
@@ -2029,7 +2065,7 @@
         getDeep(obj, path) {
             try {
                 cutdot(path.replace(/\[(\w+)\]/g, '.$1').replace(/^\./, '')).map(step => {
-                    return step in obj || (root.Reflect && Reflect.has(obj, step)) ? obj = (obj.isObservable ? obj.get(step) : obj[step]) : obj = undef;
+                    step in obj ? obj = (obj.isObservable ? obj.get(step) : obj[step]) : obj = undef;
                 });
                 return obj;
             } catch (e) {}
@@ -2085,7 +2121,8 @@
          * Converts any text to an inline URL code (good for images , svg , scripts or css)
          * @method URLfrom
          * @for Craft
-         * @param {String} - content to convert to an inline URL
+         * @param {String} text - content to convert to an inline URL
+         * @param {Object} [type] - additional info to create blob url with
          **/
         URLfrom: (text, type) => URL.createObjectURL(new Blob([text], type)),
         checkStatus(response) {
@@ -2475,7 +2512,21 @@
                 });
             });
         },
+        /**
+         * determines if string contains capital letters
+         * @method hasCaps
+         * @for Craft
+         * @param {String} str
+         * @return {Boolean}
+         */
         hasCaps: str => slice(str).some(is.Uppercase),
+        /**
+         * determines if string contains numbers
+         * @method hasNums
+         * @for Craft
+         * @param {String} str
+         * @return {Boolean}
+         */
         hasNums: str => /\d/g.test(str),
         len(val) {
             try {
@@ -2502,7 +2553,6 @@
             day: 86400000,
             year: 365 * 86400000
         },
-        observable,
         Directives: newMap(),
         Models: observable(),
         /**
@@ -2557,7 +2607,7 @@
             });
         },
         /**
-         * Promise that resolves when the DOM and WebComponents are all finished loading
+         * Promise that resolves when the DOM and WebdomLifecycle are all finished loading
          * @property WhenReady
          * @type {Promise}
          * @for Craft
@@ -2583,18 +2633,14 @@
          * @param {Class} modelclass - Class with constructor to instantiate model
          * @return {Object}
          */
-        model(name, modelclass) {
-            if (isStr(name) && !def(Craft.Models[name])) {
-                if (isFunc(modelclass)) {
-                    const scope = Object.create(Craft.observable(modelclass.prototype)),
-                        model = new scope.constructor();
-                    Craft.Models.set(name, model);
-                    Craft.Models.emit(name, scope);
-                    if (model.init) Craft.WhenReady.then(() => {
-                        model.init();
-                    });
-                    return model;
-                }
+        model(name, model) {
+            if (isStr(name) && isObj(model) && isFunc(model.init) && !def(Craft.Models[name])) {
+                model = observable(model);
+                model.init.call(model, model);
+                Craft.Models.set(name, model);
+                Craft.Models.emit(name, model);
+                if (model.load) Craft.WhenReady.then(model.load.bind(model));
+                return model;
             }
             throw new Error('Crafter : Model already exists');
         },
@@ -2604,14 +2650,14 @@
                     func.call(Craft, scope);
                 });
         },
-        fromModel(key, val) {
+        M(key, val) {
             let cutkey = cutdot(key),
                 IsValDefined = def(val),
-                ck = cutkey[0],
+                modelname = cutkey[0],
                 type = (IsValDefined ? 'set' : 'get') + 'Deep';
-            if (def(Craft.Models[ck])) {
-                const model = Craft.Models[ck];
-                return cutkey.length == 1 && !IsValDefined ? Craft.Models[ck] : Craft[type](Craft.Models[ck], joindot(Craft.omit(cutkey, ck)), val);
+            if (def(Craft.Models[modelname])) {
+                const model = Craft.Models[modelname];
+                return cutkey.length == 1 && !IsValDefined ? model : Craft[type](model, joindot(Craft.omit(cutkey, modelname)), val);
             }
         },
         getPath(path, full) {
@@ -2744,45 +2790,40 @@
                     if (!key.includes('__')) config[key] = componentclass[key];
                 });
             }
-            let element = Object.create(HTMLElement.prototype),
-                settings = {},
-                dm;
-            element.createdCallback = function () {
-                let el = dom(this),
-                    dealtWith = [];
-                for (let key in config) {
-                    if (!dealtWith.includes(key)) {
-                        if (key.includes('set_')) {
-                            let sgKey = key.split('_')[1];
-                            dealtWith.push(key, 'get_' + sgKey);
-                            el.newSetGet(sgKey, config[key], config['get_' + sgKey]);
-                        } else if (key.includes('get_')) {
-                            let sgKey = key.split('_')[1];
-                            dealtWith.push(key, 'set_' + sgKey);
-                            el.newSetGet(sgKey, (isFunc(config['set_' + sgKey]) ? config['set_' + sgKey] : noop), config[key]);
+            const settings = {
+                Instantiated: false,
+                created(el) {
+                    let dealtWith = [];
+                    for (let key in config) {
+                        if (!dealtWith.includes(key)) {
+                            if (key.includes('set_')) {
+                                let sgKey = key.split('_')[1];
+                                dealtWith.push(key, 'get_' + sgKey);
+                                el.newSetGet(sgKey, config[key], config['get_' + sgKey]);
+                            } else if (key.includes('get_')) {
+                                let sgKey = key.split('_')[1];
+                                dealtWith.push(key, 'set_' + sgKey);
+                                el.newSetGet(sgKey, (isFunc(config['set_' + sgKey]) ? config['set_' + sgKey] : noop), config[key]);
+                            } else if (['inserted', 'created', 'destroyed', 'attr'].every(is.eq(key))) {
+                                key.toLowerCase() == 'css' ? Craft.addCSS(config[key]) : defineprop(el, key, getpropdescriptor(config, key));
+                            }
                         }
                     }
-                }
 
-                if (isFunc(config['attr'])) el.observeAttrs(config['attr']);
-                if (isFunc(config['created'])) return config['created'].call(el);
+                    if (isFunc(config['attr'])) el.lifecycle.attr(config['attr']);
+                    settings.Instantiated = true;
+                },
+                attached(el) {
+                    if (!el.__DOMM) el = dom(el);
+                    if (!settings.Instantiated) settings.created.call(el, el);
+                    if (isFunc(config['inserted'])) config['inserted'].call(el, el);
+                },
+                destroyed(el) {
+                    if (isFunc(config['destroyed'])) config['destroyed'].call(el, el);
+                }
             };
 
-            for (let key in config) {
-                if (key == 'created' || key == 'attr' || (key.includes('set_') || key.includes('get_'))) continue;
-
-                if (isFunc(config[key]) && key != 'attr') dm = function () { // Adds dom methods to element
-                    return config[key].apply(dom(this), arguments);
-                };
-                key == 'inserted' ? element.attachedCallback = dm :
-                    key == 'destroyed' ? element.detachedCallback = dm :
-                    key.toLowerCase() == 'css' ? Craft.addCSS(config[key]) :
-                    isFunc(config[key]) ? element[key] = dm :
-                    defineprop(element, key, getpropdescriptor(config, key));
-            }
-
-            settings['prototype'] = element;
-            doc.registerElement(tag, settings);
+            domLifecycle.handles.set(tag, settings);
         },
         SyncInput(input, obj, key, onset) {
             if (isStr(input)) input = query(input);
@@ -2854,12 +2895,19 @@
 
     new MutationObserver(muts => {
         muts.map(mut => {
-            map(mut.removedNodes, el => {
-                if (el.state) el.state.emit('destroy');
+            if(mut.removedNodes.length > 0) map(mut.removedNodes, el => {
+                if (isEl(el)) {
+                    if (domLifecycle.hasTag(el.tagName)) domLifecycle.destroyed(el);
+                    domLifecycle.events.emit('destroyed', el);
+                }
             });
-            map(mut.addedNodes, el => {
+            if(mut.addedNodes.length > 0) map(mut.addedNodes, el => {
+                if (isEl(el)) {
+                    if (domLifecycle.hasTag(el.tagName)) domLifecycle.attached(el);
+                    domLifecycle.events.emit('attatched', el);
+                }
                 if (el.attributes) map(el.attributes, attr => {
-                    if (Craft.Directives.has(attr.name)) manageAttr(el, attr.name, attr.textContent, '', true);
+                    if (Craft.Directives.has(attr.name)) manageAttr(el, attr.name, attr.value, '', true);
                 });
             });
             if (mut.type == 'attributes' && isEl(mut.target) && mut.attributeName != 'style')
@@ -2911,7 +2959,7 @@
             element.bind(bind);
         },
         update(element, bind, oldbind) {
-            if (bind != bind) {
+            if (bind != oldbind) {
                 element.unbind(oldbind);
                 element.bind(bind);
             }
@@ -2923,7 +2971,7 @@
 
     Craft.directive('bind-for', {
         bind(element, bind) {
-            let data = Craft.fromModel(bind);
+            let data = Craft.M(bind);
             if (def(data) && data.forEach) {
                 let domfrag = dom.frag();
                 element = element.stripAttr('bind-for');
@@ -2964,7 +3012,7 @@
 
     on('click', (e, target) => {
         if (target.hasAttribute('link')) {
-            (target.hasAttr('newtab') ? root.open : Craft.router.open)(target.getAttr('link'));
+            (target.hasAttribute('newtab') ? root.open : Craft.router.open)(target.getAttribute('link'));
         }
     });
 
