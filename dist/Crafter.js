@@ -1073,9 +1073,12 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
    * @param {Boolean} [returnList] - should queryEach also return the list of nodes
    */
   function queryEach(selector, element, func, returnList) {
-    if (isFunc(element)) func = element;
+    if (isFunc(element)) {
+      func = element;
+      element = undef;
+    }
     var list = queryAll(selector, element);
-    if (list) list.forEach(func);
+    if (is.Arraylike(list)) list.forEach(func);
     if (returnList) return list;
   }
   /**
@@ -2989,6 +2992,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         return Craft.randomStr(4);
       }).join('-');
     },
+    Components: newSet(),
     /**
      * method for creating custom elements configuring their lifecycle's and inheritance
      * the config Object has 7 distinct options ( created , inserted , destroyed , attr, css, set_X and get_X )
@@ -3028,18 +3032,25 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
             }
           }
           if (isFunc(config['attr'])) el.lifecycle.attr(config['attr']);
-          settings.Instantiated = true;
+          el.ComponentInstantiated = true;
         },
         attached: function(el) {
           if (!el.__DOMM) el = dom(el);
-          if (!settings.Instantiated) settings.created.call(el, el);
+          if (!el.ComponentInstantiated) settings.created.call(el, el);
           if (isFunc(config['inserted'])) config['inserted'].call(el, el);
+          el.ComponentHandled = true;
         },
         destroyed: function(el) {
           if (isFunc(config['destroyed'])) config['destroyed'].call(el, el);
         }
       };
+      Craft.Components.add(tag);
       domLifecycle.handles.set(tag, settings);
+      Craft.WhenReady.then(function() {
+        queryAll(tag).map(function(el) {
+          if (!el.ComponentHandled) domLifecycle.attached(el);
+        });
+      });
     },
     SyncInput: function(input, obj, key, onset) {
       if (isStr(input)) input = query(input);
@@ -3123,7 +3134,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       });
       if (mut.addedNodes.length > 0) map(mut.addedNodes, function(el) {
         if (isEl(el)) {
-          if (domLifecycle.hasTag(el.tagName)) domLifecycle.attached(el);
+          if (domLifecycle.hasTag(el.tagName) && !el.ComponentHandled) domLifecycle.attached(el);
           domLifecycle.events.emit('attatched', el);
         }
         if (el.attributes) map(el.attributes, function(attr) {
