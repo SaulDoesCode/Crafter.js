@@ -255,14 +255,14 @@ Create a new Custom Element using the Craft.newComponent method
 
 ```javascript
   // has to be a hyphenated tag name
-  Craft.newComponent('news-element', class {
+  Craft.newComponent('news-element', {
   // optionally manage each stage of the element's lifecycle
     created() {
       // hypothetically fetch a news article
       fetch('/news/latest-article')
       .then(response => response.json())
       .then(news => this.news = news);
-    }
+    },
 
     inserted() {
       // when the news-element is insterted fill it with content
@@ -270,16 +270,16 @@ Create a new Custom Element using the Craft.newComponent method
       .prepend( dom.h(3, this.news.headline) /* -> <h3>News Headling...</h3> */ )
       .append( dom.div(this.news.article) );
 
-    }
+    },
 
     attr(name, value , oldvalue, hasAttr) {
       // handle Attibute changes on the element
-    }
+    },
 
     destroyed() {
       // executed when the element is no more
       // useful for stopping event listeners
-    }
+    },
   });
 ```
 
@@ -342,7 +342,7 @@ The EventHandlers can use either CSS selectors or Element variables to attatch l
 these are the basic parameter layout options
 
 ```javascript
-    let {on} = Craft;
+    let {on,once} = Craft;
     // There are several .EventType methods for EventHandlers
     // it is most common to use it this way
     on(element).Click( handler_function )
@@ -358,9 +358,9 @@ these are the basic parameter layout options
 an EventHandler always returns it self no matter how it's been accessed example
 
 ```javascript
-  EventHandler.off // -> EventHandler with .on , .once , .off and .Type methods
-  EventHandler.on // -> EventHandler with .on , .once , .off and .Type methods
-  EventHandler.once // -> EventHandler with .on , .once , .off and .Type methods
+  EventHandler.off(); // -> EventHandler with .on , .once , .off and .Type methods
+  EventHandler.on(); // -> EventHandler with .on , .once , .off and .Type methods
+  EventHandler.once(); // -> EventHandler with .on , .once , .off and .Type methods
 ```
 
 here's a simple example
@@ -370,8 +370,8 @@ here's a simple example
       // do something awesome when the element is clicked
     });
 
-    EventHandler.off; // turs off the listener
-    EventHandler.on; // turs on the listener
+    EventHandler.off(); // turs off the listener
+    EventHandler.on(); // turs on the listener
 
     EventHandler.Type = 'mouseover'; // changes the type of event to listen for
 ```
