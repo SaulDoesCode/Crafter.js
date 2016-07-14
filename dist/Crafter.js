@@ -1218,7 +1218,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     eventoptions = 'Click,Input,DoubleClick,Focus,Blur,Keydown,Mousemove,Mousedown,Mouseup,Mouseover,Mouseout'.split(','),
     domLifecycle = {
       handles: newMap(),
-      events: eventsys(),
       hasTag: function(tag) {
         return domLifecycle.handles.has(tag.toLowerCase());
       },
@@ -1226,11 +1225,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         var handle = domLifecycle.handles.get(element.tagName.toLowerCase());
         if (handle.attached) handle.attached.call(element, element);
       },
-      destroyed: function() {
+      destroyed: function(element) {
         var handle = domLifecycle.handles.get(element.tagName.toLowerCase());
         if (handle.destroyed) handle.destroyed.call(element, element);
       },
-      created: function() {
+      created: function(element) {
         var handle = domLifecycle.handles.get(element.tagName.toLowerCase());
         if (handle.created) handle.created.call(element, element);
       }
@@ -1264,7 +1263,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
               delete attributes[key];
             })();
           } else if (key === 'created') {
-            domLifecycle.once('created', attributes[key].bind(element));
+            if (isFunc(attributes[key])) attributes[key];
+            element.state.emit('created');
             delete attributes[key];
           }
         }
@@ -1273,7 +1273,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     }
     if (extraAttr != undef) is.Bool(extraAttr) ? stringForm = extraAttr : element.setAttr(extraAttr);
     if (stringForm) element = element.outerHTML;
-    if (is.Node(element) && domLifecycle.hasTag(element.tagName)) domLifecycle.emit('created', element);
+    if (isEl(element) && domLifecycle.hasTag(element.tagName)) domLifecycle.created(element);
     return element;
   }
   /**
@@ -1321,7 +1321,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     },
     input: function(type, attr) {
       if (isObj(type)) {
-        attributes = type;
+        attr = type;
         type = 'text';
       }
       return Dom.element('input', '', attr, {
@@ -1646,18 +1646,18 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     };
     element.lifecycle = {
       inserted: function(func) {
-        return domLifecycle.once('attached', function(el) {
-          if (el === element) func.call(element, element);
+        return element.state.once('attached', function(el) {
+          func.call(element, element);
         });
       },
       created: function(func) {
-        return domLifecycle.once('created', function(el) {
-          if (el === element) func.call(element, element);
+        return element.state.once('created', function(el) {
+          func.call(element, element);
         });
       },
       destroyed: function(func) {
-        return domLifecycle.once('destroyed', function(el) {
-          if (el === element) func.call(element, element);
+        return element.state.once('destroyed', function(el) {
+          func.call(element, element);
         });
       },
       attr: function(name, func) {
@@ -1796,6 +1796,30 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     element.Mouseleave = evlt('mouseleave');
     element.onScroll = function(func, pd) {
       return Craft.onScroll(element, func, pd);
+    };
+    element.Hover = function(func) {
+      var handlers = [],
+        inout = false;
+      handlers.push(on('mouseenter,mouseover', element, function(evt, srcElement) {
+        if (inout === false) func(inout = true, evt, srcElement);
+      }));
+      handlers.push(on('mouseleave,mouseout', element, function(evt, srcElement) {
+        if (inout === true) func(inout = false, evt, srcElement);
+      }));
+      return {
+        off: function() {
+          handlers = handlers.map(function(handler) {
+            return handler.off();
+          });
+          return this;
+        },
+        on: function() {
+          handlers = handlers.map(function(handler) {
+            return handler.on();
+          });
+          return this;
+        }
+      };
     };
     /* let keypress = code => (fn, type) => evlt('keydown')(element, e => {
                 if (e.which == code || e.keyCode == code) fn(e, element)
@@ -2863,15 +2887,16 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @return {Object}
      */
     model: function(name, model) {
-      if (isStr(name) && isObj(model) && isFunc(model.init) && !def(Craft.Models[name])) {
+      if (isStr(name) && isObj(model) && !def(Craft.Models[name])) {
         model = observable(model);
-        model.init.call(model, model);
+        if (isFunc(model.init)) model.init.call(model, model);
         Craft.Models.set(name, model);
         Craft.Models.emit(name, model);
         if (model.load) Craft.WhenReady.then(model.load.bind(model));
-        return model;
       }
-      throw new Error('Crafter : Model already exists');
+      return promise(function(resolve, reject) {
+        model && model.isObservable ? resolve(model) : reject(new Error('Crafter : An Error Occured with creating the ${name} Model'));
+      });
     },
     modelInit: function(name, func) {
       if (isFunc(func)) {
@@ -2910,18 +2935,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
             if (el.hasAttr(name)) {
               if (!is.Set(el.state.directives)) el.state.directives = newSet();
               if (!el.state.directives.has(name)) {
-                (function() {
-                  el.state.directives.add(name);
-                  var directiveChangeDetetor = el.state.on('attr:' + name, function(name, val, oldval, hasAttr) {
-                    if (hasAttr || !def(oldval)) {
-                      if (isFunc(handle.update)) handle.update.call(el, el, val, oldval, hasAttr);
-                    } else if (isFunc(handle.unbind)) {
-                      handle.unbind.call(el, el, val, oldval);
-                      directiveChangeDetetor.off();
-                    }
-                  });
-                  handle.bind.call(el, el, el.getAttr(name));
-                })();
+                el.state.directives.add(name);
+                handle.bind.call(el, el, el.getAttr(name));
               }
             }
           });
@@ -3083,7 +3098,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     },
     every: function(time, fn, context, pauseondefocus) {
       if (isFunc(fn)) {
-        var _ret10 = function() {
+        var _ret9 = function() {
           var options = {
             interval: undef,
             on: function() {
@@ -3102,7 +3117,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
             v: options.on()
           };
         }();
-        if ((typeof _ret10 === 'undefined' ? 'undefined' : _typeof(_ret10)) === "object") return _ret10.v;
+        if ((typeof _ret9 === 'undefined' ? 'undefined' : _typeof(_ret9)) === "object") return _ret9.v;
       }
     }
   }; // takes in an affected element and scans it for custom attributes
@@ -3128,14 +3143,14 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     muts.map(function(mut) {
       if (mut.removedNodes.length > 0) map(mut.removedNodes, function(el) {
         if (isEl(el)) {
+          if (el.state) el.state.emit('destroyed', el);
           if (domLifecycle.hasTag(el.tagName)) domLifecycle.destroyed(el);
-          domLifecycle.events.emit('destroyed', el);
         }
       });
       if (mut.addedNodes.length > 0) map(mut.addedNodes, function(el) {
         if (isEl(el)) {
+          if (el.state) el.state.emit('attached', el);
           if (domLifecycle.hasTag(el.tagName) && !el.ComponentHandled) domLifecycle.attached(el);
-          domLifecycle.events.emit('attatched', el);
         }
         if (el.attributes) map(el.attributes, function(attr) {
           if (Craft.Directives.has(attr.name)) manageAttr(el, attr.name, attr.value, '', true);
@@ -3241,5 +3256,5 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   // only CommonJS-like environments that support module.exports,
   // like Node.
   if ((typeof module === 'undefined' ? 'undefined' : _typeof(module)) === 'object' && module.exports) module.exports = Craft; // Browser globals (root is window)
-  else root.Craft = Craft; // console.log(performance.now() - perf, 'Crafter.js');
+  else root.Craft = Craft;
 })(document, self);
