@@ -1091,7 +1091,6 @@
 
     const domLifecycle = {
         handles: newMap(),
-        events: eventsys(),
         hasTag(tag) {
             return domLifecycle.handles.has(tag.toLowerCase());
         },
@@ -1099,11 +1098,11 @@
             const handle = domLifecycle.handles.get(element.tagName.toLowerCase());
             if (handle.attached) handle.attached.call(element, element);
         },
-        destroyed() {
+        destroyed(element) {
             const handle = domLifecycle.handles.get(element.tagName.toLowerCase());
             if (handle.destroyed) handle.destroyed.call(element, element);
         },
-        created() {
+        created(element) {
             const handle = domLifecycle.handles.get(element.tagName.toLowerCase());
             if (handle.created) handle.created.call(element, element);
         }
@@ -1127,7 +1126,8 @@
                         });
                         delete attributes[key];
                     } else if (key === 'created') {
-                        domLifecycle.once('created', attributes[key].bind(element));
+                        if(isFunc(attributes[key])) attributes[key]
+                        element.state.emit('created');
                         delete attributes[key];
                     }
                 }
@@ -1136,7 +1136,7 @@
         }
         if (extraAttr != undef) is.Bool(extraAttr) ? stringForm = extraAttr : element.setAttr(extraAttr);
         if (stringForm) element = element.outerHTML;
-        if (is.Node(element) && domLifecycle.hasTag(element.tagName)) domLifecycle.emit('created', element);
+        if (isEl(element) && domLifecycle.hasTag(element.tagName)) domLifecycle.created(element);
         return element;
     }
 
@@ -1183,7 +1183,7 @@
         }),
         input(type, attr) {
             if (isObj(type)) {
-                attributes = type;
+                attr = type;
                 type = 'text';
             }
             return Dom.element('input', '', attr, {
@@ -1497,18 +1497,18 @@
 
         element.lifecycle = {
             inserted(func) {
-                return domLifecycle.once('attached', el => {
-                    if (el === element) func.call(element, element);
+                return element.state.once('attached', el => {
+                    func.call(element, element);
                 })
             },
             created(func) {
-                return domLifecycle.once('created', el => {
-                    if (el === element) func.call(element, element);
+                return element.state.once('created', el => {
+                    func.call(element, element);
                 });
             },
             destroyed(func) {
-                return domLifecycle.once('destroyed', el => {
-                    if (el === element) func.call(element, element);
+                return element.state.once('destroyed', el => {
+                    func.call(element, element);
                 });
             },
             attr(name, func) {
@@ -1651,6 +1651,27 @@
         element.Mouseleave = evlt('mouseleave');
 
         element.onScroll = (func, pd) => Craft.onScroll(element, func, pd);
+
+        element.Hover = func => {
+          const handlers = [];
+          let inout = false;
+          handlers.push(on('mouseenter,mouseover',element,(evt,srcElement) => {
+            if(inout === false) func((inout = true),evt,srcElement);
+          }));
+          handlers.push(on('mouseleave,mouseout',element,(evt,srcElement) => {
+            if(inout === true) func((inout = false),evt,srcElement);
+          }));
+          return {
+            off() {
+              handlers = handlers.map(handler => handler.off())
+              return this;
+            },
+            on() {
+              handlers = handlers.map(handler => handler.on());
+              return this;
+            }
+          }
+        }
 
         /* let keypress = code => (fn, type) => evlt('keydown')(element, e => {
             if (e.which == code || e.keyCode == code) fn(e, element)
@@ -2647,15 +2668,16 @@
          * @return {Object}
          */
         model(name, model) {
-            if (isStr(name) && isObj(model) && isFunc(model.init) && !def(Craft.Models[name])) {
+            if (isStr(name) && isObj(model) && !def(Craft.Models[name])) {
                 model = observable(model);
-                model.init.call(model, model);
+                if(isFunc(model.init)) model.init.call(model, model);
                 Craft.Models.set(name, model);
                 Craft.Models.emit(name, model);
                 if (model.load) Craft.WhenReady.then(model.load.bind(model));
-                return model;
             }
-            throw new Error('Crafter : Model already exists');
+            return promise((resolve,reject) => {
+              model && model.isObservable ? resolve(model) : reject(new Error('Crafter : An Error Occured with creating the ${name} Model'));
+            });
         },
         modelInit(name, func) {
             if (isFunc(func)) {
@@ -2697,14 +2719,6 @@
                             if (!is.Set(el.state.directives)) el.state.directives = newSet();
                             if (!el.state.directives.has(name)) {
                                 el.state.directives.add(name);
-                                let directiveChangeDetetor = el.state.on(`attr:${name}`, (name, val, oldval, hasAttr) => {
-                                    if (hasAttr || !def(oldval)) {
-                                        if (isFunc(handle.update)) handle.update.call(el, el, val, oldval, hasAttr);
-                                    } else if (isFunc(handle.unbind)) {
-                                        handle.unbind.call(el, el, val, oldval);
-                                        directiveChangeDetetor.off();
-                                    }
-                                });
                                 handle.bind.call(el, el, el.getAttr(name));
                             }
                         }
@@ -2902,14 +2916,14 @@
         muts.map(mut => {
             if (mut.removedNodes.length > 0) map(mut.removedNodes, el => {
                 if (isEl(el)) {
+                    if(el.state) el.state.emit('destroyed', el);
                     if (domLifecycle.hasTag(el.tagName)) domLifecycle.destroyed(el);
-                    domLifecycle.events.emit('destroyed', el);
                 }
             });
             if (mut.addedNodes.length > 0) map(mut.addedNodes, el => {
                 if (isEl(el)) {
+                    if(el.state) el.state.emit('attached', el);
                     if (domLifecycle.hasTag(el.tagName) && !el.ComponentHandled) domLifecycle.attached(el);
-                    domLifecycle.events.emit('attatched', el);
                 }
                 if (el.attributes) map(el.attributes, attr => {
                     if (Craft.Directives.has(attr.name)) manageAttr(el, attr.name, attr.value, '', true);
@@ -3027,6 +3041,4 @@
     if (typeof module === 'object' && module.exports) module.exports = Craft;
     // Browser globals (root is window)
     else root.Craft = Craft;
-
-    // console.log(performance.now() - perf, 'Crafter.js');
 })(document, self);
