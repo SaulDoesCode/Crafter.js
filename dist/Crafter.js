@@ -1263,7 +1263,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
               delete attributes[key];
             })();
           } else if (key === 'created') {
-            if (isFunc(attributes[key])) attributes[key];
+            if (isFunc(attributes[key])) attributes[key]();
             element.state.emit('created');
             delete attributes[key];
           }

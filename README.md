@@ -143,6 +143,17 @@ Crafter.js allows the creation of scoped models to manipulate your app, models e
   // you may also use Craft.M to set values
   Craft.M('MyModel.headline','New Headline');
   Craft.M('MyModel.articles[3]','new article');
+
+
+  // Craft.model returns a promise
+  Craft.model('AnotherModel', {
+    headline : 'New Headline , this Just in...',
+    articles : ['article1...','article2...','article3...','article4...','article5...']
+  }).then(AnotherModel => {
+    /* ... post model init code */
+  }).catch(error => {
+    throw error; // handle init problems
+  })
 ```
 
 You can easily bind scope variables to the dom using the bind="ModelName.xyz" attribute and all your changes will reflect in the dom
