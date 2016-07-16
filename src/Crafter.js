@@ -798,7 +798,7 @@
                 });
             } else throw new TypeError('eventsys : you cannot emit that! ' + type);
         }
-        obj.stopall = state => stop = isBool(state) ? state : true;
+        obj.stopall = state => stop = is.Bool(state) ? state : true;
         obj.defineHandle = (name, type) => {
             if (!type) type = name;
             obj[name] = (fn, useOnce) => obj[useOnce ? 'once' : 'on'](type, fn);
