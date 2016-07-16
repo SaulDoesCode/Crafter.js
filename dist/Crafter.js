@@ -218,7 +218,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
        * @param {...*} args - value/values to test
        */
       Bool: ta(function(o) {
-        return typeof o === 'Boolean';
+        return typeof o === 'boolean';
       }),
       /**
        * Test if something is a String
@@ -936,7 +936,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       } else throw new TypeError('eventsys : you cannot emit that! ' + type);
     };
     obj.stopall = function(state) {
-      return stop = isBool(state) ? state : true;
+      return stop = is.Bool(state) ? state : true;
     };
     obj.defineHandle = function(name, type) {
       if (!type) type = name;
@@ -971,11 +971,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     });
     defineprop(obj, 'get', desc(function(key) {
       if (key != 'get' && key != 'set') {
-        var _val = void 0;
+        var val = void 0;
         listeners.loop('Get', function(ln) {
-          if (ln.prop === '*' || ln.prop === key) _val = ln(key, obj);
+          if (ln.prop === '*' || ln.prop === key) val = ln(key, obj);
         });
-        return _val != undef ? _val : obj[key];
+        return val != undef ? val : obj[key];
       } else return obj[key];
     }));
     defineprop(obj, 'set', desc(curry(function(key, value) {
@@ -994,11 +994,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     if (typeof Proxy != 'undefined') return new Proxy(obj, {
       get: function(target, key) {
         if (key != 'get' && key != 'set') {
-          var _val2 = void 0;
+          var val = void 0;
           listeners.loop('Get', function(ln) {
-            if (ln.prop === '*' || ln.prop === key) _val2 = ln(key, target);
+            if (ln.prop === '*' || ln.prop === key) val = ln(key, target);
           });
-          return _val2 != undef ? _val2 : Reflect.get(target, key);
+          return val != undef ? val : Reflect.get(target, key);
         }
         return Reflect.get(target, key);
       },
@@ -1368,6 +1368,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   });
 
   function domNodeList(elements) {
+    elements = Array.prototype.map.call(elements, function(el) {
+      return dom(el);
+    });
     if (!isArr(elements)) removeFrom(Object.getOwnPropertyNames(Array.prototype), 'length').map(function(method) {
       elements[method] = Array.prototype[method];
     });
@@ -1420,7 +1423,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     };
     elements.toggleClass = function(Class, state) {
       elements.map(function(el) {
-        (is.Bool(state) ? state : el.classList.contains(Class)) ? el.classList.remove(Class): el.classList.add(Class);
+        el.toggleClass(Class, state);
       });
       return elements;
     };
@@ -1431,11 +1434,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {...String} name of the Attribute/s to strip
      */
     elements.stripAttr = function() {
-      var _arguments2 = arguments;
+      var args = arguments;
       elements.map(function(el) {
-        map(_arguments2, function(attr) {
-          el.removeAttribute(attr);
-        });
+        el.stripAttr.apply(el, args);
       });
       return elements;
     };
@@ -1447,7 +1448,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {...String} names of attributes to check for
      */
     elements.hasAttr = function(attr) {
-      if (isStr(attr) && arguments.length == 1) return elements.every(function(el) {
+      if (arguments.length == 1 && isStr(attr)) return elements.every(function(el) {
         return el.hasAttribute(attr);
       });
       var args = Craft.flatten(arguments);
@@ -1467,11 +1468,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      */
     elements.toggleAttr = function(name, val, rtst) {
       elements.map(function(el) {
-        el[((is.Bool(val) ? !val : el.hasAttr(name)) ? 'strip' : 'set') + 'Attr'](name, val);
+        el.toggleAttr(name, val);
       });
-      return rtst ? elements.every(function(el) {
-        return el.hasAttr(name);
-      }) : elements;
+      return rtst ? elements.hasAttr(name) : elements;
     };
     /**
      * Sets or adds an Attribute on elements of a NodeList
@@ -1480,40 +1479,30 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * @param {String} Name of the Attribute to add/set
      * @param {String} Value of the Attribute to add/set
      */
-    elements.setAttr = function(attr, val) {
+    elements.setAttr = function() {
+      var args = arguments;
       elements.map(function(el) {
-        if (!def(val)) {
-          if (isStr(attr)) attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(function(Attr) {
-            var attribs = Attr.split('=');
-            def(attribs[1]) ? element.setAttribute(attribs[0], attribs[1]) : element.setAttribute(attribs[0], '');
-          }) : element.setAttribute(attr, '');
-          else if (isObj(attr)) forEach(attr, function(value, Attr) {
-            element.setAttribute(Attr, value);
-          });
-        } else element.setAttribute(attr, val || '');
+        el.setAttr.apply(el, args);
       });
       return elements;
     };
     elements.append = function() {
-      map(arguments, function(arg) {
-        elements.map(function(el) {
-          el.appendChild((is.Node(val) ? val : dffstr(val)).cloneNode(true));
-        });
+      var args = arguments;
+      elements.map(function(el) {
+        el.append.apply(el, args);
       });
       return elements;
     };
     elements.appendTo = function(val, within) {
       elements.map(function(el) {
-        if (isStr(el)) el = query(val, within);
-        if (is.Node(el)) el.appendChild(el);
+        el.appendTo(val, within);
       });
       return elements;
     };
     elements.prepend = function() {
-      map(arguments, function(val) {
-        elements.map(function(el) {
-          el.insertBefore((is.Node(val) ? val : dffstr(val)).cloneNode(true), el.firstChild);
-        });
+      var args = arguments;
+      elements.map(function(el) {
+        el.prepend.apply(el, args);
       });
       return elements;
     };
@@ -1624,8 +1613,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
       } else if (isObj(root[steps[0]])) {
         var obj = root[steps[0]],
           relativePath = joindot(slice(steps, 1)),
-          _val3 = Craft.getDeep(obj, relativePath);
-        if (is.Def(_val3)) element.html(_val3);
+          val = Craft.getDeep(obj, relativePath);
+        if (is.Def(val)) element.html(val);
         else Craft.setDeep(obj, relativePath);
         if (element.isInput) {
           var alt = function(value) {
@@ -1889,7 +1878,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      */
     element.toggleClass = function(Class, state) {
       if (!is.Bool(state)) state = element.gotClass(Class);
-      element[(state ? 'strip' : 'add') + 'Class'](Class);
+      element.classList[state ? 'remove' : 'add'](Class);
       return element;
     };
     /**
