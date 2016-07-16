@@ -1,6 +1,7 @@
 #Folders
 bower_components
 node_modules
+testing/experiments
 
 #FileTypes
 *.log

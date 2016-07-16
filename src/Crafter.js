@@ -195,7 +195,7 @@
          * @for is
          * @param {...*} args - value/values to test
          */
-        Bool: ta(o => typeof o === 'Boolean'),
+        Bool: ta(o => typeof o === 'boolean'),
         /**
          * Test if something is a String
          * @method Str
@@ -936,8 +936,8 @@
      */
     function queryEach(selector, element, func, returnList) {
         if (isFunc(element)) {
-          func = element;
-          element = undef;
+            func = element;
+            element = undef;
         }
         const list = queryAll(selector, element);
         if (is.Arraylike(list)) list.forEach(func);
@@ -1126,7 +1126,7 @@
                         });
                         delete attributes[key];
                     } else if (key === 'created') {
-                        if(isFunc(attributes[key])) attributes[key]();
+                        if (isFunc(attributes[key])) attributes[key]();
                         element.state.emit('created');
                         delete attributes[key];
                     }
@@ -1227,6 +1227,7 @@
     });
 
     function domNodeList(elements) {
+        elements = Array.prototype.map.call(elements, el => dom(el));
         if (!isArr(elements)) removeFrom(Object.getOwnPropertyNames(Array.prototype), 'length').map(method => {
             elements[method] = Array.prototype[method];
         });
@@ -1246,7 +1247,7 @@
          * @param {object} styles - should contain all the styles you wish to add example { borderWidth : '5px solid red' , float : 'right'}...
          */
         elements.css = styles => Craft.css(elements, styles);
-        elements.addClass = function (Class) {
+        elements.addClass = Class => {
             elements.map(el => {
                 el.classList.add(Class);
             });
@@ -1270,7 +1271,7 @@
         };
         elements.toggleClass = (Class, state) => {
             elements.map(el => {
-                (is.Bool(state) ? state : el.classList.contains(Class)) ? el.classList.remove(Class): el.classList.add(Class);
+                el.toggleClass(Class, state);
             });
             return elements;
         };
@@ -1282,10 +1283,9 @@
          * @param {...String} name of the Attribute/s to strip
          */
         elements.stripAttr = function () {
+            const args = arguments;
             elements.map(el => {
-                map(arguments, attr => {
-                    el.removeAttribute(attr);
-                });
+                el.stripAttr.apply(el, args);
             });
             return elements;
         };
@@ -1297,7 +1297,7 @@
          * @param {...String} names of attributes to check for
          */
         elements.hasAttr = function (attr) {
-            if (isStr(attr) && arguments.length == 1) return elements.every(el => el.hasAttribute(attr));
+            if (arguments.length == 1 && isStr(attr)) return elements.every(el => el.hasAttribute(attr));
             const args = Craft.flatten(arguments);
             return elements.every(el => args.every(a => el.hasAttribute(a)));
         };
@@ -1311,9 +1311,9 @@
          */
         elements.toggleAttr = function (name, val, rtst) {
             elements.map(el => {
-                el[((is.Bool(val) ? !val : el.hasAttr(name)) ? 'strip' : 'set') + 'Attr'](name, val);
+                el.toggleAttr(name, val);
             });
-            return rtst ? elements.every(el => el.hasAttr(name)) : elements;
+            return rtst ? elements.hasAttr(name) : elements;
         };
         /**
          * Sets or adds an Attribute on elements of a NodeList
@@ -1322,42 +1322,31 @@
          * @param {String} Name of the Attribute to add/set
          * @param {String} Value of the Attribute to add/set
          */
-        elements.setAttr = function (attr, val) {
+        elements.setAttr = function () {
+            const args = arguments;
             elements.map(el => {
-                if (!def(val)) {
-                    if (isStr(attr)) attr.includes('=') || attr.includes('&') ? attr.split('&').forEach(Attr => {
-                            let attribs = Attr.split('=');
-                            def(attribs[1]) ? element.setAttribute(attribs[0], attribs[1]) : element.setAttribute(attribs[0], '');
-                        }) :
-                        element.setAttribute(attr, '');
-                    else if (isObj(attr)) forEach(attr, (value, Attr) => {
-                        element.setAttribute(Attr, value);
-                    });
-                } else element.setAttribute(attr, val || '');
+                el.setAttr.apply(el, args);
             });
             return elements;
         };
 
         elements.append = function () {
-            map(arguments, arg => {
-                elements.map(el => {
-                    el.appendChild((is.Node(val) ? val : dffstr(val)).cloneNode(true));
-                });
+            const args = arguments;
+            elements.map(el => {
+                el.append.apply(el, args);
             });
             return elements;
         };
         elements.appendTo = (val, within) => {
             elements.map(el => {
-                if (isStr(el)) el = query(val, within);
-                if (is.Node(el)) el.appendChild(el);
+                el.appendTo(val, within);
             });
             return elements;
         };
         elements.prepend = function () {
-            map(arguments, val => {
-                elements.map(el => {
-                    el.insertBefore((is.Node(val) ? val : dffstr(val)).cloneNode(true), el.firstChild);
-                });
+            const args = arguments;
+            elements.map(el => {
+                el.prepend.apply(el, args);
             });
             return elements;
         };
@@ -1653,24 +1642,24 @@
         element.onScroll = (func, pd) => Craft.onScroll(element, func, pd);
 
         element.Hover = func => {
-          const handlers = [];
-          let inout = false;
-          handlers.push(on('mouseenter,mouseover',element,(evt,srcElement) => {
-            if(inout === false) func((inout = true),evt,srcElement);
-          }));
-          handlers.push(on('mouseleave,mouseout',element,(evt,srcElement) => {
-            if(inout === true) func((inout = false),evt,srcElement);
-          }));
-          return {
-            off() {
-              handlers = handlers.map(handler => handler.off())
-              return this;
-            },
-            on() {
-              handlers = handlers.map(handler => handler.on());
-              return this;
+            const handlers = [];
+            let inout = false;
+            handlers.push(on('mouseenter,mouseover', element, (evt, srcElement) => {
+                if (inout === false) func((inout = true), evt, srcElement);
+            }));
+            handlers.push(on('mouseleave,mouseout', element, (evt, srcElement) => {
+                if (inout === true) func((inout = false), evt, srcElement);
+            }));
+            return {
+                off() {
+                    handlers = handlers.map(handler => handler.off())
+                    return this;
+                },
+                on() {
+                    handlers = handlers.map(handler => handler.on());
+                    return this;
+                }
             }
-          }
         }
 
         /* let keypress = code => (fn, type) => evlt('keydown')(element, e => {
@@ -1738,7 +1727,7 @@
          */
         element.toggleClass = function (Class, state) {
             if (!is.Bool(state)) state = element.gotClass(Class);
-            element[(state ? 'strip' : 'add') + 'Class'](Class);
+            element.classList[(state ? 'remove' : 'add')](Class);
             return element;
         };
         /**
@@ -2670,13 +2659,13 @@
         model(name, model) {
             if (isStr(name) && isObj(model) && !def(Craft.Models[name])) {
                 model = observable(model);
-                if(isFunc(model.init)) model.init.call(model, model);
+                if (isFunc(model.init)) model.init.call(model, model);
                 Craft.Models.set(name, model);
                 Craft.Models.emit(name, model);
                 if (model.load) Craft.WhenReady.then(model.load.bind(model));
             }
-            return promise((resolve,reject) => {
-              model && model.isObservable ? resolve(model) : reject(new Error('Crafter : An Error Occured with creating the ${name} Model'));
+            return promise((resolve, reject) => {
+                model && model.isObservable ? resolve(model) : reject(new Error('Crafter : An Error Occured with creating the ${name} Model'));
             });
         },
         modelInit(name, func) {
@@ -2839,9 +2828,9 @@
             Craft.Components.add(tag);
             domLifecycle.handles.set(tag, settings);
             Craft.WhenReady.then(() => {
-              queryAll(tag).map(el => {
-                  if (!el.ComponentHandled) domLifecycle.attached(el);
-              });
+                queryAll(tag).map(el => {
+                    if (!el.ComponentHandled) domLifecycle.attached(el);
+                });
             });
         },
         SyncInput(input, obj, key, onset) {
@@ -2916,13 +2905,13 @@
         muts.map(mut => {
             if (mut.removedNodes.length > 0) map(mut.removedNodes, el => {
                 if (isEl(el)) {
-                    if(el.state) el.state.emit('destroyed', el);
+                    if (el.state) el.state.emit('destroyed', el);
                     if (domLifecycle.hasTag(el.tagName)) domLifecycle.destroyed(el);
                 }
             });
             if (mut.addedNodes.length > 0) map(mut.addedNodes, el => {
                 if (isEl(el)) {
-                    if(el.state) el.state.emit('attached', el);
+                    if (el.state) el.state.emit('attached', el);
                     if (domLifecycle.hasTag(el.tagName) && !el.ComponentHandled) domLifecycle.attached(el);
                 }
                 if (el.attributes) map(el.attributes, attr => {
